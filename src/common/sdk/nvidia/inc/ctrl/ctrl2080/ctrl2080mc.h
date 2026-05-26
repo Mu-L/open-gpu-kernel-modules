@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2014-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2014-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -83,6 +83,9 @@ typedef struct NV2080_CTRL_MC_GET_ARCH_INFO_PARAMS {
 #define NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GB200         (0x000001B0)
 
 
+#define NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GR100         (0x000001C0)
+
+
 
 /* valid ARCHITECTURE_T23X implementation values */
 
@@ -148,6 +151,11 @@ typedef struct NV2080_CTRL_MC_GET_ARCH_INFO_PARAMS {
 
 
 #define NV2080_CTRL_MC_ARCH_INFO_IMPLEMENTATION_GB20C       (0x0000000C)
+
+
+/* valid ARCHITECTURE_GR10x implementation values */
+#define NV2080_CTRL_MC_ARCH_INFO_IMPLEMENTATION_GR100       (0x00000000)
+#define NV2080_CTRL_MC_ARCH_INFO_IMPLEMENTATION_GR102       (0x00000002)
 
 
 

@@ -27,6 +27,7 @@
 #include "uvm_ats.h"
 #include "uvm_ats_faults.h"
 #include "uvm_migrate_pageable.h"
+#include "uvm_va_space.h"
 #include <linux/nodemask.h>
 #include <linux/mempolicy.h>
 #include <linux/mmu_notifier.h>
@@ -85,6 +86,11 @@ static NV_STATUS service_ats_requests(uvm_gpu_va_space_t *gpu_va_space,
         .fail_on_unresolved_sto_errors      = !is_fault_service_type || is_prefetch_faults,
     };
 
+    // CDMM pageable migration path goes through the HMM migration path.
+    // This path is only enabled when the driver is in NUMA mode.
+    UVM_ASSERT(!va_space->pageable.cdmm_enabled);
+    UVM_ASSERT(!gpu_va_space->gpu->parent->cdmm_enabled);
+
     if (is_fault_service_type) {
         uvm_migrate_args.populate_permissions = (write ? UVM_POPULATE_PERMISSIONS_WRITE : UVM_POPULATE_PERMISSIONS_ANY);
 
@@ -117,10 +123,10 @@ static NV_STATUS service_ats_requests(uvm_gpu_va_space_t *gpu_va_space,
     return status;
 }
 
-static void flush_tlb_va_region(uvm_gpu_va_space_t *gpu_va_space,
-                                NvU64 addr,
-                                size_t size,
-                                uvm_fault_client_type_t client_type)
+void uvm_flush_tlb_va_region(uvm_gpu_va_space_t *gpu_va_space,
+                             NvU64 addr,
+                             size_t size,
+                             uvm_fault_client_type_t client_type)
 {
     uvm_ats_fault_invalidate_t *ats_invalidate;
 
@@ -143,9 +149,12 @@ static void ats_batch_select_residency(uvm_gpu_va_space_t *gpu_va_space,
 {
     uvm_gpu_t *gpu = gpu_va_space->gpu;
     int residency;
-    bool cdmm_enabled = gpu->parent->cdmm_enabled;
+    // CDMM pageable migration path goes through the HMM migration path.
+    // This path is only enabled when the driver is in NUMA mode.
+    UVM_ASSERT(!gpu_va_space->va_space->pageable.cdmm_enabled);
+    UVM_ASSERT(!gpu->parent->cdmm_enabled);
 
-    if (gpu->parent->is_integrated_gpu || cdmm_enabled) {
+    if (gpu->parent->is_integrated_gpu) {
         residency = gpu->parent->closest_cpu_numa_node;
     }
     else {
@@ -209,7 +218,7 @@ static void ats_batch_select_residency(uvm_gpu_va_space_t *gpu_va_space,
     }
 #endif
 
-    ats_context->residency_id = gpu && !gpu->parent->is_integrated_gpu && !cdmm_enabled ? gpu->id : UVM_ID_CPU;
+    ats_context->residency_id = gpu && !gpu->parent->is_integrated_gpu ? gpu->id : UVM_ID_CPU;
     ats_context->residency_node = residency;
 }
 
@@ -562,7 +571,7 @@ static NV_STATUS uvm_ats_service_faults_region(uvm_gpu_va_space_t *gpu_va_space,
     // RW transitions for all page sizes. See the uvm_ats_smmu_invalidate_tlbs()
     // call above.
     if (PAGE_SIZE == UVM_PAGE_SIZE_4K || (UVM_ATS_SMMU_WAR_REQUIRED() && access_type == UVM_FAULT_ACCESS_TYPE_WRITE)) {
-        flush_tlb_va_region(gpu_va_space, start, length, ats_context->client_type);
+        uvm_flush_tlb_va_region(gpu_va_space, start, length, ats_context->client_type);
     }
     else {
         // ARM requires TLB invalidations on RO -> RW, but not all architectures
@@ -594,6 +603,11 @@ NV_STATUS uvm_ats_service_faults(uvm_gpu_va_space_t *gpu_va_space,
     UVM_ASSERT(gpu_va_space);
     UVM_ASSERT(gpu_va_space->ats.enabled);
     UVM_ASSERT(uvm_gpu_va_space_state(gpu_va_space) == UVM_GPU_VA_SPACE_STATE_ACTIVE);
+
+    // CDMM pageable migration path goes through the HMM migration path.
+    // This path is only enabled when the driver is in NUMA mode.
+    UVM_ASSERT(!gpu_va_space->va_space->pageable.cdmm_enabled);
+    UVM_ASSERT(!gpu_va_space->gpu->parent->cdmm_enabled);
 
     uvm_assert_mmap_lock_locked(vma->vm_mm);
     uvm_assert_rwsem_locked(&gpu_va_space->va_space->lock);
@@ -758,6 +772,11 @@ NV_STATUS uvm_ats_service_access_counters(uvm_gpu_va_space_t *gpu_va_space,
     UVM_ASSERT(gpu_va_space);
     UVM_ASSERT(gpu_va_space->ats.enabled);
     UVM_ASSERT(uvm_gpu_va_space_state(gpu_va_space) == UVM_GPU_VA_SPACE_STATE_ACTIVE);
+
+    // CDMM pageable migration path goes through the HMM migration path.
+    // This path is only enabled when the driver is in NUMA mode.
+    UVM_ASSERT(!gpu_va_space->va_space->pageable.cdmm_enabled);
+    UVM_ASSERT(!gpu_va_space->gpu->parent->cdmm_enabled);
 
     uvm_page_mask_zero(&ats_context->access_counters.migrated_mask);
 

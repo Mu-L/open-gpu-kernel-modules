@@ -28,7 +28,7 @@ void __nvoc_init__PrereqTracker(PrereqTracker*);
 void __nvoc_init_funcTable_PrereqTracker(PrereqTracker*);
 NV_STATUS __nvoc_ctor_PrereqTracker(PrereqTracker*, struct OBJGPU *pParent, GpuPrereqDeferralCheckCallback *pCallback);
 void __nvoc_init_dataField_PrereqTracker(PrereqTracker*);
-void __nvoc_dtor_PrereqTracker(PrereqTracker*);
+void __nvoc_dtor_PrereqTracker(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__PrereqTracker;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_PrereqTracker =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "PrereqTracker",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_PrereqTracker,
+    .objCreatefn =        &__nvoc_objCreateDynamic_PrereqTracker,
     .pCastInfo =          &__nvoc_castinfo__PrereqTracker,
     .pExportInfo =        &__nvoc_export_info__PrereqTracker
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_PrereqTracker =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__PrereqTracker __nvoc_metadata__PrereqTracker = {
     .rtti.pClassDef = &__nvoc_class_def_PrereqTracker,    // (prereq) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_PrereqTracker,
+    .rtti.dtor      = &__nvoc_dtor_PrereqTracker,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -82,16 +82,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__PrereqTracker =
 
 // Destruct PrereqTracker object.
 void __nvoc_prereqDestruct(PrereqTracker*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_PrereqTracker(PrereqTracker* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_PrereqTracker(Dynamic* pThis) {
+
+    PrereqTracker *__nvoc_this = (PrereqTracker *) pThis;
 
 // Call destructor.
-    __nvoc_prereqDestruct(pThis);
+    __nvoc_prereqDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_PrereqTracker(PrereqTracker *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -117,7 +119,7 @@ NV_STATUS __nvoc_ctor_PrereqTracker(PrereqTracker *pTracker, struct OBJGPU *pPar
 
     // Unwind on error.
 __nvoc_ctor_PrereqTracker_fail__init:
-    __nvoc_dtor_Object(&pTracker->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&pTracker->__nvoc_base_Object);
 __nvoc_ctor_PrereqTracker_fail_Object:
 __nvoc_ctor_PrereqTracker_exit:
     return status;
@@ -221,13 +223,10 @@ __nvoc_objCreate_PrereqTracker_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_PrereqTracker(PrereqTracker **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_PrereqTracker(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct OBJGPU *pParent = va_arg(__nvoc_args, struct OBJGPU *);
     GpuPrereqDeferralCheckCallback *pCallback = va_arg(__nvoc_args, GpuPrereqDeferralCheckCallback *);
 
-    __nvoc_status = __nvoc_objCreate_PrereqTracker(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pParent, pCallback);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_PrereqTracker((PrereqTracker **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pParent, pCallback);
 }
 

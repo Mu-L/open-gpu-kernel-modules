@@ -414,6 +414,9 @@ namespace DisplayPort
         virtual void setSupportsESI(bool bIsESISupported) = 0;
         virtual void setLttprSupported(bool isLttprSupported) = 0;
 
+        virtual void setPollingEnabledForDpMstDetection(bool bEnable) = 0;
+        virtual bool isPollingEnabledForDpMstDetection() = 0;
+
         //
         // Intermediate Link Rate (eDP ILR)
         //
@@ -451,6 +454,8 @@ namespace DisplayPort
         //
         //  Interrupts
         //
+        virtual bool             clearPendingServiceIrqs() = 0;
+
         virtual bool             interruptContentProtection() = 0;
         virtual void             clearInterruptContentProtection() = 0;
 
@@ -566,6 +571,7 @@ namespace DisplayPort
         virtual bool     clearDpTunnelingBwRequestStatus() = 0;
         virtual bool     clearDpTunnelingEstimatedBwStatus() = 0;
         virtual bool     clearDpTunnelingBwAllocationCapStatus() = 0;
+        virtual void     setIgnoreDiaLttprInterlaneAlignStatus() = 0;
 
         virtual AuxRetry::status notifySDPErrDetectionCapability() = 0;
         virtual bool isDp2xChannelCodingCapable() = 0;
@@ -597,6 +603,7 @@ namespace DisplayPort
         bool      bMultistream;
         bool      bGpuFECSupported;
         bool      bLttprSupported;
+        bool      bPollingEnabledForDpMstDetection;
         bool      bBypassILREdpRevCheck;
         NvU32     overrideDpcdMaxLinkRate;
         NvU32     overrideDpcdRev;
@@ -704,6 +711,7 @@ namespace DisplayPort
         // This is set by connectorImpl depending on the request from client/regkey
         bool bEnableDpTunnelBwAllocationSupport;
         bool bIsDpTunnelBwAllocationEnabled;                        // This is set to true after we succeed in enabling BW allocation
+        bool bIsIgnoreDiaLttprInterlaneAlignStatus;
 
         struct
         {
@@ -843,6 +851,17 @@ namespace DisplayPort
         {
             bLttprSupported = isLttprSupported;
         }
+
+        void setPollingEnabledForDpMstDetection(bool bEnable)
+        {
+            bPollingEnabledForDpMstDetection = bEnable;
+        }
+
+        bool isPollingEnabledForDpMstDetection()
+        {
+            return bPollingEnabledForDpMstDetection;
+        }
+
 
         bool isPC2Disabled()
         {
@@ -1405,6 +1424,8 @@ namespace DisplayPort
         // To clear pending message {DOWN_REP/UP_REQ} and reply true if existed.
         virtual bool clearPendingMsg();
 
+        virtual bool clearPendingServiceIrqs();
+
         virtual bool isMessagingEnabled();
 
         virtual void setIndexedLinkrateEnabled(bool val)
@@ -1477,27 +1498,32 @@ namespace DisplayPort
         virtual TriState getDpTunnelBwRequestStatus();
         virtual bool     setDpTunnelBwAllocation(bool bEnable);
 
-        virtual bool     isDpInTunnelingSupported()
+        virtual bool isDpInTunnelingSupported()
         {
             return caps.dpInTunnelingCaps.bIsSupported;
         }
 
-        virtual bool     isDpInTunnelingPanelReplayOptimizationSupported()
+        virtual bool isDpInTunnelingPanelReplayOptimizationSupported()
         {
             return caps.dpInTunnelingCaps.bIsPanelReplayOptimizationSupported;
         }
-        virtual bool     isDpInTunnelingBwAllocationSupported()
+        virtual bool isDpInTunnelingBwAllocationSupported()
         {
             return caps.dpInTunnelingCaps.bIsBwAllocationSupported;
         }
-        virtual void     setDpTunnelingBwAllocationSupport(bool bEnable)
+        virtual void setDpTunnelingBwAllocationSupport(bool bEnable)
         {
             bEnableDpTunnelBwAllocationSupport = bEnable;
         }
 
-        virtual bool     isDpTunnelBwAllocationEnabled()
+        virtual bool isDpTunnelBwAllocationEnabled()
         {
             return bIsDpTunnelBwAllocationEnabled;
+        }
+
+        virtual void setIgnoreDiaLttprInterlaneAlignStatus()
+        {
+            bIsIgnoreDiaLttprInterlaneAlignStatus = true;
         }
 
         bool getDpTunnelEstimatedBw(NvU8 &estimatedBw);

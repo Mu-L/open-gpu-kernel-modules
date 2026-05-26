@@ -32,7 +32,7 @@ void __nvoc_init__ZbcApi(ZbcApi*, GpuHalspecOwner *pGpuhalspecowner, RmHalspecOw
 void __nvoc_init_funcTable_ZbcApi(ZbcApi*, GpuHalspecOwner *pGpuhalspecowner, RmHalspecOwner *pRmhalspecowner);
 NV_STATUS __nvoc_ctor_ZbcApi(ZbcApi*, GpuHalspecOwner *pGpuhalspecowner, RmHalspecOwner *pRmhalspecowner, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_ZbcApi(ZbcApi*, GpuHalspecOwner *pGpuhalspecowner, RmHalspecOwner *pRmhalspecowner);
-void __nvoc_dtor_ZbcApi(ZbcApi*);
+void __nvoc_dtor_ZbcApi(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__ZbcApi;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ZbcApi =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "ZbcApi",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_ZbcApi,
+    .objCreatefn =        &__nvoc_objCreateDynamic_ZbcApi,
     .pCastInfo =          &__nvoc_castinfo__ZbcApi,
     .pExportInfo =        &__nvoc_export_info__ZbcApi
 };
@@ -125,6 +125,49 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ZbcApi =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS zbcapiCtrlCmdSetZbcColorClear__EXPORT(void *pZbcApi, void *pSetZBCClearParams) {
+    return zbcapiCtrlCmdSetZbcColorClear_IMPL(pZbcApi, pSetZBCClearParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS zbcapiCtrlCmdSetZbcDepthClear__EXPORT(void *pZbcApi, void *pSetZBCClearParams) {
+    return zbcapiCtrlCmdSetZbcDepthClear_IMPL(pZbcApi, pSetZBCClearParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS zbcapiCtrlCmdGetZbcClearTable__EXPORT(void *pZbcApi, void *pGetZBCClearTableParams) {
+    return zbcapiCtrlCmdGetZbcClearTable_IMPL(pZbcApi, pGetZBCClearTableParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+static NV_STATUS zbcapiCtrlCmdSetZbcClearTable__EXPORT(void *pZbcApi, void *pSetZBCClearTableParams) {
+    return zbcapiCtrlCmdSetZbcClearTable_IMPL(pZbcApi, pSetZBCClearTableParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS zbcapiCtrlCmdSetZbcStencilClear__EXPORT(void *pZbcApi, void *pSetZBCClearParams) {
+    return zbcapiCtrlCmdSetZbcStencilClear_IMPL(pZbcApi, pSetZBCClearParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00050048u)
+static NV_STATUS zbcapiCtrlCmdGetZbcClearTableSize__EXPORT(void *pZbcApi, void *pGetZBCClearTableSizeParams) {
+    return zbcapiCtrlCmdGetZbcClearTableSize_DISPATCH(pZbcApi, pGetZBCClearTableSizeParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00050048u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS zbcapiCtrlCmdGetZbcClearTableEntry__EXPORT(void *pZbcApi, void *pGetZBCClearTableEntryParams) {
+    return zbcapiCtrlCmdGetZbcClearTableEntry_IMPL(pZbcApi, pGetZBCClearTableEntryParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ZbcApi[] = 
 {
@@ -132,7 +175,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ZbcApi[]
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &zbcapiCtrlCmdSetZbcColorClear_IMPL,
+        /*pFunc=*/      (void (*)(void)) &zbcapiCtrlCmdSetZbcColorClear__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -147,7 +190,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ZbcApi[]
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &zbcapiCtrlCmdSetZbcDepthClear_IMPL,
+        /*pFunc=*/      (void (*)(void)) &zbcapiCtrlCmdSetZbcDepthClear__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -162,7 +205,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ZbcApi[]
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &zbcapiCtrlCmdGetZbcClearTable_IMPL,
+        /*pFunc=*/      (void (*)(void)) &zbcapiCtrlCmdGetZbcClearTable__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -177,7 +220,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ZbcApi[]
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &zbcapiCtrlCmdSetZbcClearTable_IMPL,
+        /*pFunc=*/      (void (*)(void)) &zbcapiCtrlCmdSetZbcClearTable__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*flags=*/      0x48u,
         /*accessRight=*/0x0u,
@@ -192,7 +235,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ZbcApi[]
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &zbcapiCtrlCmdSetZbcStencilClear_IMPL,
+        /*pFunc=*/      (void (*)(void)) &zbcapiCtrlCmdSetZbcStencilClear__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -207,7 +250,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ZbcApi[]
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x50048u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &zbcapiCtrlCmdGetZbcClearTableSize_DISPATCH,
+        /*pFunc=*/      (void (*)(void)) &zbcapiCtrlCmdGetZbcClearTableSize__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x50048u)
         /*flags=*/      0x50048u,
         /*accessRight=*/0x0u,
@@ -222,7 +265,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ZbcApi[]
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &zbcapiCtrlCmdGetZbcClearTableEntry_IMPL,
+        /*pFunc=*/      (void (*)(void)) &zbcapiCtrlCmdGetZbcClearTableEntry__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -239,7 +282,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ZbcApi[]
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__ZbcApi __nvoc_metadata__ZbcApi = {
     .rtti.pClassDef = &__nvoc_class_def_ZbcApi,    // (zbcapi) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_ZbcApi,
+    .rtti.dtor      = &__nvoc_dtor_ZbcApi,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -499,16 +542,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__ZbcApi =
 
 // Destruct ZbcApi object.
 void __nvoc_zbcapiDestruct(ZbcApi*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_ZbcApi(ZbcApi* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_ZbcApi(Dynamic* pThis) {
+
+    ZbcApi *__nvoc_this = (ZbcApi *) pThis;
 
 // Call destructor.
-    __nvoc_zbcapiDestruct(pThis);
+    __nvoc_zbcapiDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_ZbcApi(ZbcApi *pThis, GpuHalspecOwner *pGpuhalspecowner, RmHalspecOwner *pRmhalspecowner) {
     ChipHal *chipHal = &pGpuhalspecowner->chipHal;
@@ -544,7 +589,7 @@ NV_STATUS __nvoc_ctor_ZbcApi(ZbcApi *pZbcApi, GpuHalspecOwner *pGpuhalspecowner,
 
     // Unwind on error.
 __nvoc_ctor_ZbcApi_fail__init:
-    __nvoc_dtor_GpuResource(&pZbcApi->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pZbcApi->__nvoc_base_GpuResource);
 __nvoc_ctor_ZbcApi_fail_GpuResource:
 __nvoc_ctor_ZbcApi_exit:
     return status;
@@ -691,13 +736,10 @@ __nvoc_objCreate_ZbcApi_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_ZbcApi(ZbcApi **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_ZbcApi(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_ZbcApi(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_ZbcApi((ZbcApi **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

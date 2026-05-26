@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2019-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -39,4 +39,30 @@ nv_linux_state_t * find_pci(NvU32, NvU8, NvU8, NvU8);
 NvBool nv_pci_is_valid_topology_for_direct_pci(nv_state_t *, struct pci_dev *);
 NvBool nv_pci_has_common_pci_switch(nv_state_t *nv, struct pci_dev *);
 void nv_pci_tegra_boost_clocks(struct device *dev);
+
+/* Register Block Identifier (RBI) */
+enum cxl_regloc_type {
+    CXL_REGLOC_RBI_EMPTY = 0,
+    CXL_REGLOC_RBI_COMPONENT,
+    CXL_REGLOC_RBI_VIRT,
+    CXL_REGLOC_RBI_MEMDEV,
+    CXL_REGLOC_RBI_PMU,
+    CXL_REGLOC_RBI_TYPES
+};
+
+#define CXL_CM_OFFSET 0x1000
+#define CXL_CM_CAP_HDR_OFFSET 0x0
+#define CXL_CM_CAP_HDR_ID_MASK GENMASK(15, 0)
+#define CM_CAP_HDR_CAP_ID 1
+#define CXL_CM_CAP_HDR_ARRAY_SIZE_MASK GENMASK(31, 24)
+#define CXL_CM_CAP_PTR_MASK GENMASK(31, 20)
+#define CXL_CM_CAP_CAP_ID_HDM 0x5
+#define CXL_HDM_DECODER_CAP_OFFSET 0x0
+#define CXL_HDM_DECODER0_BASE_LOW_OFFSET(i) (0x20 * (i) + 0x10)
+#define CXL_HDM_DECODER0_BASE_HIGH_OFFSET(i) (0x20 * (i) + 0x14)
+#define CXL_HDM_DECODER0_SIZE_LOW_OFFSET(i) (0x20 * (i) + 0x18)
+#define CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(i) (0x20 * (i) + 0x1c)
+#define CXL_HDM_DECODER0_CTRL_OFFSET(i) (0x20 * (i) + 0x20)
+#define CXL_HDM_DECODER0_CTRL_COMMITTED BIT(10)
+
 #endif

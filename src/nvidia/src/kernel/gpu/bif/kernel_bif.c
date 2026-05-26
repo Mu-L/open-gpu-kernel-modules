@@ -142,16 +142,6 @@ kbifStateInitLocked_IMPL
     // Initialize DMA caps
     kbifInitDmaCaps(pGpu, pKernelBif);
 
-    // Check for OS w/o usable PAT support
-    if ((gpuGetBusIntfType_HAL(pGpu) == NV2080_CTRL_BUS_INFO_TYPE_PCI_EXPRESS) &&
-        pSys->getProperty(pOS, PDB_PROP_SYS_PAT_UNSUPPORTED))
-    {
-        NV_PRINTF(LEVEL_INFO,
-                  "BIF disabling noncoherent on OS w/o usable PAT support\n");
-
-        pKernelBif->setProperty(pKernelBif, PDB_PROP_KBIF_SUPPORT_NONCOHERENT, NV_FALSE);
-    }
-
     return NV_OK;
 }
 
@@ -763,27 +753,6 @@ kbifInitDmaCaps_IMPL
     {
         pKernelBif->dmaCaps |= REF_DEF(BIF_DMA_CAPS_SNOOP, _CTXDMA);
     }
-}
-
-NvU32
-kbifGetDmaCaps_IMPL
-(
-    OBJGPU    *pGpu,
-    KernelBif *pKernelBif
-)
-{
-    NvU32 retval;
-
-    // Start out with system specific DMA caps
-    retval = pKernelBif->dmaCaps;
-
-    // If noncoherent support is disabled, mask out SNOOP caps
-    if (!pKernelBif->getProperty(pKernelBif, PDB_PROP_KBIF_SUPPORT_NONCOHERENT))
-    {
-        retval &= ~DRF_SHIFTMASK(BIF_DMA_CAPS_NOSNOOP);
-    }
-
-    return retval;
 }
 
 /*!

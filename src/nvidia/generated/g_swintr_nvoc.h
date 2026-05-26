@@ -148,7 +148,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_SwIntr;
 #define PDB_PROP_SWINTR_IS_MISSING_BASE_NAME PDB_PROP_ENGSTATE_IS_MISSING
 
 
-NV_STATUS __nvoc_objCreateDynamic_SwIntr(SwIntr**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_SwIntr(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_SwIntr(SwIntr**, Dynamic*, NvU32);
 #define __objCreate_SwIntr(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -196,7 +196,7 @@ NV_STATUS __nvoc_objCreate_SwIntr(SwIntr**, Dynamic*, NvU32);
 #define swintrServiceNotificationInterrupt(pGpu, pIntrService, pParams) swintrServiceNotificationInterrupt_DISPATCH(pGpu, pIntrService, pParams)
 
 // Dispatch functions
-static inline void swintrRegisterIntrService_DISPATCH(OBJGPU *pGpu, struct SwIntr *pSwIntr, IntrServiceRecord pRecords[180]) {
+static inline void swintrRegisterIntrService_DISPATCH(OBJGPU *pGpu, struct SwIntr *pSwIntr, IntrServiceRecord pRecords[181]) {
     pSwIntr->__nvoc_metadata_ptr->vtable.__swintrRegisterIntrService__(pGpu, pSwIntr, pRecords);
 }
 
@@ -269,7 +269,7 @@ static inline NV_STATUS swintrServiceNotificationInterrupt_DISPATCH(OBJGPU *pGpu
 }
 
 // Virtual method declarations and/or inline definitions
-void swintrRegisterIntrService_IMPL(OBJGPU *pGpu, struct SwIntr *pSwIntr, IntrServiceRecord pRecords[180]);
+void swintrRegisterIntrService_IMPL(OBJGPU *pGpu, struct SwIntr *pSwIntr, IntrServiceRecord pRecords[181]);
 
 NvU32 swintrServiceInterrupt_IMPL(OBJGPU *pGpu, struct SwIntr *pSwIntr, IntrServiceServiceInterruptArguments *pParams);
 

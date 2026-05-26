@@ -322,7 +322,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_RsResource;
     ((RsResource*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(RsResource)))
 #endif //__nvoc_rs_resource_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_RsResource(RsResource**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_RsResource(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_RsResource(RsResource**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_RsResource(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

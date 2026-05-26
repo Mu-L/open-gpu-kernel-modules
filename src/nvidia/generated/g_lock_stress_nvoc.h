@@ -149,7 +149,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_LockStressObject;
     ((LockStressObject*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(LockStressObject)))
 #endif //__nvoc_lock_stress_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_LockStressObject(LockStressObject**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_LockStressObject(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_LockStressObject(LockStressObject**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_LockStressObject(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

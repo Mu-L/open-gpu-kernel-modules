@@ -5,7 +5,7 @@
 // Profile:  shipping-gpus-openrm
 // Template: templates/gt_hal_private.h
 //
-// Chips:    TU10X, GA100, GA102, GA103, GA104, GA106, GA107, AD10X, GH10X, GB100, GB102, GB10B, GB110, GB112, GB202, GB203, GB205, GB206, GB207, GB20B, GB20C, T234D, T26XD
+// Chips:    TU10X, GA100, GA102, GA103, GA104, GA106, GA107, AD10X, GH10X, GB100, GB102, GB10B, GB110, GB112, GB202, GB203, GB205, GB206, GB207, GB20B, GB20C, GR10X, T23XD, T26XD
 //
 
 //
@@ -30,6 +30,7 @@
 #  define RMCFG_HAL_SETUP_GH10X          1
 #  define RMCFG_HAL_SETUP_GB10X          1
 #  define RMCFG_HAL_SETUP_GB20X          1
+#  define RMCFG_HAL_SETUP_GR10X          1
 #  define RMCFG_HAL_SETUP_T23XD          1
 #  define RMCFG_HAL_SETUP_T26XD          1
 #endif   // RMCFG_HAL_SETUP_ALL
@@ -85,8 +86,14 @@
 #  define RMCFG_HAL_SETUP_GB20C          1
 #endif // GB20X
 
+#if defined(RMCFG_HAL_SETUP_GR10X)
+#  define RMCFG_HAL_SETUP_GR100          1
+#  define RMCFG_HAL_SETUP_GR102          1
+#endif // GR10X
+
 #if defined(RMCFG_HAL_SETUP_T23XD)
 #  define RMCFG_HAL_SETUP_T234D          1
+#  define RMCFG_HAL_SETUP_T239D          1
 #endif // T23XD
 
 #if defined(RMCFG_HAL_SETUP_T26XD)
@@ -571,6 +578,38 @@ NV_STATUS registerHalModule_GB20C(void)
 
 #endif  // GB20X or GB20C
 
+#if defined(RMCFG_HAL_SETUP_GR100)
+
+static const HAL_IFACE_SETUP halIface_GR100 = {
+
+    rpcHalIfacesSetup_GR100,
+    rpcstructurecopyHalIfacesSetup_GR100,
+
+};
+
+NV_STATUS registerHalModule_GR100(void)
+{
+    return registerHalModule(HAL_IMPL_GR100, &halIface_GR100);
+}
+
+#endif  // GR10X or GR100
+
+#if defined(RMCFG_HAL_SETUP_GR102)
+
+static const HAL_IFACE_SETUP halIface_GR102 = {
+
+    rpcHalIfacesSetup_GR102,
+    rpcstructurecopyHalIfacesSetup_GR102,
+
+};
+
+NV_STATUS registerHalModule_GR102(void)
+{
+    return registerHalModule(HAL_IMPL_GR102, &halIface_GR102);
+}
+
+#endif  // GR10X or GR102
+
 #if defined(RMCFG_HAL_SETUP_T234D)
 
 static const HAL_IFACE_SETUP halIface_T234D = {
@@ -586,6 +625,22 @@ NV_STATUS registerHalModule_T234D(void)
 }
 
 #endif  // T23XD or T234D
+
+#if defined(RMCFG_HAL_SETUP_T239D)
+
+static const HAL_IFACE_SETUP halIface_T239D = {
+
+    rpcHalIfacesSetup_T239D,
+    rpcstructurecopyHalIfacesSetup_T239D,
+
+};
+
+NV_STATUS registerHalModule_T239D(void)
+{
+    return registerHalModule(HAL_IMPL_T239D, &halIface_T239D);
+}
+
+#endif  // T23XD or T239D
 
 #if defined(RMCFG_HAL_SETUP_T264D)
 

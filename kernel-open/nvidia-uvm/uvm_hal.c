@@ -289,6 +289,17 @@ static uvm_hal_class_ops_t arch_table[] =
             .mmu_mode_hal = uvm_hal_mmu_mode_hopper,
         }
     },
+    {
+        .id = NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GR100,
+
+        // Rubin GR100's parent is Blackwell GB100, not GB20x.
+        .parent_id = NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GB100,
+        .u.arch_ops = {
+            .init_properties = uvm_hal_rubin_arch_init_properties,
+            .mmu_mode_hal = uvm_hal_mmu_mode_rubin,
+            .mmu_client_id_to_utlb_id = uvm_hal_rubin_mmu_client_id_to_utlb_id,
+        }
+    },
 };
 
 // chip_table[] is different from the other class op tables - it is used to
@@ -371,6 +382,13 @@ static uvm_hal_class_ops_t fault_buffer_table[] =
         .parent_id = NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GB100,
         .u.fault_buffer_ops = {}
     },
+    {
+        .id = NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GR100,
+        .parent_id = NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GB200,
+        .u.fault_buffer_ops = {
+            .write_get = uvm_hal_rubin_fault_buffer_write_get,
+        }
+    },
 };
 
 static uvm_hal_class_ops_t access_counter_buffer_table[] =
@@ -410,6 +428,11 @@ static uvm_hal_class_ops_t access_counter_buffer_table[] =
     {
         .id = NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GB200,
         .parent_id = NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GB100,
+        .u.access_counter_buffer_ops = {}
+    },
+    {
+        .id = NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GR100,
+        .parent_id = NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GB200,
         .u.access_counter_buffer_ops = {}
     },
 };
@@ -454,6 +477,11 @@ static uvm_hal_class_ops_t sec2_table[] =
     {
         .id = NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GB200,
         .parent_id = NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GB100,
+        .u.sec2_ops = {}
+    },
+    {
+        .id = NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GR100,
+        .parent_id = NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GB200,
         .u.sec2_ops = {}
     },
 };

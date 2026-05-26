@@ -31,7 +31,7 @@ void __nvoc_init__MpsApi(MpsApi*);
 void __nvoc_init_funcTable_MpsApi(MpsApi*);
 NV_STATUS __nvoc_ctor_MpsApi(MpsApi*, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_MpsApi(MpsApi*);
-void __nvoc_dtor_MpsApi(MpsApi*);
+void __nvoc_dtor_MpsApi(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__MpsApi;
@@ -89,7 +89,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_MpsApi =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "MpsApi",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_MpsApi,
+    .objCreatefn =        &__nvoc_objCreateDynamic_MpsApi,
     .pCastInfo =          &__nvoc_castinfo__MpsApi,
     .pExportInfo =        &__nvoc_export_info__MpsApi
 };
@@ -98,7 +98,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_MpsApi =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__MpsApi __nvoc_metadata__MpsApi = {
     .rtti.pClassDef = &__nvoc_class_def_MpsApi,    // (mpsApi) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_MpsApi,
+    .rtti.dtor      = &__nvoc_dtor_MpsApi,
     .rtti.offset    = 0,
     .metadata__RmResource.rtti.pClassDef = &__nvoc_class_def_RmResource,    // (rmres) super
     .metadata__RmResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -305,16 +305,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__MpsApi =
 
 // Destruct MpsApi object.
 void __nvoc_mpsApiDestruct(MpsApi*);
-void __nvoc_dtor_RmResource(RmResource*);
-void __nvoc_dtor_MpsApi(MpsApi* pThis) {
+void __nvoc_dtor_RmResource(Dynamic*);
+void __nvoc_dtor_MpsApi(Dynamic* pThis) {
+
+    MpsApi *__nvoc_this = (MpsApi *) pThis;
 
 // Call destructor.
-    __nvoc_mpsApiDestruct(pThis);
+    __nvoc_mpsApiDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RmResource(&pThis->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *) &__nvoc_this->__nvoc_base_RmResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_MpsApi(MpsApi *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -340,7 +342,7 @@ NV_STATUS __nvoc_ctor_MpsApi(MpsApi *pMpsApi, CALL_CONTEXT *pCallContext, struct
 
     // Unwind on error.
 __nvoc_ctor_MpsApi_fail__init:
-    __nvoc_dtor_RmResource(&pMpsApi->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *)&pMpsApi->__nvoc_base_RmResource);
 __nvoc_ctor_MpsApi_fail_RmResource:
 __nvoc_ctor_MpsApi_exit:
     return status;
@@ -450,13 +452,10 @@ __nvoc_objCreate_MpsApi_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_MpsApi(MpsApi **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_MpsApi(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_MpsApi(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_MpsApi((MpsApi **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

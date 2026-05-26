@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -50,6 +50,12 @@ extern "C" {
 *                                                                           *
 \***************************************************************************/
 
+#include <stddef.h>
+#include "rmconfig.h"
+#include "g_rmconfig_private.h"
+
+#include "nvoc/object.h"
+#include "nvpcie.h"
 #include "platform/hwbc.h"
 
 // forward declare PcieAerCapability struct
@@ -63,7 +69,7 @@ typedef struct PCIECONFIGSPACEBASE PCIECONFIGSPACEBASE;
 typedef struct PCIECONFIGSPACEBASE *PPCIECONFIGSPACEBASE;
 struct PCIECONFIGSPACEBASE
 {
-    RmPhysAddr baseAddress;
+    NvU64 baseAddress;
     NvU32 domain;
     NvU8 startBusNumber;
     NvU8 endBusNumber;
@@ -275,6 +281,16 @@ struct BUSTOPOLOGYINFO
 
 typedef struct GspSystemInfo GspSystemInfo;
 
+// Forward-declared to avoid header dependency
+struct OBJGPU;
+
+#ifndef __nvoc_class_id_OBJGPU
+#define __nvoc_class_id_OBJGPU 0x7ef3cbu
+typedef struct OBJGPU OBJGPU;
+#endif /* __nvoc_class_id_OBJGPU */
+
+
+
 
 // Private field names are wrapped in PRIVATE_FIELD, which does nothing for
 // the matching C source file, but causes diagnostics to be issued if another
@@ -347,7 +363,6 @@ struct OBJCL {
     NvBool PDB_PROP_CL_BUG_3562968_WAR_ALLOW_PCIE_ATOMICS;
 
     // Data members
-    NBADDR NBAddr;
     NvBool EnteredRecoverySinceErrorsLastChecked;
     struct OBJHWBC *pHWBC;
     NvU32 br04HwbcCount;
@@ -360,6 +375,8 @@ struct OBJCL {
     NBADDR chipsetIDBusAddr;
     BUSINFO chipsetIDInfo;
     PBUSTOPOLOGYINFO pBusTopologyInfo;
+    NvBool bPciePeerReadCapable;
+    NvBool bPciePeerWriteCapable;
 };
 
 
@@ -466,7 +483,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJCL;
 #define PDB_PROP_CL_BUG_3562968_WAR_ALLOW_PCIE_ATOMICS_BASE_NAME PDB_PROP_CL_BUG_3562968_WAR_ALLOW_PCIE_ATOMICS
 
 
-NV_STATUS __nvoc_objCreateDynamic_OBJCL(OBJCL**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJCL(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJCL(OBJCL**, Dynamic*, NvU32);
 #define __objCreate_OBJCL(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -647,7 +664,7 @@ static inline void clPcieWriteDword(struct OBJCL *arg_this, NvU32 arg2, NvU8 arg
 #endif // __nvoc_chipset_h_disabled
 
 #ifdef __nvoc_chipset_h_disabled
-static inline NvBool clFindBR04(POBJGPU *pGpus, NvU32 NumGpus, NvBool flat, NvU32 devId, struct OBJCL *pCl) {
+static inline NvBool clFindBR04(struct OBJGPU **pGpus, NvU32 NumGpus, NvBool flat, NvU32 devId, struct OBJCL *pCl) {
     NV_ASSERT_FAILED_PRECOMP("OBJCL was disabled!");
     return NV_FALSE;
 }
@@ -701,7 +718,7 @@ static inline NV_STATUS clStorePcieConfigSpaceBaseFromMcfg(struct OBJCL *pCl) {
 #endif // __nvoc_chipset_h_disabled
 
 #ifdef __nvoc_chipset_h_disabled
-static inline NV_STATUS clInsertPcieConfigSpaceBase(struct OBJCL *arg_this, RmPhysAddr arg2, NvU32 arg3, NvU8 arg4, NvU8 arg5) {
+static inline NV_STATUS clInsertPcieConfigSpaceBase(struct OBJCL *arg_this, NvU64 arg2, NvU32 arg3, NvU8 arg4, NvU8 arg5) {
     NV_ASSERT_FAILED_PRECOMP("OBJCL was disabled!");
     return NV_ERR_NOT_SUPPORTED;
 }
@@ -710,7 +727,7 @@ static inline NV_STATUS clInsertPcieConfigSpaceBase(struct OBJCL *arg_this, RmPh
 #endif // __nvoc_chipset_h_disabled
 
 #ifdef __nvoc_chipset_h_disabled
-static inline RmPhysAddr clFindPcieConfigSpaceBase(struct OBJCL *arg_this, NvU32 arg2, NvU8 arg3) {
+static inline NvU64 clFindPcieConfigSpaceBase(struct OBJCL *arg_this, NvU32 arg2, NvU8 arg3) {
     NV_ASSERT_FAILED_PRECOMP("OBJCL was disabled!");
     return 0;
 }
@@ -892,6 +909,14 @@ static inline NV_STATUS clGetPortAcsRedirectConfig(struct OBJGPU *arg1, struct O
 #define clGetPortAcsRedirectConfig(arg1, arg_this, arg3, arg4, arg5, arg6, arg7) clGetPortAcsRedirectConfig_IMPL(arg1, arg_this, arg3, arg4, arg5, arg6, arg7)
 #endif // __nvoc_chipset_h_disabled
 
+#ifdef __nvoc_chipset_h_disabled
+static inline void clInitChipsetGpuPeerAccessCaps(struct OBJCL *arg_this) {
+    NV_ASSERT_FAILED_PRECOMP("OBJCL was disabled!");
+}
+#else // __nvoc_chipset_h_disabled
+#define clInitChipsetGpuPeerAccessCaps(arg_this) clInitChipsetGpuPeerAccessCaps_IMPL(arg_this)
+#endif // __nvoc_chipset_h_disabled
+
 NV_STATUS clPcieGetRootGenSpeed_IMPL(struct OBJGPU *arg1, struct OBJCL *arg_this, NvU8 *arg3);
 #ifdef __nvoc_chipset_h_disabled
 static inline NV_STATUS clPcieGetRootGenSpeed(struct OBJGPU *arg1, struct OBJCL *arg_this, NvU8 *arg3) {
@@ -989,6 +1014,7 @@ static inline void clSyncWithGsp(struct OBJCL *arg_this, GspSystemInfo *arg2) {
 #define clPcieGetGpuLostDiagnosticData_HAL(pGpu, arg_this, pBuffer, size) clPcieGetGpuLostDiagnosticData(pGpu, arg_this, pBuffer, size)
 #define clGetChipsetL1ClockPMSupport_HAL(arg1, arg_this) clGetChipsetL1ClockPMSupport(arg1, arg_this)
 #define clGetPortAcsRedirectConfig_HAL(arg1, arg_this, arg3, arg4, arg5, arg6, arg7) clGetPortAcsRedirectConfig(arg1, arg_this, arg3, arg4, arg5, arg6, arg7)
+#define clInitChipsetGpuPeerAccessCaps_HAL(arg_this) clInitChipsetGpuPeerAccessCaps(arg_this)
 
 // Dispatch functions
 // Virtual method declarations and/or inline definitions
@@ -1032,7 +1058,7 @@ void clPcieWriteWord_IMPL(struct OBJCL *arg_this, NvU32 arg2, NvU8 arg3, NvU8 ar
 
 void clPcieWriteDword_IMPL(struct OBJCL *arg_this, NvU32 arg2, NvU8 arg3, NvU8 arg4, NvU8 arg5, NvU32 arg6, NvU32 arg7);
 
-NvBool clFindBR04_IMPL(POBJGPU *pGpus, NvU32 NumGpus, NvBool flat, NvU32 devId, struct OBJCL *pCl);
+NvBool clFindBR04_IMPL(struct OBJGPU **pGpus, NvU32 NumGpus, NvBool flat, NvU32 devId, struct OBJCL *pCl);
 
 NV_STATUS clResumeBridge_IMPL(struct OBJCL *pCl);
 
@@ -1044,9 +1070,9 @@ NV_STATUS clSetPortPcieCapOffset_IMPL(struct OBJCL *arg_this, void *arg2, NvU32 
 
 NV_STATUS clStorePcieConfigSpaceBaseFromMcfg_IMPL(struct OBJCL *pCl);
 
-NV_STATUS clInsertPcieConfigSpaceBase_IMPL(struct OBJCL *arg_this, RmPhysAddr arg2, NvU32 arg3, NvU8 arg4, NvU8 arg5);
+NV_STATUS clInsertPcieConfigSpaceBase_IMPL(struct OBJCL *arg_this, NvU64 arg2, NvU32 arg3, NvU8 arg4, NvU8 arg5);
 
-RmPhysAddr clFindPcieConfigSpaceBase_IMPL(struct OBJCL *arg_this, NvU32 arg2, NvU8 arg3);
+NvU64 clFindPcieConfigSpaceBase_IMPL(struct OBJCL *arg_this, NvU32 arg2, NvU8 arg3);
 
 void clFreePcieConfigSpaceBase_IMPL(struct OBJCL *pCl);
 
@@ -1085,6 +1111,8 @@ NvU16 clPcieGetGpuLostDiagnosticData_IMPL(struct OBJGPU *pGpu, struct OBJCL *arg
 NvU32 clGetChipsetL1ClockPMSupport_IMPL(struct OBJGPU *arg1, struct OBJCL *arg_this);
 
 NV_STATUS clGetPortAcsRedirectConfig_IMPL(struct OBJGPU *arg1, struct OBJCL *arg_this, NvU32 arg3, NvU8 arg4, NvU8 arg5, NvU8 arg6, NvU32 *arg7);
+
+void clInitChipsetGpuPeerAccessCaps_IMPL(struct OBJCL *arg_this);
 
 // Inline HAL method definitions
 // Static dispatch method declarations

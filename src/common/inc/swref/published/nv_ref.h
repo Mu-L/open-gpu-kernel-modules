@@ -134,6 +134,7 @@
 #define NV_PMC_BOOT_0_ARCHITECTURE_AD100                 0x00000019 /* R---V */
 #define NV_PMC_BOOT_0_ARCHITECTURE_GB100                 0x0000001A /* R---V */
 #define NV_PMC_BOOT_0_ARCHITECTURE_GB200                 0x0000001B /* R---V */
+#define NV_PMC_BOOT_0_ARCHITECTURE_GR100                 0x0000001C /* R---V */
 
 #define NV_PMC_BOOT_1                                    0x00000004 /* R--4R */
 #define NV_PMC_BOOT_1_VGPU8                                     8:8 /* R--VF */
@@ -181,6 +182,7 @@
 #define NV_PMC_BOOT_42_ARCHITECTURE_AD100                0x00000019 /*       */
 #define NV_PMC_BOOT_42_ARCHITECTURE_GB100                0x0000001A /*       */
 #define NV_PMC_BOOT_42_ARCHITECTURE_GB200                0x0000001B /*       */
+#define NV_PMC_BOOT_42_ARCHITECTURE_GR100                0x0000001C /*       */
 #define NV_PMC_BOOT_42_ARCHITECTURE_AMODEL               0x0000001F /*       */
 
 #define NV_PMC_BOOT_42_CHIP_ID_GA100                     0x00000170 /*       */
@@ -189,6 +191,19 @@
 #define NV_PAPB_MISC_GP_HIDREV_CHIPID                    15:8 /* ----F */
 #define NV_PAPB_MISC_GP_HIDREV_MAJORREV                   7:4 /* ----F */
 
+
+//
+// Helpers to return ARCHITECTURE and CHIP_ID fields from NV_PMC_BOOT_0 and NV_PMC_BOOT_42
+//
+// ARCHITECTURE and CHIP_ID bitfields increase width by 1 bit post-Blackwell.
+// These helpers use post-Blackwell bitfield definitions in this file, so they are safe
+// to use in chip-agnostic code.
+//
+// Note that these functions cannot be HAL-ified because HALs need to read NV_PMC_BOOT_0|42
+// to get the chip ID to route the HAL appropriately for the given chip - therefore, the
+// function to read the chip ID cannot be a HAL. Anyways, ABI is backwards compatible
+// (bitfield expands into a previously reserved (0) bit), so there is no need to HAL-ify.
+//
 
 //
 // Helper to return NV_PMC_BOOT_0 architecture, which is split across fields:

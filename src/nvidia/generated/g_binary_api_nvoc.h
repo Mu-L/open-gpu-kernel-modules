@@ -142,7 +142,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_BinaryApi;
     ((BinaryApi*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(BinaryApi)))
 #endif //__nvoc_binary_api_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_BinaryApi(BinaryApi**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_BinaryApi(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_BinaryApi(BinaryApi**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_BinaryApi(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \
@@ -411,7 +411,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_BinaryApiPrivileged;
     ((BinaryApiPrivileged*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(BinaryApiPrivileged)))
 #endif //__nvoc_binary_api_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_BinaryApiPrivileged(BinaryApiPrivileged**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_BinaryApiPrivileged(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_BinaryApiPrivileged(BinaryApiPrivileged**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_BinaryApiPrivileged(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

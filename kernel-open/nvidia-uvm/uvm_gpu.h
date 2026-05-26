@@ -298,7 +298,7 @@ struct uvm_fault_service_batch_context_struct
     uvm_fault_buffer_entry_t **ordered_fault_cache;
 
     // Per uTLB fault information. Used for replay policies and fault
-    // cancellation on Pascal
+    // cancellation
     uvm_fault_utlb_info_t *utlbs;
 
     // Largest uTLB id seen in a GPU fault
@@ -629,18 +629,17 @@ typedef enum
     UVM_GPU_LINK_NVLINK_3,
     UVM_GPU_LINK_NVLINK_4,
     UVM_GPU_LINK_NVLINK_5,
+    UVM_GPU_LINK_NVLINK_6,
     UVM_GPU_LINK_C2C,
     UVM_GPU_LINK_MAX
 } uvm_gpu_link_type_t;
 
 typedef enum
 {
-    // Peer copies can be disallowed for a variety of reasons. For example,
-    // P2P transfers are disabled in pre-Pascal GPUs because there is no
-    // compelling use case for direct peer migrations.
+    // Peer copies can be disallowed for a variety of reasons.
     UVM_GPU_PEER_COPY_MODE_UNSUPPORTED,
 
-    // Pascal+ GPUs support virtual addresses in P2P copies. Virtual peer copies
+    // Turing+ GPUs support virtual addresses in P2P copies. Virtual peer copies
     // require the creation of peer identity mappings.
     UVM_GPU_PEER_COPY_MODE_VIRTUAL,
 
@@ -650,6 +649,10 @@ typedef enum
 
     UVM_GPU_PEER_COPY_MODE_COUNT
 } uvm_gpu_peer_copy_mode_t;
+
+#if UVM_IS_CONFIG_HMM() || defined(NV_MEMORY_DEVICE_COHERENT_PRESENT)
+typedef struct uvm_pmm_gpu_devmem_struct uvm_pmm_gpu_devmem_t;
+#endif
 
 // In order to support SMC/MIG GPU partitions, we split UVM GPUs into two
 // parts: parent GPUs (uvm_parent_gpu_t) which represent unique PCIe devices
@@ -1133,11 +1136,9 @@ struct uvm_parent_gpu_struct
     //
     // The internal UVM VA is shared with RM by RM controlling some of the top
     // level PDEs and leaving the rest for UVM to control.
-    // On Pascal a single top level PDE covers 128 TB of VA and given that
+    // On Turing, a single top level PDE covers 128 TB of VA and given that
     // semaphores and other allocations limited to 40bit are currently allocated
     // through RM, RM needs to control the [0, 128TB) VA range at least for now.
-    // On Maxwell, limit RMs VA to [0, 128GB) that should easily fit
-    // all RM allocations and leave enough space for UVM.
     NvU64 rm_va_base;
     NvU64 rm_va_size;
 
@@ -1207,14 +1208,14 @@ struct uvm_parent_gpu_struct
         uvm_mutex_t serialize_clear_lock;
     } access_counters;
 
-    // Number of uTLBs per GPC. This information is only valid on Pascal+ GPUs.
+    // Number of uTLBs per GPC.
     NvU32 utlb_per_gpc_count;
 
     // In order to service GPU faults, UVM must be able to obtain the VA
     // space for each reported fault. The fault packet contains the
     // instance_ptr of the channel that was bound when the SMs triggered
     // the fault. On fault any instance pointer in the TSG may be
-    // reported. This is a problem on Volta, which allow different channels
+    // reported. This is a problem on Turing+, which allow different channels
     // in the TSG to be bound to different VA spaces in order to support
     // subcontexts. In order to be able to obtain the correct VA space, HW
     // provides the subcontext id (or VEID) in addition to the instance_ptr.

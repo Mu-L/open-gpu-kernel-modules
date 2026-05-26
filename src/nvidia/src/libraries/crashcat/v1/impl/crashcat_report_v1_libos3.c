@@ -74,6 +74,7 @@ void crashcatReportLogSource_V1_LIBOS3(CrashCatReport *pReport)
     NvU8 taskId = crashcatReportV1SourceLibos3TaskId(pReportV1);
     NvCrashCatNvriscvPartition sourcePartition = crashcatReportV1SourcePartition(pReportV1);
     NvCrashCatNvriscvUcodeId sourceUcodeId = crashcatReportV1SourceUcodeId(pReportV1);    
+    NvCrashCatGfid sourceGfid = crashcatReportV1SourceLibos3Gfid(pReportV1);
 
     /*
      * We use the CRASHCAT_REPORT_LOG_PACKET_TYPE macro to get the correct 
@@ -82,14 +83,14 @@ void crashcatReportLogSource_V1_LIBOS3(CrashCatReport *pReport)
 #define CRASHCAT_LOG_LIBOS3_SOURCE(fmt, ...)                                                        \
     do {                                                                                            \
         if (crashcatReportIsWatchdog_HAL(pReport))                                                  \
-            crashcatEnginePrintf(pReport->pEngine, 0, fmt ", partition:%u#%u, task:%u",           \
-                                 ##__VA_ARGS__, sourcePartition, sourceUcodeId, taskId);            \
+            crashcatEnginePrintf(pReport->pEngine, 0, fmt ", partition:%u#%u, task:%u, gfid: %u",           \
+                                 ##__VA_ARGS__, sourcePartition, sourceUcodeId, taskId, sourceGfid);            \
         else if (taskId == NV_CRASHCAT_REPORT_V1_SOURCE_ID_LIBOS3_TASK_ID_UNSPECIFIED)              \
-            crashcatEnginePrintf(pReport->pEngine, CRASHCAT_DEFAULT_XID, fmt ", partition:%u#%u", \
-                                 ##__VA_ARGS__, sourcePartition, sourceUcodeId);                    \
+            crashcatEnginePrintf(pReport->pEngine, CRASHCAT_DEFAULT_XID, fmt ", partition:%u#%u, gfid: %u", \
+                                 ##__VA_ARGS__, sourcePartition, sourceUcodeId, sourceGfid);                    \
         else                                                                                        \
-            crashcatEnginePrintf(pReport->pEngine, CRASHCAT_DEFAULT_XID, fmt ", partition:%u#%u, task:%u", \
-                                 ##__VA_ARGS__, sourcePartition, sourceUcodeId, taskId);                    \
+            crashcatEnginePrintf(pReport->pEngine, CRASHCAT_DEFAULT_XID, fmt ", partition:%u#%u, task:%u, gfid: %u", \
+                                 ##__VA_ARGS__, sourcePartition, sourceUcodeId, taskId, sourceGfid);                    \
     } while(0)
 
     const char *pModeStr = crashcatReportModeToString_LIBOS3(crashcatReportV1SourceMode(pReportV1));

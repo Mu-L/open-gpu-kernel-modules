@@ -27,16 +27,15 @@
 #include "vgpu/rpc.h"
 #include "kernel/gpu/fifo/kernel_channel_group_api.h"
 #include "kernel/gpu/fifo/kernel_channel_group.h"
+#include "class/clb0cd.h"
+#include "class/clb0ce.h"
+#include "class/clcdcd.h"
 
 static NV_INLINE NvBool
-_isDevTracingPermitted
+_isAllTelemetryPermitted
 (
     OBJGPU *pGpu, 
-    ProfilerBase *pProf, 
-    NVB2CC_ALLOC_PARAMETERS *pUserParams,
-    API_SECURITY_INFO *pSecInfo,
-    ProfilerBase *pProfBase,
-    RmClient *pRmClient
+    API_SECURITY_INFO *pSecInfo
 )
 {
     // Admins are always allowed to access device profiling
@@ -61,6 +60,30 @@ _isDevTracingPermitted
 }
 
 static NV_INLINE NvBool
+_isDevTracingPermitted
+(
+    OBJGPU *pGpu, 
+    ProfilerBase *pProf, 
+    NVB2CC_ALLOC_PARAMETERS *pUserParams,
+    API_SECURITY_INFO *pSecInfo,
+    ProfilerBase *pProfBase,
+    RmClient *pRmClient
+)
+{
+    if (_isAllTelemetryPermitted(pGpu, pSecInfo))
+    {
+        return NV_TRUE;
+    }
+
+    if (rmclientIsCapable(pRmClient, NV_RM_CAP_SYS_TRACE_DEVICE))
+    {
+        return NV_TRUE;
+    }
+
+    return NV_FALSE;
+}
+
+static NV_INLINE NvBool
 _isDevProfilingPermitted
 (
     OBJGPU *pGpu, 
@@ -71,21 +94,14 @@ _isDevProfilingPermitted
     RmClient *pRmClient
 )
 {
-    // Admins are always allowed to access device profiling
-    if (pSecInfo->privLevel >= RS_PRIV_LEVEL_USER_ROOT)
+    if (_isAllTelemetryPermitted(pGpu, pSecInfo))
     {
         return NV_TRUE;
     }
 
-    // Otherwise, allowed only if profiling is deprivileged for all users
-    if (!gpuIsRmProfilingPrivileged(pGpu))
-    {
-        return NV_TRUE;
-    }
-
-
-    // Any non-priv clients with RS_ACCESS_PERFMON capability are allowed
-    if (osCheckAccess(RS_ACCESS_PERFMON))
+    // RS_ACCESS_PERMON is only allowed for granting context profiling 
+    // permission when GLOBAL_FEATURE_GR3292_NVIDIA_CAP_FOR_PROFILING is enabled.
+    if (rmclientIsCapable(pRmClient, NV_RM_CAP_SYS_PROFILER_DEVICE))
     {
         return NV_TRUE;
     }
@@ -105,20 +121,12 @@ _isContextProfilingPermitted
 )
 {
     
-    // Admins are always allowed to access device profiling
-    if (pSecInfo->privLevel >= RS_PRIV_LEVEL_USER_ROOT)
+    if (_isAllTelemetryPermitted(pGpu, pSecInfo))
     {
         return NV_TRUE;
     }
 
-    // Any non-priv clients with RS_ACCESS_PERFMON capability are allowed
-    if (osCheckAccess(RS_ACCESS_PERFMON))
-    {
-        return NV_TRUE;
-    }
-
-    // Otherwise, allowed only if profiling is deprivileged for all users
-    if (!gpuIsRmProfilingPrivileged(pGpu))
+    if (rmclientIsCapable(pRmClient, NV_RM_CAP_SYS_PROFILER_CONTEXT))
     {
         return NV_TRUE;
     }

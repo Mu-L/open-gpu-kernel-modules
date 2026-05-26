@@ -89,3 +89,21 @@ kdispHandleWinSemEvt_v04_01
     //TODO: Notify DD about the event,
     kdispNotifyEvent(pGpu, pKernelDisplay, NVC370_NOTIFIERS_WIN_SEM_NOTIFICATION, &winSemEvtMask, sizeof(winSemEvtMask), 0, 0);
 }
+
+/*!
+ * @brief Get display MMIO aperture length for v04_01
+ *
+ * @param[in]  pGpu            GPU object pointer
+ * @param[in]  pKernelDisplay  KernelDisplay pointer
+ *
+ * @return Display MMIO range size in bytes
+ */
+NvU32
+kdispGetDisplayApertureLength_v04_01
+(
+    OBJGPU        *pGpu,
+    KernelDisplay *pKernelDisplay
+)
+{
+    return DRF_SIZE(NV_PDISP);
+}

@@ -165,6 +165,8 @@ gisubscriptionConstruct_IMPL
     {
         // Check if this is a root-client or un-privileged device profiling is allowed
         if (gpuIsRmProfilingPrivileged(pGpu)
+            && !rmclientIsCapable(pRmClient, NV_RM_CAP_SYS_PROFILER_DEVICE)
+            && !rmclientIsCapable(pRmClient, NV_RM_CAP_SYS_TRACE_DEVICE)
             && !rmclientIsAdmin(pRmClient, pCallContext->secInfo.privLevel))
         {
             return NV_ERR_INSUFFICIENT_PERMISSIONS;
@@ -794,6 +796,7 @@ gisubscriptionCtrlCmdExecPartitionsGet_IMPL
         pOutInfo->smCount = pMIGComputeInstance->resourceAllocation.smCount;
         pOutInfo->computeSize = pMIGComputeInstance->computeSize;
         pOutInfo->spanStart = pMIGComputeInstance->spanStart;
+        pOutInfo->execPartFlags = pMIGComputeInstance->execPartFlags;
     }
 
     return status;
@@ -921,6 +924,7 @@ gisubscriptionCtrlCmdExecPartitionsExport_IMPL
     pParams->info.smCount        = pMIGComputeInstance->resourceAllocation.smCount;
     pParams->info.spanStart      = pMIGComputeInstance->spanStart;
     pParams->info.computeSize    = pMIGComputeInstance->computeSize;
+    pParams->info.execPartFlags  = pMIGComputeInstance->execPartFlags;
 
     for (gpcIdx = 0; gpcIdx < pMIGComputeInstance->resourceAllocation.gpcCount; ++gpcIdx)
     {

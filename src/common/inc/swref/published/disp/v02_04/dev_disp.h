@@ -23,6 +23,7 @@
 
 #ifndef __v02_04_dev_disp_h__
 #define __v02_04_dev_disp_h__
+#define NV_PDISP                                                  0x0063FFFF:0x00610000 /* RW--D */
 
 #define NV_PDISP_DSI_RM_INTR_DISPATCH                                        0x00610088 /* R--4R */
 #define NV_PDISP_DSI_RM_INTR_DISPATCH_HEAD(i)                         (24+(i)):(24+(i)) /* R--VF */

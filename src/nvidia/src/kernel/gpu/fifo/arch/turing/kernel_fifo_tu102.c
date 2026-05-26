@@ -24,6 +24,8 @@
 #include "kernel/gpu/bus/kern_bus.h"
 #include "kernel/gpu/fifo/kernel_fifo.h"
 #include "kernel/gpu/fifo/kernel_channel.h"
+#include "kernel/gpu/fifo/kernel_channel_group.h"
+#include "kernel/gpu/nvlink/kernel_nvlink.h"
 
 #include "gpu/gpu_access.h"
 #include "gpu/gpu.h"
@@ -33,6 +35,8 @@
 #include "published/turing/tu102/dev_vm.h"
 #include "published/turing/tu102/dev_ctrl.h"
 #include "published/turing/tu102/hwproject.h"
+#include "published/turing/tu102/dev_esched_pbdma.h"
+#include "published/turing/tu102/dev_ram.h"
 
 /*!
  * @brief Update the usermode doorbell register with work submit token to notify
@@ -888,4 +892,175 @@ kfifoGetUserdLocation_TU102
     *pUserdAttribute = pUserdInfo->userdAttr;
 
     return NV_OK;
+}
+
+/**
+ * @brief Initializing RAMFC signature
+ *
+ * @param[in] pGpu          OBJGPU pointer
+ * @param[in] pKernelFifo   Kernelfifo pointer
+ * @param[in] pInstMem      INST_BLOCK_DESC pointer
+ */
+void
+kfifoInitRamfcSignature_TU102
+(
+    OBJGPU     *pGpu,
+    KernelFifo *pKernelFifo,
+    NvU8       *pInstMem
+)
+{
+    MEM_WR32( pInstMem + SF_OFFSET( NV_RAMFC_SIGNATURE ),
+              DRF_DEF( _PBDMA, _SIGNATURE, _HW, _VALID ) |
+              DRF_DEF( _PBDMA, _SIGNATURE, _SW, _ZERO  ) );
+}
+
+/**
+ * @brief Initialize the PB header in RAMFC
+ *
+ * @param pGpu
+ * @param pKernelFifo
+ * @param pInstMem
+ *
+ */
+void
+kfifoInitRamfcPbHeader_TU102
+(
+    OBJGPU     *pGpu,
+    KernelFifo *pKernelFifo,
+    NvU8       *pInstMem
+)
+{
+    MEM_WR32(pInstMem + SF_OFFSET(NV_RAMFC_PB_HEADER),
+             DRF_DEF(_PBDMA, _PB_HEADER, _METHOD,     _ZERO) |
+             DRF_DEF(_PBDMA, _PB_HEADER, _SUBCHANNEL, _ZERO) |
+             DRF_DEF(_PBDMA, _PB_HEADER, _LEVEL,      _MAIN) |
+             DRF_DEF(_PBDMA, _PB_HEADER, _FIRST,      _TRUE) |
+             DRF_DEF(_PBDMA, _PB_HEADER, _TYPE,       _INC));
+}
+void
+kfifoGetRamfcFaultMethodBufferAddrOffset_TU102
+(
+    OBJGPU     *pGpu,
+    KernelFifo *pKernelFifo,
+    NvU32      *pOffsetAddrLo,
+    NvU32      *pOffsetAddrHi
+)
+{
+    *pOffsetAddrLo = SF_OFFSET(NV_RAMIN_ENG_METHOD_BUFFER_ADDR_LO);
+    *pOffsetAddrHi = SF_OFFSET(NV_RAMIN_ENG_METHOD_BUFFER_ADDR_HI);
+}
+
+/*!
+ * @brief Update instmem with method buffer bar2 address
+ *
+ * @param[in]   pGpu              OBJGPU  pointer
+ * @param[in]   pKernelFifo       KernelFifo pointer
+ * @param[in]   pKernelChannel    KernelChannel data
+ * @param[in]   pInstMem          Pointer to instance memory of channel
+ */
+NV_STATUS
+kfifoInitRamfcFaultMethodBuffers_TU102
+(
+    OBJGPU           *pGpu,
+    KernelFifo       *pKernelFifo,
+    KernelChannel    *pKernelChannel,
+    NvU8             *pInstMem
+)
+{
+    NV_STATUS      status   = NV_OK;
+    NvU64          bar2Addr = 0;
+
+    KernelChannelGroup *pKernelChannelGroup = pKernelChannel->pKernelChannelGroupApi->pKernelChannelGroup;
+
+    NV_ASSERT_OR_RETURN(pKernelChannel != NULL, NV_ERR_INVALID_CHANNEL);
+
+    NV_PRINTF(LEVEL_INFO,
+              "Updating Method buffers for " FMT_CHANNEL_DEBUG_TAG " Grp ID 0x%0x\n",
+              kchannelGetDebugTag(pKernelChannel),
+              pKernelChannelGroup->grpID);
+
+    if (pKernelChannelGroup != NULL && pKernelChannelGroup->pMthdBuffers != NULL)
+    {
+        NvU32 offsetAddrLo;
+        NvU32 offsetAddrHi;
+
+        bar2Addr = pKernelChannelGroup->pMthdBuffers[kchannelGetRunqueue(pKernelChannel)].bar2Addr;
+
+        kfifoGetRamfcFaultMethodBufferAddrOffset_HAL(pGpu, pKernelFifo, &offsetAddrLo, &offsetAddrHi);
+
+        // Write LO and HI addresses
+        MEM_WR32(pInstMem + offsetAddrLo, NvU64_LO32(bar2Addr));
+        MEM_WR32(pInstMem + offsetAddrHi, NvU64_HI32(bar2Addr));
+
+        NV_PRINTF(LEVEL_INFO,
+                  "Method buffer updating ramfc with Bar2Addr LO 0x%08x Bar2Addr HI 0x%08x\n",
+                  NvU64_LO32(bar2Addr), NvU64_HI32(bar2Addr));
+    }
+
+    return status;
+}
+
+/**
+ * @brief Initialize USERD_WRITEBACK field in NV_RAMFC_CONFIG
+ *
+ * This field is used by host to decide whether USERD writebacks are enabled
+ *
+ * @param[in] pKernelFifo
+ * @param[in] pInstMem
+ * @param[in] bEnable whether to enable USERD writeback or not
+ */
+void
+kfifoInitRamfcUserdWriteback_TU102
+(
+    KernelFifo  *pKernelFifo,
+    NvU8        *pInstMem,
+    NvBool       bEnable
+)
+{
+    NvU32 ramfcConfig;
+
+    NV_ASSERT(pInstMem);
+
+    ramfcConfig = MEM_RD32(pInstMem + SF_OFFSET(NV_RAMFC_CONFIG));
+
+    if (bEnable)
+        ramfcConfig = FLD_SET_DRF(_PBDMA, _CONFIG, _USERD_WRITEBACK, _ENABLE, ramfcConfig);
+    else
+        ramfcConfig = FLD_SET_DRF(_PBDMA, _CONFIG, _USERD_WRITEBACK, _DISABLE, ramfcConfig);
+
+    MEM_WR32(pInstMem + SF_OFFSET(NV_RAMFC_CONFIG), ramfcConfig);
+}
+
+/**
+ * @brief Initialize CE_THROTTLE_MODE in NV_RAMFC_CONFIG
+ *
+ * This field is used by host to decide whether to throttle number of outstanding
+ * copies to copy engine
+ *
+ * @param[in] pGpu
+ * @param[in] pKernelFifo
+ * @param[in] pInstMem
+ */
+void
+kfifoInitRamfcCEThrottleMode_TU102
+(
+    OBJGPU      *pGpu,
+    KernelFifo  *pKernelFifo,
+    NvU8        *pInstMem
+)
+{
+    KernelNvlink *pKernelNvlink = GPU_GET_KERNEL_NVLINK(pGpu);
+    NvU32         ramfcConfig;
+
+    NV_ASSERT(pInstMem);
+
+    ramfcConfig = MEM_RD32(pInstMem + SF_OFFSET(NV_RAMFC_CONFIG));
+
+    // disable throttling for NVLINK2 systems
+    if ((pKernelNvlink != NULL) && (knvlinkGetIPVersion(pGpu, pKernelNvlink) == NVLINK_VERSION_20))
+        ramfcConfig = FLD_SET_DRF(_PBDMA, _CONFIG, _CE_THROTTLE_MODE, _NO_THROTTLE, ramfcConfig);
+    else
+        ramfcConfig = FLD_SET_DRF(_PBDMA, _CONFIG, _CE_THROTTLE_MODE, _THROTTLE, ramfcConfig);
+
+    MEM_WR32(pInstMem + SF_OFFSET(NV_RAMFC_CONFIG), ramfcConfig);
 }

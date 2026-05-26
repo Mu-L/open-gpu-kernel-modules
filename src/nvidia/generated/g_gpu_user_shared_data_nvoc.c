@@ -32,7 +32,7 @@ void __nvoc_init__GpuUserSharedData(GpuUserSharedData*);
 void __nvoc_init_funcTable_GpuUserSharedData(GpuUserSharedData*);
 NV_STATUS __nvoc_ctor_GpuUserSharedData(GpuUserSharedData*, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_GpuUserSharedData(GpuUserSharedData*);
-void __nvoc_dtor_GpuUserSharedData(GpuUserSharedData*);
+void __nvoc_dtor_GpuUserSharedData(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__GpuUserSharedData;
@@ -116,7 +116,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_GpuUserSharedData =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "GpuUserSharedData",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_GpuUserSharedData,
+    .objCreatefn =        &__nvoc_objCreateDynamic_GpuUserSharedData,
     .pCastInfo =          &__nvoc_castinfo__GpuUserSharedData,
     .pExportInfo =        &__nvoc_export_info__GpuUserSharedData
 };
@@ -126,6 +126,19 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_GpuUserSharedData =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS gpushareddataCtrlCmdRequestDataPoll__EXPORT(void *pData, void *pParams) {
+    return gpushareddataCtrlCmdRequestDataPoll_IMPL(pData, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+static NV_STATUS gpushareddataCtrlCmdRequestPollInterval__EXPORT(void *pData, void *pParams) {
+    return gpushareddataCtrlCmdRequestPollInterval_IMPL(pData, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_GpuUserSharedData[] = 
 {
@@ -133,7 +146,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_GpuUserS
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &gpushareddataCtrlCmdRequestDataPoll_IMPL,
+        /*pFunc=*/      (void (*)(void)) &gpushareddataCtrlCmdRequestDataPoll__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -148,7 +161,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_GpuUserS
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &gpushareddataCtrlCmdRequestPollInterval_IMPL,
+        /*pFunc=*/      (void (*)(void)) &gpushareddataCtrlCmdRequestPollInterval__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*flags=*/      0x4u,
         /*accessRight=*/0x0u,
@@ -165,7 +178,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_GpuUserS
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__GpuUserSharedData __nvoc_metadata__GpuUserSharedData = {
     .rtti.pClassDef = &__nvoc_class_def_GpuUserSharedData,    // (gpushareddata) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_GpuUserSharedData,
+    .rtti.dtor      = &__nvoc_dtor_GpuUserSharedData,
     .rtti.offset    = 0,
     .metadata__Memory.rtti.pClassDef = &__nvoc_class_def_Memory,    // (mem) super
     .metadata__Memory.rtti.dtor      = &__nvoc_destructFromBase,
@@ -435,16 +448,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__GpuUserSharedData =
 
 // Destruct GpuUserSharedData object.
 void __nvoc_gpushareddataDestruct(GpuUserSharedData*);
-void __nvoc_dtor_Memory(Memory*);
-void __nvoc_dtor_GpuUserSharedData(GpuUserSharedData* pThis) {
+void __nvoc_dtor_Memory(Dynamic*);
+void __nvoc_dtor_GpuUserSharedData(Dynamic* pThis) {
+
+    GpuUserSharedData *__nvoc_this = (GpuUserSharedData *) pThis;
 
 // Call destructor.
-    __nvoc_gpushareddataDestruct(pThis);
+    __nvoc_gpushareddataDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Memory(&pThis->__nvoc_base_Memory);
+    __nvoc_dtor_Memory((Dynamic *) &__nvoc_this->__nvoc_base_Memory);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_GpuUserSharedData(GpuUserSharedData *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -470,7 +485,7 @@ NV_STATUS __nvoc_ctor_GpuUserSharedData(GpuUserSharedData *pData, CALL_CONTEXT *
 
     // Unwind on error.
 __nvoc_ctor_GpuUserSharedData_fail__init:
-    __nvoc_dtor_Memory(&pData->__nvoc_base_Memory);
+    __nvoc_dtor_Memory((Dynamic *)&pData->__nvoc_base_Memory);
 __nvoc_ctor_GpuUserSharedData_fail_Memory:
 __nvoc_ctor_GpuUserSharedData_exit:
     return status;
@@ -582,13 +597,10 @@ __nvoc_objCreate_GpuUserSharedData_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_GpuUserSharedData(GpuUserSharedData **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_GpuUserSharedData(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_GpuUserSharedData(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_GpuUserSharedData((GpuUserSharedData **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

@@ -1599,6 +1599,16 @@ DSC_PpsCalcSliceParams
 
         out->slice_num = min_slice_num;
         out->slice_width = (out->pic_width + out->slice_num - 1) / out->slice_num;
+        if (out->native_420 || out->native_422 || out->simple_422)
+        {
+            out->slice_width = (out->slice_width+1)/2 * 2 ;
+        }
+
+        if (out->slice_width > max_slice_width)
+        {
+            // Slice width corresponding to the requested slice count is not supported
+            return NVT_STATUS_PPS_SLICE_WIDTH_ERROR;
+        }
     }
     else if (out->slice_num == 0)
     {
@@ -1625,7 +1635,7 @@ DSC_PpsCalcSliceParams
 
         out->slice_width = (out->pic_width + out->slice_num - 1) / out->slice_num;
 
-        if (out->native_420 || out->native_422)
+        if (out->native_420 || out->native_422 || out->simple_422)
         {
             out->slice_width = (out->slice_width+1)/2 * 2 ;
         }

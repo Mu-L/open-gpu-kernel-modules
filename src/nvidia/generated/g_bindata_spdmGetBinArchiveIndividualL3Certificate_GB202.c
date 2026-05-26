@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2016-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2016-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -36,6 +36,7 @@
 // COMPLEX_STRUCT: NO
 // DATA SIZE (bytes): 989
 // COMPRESSED SIZE (bytes): 745
+// EXTERNAL: NO
 //
 static BINDATA_CONST NV_DECLARE_ALIGNED(NvU8, 8) spdmBinArchiveIndividualL3Certificate_GB202_BINDATA_LABEL_CERTIFICATE_PEM_data[] = 
 {
@@ -98,9 +99,8 @@ BINDATA_STORAGE_PVT spdmBinArchiveIndividualL3Certificate_GB202_BINDATA_LABEL_CE
     989,                                                               // uncompressed data size (bytes)
     745,                                                               // compressed data size (bytes)
     spdmBinArchiveIndividualL3Certificate_GB202_BINDATA_LABEL_CERTIFICATE_PEM_data, // compressed data pointer
-    NV_TRUE,                                                           // is pData compressed?
-    NV_TRUE,                                                           // contain information for file overriding?
-    NV_FALSE,                                                          // is the data referenced during load? (Only valid when BINDATA_IS_MUTABLE is true)
+    BINDATA_FLAG_COMPRESSED | BINDATA_FLAG_EXTERNAL_VMWARE,            // u32 flags (see bin_data_pvt.h)
+    0,                                                                 // Unused
 },
 #endif // defined(BINDATA_INCLUDE_STORAGE_PVT_DEFN)
 

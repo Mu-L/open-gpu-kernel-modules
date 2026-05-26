@@ -159,7 +159,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_VaSpaceApi;
     ((VaSpaceApi*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(VaSpaceApi)))
 #endif //__nvoc_vaspace_api_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_VaSpaceApi(VaSpaceApi**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_VaSpaceApi(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_VaSpaceApi(VaSpaceApi**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_VaSpaceApi(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

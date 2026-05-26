@@ -60,6 +60,18 @@ static inline NvBool A_plus_B_greater_than_C_U64(NvU64 a, NvU64 b, NvU64 c)
     return (NV_U64_MAX - a < b) || ((a + b) > c);
 }
 
+static inline NvU32 nvAxBDivC(NvU32 a, NvU32 b, NvU32 c)
+{
+    /* Use the 64-bit implementation from nvtiming; it is simpler, avoids
+     * precision errors, and has no performance drawbacks on 64-bit platforms,
+     * which is what NVKMS exclusively supports.
+     */
+    NvU64 ret = axb_div_c_64(a, b, c);
+
+    nvAssert(ret <= NV_U32_MAX);
+    return (NvU32) ret;
+} 
+
 static inline NvS32 clamp_S32(NvS32 val, NvS32 lo, NvS32 hi)
 {
     if (val < lo) {

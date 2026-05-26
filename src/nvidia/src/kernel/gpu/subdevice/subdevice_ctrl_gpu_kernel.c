@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2004-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2004-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -464,6 +464,20 @@ getGpuInfos(Subdevice *pSubdevice, NV2080_CTRL_GPU_GET_INFO_V2_PARAMS *pParams, 
                 }
                 break;
             }
+            case NV2080_CTRL_GPU_INFO_INDEX_GPU_FLA_SYSMEM_CAPABILITY:
+            {
+                MemoryManager *pMemoryManager = GPU_GET_MEMORY_MANAGER(pGpu);
+
+                if (memmgrIsFlaSysmemSupported_HAL(pGpu, pMemoryManager))
+                {
+                    data = NV2080_CTRL_GPU_INFO_INDEX_GPU_FLA_SYSMEM_CAPABILITY_YES;
+                }
+                else
+                {
+                    data = NV2080_CTRL_GPU_INFO_INDEX_GPU_FLA_SYSMEM_CAPABILITY_NO;
+                }
+                break;
+            }
             case NV2080_CTRL_GPU_INFO_INDEX_GPU_SELF_HOSTED_CAPABILITY:
             {
                 KernelBif *pKernelBif = GPU_GET_KERNEL_BIF(pGpu);
@@ -547,6 +561,39 @@ getGpuInfos(Subdevice *pSubdevice, NV2080_CTRL_GPU_GET_INFO_V2_PARAMS *pParams, 
                 else
                 {
                     data = NV2080_CTRL_GPU_INFO_INDEX_COMP_BIT_BACKING_COPY_TYPE_VIRTUAL;
+                }
+                break;
+            }
+            case NV2080_CTRL_GPU_INFO_INDEX_CPU_COHERENT_CACHING_GPU_MEMORY_CAPABILITY:
+            {
+                data = pGpu->getProperty(pGpu, PDB_PROP_GPU_COHERENT_CPU_MAPPING) ? 
+                           NV2080_CTRL_GPU_INFO_INDEX_CPU_COHERENT_CACHING_GPU_MEMORY_CAPABILITY_YES :
+                           NV2080_CTRL_GPU_INFO_INDEX_CPU_COHERENT_CACHING_GPU_MEMORY_CAPABILITY_NO;
+                break;
+            }
+            case NV2080_CTRL_GPU_INFO_INDEX_GPU_COHERENT_CACHING_CPU_MEMORY_CAPABILITY:
+            {
+               data = NV2080_CTRL_GPU_INFO_INDEX_GPU_COHERENT_CACHING_CPU_MEMORY_CAPABILITY_NO;
+
+                if (IS_VIRTUAL(pGpu))
+                {
+                    VGPU_STATIC_INFO *pVSI = GPU_GET_STATIC_INFO(pGpu);
+                    if (pVSI)
+                    {
+                        data = pVSI->bSysL2CacheCoherentMode ?
+                               NV2080_CTRL_GPU_INFO_INDEX_GPU_COHERENT_CACHING_CPU_MEMORY_CAPABILITY_YES :
+                               NV2080_CTRL_GPU_INFO_INDEX_GPU_COHERENT_CACHING_CPU_MEMORY_CAPABILITY_NO;
+                    }
+                }
+                else
+                {
+                    GspStaticConfigInfo *pGSCI = GPU_GET_GSP_STATIC_INFO(pGpu);
+                    if (pGSCI != NULL)
+                    {
+                        data = pGSCI->bSysL2CacheCoherentMode ?
+                               NV2080_CTRL_GPU_INFO_INDEX_GPU_COHERENT_CACHING_CPU_MEMORY_CAPABILITY_YES :
+                               NV2080_CTRL_GPU_INFO_INDEX_GPU_COHERENT_CACHING_CPU_MEMORY_CAPABILITY_NO;
+                    }
                 }
                 break;
             }
@@ -642,7 +689,6 @@ subdeviceCtrlCmdGpuForceGspUnload_IMPL
     rmStatus = kgspUnloadRm(pGpu, pKernelGsp, KGSP_UNLOAD_MODE_NORMAL, (GPU_STATE_FLAGS_FAST_UNLOAD|GPU_STATE_FLAGS_FORCE_GSP_UNLOAD));
 
     pKernelGsp->bFatalError = NV_TRUE;
-    pKernelGsp->bGspRmForceUnloaded = NV_TRUE;
 
     return rmStatus;;
 }
@@ -2013,6 +2059,8 @@ subdeviceCtrlCmdGpuSetComputeModeRules_IMPL
 )
 {
     OBJGPU           *pGpu = GPU_RES_GET_GPU(pSubdevice);
+    ComputeModeState *pCMS;
+    NV_STATUS         status;
 
     NV_ASSERT_OR_RETURN(rmapiLockIsOwner(), NV_ERR_INVALID_LOCK_STATE);
 
@@ -2034,10 +2082,15 @@ subdeviceCtrlCmdGpuSetComputeModeRules_IMPL
                                                pRmCtrlParams->paramsSize));
     }
 
-    //TODO Bug 2718406  will extend compute mode support for MIG
     if (IS_MIG_ENABLED(pGpu))
     {
         return NV_ERR_NOT_SUPPORTED;
+    }
+
+    status = subdeviceGetComputeModeState(pSubdevice, &pCMS);
+    if (status != NV_OK)
+    {
+        return status;
     }
 
     // Setting compute mode for cuda non supported vGPU profiles
@@ -2055,21 +2108,24 @@ subdeviceCtrlCmdGpuSetComputeModeRules_IMPL
         case NV2080_CTRL_GPU_COMPUTE_MODE_RULES_EXCLUSIVE_COMPUTE:
         case NV2080_CTRL_GPU_COMPUTE_MODE_RULES_COMPUTE_PROHIBITED:
         case NV2080_CTRL_GPU_COMPUTE_MODE_RULES_EXCLUSIVE_COMPUTE_PROCESS:
-            pGpu->computeModeRules = pSetRulesParams->rules;
+            pCMS->computeModeRules = pSetRulesParams->rules;
 
             //
             // Store this setting in the registry so that it persists even
             // after the last client disconnects.
             // Client RM handles this so skip on GSP.
             //
-            if (NV_OK !=
-                osWriteRegistryDword(pGpu,
-                                     NV_REG_STR_RM_COMPUTE_MODE_RULES,
-                                     pGpu->computeModeRules))
+            if (!IS_MIG_ENABLED(pGpu))
             {
-                // Non-fatal but worth reporting
-                NV_PRINTF(LEVEL_ERROR,
-                          "Could not store compute mode rule in the registry, current setting may not persist if all clients disconnect!\n");
+                if (NV_OK !=
+                    osWriteRegistryDword(pGpu,
+                                         NV_REG_STR_RM_COMPUTE_MODE_RULES,
+                                         pGpu->computeModeState.computeModeRules))
+                {
+                    // Non-fatal but worth reporting
+                    NV_PRINTF(LEVEL_ERROR,
+                              "Could not store compute mode rule in the registry, current setting may not persist if all clients disconnect!\n");
+                }
             }
             break;
 
@@ -2086,8 +2142,6 @@ subdeviceCtrlCmdGpuSetComputeModeRules_IMPL
 // Lock Requirements:
 //      Assert that API lock held on entry
 //
-// TODO Bug 2718406  will extend compute mode support for MIG
-//
 NV_STATUS
 subdeviceCtrlCmdGpuQueryComputeModeRules_IMPL
 (
@@ -2095,7 +2149,7 @@ subdeviceCtrlCmdGpuQueryComputeModeRules_IMPL
     NV2080_CTRL_GPU_QUERY_COMPUTE_MODE_RULES_PARAMS *pQueryRulesParams
 )
 {
-    OBJGPU           *pGpu = GPU_RES_GET_GPU(pSubdevice);
+    OBJGPU *pGpu = GPU_RES_GET_GPU(pSubdevice);
 
     NV_ASSERT_OR_RETURN(rmapiLockIsOwner(), NV_ERR_INVALID_LOCK_STATE);
 
@@ -2111,7 +2165,18 @@ subdeviceCtrlCmdGpuQueryComputeModeRules_IMPL
     }
     else
     {
-        pQueryRulesParams->rules = pGpu->computeModeRules;
+        ComputeModeState *pCMS;
+        NV_STATUS status = subdeviceGetComputeModeState(pSubdevice, &pCMS);
+
+        if (status != NV_OK)
+        {
+            // For MIG mode or other cases where CMS is not available, return default
+            pQueryRulesParams->rules = NV2080_CTRL_GPU_COMPUTE_MODE_RULES_NONE;
+        }
+        else
+        {
+            pQueryRulesParams->rules = pCMS->computeModeRules;
+        }
     }
 
     return NV_OK;
@@ -2123,23 +2188,29 @@ subdeviceCtrlCmdGpuAcquireComputeModeReservation_IMPL
     Subdevice *pSubdevice
 )
 {
-    OBJGPU   *pGpu = GPU_RES_GET_GPU(pSubdevice);
-    NvHandle  hClient = RES_GET_CLIENT_HANDLE(pSubdevice);
+    NvHandle hClient = RES_GET_CLIENT_HANDLE(pSubdevice);
+    OBJGPU *pGpu = GPU_RES_GET_GPU(pSubdevice);
+    ComputeModeState *pCMS;
 
     NV_ASSERT_OR_RETURN(rmapiLockIsOwner(), NV_ERR_INVALID_LOCK_STATE);
 
-    //TODO Bug 2718406  will extend compute mode support for MIG
     if (IS_MIG_ENABLED(pGpu))
     {
         return NV_ERR_NOT_SUPPORTED;
     }
 
-    switch (pGpu->computeModeRules)
+    NV_STATUS status = subdeviceGetComputeModeState(pSubdevice, &pCMS);
+    if (status != NV_OK)
+    {
+        return status;
+    }
+
+    switch (pCMS->computeModeRules)
     {
         case NV2080_CTRL_GPU_COMPUTE_MODE_RULES_NONE:
             {
                 // If a GPU is in "normal" mode, then the caller can always get the reservation:
-                pGpu->hComputeModeReservation = hClient;
+                pCMS->hComputeModeReservation = hClient;
             }
             return NV_OK;
             break; // For the Coverity code checker.
@@ -2151,9 +2222,9 @@ subdeviceCtrlCmdGpuAcquireComputeModeReservation_IMPL
                 // If a GPU is in "cuda exclusive" mode, then the caller can only get the
                 // reservation if no other client holds the reservation:
                 //
-                if (NV01_NULL_OBJECT == pGpu->hComputeModeReservation)
+                if (pCMS->hComputeModeReservation == NV01_NULL_OBJECT)
                 {
-                    pGpu->hComputeModeReservation = hClient;
+                    pCMS->hComputeModeReservation = hClient;
                     return NV_OK;
                 }
                 else
@@ -2186,29 +2257,15 @@ subdeviceCtrlCmdGpuReleaseComputeModeReservation_IMPL
     Subdevice *pSubdevice
 )
 {
-    OBJGPU   *pGpu = GPU_RES_GET_GPU(pSubdevice);
-    NvHandle  hClient = RES_GET_CLIENT_HANDLE(pSubdevice);
-
+    OBJGPU *pGpu = GPU_RES_GET_GPU(pSubdevice);
     NV_ASSERT_OR_RETURN(rmapiLockIsOwner(), NV_ERR_INVALID_LOCK_STATE);
 
-    //TODO Bug 2718406  will extend compute mode support for MIG
     if (IS_MIG_ENABLED(pGpu))
     {
         return NV_ERR_NOT_SUPPORTED;
     }
 
-    // Release the reservation ONLY IF we had the reservation to begin with. Otherwise,
-    // leave it alone, because someone else has acquired it:
-    if (pGpu->hComputeModeReservation == hClient)
-    {
-        pGpu->hComputeModeReservation = NV01_NULL_OBJECT;
-    }
-    else
-    {
-        return NV_ERR_STATE_IN_USE;
-    }
-
-    return NV_OK;
+    return subdeviceReleaseComputeModeReservation(pSubdevice);
 }
 
 //
@@ -3853,7 +3910,12 @@ subdeviceCtrlCmdGpuRpcGspTest_IMPL
     }
     else if (pParams->test == NV2080_CTRL_GPU_RPC_GSP_TEST_TIMEOUT)
     {
-        osDelay(10000);
+        // delay by a multiple of the default timeout such that 
+        // 1 RPC times out
+        // a timeout on the CPURM occurs after 1.5 * the default timeout
+        // so 2* should be enough to ensure a timeout on the CPURM
+        if (pGpu->timeoutData.defaultus)
+            osDelayUs(pGpu->timeoutData.defaultus * 2);
     }
 
     return NV_OK;
@@ -4388,5 +4450,24 @@ subdeviceCtrlCmdGpuGetDefaultTimeout_IMPL(Subdevice *pSubdevice,
 
     pParams->defaultTimeout = pGpu->timeoutData.defaultus / 1000;
 
+    return NV_OK;
+}
+
+/*!
+ * @brief Set migration block state for devtools usage
+ *
+ * This control allows devtools to signal when they are in critical sections
+ * that cannot survive live migration. In vGPU environments, this is sent via RPC
+ * to the host plugin which implements the blocking logic.
+ *
+ * @return NV_OK
+ */
+NV_STATUS
+subdeviceCtrlCmdGpuSetMigrationBlock_IMPL
+(
+    Subdevice *pSubdevice,
+    NV2080_CTRL_GPU_SET_MIGRATION_BLOCK_PARAMS *pParams
+)
+{
     return NV_OK;
 }

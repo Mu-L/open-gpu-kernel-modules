@@ -184,7 +184,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_GPUInstanceSubscription;
     ((GPUInstanceSubscription*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(GPUInstanceSubscription)))
 #endif //__nvoc_gpu_instance_subscription_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_GPUInstanceSubscription(GPUInstanceSubscription**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_GPUInstanceSubscription(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_GPUInstanceSubscription(GPUInstanceSubscription**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_GPUInstanceSubscription(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

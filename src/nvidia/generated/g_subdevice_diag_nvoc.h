@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -160,7 +160,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_DiagApi;
     ((DiagApi*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(DiagApi)))
 #endif //__nvoc_subdevice_diag_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_DiagApi(DiagApi**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_DiagApi(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_DiagApi(DiagApi**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_DiagApi(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \
@@ -170,33 +170,6 @@ NV_STATUS __nvoc_objCreate_DiagApi(DiagApi**, Dynamic*, NvU32, struct CALL_CONTE
 // Wrapper macros for implementation functions
 NV_STATUS diagapiConstruct_IMPL(struct DiagApi *pDiagApi, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __nvoc_diagapiConstruct(pDiagApi, pCallContext, pParams) diagapiConstruct_IMPL(pDiagApi, pCallContext, pParams)
-
-#ifdef __nvoc_subdevice_diag_h_disabled
-static inline NV_STATUS diagapiCoverageGetState(struct DiagApi *pDiagApi, NV208F_CTRL_UCODE_INSTRUMENTATION_GET_STATE_PARAMS *pParams) {
-    NV_ASSERT_FAILED_PRECOMP("DiagApi was disabled!");
-    return NV_ERR_NOT_SUPPORTED;
-}
-#else // __nvoc_subdevice_diag_h_disabled
-#define diagapiCoverageGetState(pDiagApi, pParams) diagapiCoverageGetState_KERNEL(pDiagApi, pParams)
-#endif // __nvoc_subdevice_diag_h_disabled
-
-#ifdef __nvoc_subdevice_diag_h_disabled
-static inline NV_STATUS diagapiCoverageSetState(struct DiagApi *pDiagApi, NV208F_CTRL_UCODE_INSTRUMENTATION_GET_STATE_PARAMS *pParams) {
-    NV_ASSERT_FAILED_PRECOMP("DiagApi was disabled!");
-    return NV_ERR_NOT_SUPPORTED;
-}
-#else // __nvoc_subdevice_diag_h_disabled
-#define diagapiCoverageSetState(pDiagApi, pParams) diagapiCoverageSetState_KERNEL(pDiagApi, pParams)
-#endif // __nvoc_subdevice_diag_h_disabled
-
-#ifdef __nvoc_subdevice_diag_h_disabled
-static inline NV_STATUS diagapiCoverageGetData(struct DiagApi *pDiagApi, NV208F_CTRL_UCODE_INSTRUMENTATION_GET_DATA_PARAMS *pParams) {
-    NV_ASSERT_FAILED_PRECOMP("DiagApi was disabled!");
-    return NV_ERR_NOT_SUPPORTED;
-}
-#else // __nvoc_subdevice_diag_h_disabled
-#define diagapiCoverageGetData(pDiagApi, pParams) diagapiCoverageGetData_KERNEL(pDiagApi, pParams)
-#endif // __nvoc_subdevice_diag_h_disabled
 
 NV_STATUS diagapiCtrlCmdFifoCheckEngineContext_IMPL(struct DiagApi *pDiagApi, NV208F_CTRL_FIFO_CHECK_ENGINE_CONTEXT_PARAMS *pCheckEngineContextParams);
 #ifdef __nvoc_subdevice_diag_h_disabled
@@ -384,9 +357,6 @@ static inline NV_STATUS diagapiCtrlCmdUcodeInstrumentationGetData(struct DiagApi
 #define diagapiControl(pDiagApi, pCallContext, pParams) diagapiControl_DISPATCH(pDiagApi, pCallContext, pParams)
 #define diagapiControlFilter_FNPTR(pDiagApi) pDiagApi->__nvoc_metadata_ptr->vtable.__diagapiControlFilter__
 #define diagapiControlFilter(pDiagApi, pCallContext, pParams) diagapiControlFilter_DISPATCH(pDiagApi, pCallContext, pParams)
-#define diagapiCoverageGetState_HAL(pDiagApi, pParams) diagapiCoverageGetState(pDiagApi, pParams)
-#define diagapiCoverageSetState_HAL(pDiagApi, pParams) diagapiCoverageSetState(pDiagApi, pParams)
-#define diagapiCoverageGetData_HAL(pDiagApi, pParams) diagapiCoverageGetData(pDiagApi, pParams)
 #define diagapiCtrlCmdFifoGetChannelState_FNPTR(pDiagApi) pDiagApi->__diagapiCtrlCmdFifoGetChannelState__
 #define diagapiCtrlCmdFifoGetChannelState(pDiagApi, pChannelStateParams) diagapiCtrlCmdFifoGetChannelState_DISPATCH(pDiagApi, pChannelStateParams)
 #define diagapiCtrlCmdFifoGetChannelState_HAL(pDiagApi, pChannelStateParams) diagapiCtrlCmdFifoGetChannelState_DISPATCH(pDiagApi, pChannelStateParams)
@@ -615,12 +585,6 @@ NV_STATUS diagapiCtrlCmdUcodeInstrumentationSetState_IMPL(struct DiagApi *pDiagA
 NV_STATUS diagapiCtrlCmdUcodeInstrumentationGetData_IMPL(struct DiagApi *pDiagApi, NV208F_CTRL_UCODE_INSTRUMENTATION_GET_DATA_PARAMS *pParams);
 
 // HAL method declarations without bodies
-NV_STATUS diagapiCoverageGetState_KERNEL(struct DiagApi *pDiagApi, NV208F_CTRL_UCODE_INSTRUMENTATION_GET_STATE_PARAMS *pParams);
-
-NV_STATUS diagapiCoverageSetState_KERNEL(struct DiagApi *pDiagApi, NV208F_CTRL_UCODE_INSTRUMENTATION_GET_STATE_PARAMS *pParams);
-
-NV_STATUS diagapiCoverageGetData_KERNEL(struct DiagApi *pDiagApi, NV208F_CTRL_UCODE_INSTRUMENTATION_GET_DATA_PARAMS *pParams);
-
 NV_STATUS diagapiCtrlCmdFifoGetChannelState_IMPL(struct DiagApi *pDiagApi, NV208F_CTRL_FIFO_GET_CHANNEL_STATE_PARAMS *pChannelStateParams);
 
 // Inline HAL method definitions

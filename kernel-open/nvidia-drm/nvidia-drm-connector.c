@@ -45,6 +45,51 @@
 #include <drm/drm_atomic_helper.h>
 #include <drm/drm_edid.h>
 
+/*
+ * Dithering support requires connector atomic_check, which we only enable on
+ * kernels with HDR metadata support (v5.14+). This serves as a proxy for
+ * "new enough kernel" with the new atomic_check signature that takes
+ * drm_atomic_state.
+ */
+#if defined(NV_DRM_CONNECTOR_ATTACH_HDR_OUTPUT_METADATA_PROPERTY_PRESENT)
+static int
+nv_drm_connector_translate_dither_mode(enum nv_drm_dithering_mode mode,
+                                       enum NvKmsDpyAttributeRequestedDitheringValue *state,
+                                       enum NvKmsDpyAttributeRequestedDitheringModeValue *hw_mode)
+{
+    switch (mode) {
+    case NV_DRM_DITHERING_MODE_AUTO:
+        *state = NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_AUTO;
+        *hw_mode = NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_MODE_AUTO;
+        break;
+    case NV_DRM_DITHERING_MODE_OFF:
+        *state = NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_DISABLED;
+        *hw_mode = NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_MODE_AUTO;
+        break;
+    case NV_DRM_DITHERING_MODE_STATIC_2X2:
+        *state = NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_ENABLED;
+        *hw_mode = NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_MODE_STATIC_2X2;
+        break;
+    case NV_DRM_DITHERING_MODE_DYNAMIC_2X2:
+        *state = NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_ENABLED;
+        *hw_mode = NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_MODE_DYNAMIC_2X2;
+        break;
+    case NV_DRM_DITHERING_MODE_TEMPORAL:
+        *state = NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_ENABLED;
+        *hw_mode = NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_MODE_TEMPORAL;
+        break;
+    case NV_DRM_DITHERING_MODE_ON:
+        *state = NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_ENABLED;
+        *hw_mode = NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_MODE_AUTO;
+        break;
+    default:
+        return -EINVAL;
+    }
+
+    return 0;
+}
+#endif /* NV_DRM_CONNECTOR_ATTACH_HDR_OUTPUT_METADATA_PROPERTY_PRESENT */
+
 static void nv_drm_connector_destroy(struct drm_connector *connector)
 {
     struct nv_drm_connector *nv_connector = to_nv_connector(connector);
@@ -241,6 +286,8 @@ static void nv_drm_connector_reset(struct drm_connector *connector)
 
 static struct drm_connector_state* nv_drm_connector_atomic_duplicate_state(struct drm_connector *connector)
 {
+    struct nv_drm_connector_state *nv_drm_old_connector_state =
+           to_nv_drm_connector_state(connector->state);
     struct nv_drm_connector_state *nv_drm_new_connector_state =
            nv_drm_calloc(1, sizeof(*nv_drm_new_connector_state));
 
@@ -249,6 +296,8 @@ static struct drm_connector_state* nv_drm_connector_atomic_duplicate_state(struc
     }
 
     __drm_atomic_helper_connector_duplicate_state(connector, &nv_drm_new_connector_state->base);
+
+    nv_drm_new_connector_state->dithering_mode = nv_drm_old_connector_state->dithering_mode;
 
     return &nv_drm_new_connector_state->base;
 }
@@ -276,6 +325,47 @@ nv_drm_connector_detect(struct drm_connector *connector, bool force)
     return __nv_drm_connector_detect_internal(connector);
 }
 
+static int nv_drm_connector_atomic_set_property(
+    struct drm_connector *connector,
+    struct drm_connector_state *state,
+    struct drm_property *property,
+    uint64_t val)
+{
+    struct nv_drm_device *nv_dev = to_nv_device(connector->dev);
+    struct nv_drm_connector_state *nv_connector_state =
+        to_nv_drm_connector_state(state);
+
+    if (property == nv_dev->nv_connector_dithering_mode_property) {
+        if (val >= NV_DRM_DITHERING_MODE_MAX) {
+            return -EINVAL;
+        }
+        nv_connector_state->dithering_mode = val;
+        return 0;
+    }
+
+    /* Unknown property - DRM core handles standard connector properties */
+    return -EINVAL;
+}
+
+static int nv_drm_connector_atomic_get_property(
+    struct drm_connector *connector,
+    const struct drm_connector_state *state,
+    struct drm_property *property,
+    uint64_t *val)
+{
+    struct nv_drm_device *nv_dev = to_nv_device(connector->dev);
+    const struct nv_drm_connector_state *nv_connector_state =
+        to_nv_drm_connector_state_const(state);
+
+    if (property == nv_dev->nv_connector_dithering_mode_property) {
+        *val = nv_connector_state->dithering_mode;
+        return 0;
+    }
+
+    /* Unknown property - DRM core handles standard connector properties */
+    return -EINVAL;
+}
+
 static struct drm_connector_funcs nv_connector_funcs = {
     .destroy                = nv_drm_connector_destroy,
     .reset                  = nv_drm_connector_reset,
@@ -284,6 +374,8 @@ static struct drm_connector_funcs nv_connector_funcs = {
     .fill_modes             = drm_helper_probe_single_connector_modes,
     .atomic_duplicate_state = nv_drm_connector_atomic_duplicate_state,
     .atomic_destroy_state   = nv_drm_connector_atomic_destroy_state,
+    .atomic_set_property    = nv_drm_connector_atomic_set_property,
+    .atomic_get_property    = nv_drm_connector_atomic_get_property,
 };
 
 static int nv_drm_connector_get_modes(struct drm_connector *connector)
@@ -415,6 +507,10 @@ __nv_drm_connector_atomic_check(struct drm_connector *connector,
     struct drm_connector_state *old_connector_state =
         drm_atomic_get_old_connector_state(state, connector);
     struct nv_drm_device *nv_dev = to_nv_device(connector->dev);
+    struct nv_drm_connector_state *nv_new_connector_state =
+        to_nv_drm_connector_state(new_connector_state);
+    struct nv_drm_connector_state *nv_old_connector_state =
+        to_nv_drm_connector_state(old_connector_state);
 
     struct drm_crtc *crtc = new_connector_state->crtc;
     struct drm_crtc_state *crtc_state;
@@ -428,6 +524,22 @@ __nv_drm_connector_atomic_check(struct drm_connector *connector,
     crtc_state = drm_atomic_get_new_crtc_state(state, crtc);
     nv_crtc_state = to_nv_crtc_state(crtc_state);
     req_config = &nv_crtc_state->req_config;
+
+    /* Handle dithering changes */
+    req_config->flags.ditheringChanged =
+        nv_old_connector_state->dithering_mode !=
+        nv_new_connector_state->dithering_mode;
+    if (req_config->flags.ditheringChanged) {
+        enum NvKmsDpyAttributeRequestedDitheringValue state;
+        enum NvKmsDpyAttributeRequestedDitheringModeValue mode;
+        int ret = nv_drm_connector_translate_dither_mode(
+            nv_new_connector_state->dithering_mode, &state, &mode);
+        if (ret != 0) {
+            return ret;
+        }
+        req_config->modeSetConfig.dithering.state = state;
+        req_config->modeSetConfig.dithering.mode = mode;
+    }
 
     /*
      * Override metadata for the entire head instead of allowing NVKMS to derive
@@ -606,6 +718,13 @@ nv_drm_connector_new(struct drm_device *dev,
         drm_connector_attach_hdr_output_metadata_property(&nv_connector->base);
     }
 #endif /* defined(NV_DRM_CONNECTOR_ATTACH_HDR_OUTPUT_METADATA_PROPERTY_PRESENT) */
+
+    /* Attach dithering mode property */
+    if (nv_dev->nv_connector_dithering_mode_property) {
+        drm_object_attach_property(&nv_connector->base.base,
+                                   nv_dev->nv_connector_dithering_mode_property,
+                                   NV_DRM_DITHERING_MODE_AUTO);
+    }
 
     /* Register connector with DRM subsystem */
 

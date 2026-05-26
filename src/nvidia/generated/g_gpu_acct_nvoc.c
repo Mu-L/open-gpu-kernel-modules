@@ -28,7 +28,7 @@ void __nvoc_init__GpuAccounting(GpuAccounting*);
 void __nvoc_init_funcTable_GpuAccounting(GpuAccounting*);
 NV_STATUS __nvoc_ctor_GpuAccounting(GpuAccounting*);
 void __nvoc_init_dataField_GpuAccounting(GpuAccounting*);
-void __nvoc_dtor_GpuAccounting(GpuAccounting*);
+void __nvoc_dtor_GpuAccounting(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__GpuAccounting;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_GpuAccounting =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "GpuAccounting",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_GpuAccounting,
+    .objCreatefn =        &__nvoc_objCreateDynamic_GpuAccounting,
     .pCastInfo =          &__nvoc_castinfo__GpuAccounting,
     .pExportInfo =        &__nvoc_export_info__GpuAccounting
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_GpuAccounting =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__GpuAccounting __nvoc_metadata__GpuAccounting = {
     .rtti.pClassDef = &__nvoc_class_def_GpuAccounting,    // (gpuacct) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_GpuAccounting,
+    .rtti.dtor      = &__nvoc_dtor_GpuAccounting,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -82,16 +82,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__GpuAccounting =
 
 // Destruct GpuAccounting object.
 void __nvoc_gpuacctDestruct(GpuAccounting*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_GpuAccounting(GpuAccounting* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_GpuAccounting(Dynamic* pThis) {
+
+    GpuAccounting *__nvoc_this = (GpuAccounting *) pThis;
 
 // Call destructor.
-    __nvoc_gpuacctDestruct(pThis);
+    __nvoc_gpuacctDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_GpuAccounting(GpuAccounting *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -117,7 +119,7 @@ NV_STATUS __nvoc_ctor_GpuAccounting(GpuAccounting *arg_this) {
 
     // Unwind on error.
 __nvoc_ctor_GpuAccounting_fail__init:
-    __nvoc_dtor_Object(&arg_this->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&arg_this->__nvoc_base_Object);
 __nvoc_ctor_GpuAccounting_fail_Object:
 __nvoc_ctor_GpuAccounting_exit:
     return status;
@@ -221,11 +223,8 @@ __nvoc_objCreate_GpuAccounting_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_GpuAccounting(GpuAccounting **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_GpuAccounting(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_GpuAccounting(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_GpuAccounting((GpuAccounting **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

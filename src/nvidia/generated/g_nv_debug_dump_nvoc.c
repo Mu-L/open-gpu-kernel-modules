@@ -29,7 +29,7 @@ void __nvoc_init__NvDebugDump(NvDebugDump*, GpuHalspecOwner *pGpuhalspecowner);
 void __nvoc_init_funcTable_NvDebugDump(NvDebugDump*, GpuHalspecOwner *pGpuhalspecowner);
 NV_STATUS __nvoc_ctor_NvDebugDump(NvDebugDump*, GpuHalspecOwner *pGpuhalspecowner);
 void __nvoc_init_dataField_NvDebugDump(NvDebugDump*, GpuHalspecOwner *pGpuhalspecowner);
-void __nvoc_dtor_NvDebugDump(NvDebugDump*);
+void __nvoc_dtor_NvDebugDump(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__NvDebugDump;
@@ -62,7 +62,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_NvDebugDump =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "NvDebugDump",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_NvDebugDump,
+    .objCreatefn =        &__nvoc_objCreateDynamic_NvDebugDump,
     .pCastInfo =          &__nvoc_castinfo__NvDebugDump,
     .pExportInfo =        &__nvoc_export_info__NvDebugDump
 };
@@ -71,7 +71,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_NvDebugDump =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__NvDebugDump __nvoc_metadata__NvDebugDump = {
     .rtti.pClassDef = &__nvoc_class_def_NvDebugDump,    // (nvd) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_NvDebugDump,
+    .rtti.dtor      = &__nvoc_dtor_NvDebugDump,
     .rtti.offset    = 0,
     .metadata__OBJENGSTATE.rtti.pClassDef = &__nvoc_class_def_OBJENGSTATE,    // (engstate) super
     .metadata__OBJENGSTATE.rtti.dtor      = &__nvoc_destructFromBase,
@@ -206,16 +206,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__NvDebugDump =
 
 // Destruct NvDebugDump object.
 void __nvoc_nvdDestruct(NvDebugDump*);
-void __nvoc_dtor_OBJENGSTATE(OBJENGSTATE*);
-void __nvoc_dtor_NvDebugDump(NvDebugDump* pThis) {
+void __nvoc_dtor_OBJENGSTATE(Dynamic*);
+void __nvoc_dtor_NvDebugDump(Dynamic* pThis) {
+
+    NvDebugDump *__nvoc_this = (NvDebugDump *) pThis;
 
 // Call destructor.
-    __nvoc_nvdDestruct(pThis);
+    __nvoc_nvdDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_OBJENGSTATE(&pThis->__nvoc_base_OBJENGSTATE);
+    __nvoc_dtor_OBJENGSTATE((Dynamic *) &__nvoc_this->__nvoc_base_OBJENGSTATE);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_NvDebugDump(NvDebugDump *pThis, GpuHalspecOwner *pGpuhalspecowner) {
     ChipHal *chipHal = &pGpuhalspecowner->chipHal;
@@ -226,7 +228,7 @@ void __nvoc_init_dataField_NvDebugDump(NvDebugDump *pThis, GpuHalspecOwner *pGpu
     PORT_UNREFERENCED_VARIABLE(chipHal_HalVarIdx);
 
     // NVOC Property Hal field -- PDB_PROP_NVD_IS_MISSING
-    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000a000UL) )) /* ChipHal: T234D | T264D */ 
+    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000e000UL) )) /* ChipHal: T234D | T239D | T264D */ 
     {
         pThis->setProperty(pThis, PDB_PROP_NVD_IS_MISSING, NV_TRUE);
     }
@@ -371,11 +373,8 @@ __nvoc_objCreate_NvDebugDump_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_NvDebugDump(NvDebugDump **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_NvDebugDump(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_NvDebugDump(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_NvDebugDump((NvDebugDump **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

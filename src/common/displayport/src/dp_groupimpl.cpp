@@ -526,6 +526,7 @@ bool GroupImpl::hdcpSetEncrypted(bool encrypted, NvU8 streamType, NvBool  bForce
                     if (this->headIndex == group->headIndex)
                     {
                         group->hdcpEnabled = false;
+                        if (!(parent->bHdcpStrmEncrEnblOnlyOnDemand))
                         { // Inform ConnectorEventSink that we have disabled HDCP on this Device
                             Device * d = 0;
                             for (d = ((Group*)this)->enumDevices(0); d != 0; d = ((Group*)this)->enumDevices(d))
@@ -694,6 +695,7 @@ void GroupImpl::hdcpMSTQSEandSetECF()
         if (this->headIndex == group->headIndex)
         {
             group->hdcpEnabled = true;
+            if (!(parent->bHdcpStrmEncrEnblOnlyOnDemand))
             { // Inform ConnectorEventSink that we have enabled HDCP on this Device
                 Device * d = 0;
                 for (d = ((Group*)this)->enumDevices(0); d != 0; d = ((Group*)this)->enumDevices(d))

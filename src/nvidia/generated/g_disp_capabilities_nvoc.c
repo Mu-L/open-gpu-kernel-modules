@@ -32,7 +32,7 @@ void __nvoc_init__DispCapabilities(DispCapabilities*);
 void __nvoc_init_funcTable_DispCapabilities(DispCapabilities*);
 NV_STATUS __nvoc_ctor_DispCapabilities(DispCapabilities*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_DispCapabilities(DispCapabilities*);
-void __nvoc_dtor_DispCapabilities(DispCapabilities*);
+void __nvoc_dtor_DispCapabilities(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__DispCapabilities;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_DispCapabilities =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "DispCapabilities",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_DispCapabilities,
+    .objCreatefn =        &__nvoc_objCreateDynamic_DispCapabilities,
     .pCastInfo =          &__nvoc_castinfo__DispCapabilities,
     .pExportInfo =        &__nvoc_export_info__DispCapabilities
 };
@@ -124,7 +124,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_DispCapabilities =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__DispCapabilities __nvoc_metadata__DispCapabilities = {
     .rtti.pClassDef = &__nvoc_class_def_DispCapabilities,    // (dispcap) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_DispCapabilities,
+    .rtti.dtor      = &__nvoc_dtor_DispCapabilities,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -386,13 +386,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__DispCapabilities =
 
 
 // Destruct DispCapabilities object.
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_DispCapabilities(DispCapabilities* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_DispCapabilities(Dynamic* pThis) {
+
+    DispCapabilities *__nvoc_this = (DispCapabilities *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_DispCapabilities(DispCapabilities *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -418,7 +420,7 @@ NV_STATUS __nvoc_ctor_DispCapabilities(DispCapabilities *pDispCapabilities, stru
 
     // Unwind on error.
 __nvoc_ctor_DispCapabilities_fail__init:
-    __nvoc_dtor_GpuResource(&pDispCapabilities->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pDispCapabilities->__nvoc_base_GpuResource);
 __nvoc_ctor_DispCapabilities_fail_GpuResource:
 __nvoc_ctor_DispCapabilities_exit:
     return status;
@@ -530,13 +532,10 @@ __nvoc_objCreate_DispCapabilities_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_DispCapabilities(DispCapabilities **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_DispCapabilities(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_DispCapabilities(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_DispCapabilities((DispCapabilities **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

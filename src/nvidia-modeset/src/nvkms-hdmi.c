@@ -36,6 +36,9 @@
 #include "dp/nvdp-connector.h"
 #include "nv_vasprintf.h"
 
+#include "nv_mode_timings_utils.h"
+#include "nvidia-modeset-os-interface.h"
+
 #include "hdmi_spec.h"
 #include "nvos.h"
 
@@ -55,13 +58,7 @@
 #define SRC_TEST_CONFIG_DSC_FRL_MAX_OFFSET 6
 #define SRC_TEST_CONFIG_FRL_MAX_OFFSET     7
 
-typedef enum {
-    FORCE_NONE,
-    FORCE_MAX_FRL_RATE,
-    FORCE_MAX_DSC_FRL_RATE,
-} NVForceMaxFrlRateType;
-
-static NVForceMaxFrlRateType GetForceMaxFrlRateType(
+static enum NvKmsFrlRateForce GetForceMaxFrlRateType(
     const NVDpyEvoRec *pDpyEvo,
     const NVDpyId displayId);
 
@@ -77,7 +74,7 @@ static inline const NVT_EDID_CEA861_INFO *GetExt861(const NVParsedEdidEvoRec *pP
 }
 
 /*
- * CalculateVideoInfoFrameColorFormat() - calculate colorspace,
+ * CalculateVideoInfoFrameColorFormat() - calculate color format,
  * colorimetry and colorrange for video infoframe.
  */
 static void CalculateVideoInfoFrameColorFormat(
@@ -90,26 +87,26 @@ static void CalculateVideoInfoFrameColorFormat(
 
     // sets video infoframe colorspace (RGB/YUV).
     switch (pDpyColor->format) {
-    case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_RGB:
+    case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_RGB:
         pCtrl->color_space = NVT_VIDEO_INFOFRAME_BYTE1_Y1Y0_RGB;
         break;
-    case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr422:
+    case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr422:
         pCtrl->color_space = NVT_VIDEO_INFOFRAME_BYTE1_Y1Y0_YCbCr422;
         break;
-    case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr444:
+    case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr444:
         pCtrl->color_space = NVT_VIDEO_INFOFRAME_BYTE1_Y1Y0_YCbCr444;
         break;
-    case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr420:
+    case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr420:
         pCtrl->color_space = NVT_VIDEO_INFOFRAME_BYTE1_Y1Y0_YCbCr420;
         break;
     default:
-        nvAssert(!"Invalid colorSpace value");
+        nvAssert(!"Invalid colorFormat value");
         break;
     }
 
     // sets video infoframe colorimetry.
     switch (pDpyColor->format) {
-    case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_RGB:
+    case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_RGB:
         switch (pDpyColor->colorimetry) {
         case NVKMS_OUTPUT_COLORIMETRY_BT2100:
             pCtrl->colorimetry = NVT_VIDEO_INFOFRAME_BYTE2_C1C0_EXT_COLORIMETRY;
@@ -123,8 +120,8 @@ static void CalculateVideoInfoFrameColorFormat(
             break;
         }
         break;
-    case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr422:
-    case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr444:
+    case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr422:
+    case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr444:
         switch (pDpyColor->colorimetry) {
         case NVKMS_OUTPUT_COLORIMETRY_BT2100:
             pCtrl->colorimetry = NVT_VIDEO_INFOFRAME_BYTE2_C1C0_EXT_COLORIMETRY;
@@ -144,13 +141,13 @@ static void CalculateVideoInfoFrameColorFormat(
             break;
         }
         break;
-    case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr420:
+    case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr420:
         // XXX HDR TODO: Support YUV420 + HDR
         nvAssert(pDpyColor->colorimetry != NVKMS_OUTPUT_COLORIMETRY_BT2100);
         pCtrl->colorimetry = NVT_VIDEO_INFOFRAME_BYTE2_C1C0_ITU709;
         break;
     default:
-        nvAssert(!"Invalid colorSpace value");
+        nvAssert(!"Invalid colorFormat value");
         break;
     }
 
@@ -175,13 +172,13 @@ static void CalculateVideoInfoFrameColorFormat(
              NVT_CEA861_VCDB_QS_SHIFT) != 0);
     }
 
-    if ((pDpyColor->format == NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_RGB) &&
+    if ((pDpyColor->format == NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_RGB) &&
             !sinkSupportsRGBQuantizationOverride) {
         pCtrl->rgb_quantization_range = NVT_VIDEO_INFOFRAME_BYTE3_Q1Q0_DEFAULT;
     }
 
     /*
-     * Only limited color range is allowed with YUV444 and YUV422 color spaces.
+     * Only limited color range is allowed with YUV444 and YUV422 color formats.
      */
     nvAssert(!(((pCtrl->color_space == NVT_VIDEO_INFOFRAME_BYTE1_Y1Y0_YCbCr422) ||
                 (pCtrl->color_space == NVT_VIDEO_INFOFRAME_BYTE1_Y1Y0_YCbCr444)) &&
@@ -288,7 +285,6 @@ void nvSendHdmiCapsToRm(NVDpyEvoPtr pDpyEvo)
         return;
     }
 
-    params.subDeviceInstance    = pDispEvo->displayOwner;
     params.displayId            = nvDpyEvoGetConnectorId(pDpyEvo);
     params.caps = 0;
 
@@ -360,7 +356,6 @@ static void HdmiSendEnable(NVDpyEvoPtr pDpyEvo, NvBool hdmiEnable)
     NVDevEvoPtr pDevEvo = pDispEvo->pDevEvo;
     NvU32 ret;
 
-    params.subDeviceInstance    = pDpyEvo->pDispEvo->displayOwner;
     params.displayId            = nvDpyEvoGetConnectorId(pDpyEvo);
     params.enable               = hdmiEnable;
 
@@ -603,7 +598,6 @@ static void SetDpAudioMute(const NVDispEvoRec *pDispEvo,
     NVDevEvoPtr pDevEvo = pDispEvo->pDevEvo;
     NvU32 ret;
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = displayId;
     params.mute = mute;
 
@@ -634,7 +628,6 @@ static void SetDpAudioEnable(const NVDispEvoRec *pDispEvo,
         SetDpAudioMute(pDispEvo, pHeadState->activeRmId, TRUE);
     }
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = pHeadState->activeRmId;
     params.enable = enable;
 
@@ -669,7 +662,6 @@ static void SetHdmiAudioMute(const NVDispEvoRec *pDispEvo,
     NVDevEvoPtr pDevEvo = pDispEvo->pDevEvo;
     NvU32 ret;
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = pHeadState->activeRmId;
     params.mute = (mute ? NV0073_CTRL_SPECIFIC_SET_HDMI_AUDIO_MUTESTREAM_TRUE :
         NV0073_CTRL_SPECIFIC_SET_HDMI_AUDIO_MUTESTREAM_FALSE);
@@ -705,7 +697,6 @@ static void EnableHdmiAudio(const NVDispEvoRec *pDispEvo,
     NVDevEvoPtr pDevEvo = pDispEvo->pDevEvo;
     NvU32 ret;
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = pHeadState->activeRmId;
     params.transmitControl =
         DRF_DEF(0073_CTRL_SPECIFIC, _SET_OD_PACKET_TRANSMIT_CONTROL, _ENABLE, _YES) |
@@ -1117,7 +1108,6 @@ static void RmSetELDAudioCaps(
             return;
     }
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.deviceEntry = deviceEntry;
     params.displayId = displayId;
 
@@ -2075,20 +2065,13 @@ NvBool nvHdmiDpySupportsFrl(const NVDpyEvoRec *pDpyEvo)
     return TRUE;
 }
 
-NvBool nvHdmiIsTmdsPossible(const NVDpyEvoRec *pDpyEvo,
-                            const NVHwModeTimingsEvo *pHwTimings,
-                            const NVDpyAttributeColor *pDpyColor)
+static NvU32 GetMaxPossibleTmdsPixelClockKHz(
+    const NVDpyEvoRec *pDpyEvo,
+    const NVDpyAttributeColor *pDpyColor)
 {
-    /* For YUV420 HW mode, divide pixel clock by 2. */
-    const NvU32 pixelClock = (pHwTimings->yuv420Mode == NV_YUV420_MODE_HW) ?
-        (pHwTimings->pixelClock / 2) : pHwTimings->pixelClock;
-
     ct_assert(NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_BPC_10 ==
               NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_BPC_MAX);
 
-    nvAssert((pHwTimings->yuv420Mode == NV_YUV420_MODE_NONE) ||
-                (pDpyColor->format ==
-                 NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr420));
     nvAssert(nvDpyIsHdmiEvo(pDpyEvo));
 
     /*
@@ -2097,47 +2080,106 @@ NvBool nvHdmiIsTmdsPossible(const NVDpyEvoRec *pDpyEvo,
      */
     nvAssert(pDpyColor->bpc >= NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_BPC_8);
 
-    /* For YCbCr422, compare without adjusting maximum pixel clock despite BPC. */
-    if (pDpyColor->format == NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr422) {
-        return (pixelClock <= pDpyEvo->maxSingleLinkPixelClockKHz);
+    /* For YCbCr422, return maximum pixel clock despite BPC. */
+    if (pDpyColor->format == NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr422) {
+        return pDpyEvo->maxSingleLinkPixelClockKHz;
     }
 
     /*
-     * For 10 BPC, compare with hardware reduced limit if applicable, otherwise
-     * adjust maximum pixel clock by a ratio of 8/10 BPC.
+     * For 10BPC, adjust the maximum pixel clock by a ratio of 8/10 BPC.
+     * If applicable, also account for the hardware reduced limit.
      */
     if (pDpyColor->bpc == NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_BPC_10) {
-        NvU32 hdmiTmds10BpcMaxPClkKHz =
+        const NvU32 hdmiTmds10BpcMaxPClkKHz =
             pDpyEvo->pDispEvo->pDevEvo->caps.hdmiTmds10BpcMaxPClkMHz * 1000UL;
-        NvU32 adjustedMaxPixelClock =
+        const NvU32 adjustedMaxPixelClock =
             (pDpyEvo->maxSingleLinkPixelClockKHz * 4ULL) / 5ULL;
-        NvU32 adjustedMaxEDIDPixelClock =
+        const NvU32 adjustedMaxEDIDPixelClock =
             pDpyEvo->parsedEdid.valid ?
               (pDpyEvo->parsedEdid.limits.max_pclk_10khz * 10 * 4ULL) / 5ULL : 0;
+        const NvU32 maxPossiblePixelClockKHz =
+            NV_MIN(adjustedMaxPixelClock, adjustedMaxEDIDPixelClock);
 
-        /* Pixel clock must satisfy hdmiTmds10BpcMaxPClkKHz, if applicable. */
-        if ((hdmiTmds10BpcMaxPClkKHz > 0) &&
-            (pixelClock > hdmiTmds10BpcMaxPClkKHz)) {
-            return FALSE;
+        if (hdmiTmds10BpcMaxPClkKHz > 0) {
+            return NV_MIN(hdmiTmds10BpcMaxPClkKHz, maxPossiblePixelClockKHz);
         }
 
-        /* Pixel clock must also satisfy adjustedMaxPixelClock. */
-        if (pixelClock > adjustedMaxPixelClock) {
-            return FALSE;
-        }
+        return maxPossiblePixelClockKHz;
+    }
 
-        /* Pixel clock must also satisfy adjustedMaxEDIDPixelClock. */
-        if (adjustedMaxEDIDPixelClock != 0 &&
-            pixelClock > adjustedMaxEDIDPixelClock) {
-            return FALSE;
-        }
+    /* For 8 BPC, return maximum pixel clock. */
+    nvAssert(pDpyColor->bpc == NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_BPC_8);
+    return pDpyEvo->maxSingleLinkPixelClockKHz;
+}
 
+NvBool nvEvoHdmiTmdsMaxPixelClockCheck(
+    const NVDpyEvoRec *pDpyEvo,
+    const struct NvKmsModeValidationParams *pValidationParams,
+    NVDpyAttributeColor *pDpyColor,
+    NVHwModeTimingsEvoPtr pTimings,
+    NVEvoInfoStringPtr pInfoString)
+{
+    const NvKmsDpyOutputColorFormatInfo colorFormatsInfo =
+        nvDpyGetOutputColorFormatInfo(pDpyEvo);
+    /* For YUV420 HW mode, divide pixel clock by 2. */
+    const NvU32 pixelClock = (pTimings->yuv420Mode == NV_YUV420_MODE_HW) ?
+        (pTimings->pixelClock / 2) : pTimings->pixelClock;
+
+    if ((pValidationParams->overrides &
+         NVKMS_MODE_VALIDATION_NO_MAX_PCLK_CHECK) != 0x0) {
         return TRUE;
     }
 
-    /* For 8 BPC, compare without adjusting maximum pixel clock. */
-    nvAssert(pDpyColor->bpc == NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_BPC_8);
-    return (pixelClock <= pDpyEvo->maxSingleLinkPixelClockKHz);
+    NvU32 maxPossiblePixelClock =
+        GetMaxPossibleTmdsPixelClockKHz(pDpyEvo, pDpyColor);
+    while (pixelClock > maxPossiblePixelClock) {
+        if (nvIs3DVisionStereoEvo(pValidationParams->stereoMode) &&
+                pDpyEvo->stereo3DVision.requiresModetimingPatching &&
+                (pixelClock - maxPossiblePixelClock) < 5000) {
+            nvAssert(!pTimings->hdmi3D);
+            nvEvoLogInfoString(pInfoString,
+                "PixelClock (" NV_FMT_DIV_1000_POINT_1 " MHz) is slightly higher than Display Device maximum (" NV_FMT_DIV_1000_POINT_1 " MHz), but is within tolerance for 3D Vision Stereo.",
+                NV_VA_DIV_1000_POINT_1(pixelClock),
+                 NV_VA_DIV_1000_POINT_1(maxPossiblePixelClock));
+            break;
+        }
+
+        if (!nvDowngradeColorFormatAndBpc(pDpyEvo,
+                                          &colorFormatsInfo,
+                                          pDpyColor)) {
+            const NvU32 hdmi3DPixelClock =
+                pTimings->hdmi3D ? (pixelClock / 2) : pixelClock;
+            nvEvoLogInfoString(pInfoString,
+                "PixelClock (" NV_FMT_DIV_1000_POINT_1 " MHz%s) too high for Display Device (Max: " NV_FMT_DIV_1000_POINT_1 " MHz)",
+                NV_VA_DIV_1000_POINT_1(hdmi3DPixelClock),
+                pTimings->hdmi3D ?
+                ", doubled for HDMI 3D" : "",
+                NV_VA_DIV_1000_POINT_1(maxPossiblePixelClock));
+            return FALSE;
+        }
+
+        maxPossiblePixelClock =
+            GetMaxPossibleTmdsPixelClockKHz(pDpyEvo, pDpyColor);
+
+    }
+
+    return TRUE;
+}
+
+NvBool nvHdmiIsTmdsPossible(const NVDpyEvoRec *pDpyEvo,
+                            const NVHwModeTimingsEvo *pHwTimings,
+                            const NVDpyAttributeColor *pDpyColor)
+{
+    /* For YUV420 HW mode, divide pixel clock by 2. */
+    const NvU32 pixelClock = (pHwTimings->yuv420Mode == NV_YUV420_MODE_HW) ?
+        (pHwTimings->pixelClock / 2) : pHwTimings->pixelClock;
+
+    nvAssert((pHwTimings->yuv420Mode == NV_YUV420_MODE_NONE) ||
+                (pDpyColor->format ==
+                 NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr420));
+
+    return pixelClock <= GetMaxPossibleTmdsPixelClockKHz(pDpyEvo,
+                                                         pDpyColor);
 }
 
 static NvU64 GetHdmiFrlLinkRate(HDMI_FRL_DATA_RATE frlRate)
@@ -2173,7 +2215,7 @@ static NvU64 GetHdmiFrlLinkRate(HDMI_FRL_DATA_RATE frlRate)
     return hdmiLinkRate;
 }
 
-NvBool nvHdmiFrlQueryConfigOneColorSpaceAndBpc(
+NvBool nvHdmiFrlQueryConfigOneColorFormatAndBpc(
     const NVDpyEvoRec *pDpyEvo,
     const NvModeTimings *pModeTimings,
     const NVHwModeTimingsEvo *pHwTimings,
@@ -2186,7 +2228,7 @@ NvBool nvHdmiFrlQueryConfigOneColorSpaceAndBpc(
     const NVConnectorEvoRec *pConnectorEvo = pDpyEvo->pConnectorEvo;
     const NVDispEvoRec *pDispEvo = pDpyEvo->pDispEvo;
     const NVDevEvoRec *pDevEvo = pDispEvo->pDevEvo;
-    const NVForceMaxFrlRateType forceMaxFrlType =
+    const enum NvKmsFrlRateForce forceMaxFrlType =
         GetForceMaxFrlRateType(pDpyEvo, pConnectorEvo->displayId);
     HDMI_VIDEO_TRANSPORT_INFO videoTransportInfo = { };
     HDMI_QUERY_FRL_CLIENT_CONTROL clientControl = { };
@@ -2259,17 +2301,17 @@ NvBool nvHdmiFrlQueryConfigOneColorSpaceAndBpc(
     }
 
     switch (pDpyColor->format) {
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_RGB:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_RGB:
             videoTransportInfo.packing = HDMI_PIXEL_PACKING_RGB;
             break;
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr422:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr422:
             nvAssert(pDevEvo->hal->caps.supportsYCbCr422OverHDMIFRL);
             videoTransportInfo.packing = HDMI_PIXEL_PACKING_YCbCr422;
             break;
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr444:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr444:
             videoTransportInfo.packing = HDMI_PIXEL_PACKING_YCbCr444;
             break;
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr420:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr420:
             switch (pModeTimings->yuv420Mode) {
                 case NV_YUV420_MODE_NONE:
                 case NV_YUV420_MODE_SW:
@@ -2299,23 +2341,23 @@ NvBool nvHdmiFrlQueryConfigOneColorSpaceAndBpc(
             clientControl.enableDSC = TRUE;
             break;
         case NVKMS_DSC_MODE_DEFAULT:
-            clientControl.forceFRLRate = (forceMaxFrlType != FORCE_NONE);
+            clientControl.forceFRLRate = (forceMaxFrlType != NVKMS_FRL_RATE_FORCE_NONE);
             switch (forceMaxFrlType) {
-                case FORCE_MAX_FRL_RATE:
+                case NVKMS_FRL_RATE_FORCE_MAX:
                     clientControl.forceDisableDSC = TRUE;
                     clientControl.frlRate =
                         NV_MIN(pDpyEvo->hdmi.srcCaps.linkMaxFRLRate,
                                pDpyEvo->hdmi.sinkCaps.linkMaxFRLRate);
                     break;
-                case FORCE_MAX_DSC_FRL_RATE:
+                case NVKMS_FRL_RATE_FORCE_MAX_DSC:
                     clientControl.enableDSC = TRUE;
                     clientControl.frlRate =
                         NV_MIN(pDpyEvo->hdmi.srcCaps.linkMaxFRLRate,
                                pDpyEvo->hdmi.sinkCaps.linkMaxFRLRateDSC);
                     break;
-                case FORCE_NONE:
+                case NVKMS_FRL_RATE_FORCE_NONE:
                     break;
-            } 
+            }
             break;
     }
 
@@ -2425,7 +2467,7 @@ void nvHdmiFrlClearConfig(NVDispEvoRec *pDispEvo, NvU32 activeRmId)
     }
 }
 
-static NVForceMaxFrlRateType GetForceMaxFrlRateType(
+static enum NvKmsFrlRateForce GetForceMaxFrlRateType(
     const NVDpyEvoRec *pDpyEvo,
     const NVDpyId displayId)
 {
@@ -2438,14 +2480,17 @@ static NVForceMaxFrlRateType GetForceMaxFrlRateType(
     NvBool bTestMaxDscFrlRate;
     NvU32 ret;
 
+    if (nvkms_force_frl_rate() != NVKMS_FRL_RATE_FORCE_NONE) {
+        return nvkms_force_frl_rate();
+    }
+
     if (!pHdmiInfo->scdc_present) {
-        return FORCE_NONE;
+        return NVKMS_FRL_RATE_FORCE_NONE;
     }
 
     NV0073_CTRL_SPECIFIC_GET_HDMI_SCDC_DATA_PARAMS scdcParams;
     nvkms_memset(&scdcParams, 0, sizeof(scdcParams));
 
-    scdcParams.subDeviceInstance = 0;
     scdcParams.displayId = nvDpyIdToNvU32(displayId);
     scdcParams.offset = NV0073_CTRL_CMD_SPECIFIC_GET_HDMI_SCDC_DATA_OFFSET_SOURCE_TEST_CONFIGURATION;
 
@@ -2456,17 +2501,17 @@ static NVForceMaxFrlRateType GetForceMaxFrlRateType(
                          sizeof(scdcParams));
 
     if (ret != NVOS_STATUS_SUCCESS) {
-        return FORCE_NONE;
+        return NVKMS_FRL_RATE_FORCE_NONE;
     }
 
     bTestMaxFrlRate = !!(scdcParams.data & NVBIT(SRC_TEST_CONFIG_FRL_MAX_OFFSET));
     bTestMaxDscFrlRate = !!(scdcParams.data & NVBIT(SRC_TEST_CONFIG_DSC_FRL_MAX_OFFSET));
 
     if (bTestMaxFrlRate != bTestMaxDscFrlRate) {
-        return bTestMaxFrlRate ? FORCE_MAX_FRL_RATE : FORCE_MAX_DSC_FRL_RATE;
+        return bTestMaxFrlRate ? NVKMS_FRL_RATE_FORCE_MAX : NVKMS_FRL_RATE_FORCE_MAX_DSC;
     }
 
-    return FORCE_NONE;
+    return NVKMS_FRL_RATE_FORCE_NONE;
 }
 
 void nvHdmiFrlSetConfig(NVDispEvoRec *pDispEvo, NvU32 head)

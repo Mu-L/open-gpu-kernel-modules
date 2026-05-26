@@ -318,6 +318,18 @@ typedef struct tagADVANCED_INFOFRAME
     NvU32                      reserved                 : 24;
 } ADVANCED_INFOFRAME;
 
+/*
+ * ADVANCED_INFOFRAME_CTRL
+ *
+ * Wrapper structure for advanced infoframe control operations.
+ * Adds enable/disable control without modifying the base ADVANCED_INFOFRAME structure.
+ */
+typedef struct tagADVANCED_INFOFRAME_CTRL
+{
+    NvBool                     enable;      // NV_TRUE to enable infoframe, NV_FALSE to disable
+    ADVANCED_INFOFRAME         infoframe;   // Infoframe configuration
+} ADVANCED_INFOFRAME_CTRL;
+
 /*********************** HDMI Library interface to write hdmi ctrl/packet ***********************/
 typedef void* NvHdmiPkt_Handle;
 #define NVHDMIPKT_INVALID_HANDLE ((NvHdmiPkt_Handle)0)
@@ -401,6 +413,26 @@ NvHdmiPkt_SetupAdvancedInfoframe(NvHdmiPkt_Handle          libHandle,
                                  NvU32                     head,
                                  NVHDMIPKT_TYPE            packetReg,
                                  ADVANCED_INFOFRAME const *pInfoframe);
+
+/************************************************************************************************
+ * NvHdmiPkt_AdvancedPacketCtrl - Returns HDMI NVHDMIPKT_RESULT.                               *
+ *                                                                                              *
+ * Updates control registers for advanced infoframe without modifying packet data.             *
+ * Used for control-only operations like changing FID, runmode, or disabling.                  *
+ *                                                                                              *
+ * Parameters:                                                                                  *
+ * libHandle       - Hdmi library handle, provided on initializing the library.                *
+ * subDevice       - Sub Device ID.                                                            *
+ * head            - Head number.                                                              *
+ * packetType      - One of the NVHDMIPKT_TYPE types.                                          *
+ * pInfoframeCtrl  - Control structure with enable flag and infoframe configuration            *
+ ************************************************************************************************/
+NVHDMIPKT_RESULT
+NvHdmiPkt_AdvancedPacketCtrl(NvHdmiPkt_Handle                  libHandle,
+                             NvU32                             subDevice,
+                             NvU32                             head,
+                             NVHDMIPKT_TYPE                    packetType,
+                             ADVANCED_INFOFRAME_CTRL const    *pInfoframeCtrl);
 
 
 /***************************** Interface to initialize HDMI Library *****************************/

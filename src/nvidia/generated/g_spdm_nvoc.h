@@ -146,9 +146,9 @@ struct Spdm {
     NV_STATUS (*__spdmGetCertificates__)(OBJGPU *, struct Spdm * /*this*/);  // halified (2 hals) body
     NV_STATUS (*__spdmGetReqEncapCertificates__)(OBJGPU *, struct Spdm * /*this*/, NvU8 **, NvU32 *);  // halified (2 hals) body
     NV_STATUS (*__spdmGetRequesterCertificateCount__)(OBJGPU *, struct Spdm * /*this*/, NvU32 *);  // halified (3 hals) body
-    const BINDATA_ARCHIVE * (*__spdmGetBinArchiveIndividualL2Certificate__)(struct Spdm * /*this*/);  // halified (4 hals) body
-    const BINDATA_ARCHIVE * (*__spdmGetBinArchiveIndividualL3Certificate__)(struct Spdm * /*this*/);  // halified (11 hals) body
-    NV_STATUS (*__spdmGetIndividualCertificate__)(OBJGPU *, struct Spdm * /*this*/, NvU32, NvBool, void *, NvU64 *);  // halified (3 hals) body
+    const BINDATA_ARCHIVE * (*__spdmGetBinArchiveIndividualL2Certificate__)(struct Spdm * /*this*/);  // halified (5 hals) body
+    const BINDATA_ARCHIVE * (*__spdmGetBinArchiveIndividualL3Certificate__)(struct Spdm * /*this*/);  // halified (13 hals) body
+    NV_STATUS (*__spdmGetIndividualCertificate__)(OBJGPU *, struct Spdm * /*this*/, NvU32, NvBool, void *, NvU64 *);  // halified (4 hals) body
     NV_STATUS (*__spdmConvertCertificateToDer__)(OBJGPU *, struct Spdm * /*this*/, const BINDATA_STORAGE *, NvBool, NvU8 *, NvU64 *);  // halified (2 hals) body
 
     // 2 PDB properties
@@ -233,7 +233,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_Spdm;
 #define PDB_PROP_SPDM_IS_MISSING_BASE_NAME PDB_PROP_ENGSTATE_IS_MISSING
 
 
-NV_STATUS __nvoc_objCreateDynamic_Spdm(Spdm**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_Spdm(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_Spdm(Spdm**, Dynamic*, NvU32);
 #define __objCreate_Spdm(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -662,6 +662,8 @@ const BINDATA_ARCHIVE * spdmGetBinArchiveL1Certificate_IMPL(struct Spdm *pSpdm);
 
 const BINDATA_ARCHIVE * spdmGetBinArchiveIndividualL2Certificate_GH100(struct Spdm *pSpdm);
 
+const BINDATA_ARCHIVE * spdmGetBinArchiveIndividualL2Certificate_GR1XX(struct Spdm *pSpdm);
+
 const BINDATA_ARCHIVE * spdmGetBinArchiveIndividualL2Certificate_GB20X(struct Spdm *pSpdm);
 
 const BINDATA_ARCHIVE * spdmGetBinArchiveIndividualL2Certificate_GB100(struct Spdm *pSpdm);
@@ -686,7 +688,13 @@ const BINDATA_ARCHIVE * spdmGetBinArchiveIndividualL3Certificate_GB206(struct Sp
 
 const BINDATA_ARCHIVE * spdmGetBinArchiveIndividualL3Certificate_GB207(struct Spdm *pSpdm);
 
+const BINDATA_ARCHIVE * spdmGetBinArchiveIndividualL3Certificate_GR100(struct Spdm *pSpdm);
+
+const BINDATA_ARCHIVE * spdmGetBinArchiveIndividualL3Certificate_GR102(struct Spdm *pSpdm);
+
 NV_STATUS spdmGetIndividualCertificate_GH100(OBJGPU *pGpu, struct Spdm *pSpdm, NvU32 certId, NvBool bDerFormat, void *pCert, NvU64 *pCertSize);
+
+NV_STATUS spdmGetIndividualCertificate_GR100(OBJGPU *pGpu, struct Spdm *pSpdm, NvU32 certId, NvBool bDerFormat, void *pCert, NvU64 *pCertSize);
 
 NV_STATUS spdmGetIndividualCertificate_GB100(OBJGPU *pGpu, struct Spdm *pSpdm, NvU32 certId, NvBool bDerFormat, void *pCert, NvU64 *pCertSize);
 

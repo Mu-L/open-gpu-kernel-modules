@@ -22,6 +22,7 @@
 *******************************************************************************/
 
 #include "uvm_ats.h"
+#include "uvm_extern_decl.h"
 #include "uvm_ioctl.h"
 #include "uvm_va_space.h"
 #include "uvm_va_range.h"
@@ -60,7 +61,6 @@ uvm_api_range_type_t uvm_api_range_type_check(uvm_va_space_t *va_space, struct m
 {
     uvm_va_range_managed_t *managed_range, *managed_range_last;
     const NvU64 last_address = base + length - 1;
-    bool potential_ats_range;
 
     if (mm)
         uvm_assert_mmap_lock_locked(mm);
@@ -72,21 +72,19 @@ uvm_api_range_type_t uvm_api_range_type_check(uvm_va_space_t *va_space, struct m
 
     // Check if passed interval overlaps with any VA range.
     if (uvm_va_space_range_empty(va_space, base, last_address)) {
-        potential_ats_range = g_uvm_global.ats.enabled &&
-            !(va_space->initialization_flags & UVM_INIT_FLAGS_MULTI_PROCESS_SHARING_MODE) &&
-            mm && uvm_is_valid_vma_range(mm, base, length);
-
-        if (potential_ats_range && uvm_va_space_ats_unset(va_space)) {
-            uvm_va_space_ats_set(va_space, UVM_ATS_VA_SPACE_ATS_SUPPORTED);
-            return UVM_API_RANGE_TYPE_ATS;
+        if (!va_space->pageable.access_enabled || !mm || !uvm_is_valid_vma_range(mm, base, length)) {
+            return UVM_API_RANGE_TYPE_INVALID;
         }
-        else if (potential_ats_range && uvm_va_space_ats_supported(va_space)) {
-            return UVM_API_RANGE_TYPE_ATS;
-        }
-        else if (uvm_hmm_is_enabled(va_space) && mm && uvm_is_valid_vma_range(mm, base, length)) {
-            return UVM_API_RANGE_TYPE_HMM;
+        else if (va_space->pageable.cdmm_enabled) {
+            return UVM_API_RANGE_TYPE_CDMM;
         }
         else {
+            if (uvm_va_space_ats_unset(va_space) && !g_uvm_global.cdmm_enabled)
+                uvm_va_space_ats_set(va_space, UVM_ATS_VA_SPACE_ATS_SUPPORTED);
+
+            if (uvm_va_space_ats_supported(va_space))
+                return UVM_API_RANGE_TYPE_NUMA;
+
             return UVM_API_RANGE_TYPE_INVALID;
         }
     }
@@ -364,8 +362,8 @@ NV_STATUS uvm_api_set_preferred_location(const UVM_SET_PREFERRED_LOCATION_PARAMS
         goto done;
     }
 
-    // For ATS regions, let userspace handle it.
-    if (type == UVM_API_RANGE_TYPE_ATS) {
+    // For NUMA, let userspace handle it.
+    if (type == UVM_API_RANGE_TYPE_NUMA) {
         UVM_ASSERT(g_uvm_global.ats.enabled);
         status = NV_WARN_NOTHING_TO_DO;
         goto done;
@@ -417,7 +415,7 @@ NV_STATUS uvm_api_unset_preferred_location(const UVM_UNSET_PREFERRED_LOCATION_PA
         goto done;
     }
 
-    if (type == UVM_API_RANGE_TYPE_ATS) {
+    if (type == UVM_API_RANGE_TYPE_NUMA) {
         status = NV_WARN_NOTHING_TO_DO;
         goto done;
     }
@@ -558,7 +556,7 @@ static NV_STATUS accessed_by_set(uvm_va_space_t *va_space,
         processor_id = gpu->id;
     }
 
-    if (type == UVM_API_RANGE_TYPE_ATS) {
+    if (type == UVM_API_RANGE_TYPE_NUMA) {
         status = NV_OK;
         goto done;
     }
@@ -601,7 +599,8 @@ static NV_STATUS accessed_by_set(uvm_va_space_t *va_space,
     else {
         // NULL mm case already filtered by uvm_api_range_type_check()
         UVM_ASSERT(mm);
-        UVM_ASSERT(type == UVM_API_RANGE_TYPE_HMM);
+
+        UVM_ASSERT(type == UVM_API_RANGE_TYPE_CDMM);
         status = uvm_hmm_set_accessed_by(va_space,
                                          processor_id,
                                          set_bit,
@@ -816,7 +815,7 @@ static NV_STATUS read_duplication_set(uvm_va_space_t *va_space, NvU64 base, NvU6
         status = NV_ERR_INVALID_ADDRESS;
         goto done;
     }
-    else if (type == UVM_API_RANGE_TYPE_ATS) {
+    else if (type == UVM_API_RANGE_TYPE_NUMA) {
         status = NV_OK;
         goto done;
     }
@@ -868,7 +867,7 @@ static NV_STATUS read_duplication_set(uvm_va_space_t *va_space, NvU64 base, NvU6
         UVM_ASSERT(managed_range_last->va_range.node.end >= last_address);
     }
     else {
-        UVM_ASSERT(type == UVM_API_RANGE_TYPE_HMM);
+        UVM_ASSERT(type == UVM_API_RANGE_TYPE_CDMM);
         status = uvm_hmm_set_read_duplication(va_space, new_policy, base, last_address);
     }
 
@@ -919,19 +918,11 @@ NV_STATUS uvm_api_discard(UVM_DISCARD_PARAMS *params, struct file *filp)
     type = uvm_api_range_type_check(va_space, mm, base, length);
     if (type != UVM_API_RANGE_TYPE_MANAGED) {
         // System allocated and HMM memory is validated but we don't do anything with it.
-        if (type == UVM_API_RANGE_TYPE_ATS || type == UVM_API_RANGE_TYPE_HMM)
+        if (type == UVM_API_RANGE_TYPE_NUMA || type == UVM_API_RANGE_TYPE_CDMM)
             status = NV_WARN_NOTHING_TO_DO;
         else
             status = NV_ERR_INVALID_ADDRESS;
 
-        goto done;
-    }
-
-    // TODO: Bug 5260180: Remove this check after tests and 
-    // related driver code are updated to account for 
-    // integrated GPUs.
-    if (uvm_va_space_has_integrated_gpu(va_space)) {
-        status = NV_OK;
         goto done;
     }
 

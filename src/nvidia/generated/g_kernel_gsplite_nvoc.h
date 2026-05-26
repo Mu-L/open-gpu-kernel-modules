@@ -154,7 +154,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelGsplite;
 #define PDB_PROP_KGSPLITE_ENABLE_CMC_NVLOG_BASE_NAME PDB_PROP_KGSPLITE_ENABLE_CMC_NVLOG
 
 
-NV_STATUS __nvoc_objCreateDynamic_KernelGsplite(KernelGsplite**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelGsplite(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelGsplite(KernelGsplite**, Dynamic*, NvU32);
 #define __objCreate_KernelGsplite(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

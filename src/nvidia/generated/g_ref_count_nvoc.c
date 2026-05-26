@@ -28,7 +28,7 @@ void __nvoc_init__OBJREFCNT(OBJREFCNT*);
 void __nvoc_init_funcTable_OBJREFCNT(OBJREFCNT*);
 NV_STATUS __nvoc_ctor_OBJREFCNT(OBJREFCNT*, Dynamic *pParent, NvU32 tag, RefcntStateChangeCallback *pStateChangeCallback, RefcntResetCallback *pResetCallback);
 void __nvoc_init_dataField_OBJREFCNT(OBJREFCNT*);
-void __nvoc_dtor_OBJREFCNT(OBJREFCNT*);
+void __nvoc_dtor_OBJREFCNT(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJREFCNT;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJREFCNT =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJREFCNT",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_OBJREFCNT,
+    .objCreatefn =        &__nvoc_objCreateDynamic_OBJREFCNT,
     .pCastInfo =          &__nvoc_castinfo__OBJREFCNT,
     .pExportInfo =        &__nvoc_export_info__OBJREFCNT
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJREFCNT =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__OBJREFCNT __nvoc_metadata__OBJREFCNT = {
     .rtti.pClassDef = &__nvoc_class_def_OBJREFCNT,    // (refcnt) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJREFCNT,
+    .rtti.dtor      = &__nvoc_dtor_OBJREFCNT,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -82,16 +82,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJREFCNT =
 
 // Destruct OBJREFCNT object.
 void __nvoc_refcntDestruct(OBJREFCNT*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_OBJREFCNT(OBJREFCNT* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_OBJREFCNT(Dynamic* pThis) {
+
+    OBJREFCNT *__nvoc_this = (OBJREFCNT *) pThis;
 
 // Call destructor.
-    __nvoc_refcntDestruct(pThis);
+    __nvoc_refcntDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJREFCNT(OBJREFCNT *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -117,7 +119,7 @@ NV_STATUS __nvoc_ctor_OBJREFCNT(OBJREFCNT *pRefcnt, Dynamic *pParent, NvU32 tag,
 
     // Unwind on error.
 __nvoc_ctor_OBJREFCNT_fail__init:
-    __nvoc_dtor_Object(&pRefcnt->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&pRefcnt->__nvoc_base_Object);
 __nvoc_ctor_OBJREFCNT_fail_Object:
 __nvoc_ctor_OBJREFCNT_exit:
     return status;
@@ -221,15 +223,12 @@ __nvoc_objCreate_OBJREFCNT_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_OBJREFCNT(OBJREFCNT **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_OBJREFCNT(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     Dynamic *pParent = va_arg(__nvoc_args, Dynamic *);
     NvU32 tag = va_arg(__nvoc_args, NvU32);
     RefcntStateChangeCallback *pStateChangeCallback = va_arg(__nvoc_args, RefcntStateChangeCallback *);
     RefcntResetCallback *pResetCallback = va_arg(__nvoc_args, RefcntResetCallback *);
 
-    __nvoc_status = __nvoc_objCreate_OBJREFCNT(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pParent, tag, pStateChangeCallback, pResetCallback);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_OBJREFCNT((OBJREFCNT **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pParent, tag, pStateChangeCallback, pResetCallback);
 }
 

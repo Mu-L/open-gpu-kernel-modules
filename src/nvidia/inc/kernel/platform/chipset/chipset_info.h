@@ -31,23 +31,13 @@
 *                                                                           *
 \***************************************************************************/
 
-#include "core/core.h"
 #include "platform/chipset/chipset.h"
 
 typedef struct CSINFO CSINFO;
-typedef CSINFO *PCSINFO;
-
 typedef struct VENDORNAME VENDORNAME;
-typedef VENDORNAME *PVENDORNAME;
-
 typedef struct RPINFO RPINFO;
-typedef RPINFO *PRPINFO;
-
 typedef struct BRINFO BRINFO;
-typedef RPINFO *PBRINFO;
-
 typedef struct ARMCSALLOWLISTINFO ARMCSALLOWLISTINFO;
-typedef ARMCSALLOWLISTINFO *PARMCSALLOWLISTINFO;
 
 struct CSINFO
 {

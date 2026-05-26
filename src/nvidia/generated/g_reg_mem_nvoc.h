@@ -144,7 +144,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_RegisterMemory;
     ((RegisterMemory*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(RegisterMemory)))
 #endif //__nvoc_reg_mem_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_RegisterMemory(RegisterMemory**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_RegisterMemory(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_RegisterMemory(RegisterMemory**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_RegisterMemory(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

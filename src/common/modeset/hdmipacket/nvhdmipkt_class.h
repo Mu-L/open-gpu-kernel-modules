@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2012-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2012-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -41,18 +41,14 @@ typedef enum
 {
     NVHDMIPKT_0073_CLASS = 0, // pre GK104
     NVHDMIPKT_9171_CLASS = 1, // GK104
-    NVHDMIPKT_9271_CLASS = 2, // GK110
-    NVHDMIPKT_9471_CLASS = 3, // GM10X
-    NVHDMIPKT_9571_CLASS = 4, // GM20X
-    NVHDMIPKT_C371_CLASS = 5, // GV100
-    NVHDMIPKT_C571_CLASS = 6, // TU102
-    NVHDMIPKT_C671_CLASS = 7, // GA102, T234D
-    NVHDMIPKT_C771_CLASS = 8, // AD10X
-    NVHDMIPKT_C871_CLASS = 9, // T239
-    NVHDMIPKT_C971_CLASS = 10, // NVD5.0
-    NVHDMIPKT_CA71_CLASS = 11,
-    NVHDMIPKT_CB71_CLASS = 12,
-    NVHDMIPKT_CC71_CLASS = 13,
+    NVHDMIPKT_C571_CLASS = 2, // TU102
+    NVHDMIPKT_C671_CLASS = 3, // GA102, T234D
+    NVHDMIPKT_C771_CLASS = 4, // AD10X
+    NVHDMIPKT_C871_CLASS = 5, // T239
+    NVHDMIPKT_C971_CLASS = 6, // NVD5.0
+    NVHDMIPKT_CA71_CLASS = 7,
+    NVHDMIPKT_CB71_CLASS = 8,
+    NVHDMIPKT_CC71_CLASS = 9,
     NVHDMIPKT_INVALID_CLASS   // Not to be used by client, and always the last entry here.
 } NVHDMIPKT_CLASS_ID;
 
@@ -104,6 +100,13 @@ struct tagNVHDMIPKT_CLASS
                                   NvU32                     head,
                                   NVHDMIPKT_TYPE            packetReg,
                                   const ADVANCED_INFOFRAME* pInfoframe);
+
+    NVHDMIPKT_RESULT
+    (*hdmiAdvancedPacketCtrl)    (NVHDMIPKT_CLASS*               pThis,
+                                  NvU32                          subDevice,
+                                  NvU32                          head,
+                                  NVHDMIPKT_TYPE                 packetReg,
+                                  const ADVANCED_INFOFRAME_CTRL* pInfoframeCtrl);
 
     // HW functions - that read/write registers
     NvBool

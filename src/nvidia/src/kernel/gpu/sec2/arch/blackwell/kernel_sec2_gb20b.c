@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -35,6 +35,7 @@
 #include "gpu/pmu/kern_pmu.h"
 #include "gpu/spdm/spdm.h"
 #include "sec2/nvdm_payload_cmd_response.h"
+#include "sec2/sec2_emem_channels.h"
 #include "fsp/fsp_caps_query_rpc.h"
 
 #include "published/blackwell/gb20b/dev_sec_pri.h"
@@ -43,7 +44,8 @@
 #include "published/blackwell/gb20b/dev_bus_zb.h"
 #include "published/blackwell/gb20b/hwproject.h"
 #include "published/blackwell/gb20b/dev_top_zb.h"
-#include "sec2/sec2_nvdm_format.h"
+#include "mctp_format.h"
+#include "nvdm_format.h"
 #include "os/os.h"
 #include "nvRmReg.h"
 #include "nverror.h"
@@ -193,35 +195,6 @@ ksec2NvdmToSeid_GB20B
     }
 
     return seid;
-}
-
-/*!
- * @brief Create MCTP header
- *
- * @param[in] pGpu       OBJGPU pointer
- * @param[in] pKernelSec2 KernelSec2 pointer
- * @param[in] som        Start of Message flag
- * @param[in] eom        End of Message flag
- * @param[in] tag        Message tag
- * @param[in] seq        Packet sequence number
- *
- * @return Constructed MCTP header
- */
-NvU32
-ksec2CreateMctpHeader_GB20B
-(
-    OBJGPU    *pGpu,
-    KernelSec2 *pKernelSec2,
-    NvU8       som,
-    NvU8       eom,
-    NvU8       seid,
-    NvU8       seq
-)
-{
-    return REF_NUM(MCTP_HEADER_SOM,  (som)) |
-           REF_NUM(MCTP_HEADER_EOM,  (eom)) |
-           REF_NUM(MCTP_HEADER_SEID, (seid)) |
-           REF_NUM(MCTP_HEADER_SEQ,  (seq));
 }
 
 /*!
@@ -647,7 +620,7 @@ _ksec2GetGspUcodeArchive
                 // For debug board, when CC enabled, only pick SPDM profile if SPDM is enabled.
                 if  (pCC->getProperty(pCC, PDB_PROP_CONFCOMPUTE_ENABLED) == NV_TRUE)
                 {
-                    if ((confComputeIsSpdmEnabled(pGpu, pCC)              == NV_TRUE) &&
+                    if ((confComputeIsSpdmSupported(pGpu, pCC)              == NV_TRUE) &&
                         (pSpdm->getProperty(pSpdm, PDB_PROP_SPDM_ENABLED) == NV_TRUE))
                     {
                         return gspGetBinArchiveGspFmcSpdmGfwDebugSigned_HAL(pGsp);
@@ -674,7 +647,7 @@ _ksec2GetGspUcodeArchive
 
                 if (pCC->getProperty(pCC, PDB_PROP_CONFCOMPUTE_ENABLED))
                 {
-                    if (confComputeIsSpdmEnabled(pGpu, pCC) &&
+                    if (confComputeIsSpdmSupported(pGpu, pCC) &&
                         pSpdm->getProperty(pSpdm, PDB_PROP_SPDM_ENABLED))
                     {
                         return gspGetBinArchiveGspCcFmcGfwProdSigned_HAL(pGsp);
@@ -756,7 +729,10 @@ ksec2SetupGspImages_GB20B
     // On systems with SEV enabled, the GSP-FMC image has to be accessible
     // to SEC2 (an unit inside GPU) and hence placed in unprotected sysmem
     //
-    flags = MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    if (confComputeForceUnprotAlloc(pGpu))
+    {
+        flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    }
 
     // Detect the mode of operation for GSP and fetch the right image to boot
     pBinArchive = _ksec2GetGspUcodeArchive(pGpu, pKernelSec2);

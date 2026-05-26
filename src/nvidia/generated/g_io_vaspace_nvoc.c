@@ -29,7 +29,7 @@ void __nvoc_init__OBJIOVASPACE(OBJIOVASPACE*);
 void __nvoc_init_funcTable_OBJIOVASPACE(OBJIOVASPACE*);
 NV_STATUS __nvoc_ctor_OBJIOVASPACE(OBJIOVASPACE*);
 void __nvoc_init_dataField_OBJIOVASPACE(OBJIOVASPACE*);
-void __nvoc_dtor_OBJIOVASPACE(OBJIOVASPACE*);
+void __nvoc_dtor_OBJIOVASPACE(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJIOVASPACE;
@@ -60,7 +60,7 @@ NV_STATUS __nvoc_up_thunk_OBJVASPACE_iovaspaceGetPasid(struct OBJIOVASPACE *pVAS
 PMEMORY_DESCRIPTOR __nvoc_up_thunk_OBJVASPACE_iovaspaceGetPageDirBase(struct OBJIOVASPACE *pVAS, struct OBJGPU *pGpu);    // this
 NV_STATUS __nvoc_up_thunk_OBJVASPACE_iovaspacePinRootPageDir(struct OBJIOVASPACE *pVAS, struct OBJGPU *pGpu);    // this
 void __nvoc_up_thunk_OBJVASPACE_iovaspaceUnpinRootPageDir(struct OBJIOVASPACE *pVAS, struct OBJGPU *pGpu);    // this
-void __nvoc_up_thunk_OBJVASPACE_iovaspaceInvalidateTlb(struct OBJIOVASPACE *pVAS, struct OBJGPU *pGpu, VAS_PTE_UPDATE_TYPE type);    // this
+NV_STATUS __nvoc_up_thunk_OBJVASPACE_iovaspaceInvalidateTlb(struct OBJIOVASPACE *pVAS, struct OBJGPU *pGpu, VAS_PTE_UPDATE_TYPE type);    // this
 NV_STATUS __nvoc_up_thunk_OBJVASPACE_iovaspaceGetPageTableInfo(struct OBJIOVASPACE *pVAS, NV0080_CTRL_DMA_GET_PDE_INFO_PARAMS *pParams);    // this
 NV_STATUS __nvoc_up_thunk_OBJVASPACE_iovaspaceGetPteInfo(struct OBJIOVASPACE *pVAS, struct OBJGPU *pGpu, NV0080_CTRL_DMA_GET_PTE_INFO_PARAMS *pParams, RmPhysAddr *pPhysAddr);    // this
 NV_STATUS __nvoc_up_thunk_OBJVASPACE_iovaspaceSetPteInfo(struct OBJIOVASPACE *pVAS, struct OBJGPU *pGpu, NV0080_CTRL_DMA_SET_PTE_INFO_PARAMS *pParams);    // this
@@ -75,7 +75,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJIOVASPACE =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJIOVASPACE",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_OBJIOVASPACE,
+    .objCreatefn =        &__nvoc_objCreateDynamic_OBJIOVASPACE,
     .pCastInfo =          &__nvoc_castinfo__OBJIOVASPACE,
     .pExportInfo =        &__nvoc_export_info__OBJIOVASPACE
 };
@@ -84,7 +84,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJIOVASPACE =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__OBJIOVASPACE __nvoc_metadata__OBJIOVASPACE = {
     .rtti.pClassDef = &__nvoc_class_def_OBJIOVASPACE,    // (iovaspace) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJIOVASPACE,
+    .rtti.dtor      = &__nvoc_dtor_OBJIOVASPACE,
     .rtti.offset    = 0,
     .metadata__OBJVASPACE.rtti.pClassDef = &__nvoc_class_def_OBJVASPACE,    // (vaspace) super
     .metadata__OBJVASPACE.rtti.dtor      = &__nvoc_destructFromBase,
@@ -276,8 +276,8 @@ void __nvoc_up_thunk_OBJVASPACE_iovaspaceUnpinRootPageDir(struct OBJIOVASPACE *p
 }
 
 // iovaspaceInvalidateTlb: virtual inherited (vaspace) base (vaspace)
-void __nvoc_up_thunk_OBJVASPACE_iovaspaceInvalidateTlb(struct OBJIOVASPACE *pVAS, struct OBJGPU *pGpu, VAS_PTE_UPDATE_TYPE type) {
-    vaspaceInvalidateTlb((struct OBJVASPACE *)(((unsigned char *) pVAS) + NV_OFFSETOF(OBJIOVASPACE, __nvoc_base_OBJVASPACE)), pGpu, type);
+NV_STATUS __nvoc_up_thunk_OBJVASPACE_iovaspaceInvalidateTlb(struct OBJIOVASPACE *pVAS, struct OBJGPU *pGpu, VAS_PTE_UPDATE_TYPE type) {
+    return vaspaceInvalidateTlb((struct OBJVASPACE *)(((unsigned char *) pVAS) + NV_OFFSETOF(OBJIOVASPACE, __nvoc_base_OBJVASPACE)), pGpu, type);
 }
 
 // iovaspaceGetPageTableInfo: inline virtual inherited (vaspace) base (vaspace) body
@@ -310,16 +310,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJIOVASPACE =
 
 // Destruct OBJIOVASPACE object.
 void __nvoc_iovaspaceDestruct(OBJIOVASPACE*);
-void __nvoc_dtor_OBJVASPACE(OBJVASPACE*);
-void __nvoc_dtor_OBJIOVASPACE(OBJIOVASPACE* pThis) {
+void __nvoc_dtor_OBJVASPACE(Dynamic*);
+void __nvoc_dtor_OBJIOVASPACE(Dynamic* pThis) {
+
+    OBJIOVASPACE *__nvoc_this = (OBJIOVASPACE *) pThis;
 
 // Call destructor.
-    __nvoc_iovaspaceDestruct(pThis);
+    __nvoc_iovaspaceDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_OBJVASPACE(&pThis->__nvoc_base_OBJVASPACE);
+    __nvoc_dtor_OBJVASPACE((Dynamic *) &__nvoc_this->__nvoc_base_OBJVASPACE);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJIOVASPACE(OBJIOVASPACE *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -445,11 +447,8 @@ __nvoc_objCreate_OBJIOVASPACE_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_OBJIOVASPACE(OBJIOVASPACE **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_OBJIOVASPACE(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_OBJIOVASPACE(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_OBJIOVASPACE((OBJIOVASPACE **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

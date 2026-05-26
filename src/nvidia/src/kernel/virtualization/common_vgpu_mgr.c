@@ -58,7 +58,7 @@ static char * getGridLicenseProductName(const char* licenseInfo)
     }
     else if (portStringCompare(licenseInfo, NV_GRID_LICENSE_FEATURE_COMPUTE_EDITION, (portStringLength(NV_GRID_LICENSE_FEATURE_COMPUTE_EDITION) + 1)) == 0)
     {
-        return (char *)NV_GRID_LICENSED_PRODUCT_COMPUTE;
+        return (char *)NV_GRID_LICENSED_PRODUCT_VGPU_FOR_COMPUTE;
     }
     else
     {

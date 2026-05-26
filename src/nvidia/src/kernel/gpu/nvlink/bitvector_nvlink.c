@@ -138,7 +138,7 @@ convertLinkMasksToBitVector(const void *pLinkMask1, NvU32 linkMask1Size,
     NVLINK_BIT_VECTOR localLinkMask2;
 
     // Return invalid args if output NVLINK_BIT_VECTOR is not specified
-    if ((pOutputBitVector == NULL))
+    if (pOutputBitVector == NULL)
     {
         return NV_ERR_INVALID_ARGUMENT;
     }
@@ -187,4 +187,92 @@ convertLinkMasksToBitVector(const void *pLinkMask1, NvU32 linkMask1Size,
 
     // Return the OR of the 2 converted bitvectors from pLinkMask1 and pLinkMask2
     return bitVectorOr(pOutputBitVector, &localLinkMask1, &localLinkMask2);
+}
+
+NV_STATUS
+bitVectorGetSliceAtOffsetUnaligned_IMPL
+(
+    NV_BITVECTOR *pBitVector,
+    NvU16         bitVectorLast,
+    NvU32         offset,
+    NvU32         size,
+    NvU64        *pSlice
+)
+{
+    NV_STATUS status;
+    NvU64 tmpSlice = 0;
+
+    if (pBitVector == NULL || pSlice == NULL)
+    {
+        return NV_ERR_INVALID_ARGUMENT;
+    }
+
+    // Get slice into aligned temporary variable
+    status = bitVectorGetSlice_IMPL(pBitVector, bitVectorLast,
+                                    rangeMake(offset, offset + size - 1),
+                                    &tmpSlice);
+    if (status != NV_OK)
+    {
+        return status;
+    }
+
+    // Copy to potentially unaligned destination
+    portMemCopy(pSlice, sizeof(*pSlice), &tmpSlice, sizeof(tmpSlice));
+
+    return NV_OK;
+}
+
+NV_STATUS
+nvlinkConvertSplitMasksToBitVector_IMPL
+(
+    NvU32         numMasks,
+    NvU64         mask0,
+    NvU64         mask1,
+    NvU64         mask2,
+    NvU64         mask3,
+    NV_BITVECTOR *pOutBitVector,
+    NvU16         bitVectorLast
+)
+{
+    NV_STATUS status;
+    NvU64 masks[4] = { mask0, mask1, mask2, mask3 };
+    NV_ASSERT_OR_RETURN(pOutBitVector != NULL, NV_ERR_INVALID_ARGUMENT);
+    NV_ASSERT_OR_RETURN((numMasks > 0) && (numMasks <= NV_ARRAY_ELEMENTS(masks)),
+                        NV_ERR_INVALID_ARGUMENT);
+    status = bitVectorClrAll_IMPL(pOutBitVector, bitVectorLast);
+    if (status != NV_OK)
+        return status;
+    return bitVectorFromRaw_IMPL(pOutBitVector, bitVectorLast,
+                                 masks, numMasks * sizeof(NvU64));
+}
+NV_STATUS
+nvlinkConvertBitVectorToSplitMasks_IMPL
+(
+    const NV_BITVECTOR *pInBitVector,
+    NvU16               bitVectorLast,
+    NvU32               numMasks,
+    NvU64              *pMask0,
+    NvU64              *pMask1,
+    NvU64              *pMask2,
+    NvU64              *pMask3
+)
+{
+    NV_STATUS status;
+    NvU64 masks[4] = { 0 };
+    NV_ASSERT_OR_RETURN(pInBitVector != NULL, NV_ERR_INVALID_ARGUMENT);
+    NV_ASSERT_OR_RETURN((numMasks > 0) && (numMasks <= NV_ARRAY_ELEMENTS(masks)),
+                        NV_ERR_INVALID_ARGUMENT);
+    status = bitVectorToRaw_IMPL(pInBitVector, bitVectorLast,
+                                 masks, numMasks * sizeof(NvU64));
+    if (status != NV_OK)
+        return status;
+    if (pMask0 != NULL)
+        portMemCopy(pMask0, sizeof(*pMask0), &masks[0], sizeof(masks[0]));
+    if (pMask1 != NULL)
+        portMemCopy(pMask1, sizeof(*pMask1), &masks[1], sizeof(masks[1]));
+    if (pMask2 != NULL)
+        portMemCopy(pMask2, sizeof(*pMask2), &masks[2], sizeof(masks[2]));
+    if (pMask3 != NULL)
+        portMemCopy(pMask3, sizeof(*pMask3), &masks[3], sizeof(masks[3]));
+    return NV_OK;
 }

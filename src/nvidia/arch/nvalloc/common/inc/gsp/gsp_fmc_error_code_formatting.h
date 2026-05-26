@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -20,7 +20,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
- 
+
 #ifndef GSP_FMC_ERROR_CODES_FORMATTING_H
 #define GSP_FMC_ERROR_CODES_FORMATTING_H
 
@@ -64,13 +64,11 @@
 #define NV_PBUS_SW_SCRATCH_GSP_FMC_ERROR_GENERIC_ERROR_CODE_XMSB       15
 #define NV_PBUS_SW_SCRATCH_GSP_FMC_ERROR_GENERIC_ERROR_CODE_XLSB        0
 
-
 //================================================================================
 // Constant Values
 //================================================================================
 
 // Partition ID Encoding Logic
-#define GSP_FMC_ERROR_CODES_LATEST_IMPL_PART_ID 2U
 #define GSP_FMC_PARTITION_ID_MASK               0xFU
 #define GSP_FMC_PARTITION_ID_OFFSET             1U
 

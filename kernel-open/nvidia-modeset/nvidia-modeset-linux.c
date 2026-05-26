@@ -100,10 +100,20 @@ MODULE_PARM_DESC(malloc_verbose, "Report information about malloc calls on modul
 static bool malloc_verbose = false;
 module_param_named(malloc_verbose, malloc_verbose, bool, 0400);
 
-MODULE_PARM_DESC(conceal_vrr_caps, 
+MODULE_PARM_DESC(force_frl_rate,
+                 "Override the default FRL rate selection (2 = max FRL rate w/ DSC, 1 = max FRL rate, 0 = default rate)");
+static int force_frl_rate = 0;
+module_param_named(force_frl_rate, force_frl_rate, int, 0400);
+
+MODULE_PARM_DESC(conceal_vrr_caps,
                  "Conceal all display VRR capabilities");
 static bool conceal_vrr_caps = false;
 module_param_named(conceal_vrr_caps, conceal_vrr_caps, bool, 0400);
+
+MODULE_PARM_DESC(enhanced_pcon_support,
+                 "Enable enhanced display protocol converter features (e.g. VRR over active DP-HDMI converters)");
+static bool enhanced_pcon_support = false;
+module_param_named(enhanced_pcon_support, enhanced_pcon_support, bool, 0400);
 
 /* Fail allocating the RM core channel for NVKMS using the i-th method (see
  * FailAllocCoreChannelMethod). Failures not using the i-th method are ignored. */
@@ -137,7 +147,7 @@ struct platform_device *nvhost_platform_device = NULL;
 #endif
 
 NvBool nvkms_test_fail_alloc_core_channel(
-    enum FailAllocCoreChannelMethod method
+    enum NvKmsFailAllocCoreChannelMethod method
 )
 {
     if (method != fail_alloc_core_channel_method) {
@@ -152,9 +162,26 @@ NvBool nvkms_test_fail_alloc_core_channel(
     return NV_TRUE;
 }
 
+enum NvKmsFrlRateForce nvkms_force_frl_rate(void)
+{
+    switch (force_frl_rate) {
+    case 2:
+        return NVKMS_FRL_RATE_FORCE_MAX_DSC;
+    case 1:
+        return NVKMS_FRL_RATE_FORCE_MAX;
+    }
+
+    return NVKMS_FRL_RATE_FORCE_NONE;
+}
+
 NvBool nvkms_conceal_vrr_caps(void)
 {
     return conceal_vrr_caps;
+}
+
+NvBool nvkms_enhanced_pcon_support(void)
+{
+    return enhanced_pcon_support;
 }
 
 NvBool nvkms_output_rounding_fix(void)

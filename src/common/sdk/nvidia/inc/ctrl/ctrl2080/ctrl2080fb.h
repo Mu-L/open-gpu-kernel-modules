@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2006-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2006-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -158,6 +158,8 @@
  *   NV2080_CTRL_FB_INFO_INDEX_PARTITION_MASK
  *   NV2080_CTRL_FB_INFO_INDEX_PARTITION_MASK_0
  *   NV2080_CTRL_FB_INFO_INDEX_PARTITION_MASK_1
+ *   NV2080_CTRL_FB_INFO_INDEX_PARTITION_MASK_2
+ *   NV2080_CTRL_FB_INFO_INDEX_PARTITION_MASK_3
  *     This index is used to request the mask of currently active partitions.
  *     Each active partition has an ID that's equivalent to the corresponding
  *     bit position in the mask.
@@ -167,12 +169,20 @@
  *     (though kept for backwards compatibility on older chips), on newer chips
  *     will be replaced by:
  *     PARTITION_MASK_0 for the lower 32bits
- *     PARTITION_MASK_1 for the upper 32bits
+ *     PARTITION_MASK_1 for the next 32bits
+ *     PARTITION_MASK_2 for the next 32bits
+ *     PARTITION_MASK_3 for the upper 32bits
  *     Note that PARTITION_MASK and PARTITION_MASK_0 are handled the same, and
  *     use the same enum value.
  *   NV2080_CTRL_FB_INFO_INDEX_LTC_MASK
  *   NV2080_CTRL_FB_INFO_INDEX_LTC_MASK_0
  *   NV2080_CTRL_FB_INFO_INDEX_LTC_MASK_1
+ *   NV2080_CTRL_FB_INFO_INDEX_LTC_MASK_2
+ *   NV2080_CTRL_FB_INFO_INDEX_LTC_MASK_3
+ *   NV2080_CTRL_FB_INFO_INDEX_LTC_MASK_4
+ *   NV2080_CTRL_FB_INFO_INDEX_LTC_MASK_5
+ *   NV2080_CTRL_FB_INFO_INDEX_LTC_MASK_6
+ *   NV2080_CTRL_FB_INFO_INDEX_LTC_MASK_7
  *     This index is used to request the mask of currently active LTCs.
  *     Each active LTC has an ID that's equivalent to the corresponding
  *     bit position in the mask.
@@ -182,7 +192,13 @@
  *     (though kept for backwards compatibility on older chips), on newer chips
  *     will be replaced by:
  *     LTC_MASK_0 for the lower 32bits
- *     LTC_MASK_1 for the upper 32bits
+ *     LTC_MASK_1 for the next 32bits
+ *     LTC_MASK_2 for the next 32bits
+ *     LTC_MASK_3 for the next 32bits
+ *     LTC_MASK_4 for the next 32bits
+ *     LTC_MASK_5 for the next 32bits
+ *     LTC_MASK_6 for the next 32bits
+ *     LTC_MASK_7 for the upper 32bits
  *     Note that LTC_MASK and LTC_MASK_0 are handled the same, and
  *     use the same enum value.
  *   NV2080_CTRL_FB_INFO_INDEX_VISTA_RESERVED_HEAP_SIZE
@@ -365,8 +381,16 @@ typedef NVXXXX_CTRL_XXX_INFO NV2080_CTRL_FB_INFO;
 #define NV2080_CTRL_FB_INFO_INDEX_ACCESS_COUNTER_BUFFER_COUNT       (0x00000039U)
 #define NV2080_CTRL_FB_INFO_INDEX_COHERENCE_INFO                    (0x0000003AU)
 #define NV2080_CTRL_FB_INFO_INDEX_NUMA_NODE_ID                      (0x0000003BU)
+#define NV2080_CTRL_FB_INFO_INDEX_PARTITION_MASK_2                  (0x0000003CU)
+#define NV2080_CTRL_FB_INFO_INDEX_PARTITION_MASK_3                  (0x0000003DU)
+#define NV2080_CTRL_FB_INFO_INDEX_LTC_MASK_2                        (0x0000003EU)
+#define NV2080_CTRL_FB_INFO_INDEX_LTC_MASK_3                        (0x0000003FU)
+#define NV2080_CTRL_FB_INFO_INDEX_LTC_MASK_4                        (0x00000040U)
+#define NV2080_CTRL_FB_INFO_INDEX_LTC_MASK_5                        (0x00000041U)
+#define NV2080_CTRL_FB_INFO_INDEX_LTC_MASK_6                        (0x00000042U)
+#define NV2080_CTRL_FB_INFO_INDEX_LTC_MASK_7                        (0x00000043U)
 
-#define NV2080_CTRL_FB_INFO_INDEX_MAX                               NV2080_CTRL_FB_INFO_INDEX_NUMA_NODE_ID
+#define NV2080_CTRL_FB_INFO_INDEX_MAX                               NV2080_CTRL_FB_INFO_INDEX_LTC_MASK_7
 
 /* Intentionally picking a value much bigger than NV2080_CTRL_FB_INFO_INDEX_MAX to prevent VGPU plumbing updates */
 #define NV2080_CTRL_FB_INFO_MAX_LIST_SIZE                           (0x00000080U)
@@ -397,6 +421,12 @@ typedef NVXXXX_CTRL_XXX_INFO NV2080_CTRL_FB_INFO;
 #define NV2080_CTRL_FB_INFO_RAM_TYPE_HBM3                           (0x00000014U) /* HBM3 (High Bandwidth Memory) v3 */
 
 #define NV2080_CTRL_FB_INFO_RAM_TYPE_GDDR7                          (0x00000015U) /* GDDR7 */
+
+
+/*
+ * Guarding the macro which reveal the use of HBM4.
+ */
+#define NV2080_CTRL_FB_INFO_RAM_TYPE_HBM4                           (0x00000016U) /* HBM4 (High Bandwidth Memory) v4 */
 
 
 
@@ -861,15 +891,26 @@ typedef struct NV2080_CTRL_FB_GET_GPU_CACHE_INFO_PARAMS {
 
 #define NV2080_CTRL_CMD_FB_GET_FB_REGION_INFO_MEM_TYPES           18U
 
+// add tags as needed for regions through either memmgrInitFbRegions or memmgrInsertFbRegion
+typedef enum NV2080_FB_REGION_TAG {
+    NV2080_FB_REGION_TAG_NONE = 0,                 // default tag
+    NV2080_FB_REGION_TAG_GSP_CARVEOUT = 1,         // GSP carveout region, usually at highest address    
+    NV2080_FB_REGION_TAG_CPU_RM_RESERVED = 2,      // first reserved region for structures in CPU RM
+    NV2080_FB_REGION_TAG_CPU_RM_RESERVED_HEAP = 3, // second reserved region for structures in CPU RM
+    NV2080_FB_REGION_TAG_GSP_RM_RESERVED = 4,      // first reserved region for structures in GSP RM
+    NV2080_FB_REGION_TAG_GSP_RM_RESERVED_HEAP = 5,  // second reserved region for structures in GSP RM
+} NV2080_FB_REGION_TAG;
+
 typedef struct NV2080_CTRL_CMD_FB_GET_FB_REGION_FB_REGION_INFO {
     NV_DECLARE_ALIGNED(NvU64 base, 8);
     NV_DECLARE_ALIGNED(NvU64 limit, 8);
     NV_DECLARE_ALIGNED(NvU64 reserved, 8);
-    NvU32  performance;
-    NvBool supportCompressed;
-    NvBool supportISO;
-    NvBool bProtected;
-    NvBool blackList[NV2080_CTRL_CMD_FB_GET_FB_REGION_INFO_MEM_TYPES];
+    NvU32                performance;
+    NvBool               supportCompressed;
+    NvBool               supportISO;
+    NvBool               bProtected;
+    NvBool               blackList[NV2080_CTRL_CMD_FB_GET_FB_REGION_INFO_MEM_TYPES];
+    NV2080_FB_REGION_TAG regionTag;
 } NV2080_CTRL_CMD_FB_GET_FB_REGION_FB_REGION_INFO;
 
 #define NV2080_CTRL_CMD_FB_GET_FB_REGION_INFO_MAX_ENTRIES 16U
@@ -2612,26 +2653,6 @@ typedef struct NV2080_CTRL_FB_GET_SEMAPHORE_SURFACE_LAYOUT_PARAMS {
     NvU32 caps;
 } NV2080_CTRL_FB_GET_SEMAPHORE_SURFACE_LAYOUT_PARAMS;
 
-typedef struct NV2080_CTRL_CMD_FB_STATS_ENTRY {
-    //! Total physical memory available (accounts row-remapping)
-    NV_DECLARE_ALIGNED(NvU64 totalSize, 8);
-
-    //! Total reserved memory (includes both Region 1 and region 2)
-    NV_DECLARE_ALIGNED(NvU64 rsvdSize, 8);
-
-    //! Total usable memory (Region 0) for OS/KMD
-    NV_DECLARE_ALIGNED(NvU64 osSize, 8);
-
-    //! Region 1 (RM Internal) memory
-    NV_DECLARE_ALIGNED(NvU64 r1Size, 8);
-
-    //! Region 2 (Reserved) memory
-    NV_DECLARE_ALIGNED(NvU64 r2Size, 8);
-
-    //! Free memory (reserved but not allocated)
-    NV_DECLARE_ALIGNED(NvU64 freeSize, 8);
-} NV2080_CTRL_CMD_FB_STATS_ENTRY;
-
 /*
  * NV2080_CTRL_CMD_GMMU_COMMIT_TLB_INVALIDATE
  *
@@ -2656,6 +2677,9 @@ typedef struct NV2080_CTRL_GMMU_COMMIT_TLB_INVALIDATE_PARAMS {
     NvBool invalidateAll;
 } NV2080_CTRL_GMMU_COMMIT_TLB_INVALIDATE_PARAMS;
 
+// NV_FB_ALLOC_RM_INTERNAL_OWNER__MAX - NV_FB_ALLOC_RM_INTERNAL_OWNER__MIN //
+#define NV2080_CTRL_CMD_FB_STATS_MAX_OWNER 201U
+
 typedef struct NV2080_CTRL_CMD_FB_STATS_OWNER_INFO {
     //! Total allocated size for this owner
     NV_DECLARE_ALIGNED(NvU64 allocSize, 8);
@@ -2667,28 +2691,58 @@ typedef struct NV2080_CTRL_CMD_FB_STATS_OWNER_INFO {
     NV_DECLARE_ALIGNED(NvU64 rsvdSize, 8);
 } NV2080_CTRL_CMD_FB_STATS_OWNER_INFO;
 
-#define NV2080_CTRL_CMD_FB_STATS_MAX_OWNER 200U
+#define NV2080_CTRL_CMD_RM_FB_STATS_ENTRY_MESSAGE_ID (0x2AU)
+
+typedef struct NV2080_CTRL_CMD_RM_FB_STATS_ENTRY {
+    //! RM reserved heap memory
+    NV_DECLARE_ALIGNED(NvU64 reservedHeap, 8);
+
+    //! Free RM heap memory (reserved but not allocated)
+    NV_DECLARE_ALIGNED(NvU64 reservedHeapFree, 8);
+
+    //! RM reserved memory
+    NV_DECLARE_ALIGNED(NvU64 reserved, 8);
+
+    //! owner info table
+    NV_DECLARE_ALIGNED(NV2080_CTRL_CMD_FB_STATS_OWNER_INFO fbBlockInfo[NV2080_CTRL_CMD_FB_STATS_MAX_OWNER], 8);
+} NV2080_CTRL_CMD_RM_FB_STATS_ENTRY;
+
 
 /*
  * NV2080_CTRL_CMD_FB_STATS_GET
  *
- * Get the FB allocations info.
+ * Get the FB allocations info from CPU-RM and GSP-RM.
  */
-#define NV2080_CTRL_CMD_FB_STATS_GET       (0x2080132a) /* finn: Evaluated from "(FINN_NV20_SUBDEVICE_0_FB_INTERFACE_ID << 8) | NV2080_CTRL_CMD_FB_STATS_GET_PARAMS_MESSAGE_ID" */
+#define NV2080_CTRL_CMD_FB_STATS_GET (0x2080132f) /* finn: Evaluated from "(FINN_NV20_SUBDEVICE_0_FB_INTERFACE_ID << 8) | NV2080_CTRL_CMD_FB_STATS_GET_PARAMS_MESSAGE_ID" */
 
-#define NV2080_CTRL_CMD_FB_STATS_GET_PARAMS_MESSAGE_ID (0x2AU)
+#define NV2080_CTRL_CMD_FB_STATS_GET_PARAMS_MESSAGE_ID (0x2FU)
 
 typedef struct NV2080_CTRL_CMD_FB_STATS_GET_PARAMS {
+    //! Total physical memory available (accounts row-remapping)
+    NV_DECLARE_ALIGNED(NvU64 total, 8);
 
-    //! Version id for driver and tool matching
-    NV_DECLARE_ALIGNED(NvU64 version, 8);
+    //! Total usable memory for OS/KMD
+    NV_DECLARE_ALIGNED(NvU64 os, 8);
 
-    //! All sizes info
-    NV_DECLARE_ALIGNED(NV2080_CTRL_CMD_FB_STATS_ENTRY fbSizeInfo, 8);
+    //! GSP carveout size
+    NV_DECLARE_ALIGNED(NvU64 gspCarveout, 8);
 
-    //! Level 2 owner info table
-    NV_DECLARE_ALIGNED(NV2080_CTRL_CMD_FB_STATS_OWNER_INFO fbBlockInfo[NV2080_CTRL_CMD_FB_STATS_MAX_OWNER], 8);
+    //! misc reserved region size (console, vGPU-specific, CBC, etc.)
+    NV_DECLARE_ALIGNED(NvU64 miscReserved, 8);
+
+    //! CPU-RM sizes info
+    NV_DECLARE_ALIGNED(NV2080_CTRL_CMD_RM_FB_STATS_ENTRY cpuFbInfo, 8);
+
+    //! GSP-RM sizes info
+    NV_DECLARE_ALIGNED(NV2080_CTRL_CMD_RM_FB_STATS_ENTRY gspFbInfo, 8);
 } NV2080_CTRL_CMD_FB_STATS_GET_PARAMS;
+
+/*
+ * NV2080_CTRL_CMD_GSP_FB_STATS_GET
+ *
+ * Get the FB allocations info from GSP-RM.
+ */
+#define NV2080_CTRL_CMD_GSP_FB_STATS_GET        (0x2080132a) /* finn: Evaluated from "(FINN_NV20_SUBDEVICE_0_FB_INTERFACE_ID << 8) | NV2080_CTRL_CMD_RM_FB_STATS_ENTRY_MESSAGE_ID" */
 
 /*
  * NV2080_CTRL_CMD_FB_GET_STATIC_BAR1_INFO
@@ -2919,6 +2973,8 @@ typedef struct NV2080_CTRL_FB_BANK_REMAP_HISTOGRAM {
  *   flags
  *     This output parameter contains info on whether or not there are pending
  *     remappings and whether or not a remapping failed
+ *   histogram
+ *     This output parameter contains the group histogram of bank remapper.
  *   entries
  *     This output parameter is an array of NV2080_CTRL_FB_BANK_REMAP_ENTRY
  *     containing inforomation on the remapping that occurred. This array can

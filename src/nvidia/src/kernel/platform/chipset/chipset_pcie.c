@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2000-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2000-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -90,6 +90,227 @@ static NV_STATUS addHwbcToList(OBJGPU *, OBJHWBC *);
 #define NV_ACPI_TABLE_SIGNATURE_GFCM NvU32_BUILD('G','F','C','M')
 #define NV_ACPI_TABLE_SIGNATURE_TDSR NvU32_BUILD('T','D','S','R')
 #define NV_ACPI_TABLE_SIGNATURE_TDSX NvU32_BUILD('T','D','S','X')
+
+#define PEER_ACCESS_CAPS_CAPABLE_NONE       0x00
+#define PEER_ACCESS_CAPS_CAPABLE_READ       0x01
+#define PEER_ACCESS_CAPS_CAPABLE_WRITE      0x02
+#define PEER_ACCESS_CAPS_CAPABLE_READWRITE  (PEER_ACCESS_CAPS_CAPABLE_READ | PEER_ACCESS_CAPS_CAPABLE_WRITE)
+
+#define PEER_ACCESS_CAPS_CHIPSET_ANY        ~0
+
+#define PEER_CAPS(xx)  PEER_ACCESS_CAPS_##xx
+
+typedef struct
+{
+    NvU32 chipsetId;                         // Chipset ID
+    NvU16 chipsetDevId;                      // Chipset device ID
+    NvU16 chipsetVenId;                      // Chipset vendor ID
+    NvU16 chipsetSSDevId;                    // Chipset SS device ID
+    NvU16 chipsetSSVenId;                    // Chipset SS vendor
+    NvU8  caps;                              // PEER_ACCESS_CAPS_CAPABLE_* defines
+} CHIPSET_PEER_ACCESS_CAPS;
+
+//
+// This chipset table doesn't take into account the presence of any PCIe switches.
+// The check for PCIe switch needs to be done separately.
+// The table indicates that the chipset supports PCIe P2P between 2 devices with
+// the P2P transactions going over the root ports.
+//
+static
+CHIPSET_PEER_ACCESS_CAPS pciePeerAccessCaps[] =
+{
+    //
+    // System specific black list below - No PCIE P2P allowed
+    //
+
+    // Intel - C422 - Foxconn Einstein 64 [8086:a1c1][105b:7270]: no P2P - Bug 200433941
+    {CS_INTEL_A242, FOXCONN_EINSTEIN_64_DEVID, NV_PCI_SUBID_VENDOR_INTEL,
+     FOXCONN_EINSTEIN_64_SSDEVID, NV_PCI_SUBID_VENDOR_FOXCONN, PEER_CAPS(CAPABLE_NONE)},
+
+    // Intel - Clevo Mobile X58
+    {CS_INTEL_3400, X58_MOBILE_DEVID, PEER_CAPS(CHIPSET_ANY),
+     X58_MOBILE_CLEVO_7200_SSDEVID, PCI_VENDOR_ID_CLEVO, PEER_CAPS(CAPABLE_NONE)},
+
+    // Cavium, Inc. CN99xx [ThunderX2]
+    {PEER_CAPS(CHIPSET_ANY), CAVIUM_X2_DEVID, NV_PCI_SUBID_VENDOR_CAVIUM,
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_NONE)},
+
+    // NVIDIA Grace chipset - P2P enabled with PCIe switches but disabled otherwise.
+    {CS_NVIDIA_TH500, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_NONE)},
+
+    // Ampere Computing - Altra
+    {CS_AMPERE_ALTRA, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_NONE)},
+
+    // Amazon.com - Graviton2
+    {CS_AMAZON_GRAVITRON2, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_NONE)},
+
+    // Ampere - AmpereOne-160
+    {CS_AMPERE_AMPEREONE160, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_NONE)},
+
+    // Phytium S5000
+    {CS_PHYTIUM_S5000,  PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_NONE)},
+
+    //
+    // White list below - P2P allowed with specified mode (P2P reads, writes or both)
+    //
+    // Intel - GreenCreek - Writes only
+    {CS_INTEL_25E0, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_WRITE)},
+
+    // Intel - BearlakeX - Writes only
+    {CS_INTEL_29E0, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_WRITE)},
+
+    // Intel - Tumwater - Writes only
+    {CS_INTEL_359E, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_WRITE)},
+
+    // Intel - Stoakley - Writes only
+    {CS_INTEL_4000, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_WRITE)},
+
+    // Intel - Skulltrail - Writes only
+    {CS_INTEL_4003, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_WRITE)},
+
+    // Intel - X58
+    {CS_INTEL_3400, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - Desktop P55 (Mobile P55 implicitly disabled as not listed)
+    {CS_INTEL_3B42, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - P67
+    {CS_INTEL_1C46, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - X79
+    {CS_INTEL_1D40, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - Z75
+    {CS_INTEL_1E10, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - Z87
+    {CS_INTEL_8C4B, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - Z97
+    {CS_INTEL_8CC4, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - X99
+    {CS_INTEL_8D47, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - Z170
+    {CS_INTEL_A145, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - Z270
+    {CS_INTEL_A2C5, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - X299
+    {CS_INTEL_A2D2, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - C62x/C422
+    {CS_INTEL_A242, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - Z370
+    {CS_INTEL_A2C9, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - CometLake
+    {CS_INTEL_0685, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - IceLake
+    {CS_INTEL_C620, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    {CS_INTEL_18DC, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - RocketLake
+    {CS_INTEL_4381, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - AlderLake
+    {CS_INTEL_7A82, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - SapphireRapids
+    {CS_INTEL_1B81, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - Intel-RaptorLake
+    {CS_INTEL_7A04, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Intel - Intel-GraniteRapids
+    {CS_INTEL_5795, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // AMD - 990FX
+    {CS_ATI_FX990, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // AMD - RD850
+    {CS_ATI_RD850, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // AMD - RD870
+    {CS_ATI_RD870, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // AMD - RD890
+    {CS_ATI_RD890, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // AMD - X370
+    {CS_AMD_X370, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // IBM - Venice/Naples - Writes only
+    {CS_IBM_VENICE, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_WRITE)},
+
+    // NVIDIA - nForce4 - Reads only
+    {CS_NVIDIA_C19, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READ)},
+
+    // Hygon-C86-7151
+    {CS_HYGON_C86, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    // Ampere - AmpereOne-192
+    {CS_AMPERE_AMPEREONE192, PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    //
+    // General rules after the specifics above
+    //
+
+    // NVIDIA chipsets - all
+    {PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PCI_VENDOR_ID_NVIDIA,
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_READWRITE)},
+
+    //
+    // Last entry - default = not supported
+    //
+    {PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY),
+     PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CHIPSET_ANY), PEER_CAPS(CAPABLE_NONE)},
+};
 
 NV_STATUS
 clInitDeviceInfo_IMPL(OBJCL *pCl, OBJGPU *pGpu)
@@ -241,6 +462,62 @@ objClBuildPcieAtomicsAllowList(OBJGPU *pGpu, OBJCL *pCl)
         pCl->setProperty(pCl, PDB_PROP_CL_BUG_3562968_WAR_ALLOW_PCIE_ATOMICS, NV_TRUE);
     }
     return;
+}
+
+void
+clInitChipsetGpuPeerAccessCaps_IMPL
+(
+    OBJCL  *pCl
+)
+{
+    NvU32 index;
+
+    for (index = 0; index < NV_ARRAY_ELEMENTS(pciePeerAccessCaps); index ++)
+    {
+        if ((pciePeerAccessCaps[index].chipsetId != (NvU32)PEER_CAPS(CHIPSET_ANY)) &&
+            (pciePeerAccessCaps[index].chipsetId != pCl->Chipset))
+        {
+            continue;
+        }
+        if ((pciePeerAccessCaps[index].chipsetDevId != (NvU16)PEER_CAPS(CHIPSET_ANY)) &&
+            (!pCl->FHBAddr.valid || (pciePeerAccessCaps[index].chipsetDevId != pCl->FHBBusInfo.deviceID)) &&
+            (!pCl->chipsetIDBusAddr.valid || (pciePeerAccessCaps[index].chipsetDevId != pCl->chipsetIDInfo.deviceID)))
+        {
+            continue;
+        }
+        if ((pciePeerAccessCaps[index].chipsetVenId != (NvU16)PEER_CAPS(CHIPSET_ANY)) &&
+            (!pCl->FHBAddr.valid || (pciePeerAccessCaps[index].chipsetVenId != pCl->FHBBusInfo.vendorID)) &&
+            (!pCl->chipsetIDBusAddr.valid || (pciePeerAccessCaps[index].chipsetVenId != pCl->chipsetIDInfo.vendorID)))
+        {
+            continue;
+        }
+        if ((pciePeerAccessCaps[index].chipsetSSDevId != (NvU16)PEER_CAPS(CHIPSET_ANY)) &&
+            (!pCl->FHBAddr.valid || (pciePeerAccessCaps[index].chipsetSSDevId != pCl->FHBBusInfo.subdeviceID)) &&
+            (!pCl->chipsetIDBusAddr.valid || (pciePeerAccessCaps[index].chipsetSSDevId != pCl->chipsetIDInfo.subdeviceID)))
+        {
+            continue;
+        }
+        if ((pciePeerAccessCaps[index].chipsetSSVenId != (NvU16)PEER_CAPS(CHIPSET_ANY)) &&
+            (!pCl->FHBAddr.valid || (pciePeerAccessCaps[index].chipsetSSVenId != pCl->FHBBusInfo.subvendorID)) &&
+            (!pCl->chipsetIDBusAddr.valid || (pciePeerAccessCaps[index].chipsetSSVenId != pCl->chipsetIDInfo.subvendorID)))
+        {
+            continue;
+        }
+
+        // Match found
+        pCl->bPciePeerWriteCapable = ((pciePeerAccessCaps[index].caps & PEER_CAPS(CAPABLE_WRITE)) != 0);
+        pCl->bPciePeerReadCapable  = ((pciePeerAccessCaps[index].caps & PEER_CAPS(CAPABLE_READ)) != 0);
+
+        break;
+    }
+
+    if (index == NV_ARRAY_ELEMENTS(pciePeerAccessCaps))
+    {
+        pCl->bPciePeerWriteCapable = NV_FALSE;
+        pCl->bPciePeerReadCapable = NV_FALSE;
+
+        NV_ASSERT_FAILED("Unable to find a match in the chipset P2P table");
+    }
 }
 
 //
@@ -520,6 +797,8 @@ objClInitPcieChipset(OBJGPU *pGpu, OBJCL *pCl)
 
     // Cache L1SS enablement info from chipset side
     kbifCacheChipsetL1SubstatesEnable(pGpu, pKernelBif);
+
+    clInitChipsetGpuPeerAccessCaps(pCl);
 
     return NV_OK;
 }
@@ -1541,7 +1820,7 @@ objClGpuMapRootPort
     OBJOS  *pOS = SYS_GET_OS(pSys);
     NBADDR *pRoot = &pGpu->gpuClData.rootPort.addr;
     void   *vAddr;
-    RmPhysAddr pcieConfigSpaceBase;
+    NvU64 pcieConfigSpaceBase;
 
     NV_ASSERT_OR_RETURN_VOID(!pOS->getProperty(pOS, PDB_PROP_OS_DOES_NOT_ALLOW_DIRECT_PCIE_MAPPINGS));
 
@@ -1605,7 +1884,7 @@ objClGpuMapEnhCfgSpace
     NvU8 bus;
     NvU8 device;
     NvU32 domain;
-    RmPhysAddr pcieConfigSpaceBase;
+    NvU64 pcieConfigSpaceBase;
 
     NV_ASSERT_OR_RETURN_VOID(!pOS->getProperty(pOS, PDB_PROP_OS_DOES_NOT_ALLOW_DIRECT_PCIE_MAPPINGS));
 
@@ -3010,7 +3289,7 @@ objClPcieMapEnhCfgSpace
     OBJOS  *pOS     = SYS_GET_OS(pSys);
     OBJGPU *pGpu    = NULL;
     NvU32 gpuAttachCnt, gpuAttachMask, gpuInstance;
-    RmPhysAddr pcieConfigSpaceBase;
+    NvU64 pcieConfigSpaceBase;
 
     NV_ASSERT_OR_RETURN(!pOS->getProperty(pOS, PDB_PROP_OS_DOES_NOT_ALLOW_DIRECT_PCIE_MAPPINGS), NULL);
 
@@ -4282,11 +4561,11 @@ clStorePcieConfigSpaceBaseFromMcfg_exit:
 NV_STATUS
 clInsertPcieConfigSpaceBase_IMPL
 (
-    OBJCL     *pCl,
-    RmPhysAddr baseAddress,
-    NvU32      domain,
-    NvU8       startBusNumber,
-    NvU8       endBusNumber
+    OBJCL *pCl,
+    NvU64  baseAddress,
+    NvU32  domain,
+    NvU8   startBusNumber,
+    NvU8   endBusNumber
 )
 {
     PPCIECONFIGSPACEBASE pPcieConfigSpaceBase;
@@ -4314,7 +4593,7 @@ clInsertPcieConfigSpaceBase_IMPL
 }
 
 
-RmPhysAddr
+NvU64
 clFindPcieConfigSpaceBase_IMPL
 (
     OBJCL *pCl,

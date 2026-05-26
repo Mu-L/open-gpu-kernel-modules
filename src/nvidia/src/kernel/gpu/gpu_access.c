@@ -24,6 +24,7 @@
 #include "kernel/gpu/gpu.h"
 #include "gpu_mgr/gpu_mgr.h"
 #include "kernel/diagnostics/journal.h"
+#include "gpu/disp/kern_disp.h"
 
 #include "core/thread_state.h"
 #include "platform/sli/sli.h"
@@ -478,6 +479,22 @@ regWrite032Unicast
     THREAD_STATE_NODE *pThreadState
 )
 {
+    OBJGPU   *pGpu    = pRegisterAccess->pGpu;
+
+    if (pGpu->getProperty(pGpu, PDB_PROP_GPU_TEGRA_SOC_NVDISPLAY))
+    {
+        //
+        // Display IED dev init scripts are still called using GPU_REG_RD/WR macros
+        // There is proposal to replace these script with direct function calls
+        // Temporary hack to call with KernelDispaly aperture.
+        //
+        KernelDisplay *pKernelDisplay = GPU_GET_KERNEL_DISPLAY(pGpu);
+        if (pKernelDisplay != NULL && pKernelDisplay->pAperture != NULL)
+        {
+            REG_WR32(pKernelDisplay->pAperture, addr, val);
+            return;
+        }
+    }
 
     _regWriteUnicast(pRegisterAccess, deviceIndex, instance, addr, val, 32, pThreadState);
 }
@@ -742,9 +759,27 @@ regRead032
     THREAD_STATE_NODE *pThreadState
 )
 {
+    OBJGPU *pGpu;
+
     if (pRegisterAccess == NULL)
     {
         return NV_ERR_INVALID_POINTER;
+    }
+
+    pGpu = pRegisterAccess->pGpu;
+
+    if (pGpu->getProperty(pGpu, PDB_PROP_GPU_TEGRA_SOC_NVDISPLAY))
+    {
+        //
+        // Display IED dev init scripts are still called using GPU_REG_RD/WR macros
+        // There is proposal to replace these script with direct function calls
+        // Temporary hack to call with pKernelDisplay aperture.
+        //
+        KernelDisplay *pKernelDisplay = GPU_GET_KERNEL_DISPLAY(pGpu);
+        if (pKernelDisplay != NULL && pKernelDisplay->pAperture != NULL)
+        {
+           return REG_RD32(pKernelDisplay->pAperture, addr);
+        }
     }
 
     return _regRead(pRegisterAccess, deviceIndex, instance, addr, 32, pThreadState);

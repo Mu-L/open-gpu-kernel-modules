@@ -5,7 +5,7 @@
 // Profile:  shipping-gpus-openrm
 // Template: templates/gt_hal_register.h
 //
-// Chips:    TU10X, GA100, GA102, GA103, GA104, GA106, GA107, AD10X, GH10X, GB100, GB102, GB10B, GB110, GB112, GB202, GB203, GB205, GB206, GB207, GB20B, GB20C, T234D, T26XD
+// Chips:    TU10X, GA100, GA102, GA103, GA104, GA106, GA107, AD10X, GH10X, GB100, GB102, GB10B, GB110, GB112, GB202, GB203, GB205, GB206, GB207, GB20B, GB20C, GR10X, T23XD, T26XD
 //
 
 #ifndef _G_RMCFG_HAL_REGISTER_H_
@@ -209,13 +209,36 @@ static NV_STATUS NV_INLINE REGISTER_GB20X_HALS(void)
     return NV_OK;
 }
 
+NV_STATUS registerHalModule_GR100(void);    
+NV_STATUS registerHalModule_GR102(void);    
+
+static NV_STATUS NV_INLINE REGISTER_GR10X_HALS(void)
+{
+    NV_STATUS rmStatus;
+
+    rmStatus = registerHalModule_GR100();
+    if (rmStatus != NV_OK)
+        return rmStatus;
+
+    rmStatus = registerHalModule_GR102();
+    if (rmStatus != NV_OK)
+        return rmStatus;
+
+    return NV_OK;
+}
+
 NV_STATUS registerHalModule_T234D(void);    
+NV_STATUS registerHalModule_T239D(void);    
 
 static NV_STATUS NV_INLINE REGISTER_T23XD_HALS(void)
 {
     NV_STATUS rmStatus;
 
     rmStatus = registerHalModule_T234D();
+    if (rmStatus != NV_OK)
+        return rmStatus;
+
+    rmStatus = registerHalModule_T239D();
     if (rmStatus != NV_OK)
         return rmStatus;
 
@@ -274,6 +297,12 @@ static NV_STATUS NV_INLINE REGISTER_ALL_HALS(void)
     }
 
     rmStatus = REGISTER_GB20X_HALS();
+    if (rmStatus != NV_OK)
+    {
+        return rmStatus;
+    }
+
+    rmStatus = REGISTER_GR10X_HALS();
     if (rmStatus != NV_OK)
     {
         return rmStatus;

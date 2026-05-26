@@ -340,7 +340,7 @@ struct OBJSYS {
     struct OBJTRACEABLE *__nvoc_pbase_OBJTRACEABLE;    // traceable super
     struct OBJSYS *__nvoc_pbase_OBJSYS;    // sys
 
-    // 39 PDB properties
+    // 40 PDB properties
     NvBool PDB_PROP_SYS_SBIOS_NVIF_POWERMIZER_LIMIT;
     NvBool PDB_PROP_SYS_MXM_THERMAL_CONTROL_PRESENT;
     NvBool PDB_PROP_SYS_NVIF_INIT_DONE;
@@ -375,9 +375,10 @@ struct OBJSYS {
     NvBool PDB_PROP_SYS_ENABLE_FORCE_SHARED_LOCK;
     NvBool PDB_PROP_SYS_DESTRUCTING;
     NvBool PDB_PROP_SYS_ALLOW_UNKNOWN_4PART_IDS;
-    NvBool PDB_PROP_SYS_RECOVERY_REBOOT_REQUIRED;
+    NvBool PDB_PROP_SYS_EVENT_NOTIFY_ISR_OPT_ENABLED;
+    NvBool PDB_PROP_SYS_RECOVERY_OS_REBOOT_REQUIRED;
+    NvBool PDB_PROP_SYS_RECOVERY_SYSTEM_REBOOT_REQUIRED;
     NvBool PDB_PROP_SYS_SUPPORTS_S0IX;
-    NvBool PDB_PROP_SYS_PAT_UNSUPPORTED;
     NvBool PDB_PROP_SYS_SYSTEM_EVENTS_SUPPORTED;
     NvBool PDB_PROP_SYS_ONDEMAND_VBLANK_CONTROL_ENABLE_DEFAULT;
 
@@ -528,19 +529,21 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJSYS;
 #define PDB_PROP_SYS_DESTRUCTING_BASE_NAME PDB_PROP_SYS_DESTRUCTING
 #define PDB_PROP_SYS_ALLOW_UNKNOWN_4PART_IDS_BASE_CAST
 #define PDB_PROP_SYS_ALLOW_UNKNOWN_4PART_IDS_BASE_NAME PDB_PROP_SYS_ALLOW_UNKNOWN_4PART_IDS
-#define PDB_PROP_SYS_RECOVERY_REBOOT_REQUIRED_BASE_CAST
-#define PDB_PROP_SYS_RECOVERY_REBOOT_REQUIRED_BASE_NAME PDB_PROP_SYS_RECOVERY_REBOOT_REQUIRED
+#define PDB_PROP_SYS_EVENT_NOTIFY_ISR_OPT_ENABLED_BASE_CAST
+#define PDB_PROP_SYS_EVENT_NOTIFY_ISR_OPT_ENABLED_BASE_NAME PDB_PROP_SYS_EVENT_NOTIFY_ISR_OPT_ENABLED
+#define PDB_PROP_SYS_RECOVERY_OS_REBOOT_REQUIRED_BASE_CAST
+#define PDB_PROP_SYS_RECOVERY_OS_REBOOT_REQUIRED_BASE_NAME PDB_PROP_SYS_RECOVERY_OS_REBOOT_REQUIRED
+#define PDB_PROP_SYS_RECOVERY_SYSTEM_REBOOT_REQUIRED_BASE_CAST
+#define PDB_PROP_SYS_RECOVERY_SYSTEM_REBOOT_REQUIRED_BASE_NAME PDB_PROP_SYS_RECOVERY_SYSTEM_REBOOT_REQUIRED
 #define PDB_PROP_SYS_SUPPORTS_S0IX_BASE_CAST
 #define PDB_PROP_SYS_SUPPORTS_S0IX_BASE_NAME PDB_PROP_SYS_SUPPORTS_S0IX
-#define PDB_PROP_SYS_PAT_UNSUPPORTED_BASE_CAST
-#define PDB_PROP_SYS_PAT_UNSUPPORTED_BASE_NAME PDB_PROP_SYS_PAT_UNSUPPORTED
 #define PDB_PROP_SYS_SYSTEM_EVENTS_SUPPORTED_BASE_CAST
 #define PDB_PROP_SYS_SYSTEM_EVENTS_SUPPORTED_BASE_NAME PDB_PROP_SYS_SYSTEM_EVENTS_SUPPORTED
 #define PDB_PROP_SYS_ONDEMAND_VBLANK_CONTROL_ENABLE_DEFAULT_BASE_CAST
 #define PDB_PROP_SYS_ONDEMAND_VBLANK_CONTROL_ENABLE_DEFAULT_BASE_NAME PDB_PROP_SYS_ONDEMAND_VBLANK_CONTROL_ENABLE_DEFAULT
 
 
-NV_STATUS __nvoc_objCreateDynamic_OBJSYS(OBJSYS**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJSYS(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJSYS(OBJSYS**, Dynamic*, NvU32);
 #define __objCreate_OBJSYS(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -610,13 +613,22 @@ static inline NV_STATUS sysSyncExternalFabricMgmtWAR(struct OBJSYS *arg_this, OB
 #define sysSyncExternalFabricMgmtWAR(arg_this, arg2) sysSyncExternalFabricMgmtWAR_IMPL(arg_this, arg2)
 #endif // __nvoc_system_h_disabled
 
-void sysSetRecoveryRebootRequired_IMPL(struct OBJSYS *pSys, NvBool bRebootRequired);
+void sysSetRecoveryOsRebootRequired_IMPL(struct OBJSYS *pSys, NvBool bRebootRequired);
 #ifdef __nvoc_system_h_disabled
-static inline void sysSetRecoveryRebootRequired(struct OBJSYS *pSys, NvBool bRebootRequired) {
+static inline void sysSetRecoveryOsRebootRequired(struct OBJSYS *pSys, NvBool bRebootRequired) {
     NV_ASSERT_FAILED_PRECOMP("OBJSYS was disabled!");
 }
 #else // __nvoc_system_h_disabled
-#define sysSetRecoveryRebootRequired(pSys, bRebootRequired) sysSetRecoveryRebootRequired_IMPL(pSys, bRebootRequired)
+#define sysSetRecoveryOsRebootRequired(pSys, bRebootRequired) sysSetRecoveryOsRebootRequired_IMPL(pSys, bRebootRequired)
+#endif // __nvoc_system_h_disabled
+
+void sysSetRecoverySystemRebootRequired_IMPL(struct OBJSYS *pSys, NvBool bRebootRequired);
+#ifdef __nvoc_system_h_disabled
+static inline void sysSetRecoverySystemRebootRequired(struct OBJSYS *pSys, NvBool bRebootRequired) {
+    NV_ASSERT_FAILED_PRECOMP("OBJSYS was disabled!");
+}
+#else // __nvoc_system_h_disabled
+#define sysSetRecoverySystemRebootRequired(pSys, bRebootRequired) sysSetRecoverySystemRebootRequired_IMPL(pSys, bRebootRequired)
 #endif // __nvoc_system_h_disabled
 
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1999-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1999-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -26,8 +26,10 @@
  * @brief NBSI table initialization, search and hash routines.
  */
 
+#include "utils/nvassert.h"
 #include "nvacpitypes.h"
 #include "platform/nbsi/nbsi_read.h"
+#include "nvport/nvport.h"
 
 /***
  *
@@ -114,7 +116,7 @@ NvU32 fnv32buf(const void *buf, NvU32 len, NvU32 hval, NvU32 prevPartHashLen)
         // of the position counter...
         // This was done because we had a collision in NBSI string hashes.
         //
-        hval ^= (((NvU32)(NV_TO_UPPER(*bp))) ^ ((counter++ & 0x1) << 7));
+        hval ^= (((NvU32)(portUtilToUpper(*bp))) ^ ((counter++ & 0x1) << 7));
         bp++;
 
         /* multiply by the 32 bit FNV magic prime mod 2^32 */
@@ -161,7 +163,7 @@ NvU32 fnv32bufUnicode(const void *buf, NvU32 len, NvU32 hval, NvU32 prevPartHash
         // This was done because we had a collision in NBSI string hashes.
         //
 
-        hval ^= (((NvU32)(NV_TO_UPPER(*bp))) ^ ((counter++ & 0x1) << 7));
+        hval ^= (((NvU32)(portUtilToUpper(*bp))) ^ ((counter++ & 0x1) << 7));
         bp++;
 
         /* multiply by the 32 bit FNV magic prime mod 2^32 */

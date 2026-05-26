@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2014-2019 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2014-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -111,11 +111,15 @@ AssignProposedHdmiFrlConfig(
     const NVDpyEvoRec *pDpyEvo);
 
 static NvBool
-GetColorSpaceAndColorRange(
+GetColorFormatAndColorRange(
     const NVDispEvoRec *pDispEvo,
     const NvU32 apiHead,
     const struct NvKmsSetModeOneHeadRequest *pRequestHead,
     NVDpyAttributeColor *pDpyColor);
+
+static void DisableVBlankRgSemaphoreInterrupt(NVDispEvoPtr pDispEvo,
+                                              NvU32 apiHead,
+                                              NVEvoUpdateState *pUpdateState);
 
 static void
 ClearProposedModeSetHwState(const NVDevEvoRec *pDevEvo,
@@ -205,7 +209,7 @@ nvGetHwModeTimings(const NVDispEvoRec *pDispEvo,
         return FALSE;
     }
 
-    if (!GetColorSpaceAndColorRange(pDispEvo, apiHead, pRequestHead,
+    if (!GetColorFormatAndColorRange(pDispEvo, apiHead, pRequestHead,
                                     &dpyColor)) {
         return FALSE;
     }
@@ -251,7 +255,7 @@ static NvBool IsPreSyncptSpecified(
 }
 
 static NvBool
-GetColorSpaceAndColorRange(
+GetColorFormatAndColorRange(
     const NVDispEvoRec *pDispEvo,
     const NvU32 apiHead,
     const struct NvKmsSetModeOneHeadRequest *pRequestHead,
@@ -260,26 +264,26 @@ GetColorSpaceAndColorRange(
     enum NvKmsOutputColorimetry colorimetry;
     enum NvKmsDpyAttributeColorRangeValue requestedColorRange;
     enum NvKmsDpyAttributeColorBpcValue requestedColorBpc;
-    enum NvKmsDpyAttributeRequestedColorSpaceValue requestedColorSpace;
+    enum NvKmsDpyAttributeRequestedColorFormatValue requestedColorFormat;
     NVDpyEvoRec *pOneArbitraryDpyEvo =
         nvGetOneArbitraryDpyEvo(pRequestHead->dpyIdList, pDispEvo);
 
-    if (pRequestHead->colorSpaceSpecified) {
+    if (pRequestHead->colorFormatSpecified) {
         const NVDpyEvoRec *pDpyEvo;
 
         /*
          * There could be multiple DPYs driven by this head. For each DPY,
-         * validate that the requested colorspace and color range is valid.
+         * validate that the requested color format and color range is valid.
          */
         FOR_ALL_EVO_DPYS(pDpyEvo, pRequestHead->dpyIdList, pDispEvo) {
-            if (!nvDpyValidateColorSpace(pDpyEvo, pRequestHead->colorSpace)) {
+            if (!nvDpyValidateColorFormat(pDpyEvo, pRequestHead->colorFormat)) {
                 return FALSE;
             }
         }
 
-        requestedColorSpace = pRequestHead->colorSpace;
+        requestedColorFormat = pRequestHead->colorFormat;
     } else {
-        requestedColorSpace = pOneArbitraryDpyEvo->requestedColorSpace;
+        requestedColorFormat = pOneArbitraryDpyEvo->requestedColorFormat;
     }
 
     if (pRequestHead->colorRangeSpecified) {
@@ -301,14 +305,24 @@ GetColorSpaceAndColorRange(
             pDispEvo->apiHeadState[apiHead].attributes.color.colorimetry;
     }
 
+    /* Update requested dithering state for all dpys on this head */
+    if (pRequestHead->flip.dithering.specified) {
+        NVDpyEvoRec *pDpyEvo;
+
+        FOR_ALL_EVO_DPYS(pDpyEvo, pRequestHead->dpyIdList, pDispEvo) {
+            pDpyEvo->requestedDithering.state = pRequestHead->flip.dithering.state;
+            pDpyEvo->requestedDithering.mode = pRequestHead->flip.dithering.mode;
+        }
+    }
+
     /*
-     * Choose current colorSpace and colorRange based on the current mode
-     * timings and the requested color space and range.
+     * Choose current color format and colorRange based on the current mode
+     * timings and the requested color format and range.
      */
-    if (!nvChooseCurrentColorSpaceAndRangeEvo(pOneArbitraryDpyEvo,
+    if (!nvChooseCurrentColorFormatAndRangeEvo(pOneArbitraryDpyEvo,
                                               pRequestHead->mode.timings.yuv420Mode,
                                               colorimetry,
-                                              requestedColorSpace,
+                                              requestedColorFormat,
                                               requestedColorBpc,
                                               requestedColorRange,
                                               &pDpyColor->format,
@@ -321,30 +335,30 @@ GetColorSpaceAndColorRange(
     return TRUE;
 }
 
-static NvBool AssignProposedModeSetColorSpaceAndColorRangeSpecified(
+static NvBool AssignProposedModeSetColorFormatAndColorRangeSpecified(
     const struct NvKmsSetModeOneHeadRequest *pRequestHead,
     NVProposedModeSetStateOneApiHead *pProposedApiHead)
 {
     /*
-     * When colorspace is specified in modeset request, it should
-     * match the proposed colorspace.
+     * When color format is specified in modeset request, it should
+     * match the proposed color format.
      */
-    if (pRequestHead->colorSpaceSpecified) {
+    if (pRequestHead->colorFormatSpecified) {
         NvBool ret = FALSE;
         switch (pProposedApiHead->attributes.color.format) {
-            case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_RGB:
-                ret = (pRequestHead->colorSpace ==
-                        NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_SPACE_RGB);
+            case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_RGB:
+                ret = (pRequestHead->colorFormat ==
+                        NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT_RGB);
                 break;
-            case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr422:
-                ret = (pRequestHead->colorSpace ==
-                        NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_SPACE_YCbCr422);
+            case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr422:
+                ret = (pRequestHead->colorFormat ==
+                        NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT_YCbCr422);
                 break;
-            case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr444:
-                ret = (pRequestHead->colorSpace ==
-                        NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_SPACE_YCbCr444);
-                 break;
-             default:
+            case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr444:
+                ret = (pRequestHead->colorFormat ==
+                        NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT_YCbCr444);
+                break;
+            default:
                 break;
         }
         if (!ret) {
@@ -370,7 +384,7 @@ static NvBool AssignProposedModeSetColorSpaceAndColorRangeSpecified(
         return FALSE;
     }
 
-    pProposedApiHead->colorSpaceSpecified = pRequestHead->colorSpaceSpecified;
+    pProposedApiHead->colorFormatSpecified = pRequestHead->colorFormatSpecified;
     pProposedApiHead->colorBpcSpecified = pRequestHead->colorBpcSpecified;
     pProposedApiHead->colorRangeSpecified = pRequestHead->colorRangeSpecified;
     return TRUE;
@@ -436,6 +450,8 @@ InitNVProposedModeSetStateOneApiHead(
     nvAssert(pDispEvo->apiHeadState[apiHead].hwHeadsMask != 0x0);
     nvAssert(pDpyEvo != NULL);
 
+    pProposedApiHead->modeValidationParams =
+                pDispEvo->apiHeadState[apiHead].modeValidationParams;
     pProposedApiHead->hwHeadsMask =
         pDispEvo->apiHeadState[apiHead].hwHeadsMask;
     pProposedApiHead->timings =
@@ -470,17 +486,12 @@ InitNVProposedModeSetStateOneApiHead(
         if (hwHeadCount == 0) {
             pProposedApiHead->dscInfo = pHeadState->dscInfo;
             pProposedApiHead->activeRmId = pHeadState->activeRmId;
-            pProposedApiHead->modeValidationParams =
-                pHeadState->modeValidationParams;
          } else {
             nvAssert(nvkms_memcmp(&pProposedApiHead->dscInfo,
                         &pHeadState->dscInfo,
                         sizeof(pProposedApiHead->dscInfo)) == 0x0);
             nvAssert(pProposedApiHead->activeRmId ==
                         pHeadState->activeRmId);
-            nvAssert(nvkms_memcmp(&pProposedApiHead->modeValidationParams,
-                &pHeadState->modeValidationParams,
-                sizeof(pProposedApiHead->modeValidationParams)) == 0x0);
          }
     }
 }
@@ -1093,7 +1104,7 @@ AssignProposedModeSetHwState(NVDevEvoRec *pDevEvo,
                 continue;
             }
 
-            if (!AssignProposedModeSetColorSpaceAndColorRangeSpecified(
+            if (!AssignProposedModeSetColorFormatAndColorRangeSpecified(
                     pRequestHead, pProposedApiHead)) {
                 pReply->disp[sd].head[apiHead].status =
                     NVKMS_SET_MODE_ONE_HEAD_STATUS_INVALID_MODE;
@@ -1166,9 +1177,9 @@ AssignProposedModeSetHwState(NVDevEvoRec *pDevEvo,
                         continue;
                     }
 
-                    /* NVKMS_OUTPUT_TF_PQ requires the RGB color space */
+                    /* NVKMS_OUTPUT_TF_PQ requires the RGB color format */
                     if (pProposedApiHead->attributes.color.format !=
-                            NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_RGB) {
+                            NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_RGB) {
                         ret = FALSE;
                         pReply->disp[sd].head[apiHead].status =
                             NVKMS_SET_MODE_ONE_HEAD_STATUS_INVALID_FLIP;
@@ -1452,7 +1463,9 @@ ValidateProposedModeSetHwStateOneDispImp(NVDispEvoPtr pDispEvo,
     }
 
     if (skipImpCheck &&
+        pDevEvo->hal->SetMultiTileConfig == NULL &&
         reallocBandwidth == NV_EVO_REALLOCATE_BANDWIDTH_MODE_NONE) {
+        /* Can safely skip IMP if a multi-tile configuration is not needed */
         return TRUE;
     }
 
@@ -1543,7 +1556,7 @@ static NvBool SkipDisplayPortBandwidthCheck(
             NVKMS_MODE_VALIDATION_NO_DISPLAYPORT_BANDWIDTH_CHECK) != 0;
 }
 
-static NvBool DowngradeColorSpaceAndBpcOneHead(
+static NvBool DowngradeColorFormatAndBpcOneHead(
     const NVDispEvoRec *pDispEvo,
     NVProposedModeSetStateOneApiHead *pProposedApiHead)
 {
@@ -1554,7 +1567,7 @@ static NvBool DowngradeColorSpaceAndBpcOneHead(
     const NvKmsDpyOutputColorFormatInfo supportedColorFormats =
         nvDpyGetOutputColorFormatInfo(pDpyEvo);
 
-    if (!nvDowngradeColorSpaceAndBpc(pDpyEvo, &supportedColorFormats, &dpyColor)) {
+    if (!nvDowngradeColorFormatAndBpc(pDpyEvo, &supportedColorFormats, &dpyColor)) {
         return FALSE;
     }
 
@@ -1568,7 +1581,7 @@ static NvBool DowngradeColorSpaceAndBpcOneHead(
         return FALSE;
     }
 
-    if (pProposedApiHead->colorSpaceSpecified &&
+    if (pProposedApiHead->colorFormatSpecified &&
         (dpyColor.format != pProposedApiHead->attributes.color.format)) {
         return FALSE;
     }
@@ -1577,7 +1590,7 @@ static NvBool DowngradeColorSpaceAndBpcOneHead(
     return TRUE;
 }
 
-static NvBool DowngradeColorSpaceAndBpcOneDisp(
+static NvBool DowngradeColorFormatAndBpcOneDisp(
     const NVDispEvoRec              *pDispEvo,
     NVProposedModeSetHwStateOneDisp *pProposedDisp,
     const NVConnectorEvoRec         *pConnectorEvo)
@@ -1603,7 +1616,7 @@ static NvBool DowngradeColorSpaceAndBpcOneDisp(
 
         if ((pDpyEvo != NULL) &&
             (pDpyEvo->pConnectorEvo == pConnectorEvo) &&
-            DowngradeColorSpaceAndBpcOneHead(pDispEvo, pProposedApiHead)) {
+            DowngradeColorFormatAndBpcOneHead(pDispEvo, pProposedApiHead)) {
             ret = TRUE;
         }
     }
@@ -1653,7 +1666,7 @@ static NvU32 SetDpLibImpParamsOneConnectorEvo(
 
         pParams->head[head].displayId = pProposedApiHead->activeRmId;
         pParams->head[head].dpyIdList = pProposedApiHead->dpyIdList;
-        pParams->head[head].colorSpace = pProposedApiHead->attributes.color.format;
+        pParams->head[head].colorFormat = pProposedApiHead->attributes.color.format;
         pParams->head[head].colorBpc = pProposedApiHead->attributes.color.bpc;
         pParams->head[head].pModeValidationParams =
             &pProposedApiHead->modeValidationParams;
@@ -1667,7 +1680,7 @@ static NvU32 SetDpLibImpParamsOneConnectorEvo(
     return attachedHeadsMask;
 }
 
-static NvBool DowngradeColorSpaceAndBpcOneConnectorEvo(
+static NvBool DowngradeColorFormatAndBpcOneConnectorEvo(
     const NVConnectorEvoRec *pConnectorEvo,
     const NvU32 failedHeadMask,
     NVProposedModeSetHwStateOneDisp *pProposedDisp)
@@ -1692,13 +1705,13 @@ static NvBool DowngradeColorSpaceAndBpcOneConnectorEvo(
             continue;
         }
 
-        if (DowngradeColorSpaceAndBpcOneHead(pDispEvo, pProposedApiHead)) {
+        if (DowngradeColorFormatAndBpcOneHead(pDispEvo, pProposedApiHead)) {
             return TRUE;
         }
     }
 
 
-    if (DowngradeColorSpaceAndBpcOneDisp(pDispEvo,
+    if (DowngradeColorFormatAndBpcOneDisp(pDispEvo,
                                          pProposedDisp,
                                          pConnectorEvo)) {
         return TRUE;
@@ -1715,7 +1728,7 @@ static NvBool AssignProposedHdmiFrlConfig(
     const NVDpyEvoRec *pDpyEvo)
 {
     do {  
-        if (nvHdmiFrlQueryConfigOneColorSpaceAndBpc(pDpyEvo,
+        if (nvHdmiFrlQueryConfigOneColorFormatAndBpc(pDpyEvo,
                                                     &pRequestHead->mode.timings,
                                                     &pProposedApiHead->timings,
                                                     &pProposedApiHead->attributes.color,
@@ -1727,7 +1740,7 @@ static NvBool AssignProposedHdmiFrlConfig(
             return TRUE;
         } 
 
-    } while (DowngradeColorSpaceAndBpcOneHead(pDispEvo, pProposedApiHead));
+    } while (DowngradeColorFormatAndBpcOneHead(pDispEvo, pProposedApiHead));
 
     return FALSE;
 }
@@ -1772,7 +1785,7 @@ tryAgain:
                                     &failedHeadMask);
 
     if (!bResult) {
-        if (DowngradeColorSpaceAndBpcOneConnectorEvo(pConnectorEvo,
+        if (DowngradeColorFormatAndBpcOneConnectorEvo(pConnectorEvo,
                                                      failedHeadMask,
                                                      pProposedDisp)) {
             goto tryAgain;
@@ -2594,9 +2607,6 @@ ApplyProposedModeSetHwStateOneHeadShutDown(
 
     nvkms_memset(&pHeadState->audio, 0, sizeof(pHeadState->audio));
 
-    nvkms_memset(&pHeadState->modeValidationParams, 0,
-                 sizeof(pHeadState->modeValidationParams));
-
     nvkms_memset(&pDevEvo->gpus[sd].headState[head], 0,
                  sizeof(pDevEvo->gpus[sd].headState[head]));
 
@@ -2707,6 +2717,13 @@ ApplyProposedModeSetStateOneApiHeadShutDown(
     DisableActiveCoreRGSyncObjects(pDispEvo, apiHead,
                                    &pWorkArea->modesetUpdateState.updateState);
 
+    /*
+     * Disable the RG semaphore hardware interrupt.
+     * DMA is managed separately and persists across modesets.
+     */
+    DisableVBlankRgSemaphoreInterrupt(pDispEvo, apiHead,
+                                     &pWorkArea->modesetUpdateState.updateState);
+
     nvDisable3DVisionAegis(pDpyEvo);
 
     /* Cancel any pending LUT updates. */
@@ -2718,6 +2735,8 @@ ApplyProposedModeSetStateOneApiHeadShutDown(
             pApiHeadState->activeDpys,
             pWorkArea->sd[pDispEvo->displayOwner].changedDpyIdList);
     pApiHeadState->activeDpys = nvEmptyDpyIdList();
+    nvkms_memset(&pApiHeadState->modeValidationParams, 0,
+                 sizeof(pApiHeadState->modeValidationParams));
     nvkms_memset(&pApiHeadState->timings, 0, sizeof(pApiHeadState->timings));
     nvkms_memset(&pApiHeadState->stereo, 0, sizeof(pApiHeadState->stereo));
 
@@ -2784,6 +2803,7 @@ ApplyProposedModeSetStateOneDispFlip(
     }
 }
 
+
 static void ReEnableActiveCoreRGSyncObjects(NVDispEvoRec *pDispEvo,
                                             const NvU32 apiHead,
                                             NVEvoUpdateState *pUpdateState)
@@ -2822,7 +2842,6 @@ ApplyProposedModeSetHwStateOneHeadPreUpdate(
     NVDispHeadStateEvoPtr pHeadState = &pDispEvo->headState[head];
     NVEvoUpdateState *updateState = &pModesetUpdateState->updateState;
 
-    pHeadState->modeValidationParams = pProposedApiHead->modeValidationParams;
     pHeadState->bypassComposition = bypassComposition;
     pHeadState->activeRmId = pProposedApiHead->activeRmId;
     pHeadState->pConnectorEvo = pProposedHead->pConnectorEvo;
@@ -2858,8 +2877,8 @@ ApplyProposedModeSetHwStateOneHeadPreUpdate(
                           &pProposedApiHead->attributes.color,
                           updateState);
 
-    /* Update hardware's current colorSpace and colorRange */
-    nvUpdateCurrentHardwareColorSpaceAndRangeEvo(pDispEvo,
+    /* Update hardware's current color format and colorRange */
+    nvUpdateCurrentHardwareColorFormatAndRangeEvo(pDispEvo,
                                                  head,
                                                  &pProposedApiHead->attributes.color,
                                                  updateState);
@@ -2878,6 +2897,223 @@ ApplyProposedModeSetHwStateOneHeadPreUpdate(
 
 
     nvHdmiFrlSetConfig(pDispEvo, head);
+}
+
+/*!
+ * Calculate time offset from RG semaphore trigger line to first active line.
+ *
+ * DRM core expects vblank timestamps to correspond to the "physical top
+ * of the display", which is the first active/visible scan line appears
+ * (See the comment in drm_vblank.c). This calculation determines the time
+ * difference between when the RG semaphore triggers a vblank interrupt
+ * and when the first active/visible scan line appears.
+ *
+ * @param[in] pDispEvo      Display EVO pointer
+ * @param[in] apiHead       API head number
+ * @param[in] rgTriggerLine Raster line where RG semaphore triggers interrupt
+ */
+static void CalculateRgTriggerToActiveLineOffset(NVDispEvoPtr pDispEvo,
+                                                 NvU32 apiHead,
+                                                 NvU16 rgTriggerLine)
+{
+    NVDispApiHeadStateEvoRec *pApiHeadState = &pDispEvo->apiHeadState[apiHead];
+    const NvU32 head = nvGetPrimaryHwHead(pDispEvo, apiHead);
+    const NVDispHeadStateEvoRec *pHeadState = &pDispEvo->headState[head];
+    const NVHwModeTimingsEvo *pTimings = &pHeadState->timings;
+    NvU32 linesToFirstActive = 0;
+    NvU32 firstActiveLine = pTimings->rasterBlankEnd.y + 1;
+    NvU64 lineTimeNs = 0;
+
+    pApiHeadState->rgSemaInfo.triggerToActiveOffsetNs = 0;
+
+    /*
+     * Timing must be valid at this point - this function is only called
+     * during modeset (after timing validation) or registration (when head
+     * is active with valid timing).
+     */
+    nvAssert(pTimings->pixelClock != 0 && pTimings->rasterSize.x != 0);
+
+    /* rgTriggerLine must be in blanking region. */
+    nvAssert(rgTriggerLine <= pTimings->rasterBlankEnd.y ||
+             (rgTriggerLine >= pTimings->rasterBlankStart.y && rgTriggerLine < pTimings->rasterSize.y));
+
+    // Calculate number of lines from RG trigger line to first active line
+    if (rgTriggerLine <= pTimings->rasterBlankEnd.y) {
+        // Trigger line is in vsync or vertical back porch (0 to rasterBlankEnd.y)
+        linesToFirstActive = firstActiveLine - rgTriggerLine;
+    } else if (rgTriggerLine >= pTimings->rasterBlankStart.y && rgTriggerLine < pTimings->rasterSize.y) {
+        // Trigger line is in vertical front porch (rasterBlankStart.y to rasterSize.y - 1)
+        linesToFirstActive = (pTimings->rasterSize.y - rgTriggerLine) + firstActiveLine;
+    }
+
+    /*
+     * Calculate time per line in nanoseconds:
+     *   lineTimeNs = (horizontal_pixels * 1,000,000,000) / pixel_clock_hz
+     *
+     * Overflow safety: rasterSize.x (NvU16 max 65535) * 1 billion = ~65 trillion,
+     * which fits easily in NvU64 (max ~18 quintillion).
+     *
+     * Precision: Integer division truncation is sub-nanosecond per line.
+     * Example for 8K@60Hz (rasterSize.x=8200, pixelClock=2376000 kHz):
+     * 8200 * 1e9 / 2.376e9 = 3451.178 ns, truncated to 3451 ns (error
+     * ~0.18 ns/line). Accumulated over vertical blanking lines (~45-180),
+     * total error is tens of nanoseconds - negligible for vblank timestamp
+     * purposes.
+     */
+    lineTimeNs = ((NvU64)pTimings->rasterSize.x * 1000000000ULL) / KHzToHz(pTimings->pixelClock);
+
+    // Calculate total offset in nanoseconds
+    pApiHeadState->rgSemaInfo.triggerToActiveOffsetNs = (NvU64)linesToFirstActive * lineTimeNs;
+}
+
+static void SetupVBlankRgSemaphoreForApiHead(
+    NVDispEvoPtr pDispEvo,
+    NvU32 apiHead,
+    NvU32 head,
+    NVEvoUpdateState *pUpdateState)
+{
+    NVDevEvoRec *pDevEvo = pDispEvo->pDevEvo;
+    NVDispApiHeadStateEvoRec *pApiHeadState = &pDispEvo->apiHeadState[apiHead];
+    const NVDispHeadStateEvoRec *pHeadState = &pDispEvo->headState[head];
+    NVEvoDmaPtr pDma = &pDevEvo->rgSemaDma[head].dma;
+    NVSurfaceDescriptor *pSurfaceDesc = NULL;
+    NvU16 rasterLine = pHeadState->timings.rasterBlankStart.y;
+
+    /* Check if already configured */
+    if (pApiHeadState->rgSemaInfo.configured) {
+        return;
+    }
+
+    /*
+     * HAL and DMA are guaranteed here because:
+     * 1. Callbacks can only be registered if HAL supports SetupVBlankRgSemaphoreInterrupt
+     * 2. Callbacks can only be registered if rgSemaDmaAvailable is TRUE (all DMAs succeeded)
+     * 3. We only reach here if callbacks exist
+     */
+    nvAssert(pDevEvo->hal->SetupVBlankRgSemaphoreInterrupt != NULL);
+    nvAssert(pDma->memoryHandle != 0);
+
+    pSurfaceDesc = &pDma->surfaceDesc;
+
+    /* Calculate time offset to adjust timestamp to first active raster line */
+    CalculateRgTriggerToActiveLineOffset(pDispEvo, apiHead, rasterLine);
+
+    /* Update GPU-CPU time difference for accurate timestamp conversion */
+    nvUpdateGpuCpuTimeDiff(pDevEvo);
+
+    /* Start the periodic refresh timer when first enabling RG semaphore vblank interrupts */
+    if (pDevEvo->gpuCpuTimeDiffRefreshTimer == NULL) {
+        nvStartGpuCpuTimeDiffRefreshTimer(pDevEvo);
+    }
+
+    pDevEvo->hal->SetupVBlankRgSemaphoreInterrupt(pDispEvo, head,
+                                                  rasterLine,
+                                                  pSurfaceDesc,
+                                                  pUpdateState);
+    pApiHeadState->rgSemaInfo.configured = TRUE;
+}
+
+static void DisableVBlankRgSemaphoreInterrupt(NVDispEvoPtr pDispEvo,
+                                              NvU32 apiHead,
+                                              NVEvoUpdateState *pUpdateState)
+{
+    NVDevEvoRec *pDevEvo = pDispEvo->pDevEvo;
+    NVDispApiHeadStateEvoRec *pApiHeadState = &pDispEvo->apiHeadState[apiHead];
+    const NvU32 head = nvGetPrimaryHwHead(pDispEvo, apiHead);
+    NVEvoUpdateState localUpdateState = { };
+
+    /* If already disabled, nothing to do */
+    if (!pApiHeadState->rgSemaInfo.configured) {
+        return;
+    }
+
+    /*
+     * If head is invalid, we can't send disable methods to hardware, but we
+     * still want to clear software state so the interrupt is re-programmed the
+     * next time the apiHead is active.
+     */
+    if (head == NV_INVALID_HEAD) {
+        pApiHeadState->rgSemaInfo.configured = FALSE;
+        return;
+    }
+
+    /*
+     * If caller passed NULL for pUpdateState, use a local one and handle
+     * everything internally (batch and kickoff).
+     */
+    if (pUpdateState == NULL) {
+        pUpdateState = &localUpdateState;
+    }
+
+    if (pDevEvo->hal->SetupVBlankRgSemaphoreInterrupt != NULL) {
+        /*
+         * Disable the RG semaphore interrupt by clearing the configuration.
+         * This batches the hardware update into the updateState.
+         */
+        pDevEvo->hal->SetupVBlankRgSemaphoreInterrupt(pDispEvo, head,
+                                                      0,
+                                                      NULL,
+                                                      pUpdateState);
+    }
+
+    /*
+     * If using local updateState, apply UPDATE to hardware now.
+     */
+    if (pUpdateState == &localUpdateState) {
+        if (!nvIsUpdateStateEmpty(pDevEvo, &localUpdateState)) {
+            nvEvoUpdateAndKickOff(pDispEvo, TRUE, &localUpdateState, TRUE);
+        }
+    }
+
+    pApiHeadState->rgSemaInfo.configured = FALSE;
+}
+
+static void DisableVBlankRgSemaphoreInterruptsForModeset(const NVDevEvoRec *pDevEvo)
+{
+    NvU32 dispIndex;
+    NVDispEvoPtr pDispEvo;
+
+    FOR_ALL_EVO_DISPLAYS(pDispEvo, dispIndex, pDevEvo) {
+        NVEvoUpdateState updateState = { };
+
+        for (NvU32 apiHead = 0; apiHead < pDevEvo->numApiHeads; apiHead++) {
+            DisableVBlankRgSemaphoreInterrupt(pDispEvo, apiHead, &updateState);
+        }
+
+        if (!nvIsUpdateStateEmpty(pDevEvo, &updateState)) {
+            nvEvoUpdateAndKickOff(pDispEvo, TRUE, &updateState, TRUE);
+        }
+    }
+}
+
+/*
+ * Enable RG semaphore vblank interrupt for one apiHead as part of modeset.
+ * This is called from ApplyProposedModeSetStateOneApiHeadPreUpdate() to batch
+ * the RG semaphore setup into the modeset UPDATE, avoiding a separate UPDATE.
+ */
+static void EnableVBlankRgSemaphoreInterruptOneApiHead(
+    NVDispEvoPtr pDispEvo,
+    NvU32 apiHead,
+    NvU32 head,
+    NVEvoUpdateState *pUpdateState)
+{
+    NVDevEvoRec *pDevEvo = pDispEvo->pDevEvo;
+
+    if ((pDevEvo->hal->SetupVBlankRgSemaphoreInterrupt == NULL) ||
+        !pDevEvo->rgSemaDmaAvailable) {
+        return;
+    }
+
+    if (nvListIsEmpty(&pDispEvo->rgInterruptCallbackList[apiHead])) {
+        return;
+    }
+
+    /*
+     * Program requested RG semaphore vblank interrupts every modeset.
+     * This is required because modeset can change the apiHead=>hwHead
+     * mapping and head timings (e.g., rasterBlankStart.y).
+     */
+    SetupVBlankRgSemaphoreForApiHead(pDispEvo, apiHead, head, pUpdateState);
 }
 
 /*!
@@ -2973,6 +3209,8 @@ ApplyProposedModeSetStateOneApiHeadPreUpdate(
      * mode timings.
      */
     pApiHeadState->activeDpys = pProposedApiHead->dpyIdList;
+    pApiHeadState->modeValidationParams =
+        pProposedApiHead->modeValidationParams;
     pApiHeadState->timings = pProposedApiHead->timings;
     pApiHeadState->stereo = pProposedApiHead->stereo;
     pWorkArea->sd[pDispEvo->displayOwner].changedDpyIdList =
@@ -3008,6 +3246,10 @@ ApplyProposedModeSetStateOneApiHeadPreUpdate(
      */
     ReEnableActiveCoreRGSyncObjects(pDispEvo, apiHead, updateState);
 
+    /* Re-enable RG semaphore vblank interrupt with the new timings. */
+    EnableVBlankRgSemaphoreInterruptOneApiHead(pDispEvo, apiHead,
+                                               proposedPrimaryHead, updateState);
+
     pApiHeadState->attributes = pProposedApiHead->attributes;
     pApiHeadState->tf = pProposedApiHead->tf;
     pApiHeadState->hdrInfoFrameOverride =
@@ -3022,7 +3264,6 @@ ApplyProposedModeSetStateOneApiHeadPreUpdate(
                                        &pModesetUpdateState->updateState);
     }
 }
-
 
 /*!
  * Update the heads to be modified on this disp.
@@ -3826,15 +4067,12 @@ BeginEndModeset(NVDevEvoPtr pDevEvo,
  */
 static NvBool IdleAllSatelliteChannels(NVDevEvoRec *pDevEvo)
 {
-    NVDispEvoPtr pDispEvo;
-    NvU32 head, sd;
+    NvU32 head;
 
-    FOR_ALL_EVO_DISPLAYS(pDispEvo, sd, pDevEvo) {
-        for (head = 0; head < pDevEvo->numHeads; head++) {
-            NvBool unused;
-            if (!nvRMIdleBaseChannel(pDevEvo, head, sd, &unused)) {
-                return FALSE;
-            }
+    for (head = 0; head < pDevEvo->numHeads; head++) {
+        NvBool unused;
+        if (!nvRMIdleBaseChannel(pDevEvo, head, &unused)) {
+            return FALSE;
         }
     }
 
@@ -4044,6 +4282,8 @@ NvBool nvSetDispModeEvo(NVDevEvoPtr pDevEvo,
 
     DisableVBlankCallbacks(pDevEvo);
 
+    DisableVBlankRgSemaphoreInterruptsForModeset(pDevEvo);
+
     nvEvoLockStatePreModeset(pDevEvo);
 
     nvEvoRemoveOverlappingFlipLockRequestGroupsForModeset(pDevEvo, pRequest);
@@ -4219,6 +4459,98 @@ void nvApiHeadUnregisterVBlankCallback(NVDispEvoPtr pDispEvo,
         nvRmRemoveVBlankCallback(pDispEvo,
                                  pApiHeadState->rmVBlankCallbackHandle);
         pApiHeadState->rmVBlankCallbackHandle = 0;
+    }
+}
+
+NVRgInterruptCallbackRec*
+nvApiHeadRegisterRgInterruptCallback(NVDispEvoPtr pDispEvo,
+                                     const NvU32 apiHead,
+                                     NVRgInterruptCallbackProc pCallback,
+                                     NvU64 param)
+{
+    NVDevEvoPtr pDevEvo = pDispEvo->pDevEvo;
+    const NvU32 head = nvGetPrimaryHwHead(pDispEvo, apiHead);
+    NVRgInterruptCallbackRec *pRgIntrCallback = NULL;
+
+    /* Check if HAL supports RG semaphore vblank interrupts */
+    if (pDevEvo->hal->SetupVBlankRgSemaphoreInterrupt == NULL) {
+        nvEvoLogDev(pDevEvo, EVO_LOG_INFO,
+                    "RG semaphore vblank interrupt not supported on this platform");
+        return NULL;
+    }
+
+    /* Check if DMA allocation failed during core channel setup */
+    if (!pDevEvo->rgSemaDmaAvailable) {
+        nvEvoLogDev(pDevEvo, EVO_LOG_ERROR,
+                    "Cannot register vblank callback: RG semaphore DMA allocation failed");
+        return NULL;
+    }
+
+    pRgIntrCallback = nvCalloc(1, sizeof(*pRgIntrCallback));
+    if (pRgIntrCallback == NULL) {
+        return NULL;
+    }
+
+    pRgIntrCallback->pCallback = pCallback;
+    pRgIntrCallback->apiHead = apiHead;
+    pRgIntrCallback->param = param;
+    pRgIntrCallback->pDispEvo = pDispEvo;
+
+    nvListAppend(&pRgIntrCallback->rgInterruptCallbackListEntry,
+                 &pDispEvo->rgInterruptCallbackList[apiHead]);
+
+    /*
+     * If head is valid, setup hardware immediately.
+     * If head is invalid, defer setup to modeset.
+     */
+    if (head != NV_INVALID_HEAD) {
+        /* Setup hardware - only needed for first callback on this apiHead */
+        if (nvListCount(&pDispEvo->rgInterruptCallbackList[apiHead]) == 1) {
+            NVEvoUpdateState updateState = { };
+
+            SetupVBlankRgSemaphoreForApiHead(pDispEvo, apiHead, head, &updateState);
+
+            if (!nvIsUpdateStateEmpty(pDispEvo->pDevEvo, &updateState)) {
+                nvEvoUpdateAndKickOff(pDispEvo, TRUE, &updateState, TRUE);
+            }
+        }
+    }
+
+    return pRgIntrCallback;
+}
+
+void nvApiHeadUnregisterRgInterruptCallback(NVDispEvoPtr pDispEvo,
+                                            NVRgInterruptCallbackRec *pCallback)
+{
+    const NvU32 apiHead = pCallback->apiHead;
+
+    nvListDel(&pCallback->rgInterruptCallbackListEntry);
+    nvFree(pCallback);
+
+    /*
+     * If this was the last callback for this apiHead, disable the RG semaphore
+     * hardware interrupt for this apiHead.
+     */
+    if (nvListIsEmpty(&pDispEvo->rgInterruptCallbackList[apiHead])) {
+        NvU32 i;
+        NvBool isLastCallback = TRUE;
+
+        DisableVBlankRgSemaphoreInterrupt(pDispEvo, apiHead, NULL);
+
+        /*
+         * Check if there are any remaining callbacks on other heads.
+         * If not, stop the periodic GPU-CPU time difference refresh timer.
+         */
+        for (i = 0; i < NVKMS_MAX_HEADS_PER_DISP; i++) {
+            if (!nvListIsEmpty(&pDispEvo->rgInterruptCallbackList[i])) {
+                isLastCallback = FALSE;
+                break;
+            }
+        }
+
+        if (isLastCallback) {
+            nvStopGpuCpuTimeDiffRefreshTimer(pDispEvo->pDevEvo);
+        }
     }
 }
 

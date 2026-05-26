@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2013-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2013-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -107,6 +107,7 @@ vmmCreateVaspace_IMPL
                 return NV_OK;
             }
             break;
+
         default: // Unsupported class
             addressTranslation = AT_GPU;
             pClassInfo         = NULL;

@@ -1,5 +1,5 @@
 /*******************************************************************************
-    Copyright (c) 2016-2024 NVIDIA Corporation
+    Copyright (c) 2016-2025 NVIDIA Corporation
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
@@ -70,7 +70,7 @@
 //    lifted)
 //
 // Limitations:
-//  - On Pascal+ limited to VAs over 40bit due to how the internal VA is shared
+//  - On Turing+ limited to VAs over 40bit due to how the internal VA is shared
 //    with RM. This implies it cannot be used for e.g. pushbuffer nor sempahores
 //    currently. At some point in the future UVM should be able
 //    to take full control of the VA (or at least the bottom 40bits of it)

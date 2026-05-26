@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2000-2020 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2000-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -24,21 +24,21 @@
 #ifndef HWBC_H
 #define HWBC_H
 
-#include "gpu/gpu.h"       // NBADDR, OBJGPU
-
 /**************** Resource Manager Defines and Structures ******************\
 *                                                                           *
 * Module: HWBC.H                                                            *
 *       Hardware Broadcast related defines and structures.                  *
 *                                                                           *
 \***************************************************************************/
-struct OBJCL;
-typedef struct OBJHWBC OBJHWBC;
+#include "nvpcie.h"
 
+typedef struct OBJCL OBJCL;
+typedef struct OBJGPU OBJGPU;
+typedef struct OBJHWBC OBJHWBC;
 
 #define BR03_GPU_REGISTER_ALIAS_OFFSET                              0x4FC000
 
-NvBool  objClSetPcieHWBC(OBJGPU *, OBJCL*); // Find all Broadcast resource in the higher hierarchy of the GPU
+NvBool  objClSetPcieHWBC(OBJGPU *, OBJCL *); // Find all Broadcast resource in the higher hierarchy of the GPU
 
 //
 // Bridge resource type
@@ -71,7 +71,7 @@ struct OBJHWBC
 
     NvU32 gpuMask;
 
-    RmPhysAddr gpuPhysAddr;
+    NvU64 gpuPhysAddr;
 
     // Private data
     NvBool          hasPlxFirmwareInfo;

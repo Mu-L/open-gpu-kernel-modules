@@ -143,7 +143,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_I2cApi;
     ((I2cApi*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(I2cApi)))
 #endif //__nvoc_i2c_api_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_I2cApi(I2cApi**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_I2cApi(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_I2cApi(I2cApi**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_I2cApi(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

@@ -69,6 +69,12 @@ kmemsysInitRegistryOverrides
         pKernelMemorySystem->nonPasIdAtsOverride.bEnabled = NV_TRUE;
         pKernelMemorySystem->nonPasIdAtsOverride.bValue = !!data32;
     }
+
+    if ((osReadRegistryDword(pGpu, NV_REG_STR_RM_ENABLE_LTC_PROBE_FILTER_CLEAN_ON_TEARDOWN, &data32)) == NV_OK)
+    {
+        pKernelMemorySystem->ltcProbeFilterCleanOnTeardown.bEnabled = NV_TRUE;
+        pKernelMemorySystem->ltcProbeFilterCleanOnTeardown.bValue = !!data32;
+    }
 }
 
 NV_STATUS
@@ -164,6 +170,8 @@ NV_STATUS kmemsysStateInitLocked_IMPL
     }
     portMemSet(pKernelMemorySystem->memPartitionNumaInfo, 0, sizeof(MEM_PARTITION_NUMA_INFO) * KMIGMGR_MAX_GPU_SWIZZID);
 
+    NV_ASSERT_OK_OR_GOTO(status, kmemsysInitializeSysLtcApertures_HAL(pGpu, pKernelMemorySystem), fail);
+
     if (gpuIsSelfHosted(pGpu) &&
         (pKernelBif != NULL) && pKernelBif->getProperty(pKernelBif, PDB_PROP_KBIF_IS_C2C_LINK_UP))
     {
@@ -186,7 +194,21 @@ NV_STATUS kmemsysStateInitLocked_IMPL
 
                 pGpu->setProperty(pGpu, PDB_PROP_GPU_ATS_SUPPORTED, NV_TRUE);
             }
+
+            if (pGSCI->bSysL2CacheCoherentMode)
+            {
+                NV_PRINTF(LEVEL_INFO, "SysL2 in Cache Coherent mode.\n");
+
+                pKernelMemorySystem->bIsSysl2CacheCoherent = NV_TRUE;
+            }
         }
+
+        if (IS_SILICON(pGpu) && osNumaOnliningEnabled(pGpu->pOsGpuInfo))
+        {
+            NV_ASSERT_OR_RETURN(pGpu->getProperty(pGpu, PDB_PROP_GPU_ATS_SUPPORTED),
+                                NV_ERR_INVALID_STATE);
+        }
+
         if (IS_GSP_CLIENT(pGpu) || IS_VIRTUAL_WITH_SRIOV(pGpu))
         {
             //
@@ -228,6 +250,8 @@ NV_STATUS kmemsysStateInitLocked_IMPL
         NV_CHECK_OK_OR_RETURN(LEVEL_ERROR,
             kgmmuCheckAndDecideBigPageSize_HAL(pGpu, pKernelGmmu));
     }
+
+    bitVectorSetAll(&pKernelMemorySystem->mcFlaOffsetTableFreeEntries);
 
 fail:
     return status;
@@ -274,13 +298,6 @@ kmemsysStatePostLoad_IMPL
     NvU32 flags
 )
 {
-    if (IS_SILICON(pGpu) &&
-        osNumaOnliningEnabled(pGpu->pOsGpuInfo))
-    {
-        NV_ASSERT_OR_RETURN(pGpu->getProperty(pGpu, PDB_PROP_GPU_ATS_SUPPORTED),
-                            NV_ERR_INVALID_STATE);
-    }
-
     //
     // VBIOS programs the peer ATS range register in Nvswitch case.
     //
@@ -345,8 +362,11 @@ void kmemsysStateDestroy_IMPL
         kmemsysTeardownCoherentCpuLink(pGpu, GPU_GET_KERNEL_MEMORY_SYSTEM(pGpu), NV_FALSE);
     }
 
+    kmemsysDestroySysLtcApertures_HAL(pGpu, pKernelMemorySystem);
+
     portMemFree((void *)pKernelMemorySystem->pStaticConfig);
 
+    NV_ASSERT(bitVectorTestAllSet(&pKernelMemorySystem->mcFlaOffsetTableFreeEntries));
 }
 
 /*!
@@ -745,6 +765,8 @@ kmemsysPopulateMIGGPUInstanceMemConfig_KERNEL
     vmmuSegmentSize = gpuGetVmmuSegmentSize(pGpu);
     NV_ASSERT_OR_RETURN((vmmuSegmentSize != 0), NV_ERR_INVALID_STATE);
 
+    NV_PRINTF(LEVEL_INFO, "partitionableMemoryRange: [0x%llx, 0x%llx], vmmuSegmentSize = 0x%llx\n", partitionableMemoryRange.lo, partitionableMemoryRange.hi, vmmuSegmentSize);
+
     alignedStartAddr = partitionableMemoryRange.lo;
     alignedEndAddr = partitionableMemoryRange.hi;
     if (alignedStartAddr != 0)
@@ -1056,6 +1078,9 @@ kmemsysSetupCoherentCpuLink_IMPL
     // Switch the toggle for coherent link mapping only if migration is successful
     pGpu->setProperty(pGpu, PDB_PROP_GPU_COHERENT_CPU_MAPPING, NV_TRUE);
 
+    // Enable SysL2 caching
+    kmemsysForceSetSysmemCaching_HAL(pGpu, pKernelMemorySystem, NV_TRUE);
+
     return NV_OK;
 }
 
@@ -1077,6 +1102,20 @@ kmemsysTeardownCoherentCpuLink_IMPL
 {
     kbusTeardownCoherentCpuMapping_HAL(pGpu, GPU_GET_KERNEL_BUS(pGpu), bFlush);
     pGpu->setProperty(pGpu, PDB_PROP_GPU_COHERENT_CPU_MAPPING, NV_FALSE);
+
+    // Flush and disable SysL2 caching
+    kmemsysForceSetSysmemCaching_HAL(pGpu, pKernelMemorySystem, NV_FALSE);
+
+    //
+    // Set LTC probe filter to CLEAN state if enabled via regkey.
+    // This evicts all checked-out lines from the probe filter.
+    // Only runs when regkey is explicitly set to 1.
+    //
+    if (pKernelMemorySystem->ltcProbeFilterCleanOnTeardown.bEnabled &&
+        pKernelMemorySystem->ltcProbeFilterCleanOnTeardown.bValue)
+    {
+        kmemsysCleanLTCProbeFilter(pGpu, pKernelMemorySystem);
+    }
 }
 
 NV_STATUS
@@ -1107,6 +1146,22 @@ kmemsysSendFlushL2AllRamsAndCaches_IMPL
 
     return pRmApi->Control(pRmApi, pGpu->hInternalClient, pGpu->hInternalSubdevice,
                            NV2080_CTRL_CMD_INTERNAL_MEMSYS_FLUSH_L2_ALL_RAMS_AND_CACHES,
+                           NULL, 0);
+}
+
+NV_STATUS
+kmemsysCleanLTCProbeFilter_IMPL
+(
+    OBJGPU             *pGpu,
+    KernelMemorySystem *pKernelMemorySystem
+)
+{
+    RM_API *pRmApi = GPU_GET_PHYSICAL_RMAPI(pGpu);
+
+    NV_PRINTF(LEVEL_INFO, "Setting LTC probe filter to CLEAN state\n");
+
+    return pRmApi->Control(pRmApi, pGpu->hInternalClient, pGpu->hInternalSubdevice,
+                           NV2080_CTRL_CMD_INTERNAL_MEMSYS_CLEAN_LTC_PROBE_FILTER,
                            NULL, 0);
 }
 

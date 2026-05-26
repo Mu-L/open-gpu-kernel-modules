@@ -23,6 +23,7 @@
 
 #ifndef __v03_00_dev_disp_h__
 #define __v03_00_dev_disp_h__
+#define NV_PDISP                                                    0x0064FFFF:0x00610000 /* RW--D */
 #define NV_PDISP_CHN_NUM_CORE                                                           0 /*       */
 #define NV_PDISP_CHN_NUM_WIN(i)                                                   (1+(i)) /*       */
 #define NV_PDISP_CHN_NUM_WIN__SIZE_1                                                   32 /*       */
@@ -176,6 +177,20 @@
 #define NV_PDISP_FE_CHNSTATUS_CURS_STATE_BUSY                                  0x00000005 /* R---V */
 #define NV_PDISP_FE_CHNSTATUS_WIN(i)                                   (0x00610664+(i)*4) /* R--4A */
 #define NV_PDISP_FE_CHNSTATUS_WIN__SIZE_1                                              32 /*       */
+#define NV_PDISP_FE_CHNSTATUS_WIN_UPD_STATE                                          11:8 /* R-IVF */
+#define NV_PDISP_FE_CHNSTATUS_WIN_UPD_STATE_INIT                               0x00000000 /* R-I-V */
+#define NV_PDISP_FE_CHNSTATUS_WIN_UPD_STATE_IDLE                               0x00000001 /* R---V */
+#define NV_PDISP_FE_CHNSTATUS_WIN_UPD_STATE_WAIT_BLOCK                         0x00000002 /* R---V */
+#define NV_PDISP_FE_CHNSTATUS_WIN_UPD_STATE_WAIT_MPI                           0x00000003 /* R---V */
+#define NV_PDISP_FE_CHNSTATUS_WIN_UPD_STATE_WAIT_ILK_PH_1                      0x00000004 /* R---V */
+#define NV_PDISP_FE_CHNSTATUS_WIN_UPD_STATE_WAIT_STATE_ERRCHK                  0x00000005 /* R---V */
+#define NV_PDISP_FE_CHNSTATUS_WIN_UPD_STATE_WAIT_RDY_TO_FLIP                   0x00000006 /* R---V */
+#define NV_PDISP_FE_CHNSTATUS_WIN_UPD_STATE_WAIT_ILK_PH_2                      0x00000007 /* R---V */
+#define NV_PDISP_FE_CHNSTATUS_WIN_UPD_STATE_CHECK_PEND_LOADV                   0x00000008 /* R---V */
+#define NV_PDISP_FE_CHNSTATUS_WIN_UPD_STATE_SEND_UPD                           0x00000009 /* R---V */
+#define NV_PDISP_FE_CHNSTATUS_WIN_UPD_STATE_WAIT_PRM                           0x0000000a /* R---V */
+#define NV_PDISP_FE_CHNSTATUS_WIN_UPD_STATE_EXCEPTION                          0x0000000b /* R---V */
+#define NV_PDISP_FE_CHNSTATUS_WIN_UPD_STATE_WAIT_ILK_ABORT                     0x0000000c /* R---V */
 #define NV_PDISP_FE_CHNSTATUS_WIN_STATE                                             19:16 /* R-IVF */
 #define NV_PDISP_FE_CHNSTATUS_WIN_STATE_DEALLOC                                0x00000000 /* R---V */
 #define NV_PDISP_FE_CHNSTATUS_WIN_STATE_INIT1                                  0x00000002 /* R---V */

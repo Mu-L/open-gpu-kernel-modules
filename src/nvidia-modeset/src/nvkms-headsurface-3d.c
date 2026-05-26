@@ -1955,7 +1955,7 @@ NvBool nvHs3dRenderFrame(
                      pHsChannel->nv3d.texInfo,
                      ARRAY_LEN(pHsChannel->nv3d.texInfo));
 
-    nv3dBindTextures(p3d, fragmentProgram, textures);
+    nv3dBindTextures(p3d, textures);
 
     /*
      * Set up the destination.
@@ -2015,7 +2015,6 @@ NvBool nvHs3dRenderFrame(
  *
  * \param[in,out] pHsChannel    The channel to use for the release.
  * \param[in]     pSurfaceEvo   The semaphore surface.
- * \param[in]     nIsoFormat    The NISO format of the surface.
  * \param[in]     offsetInWords The offset to the semaphore within the surface.
  * \param[in]     payload       The payload to write to the semaphore.
  * \param[in]     allPreceedingReads  Whether to wait for preceding
@@ -2024,7 +2023,6 @@ NvBool nvHs3dRenderFrame(
 void nvHs3dReleaseSemaphore(
     NVHsChannelEvoPtr pHsChannel,
     const NVSurfaceEvoRec *pSurfaceEvo,
-    const enum NvKmsNIsoFormat nIsoFormat,
     const NvU16 offsetInWords,
     const NvU32 payload,
     const NvBool allPreceedingReads)
@@ -2032,7 +2030,7 @@ void nvHs3dReleaseSemaphore(
     NvPushChannelPtr p = &pHsChannel->nvPush.channel;
 
     const NvU32 payloadByteOffsetInSemaphore =
-        nvKmsSemaphorePayloadOffset(nIsoFormat) * 4;
+        nvKmsSemaphorePayloadOffset() * 4;
 
     const NvU64 gpuAddress =
         pSurfaceEvo->gpuAddress +

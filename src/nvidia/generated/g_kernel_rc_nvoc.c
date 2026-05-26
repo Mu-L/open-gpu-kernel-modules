@@ -29,7 +29,7 @@ void __nvoc_init__KernelRc(KernelRc*, GpuHalspecOwner *pGpuhalspecowner, RmHalsp
 void __nvoc_init_funcTable_KernelRc(KernelRc*, GpuHalspecOwner *pGpuhalspecowner, RmHalspecOwner *pRmhalspecowner);
 NV_STATUS __nvoc_ctor_KernelRc(KernelRc*, GpuHalspecOwner *pGpuhalspecowner, RmHalspecOwner *pRmhalspecowner);
 void __nvoc_init_dataField_KernelRc(KernelRc*, GpuHalspecOwner *pGpuhalspecowner, RmHalspecOwner *pRmhalspecowner);
-void __nvoc_dtor_KernelRc(KernelRc*);
+void __nvoc_dtor_KernelRc(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__KernelRc;
@@ -62,7 +62,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelRc =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "KernelRc",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_KernelRc,
+    .objCreatefn =        &__nvoc_objCreateDynamic_KernelRc,
     .pCastInfo =          &__nvoc_castinfo__KernelRc,
     .pExportInfo =        &__nvoc_export_info__KernelRc
 };
@@ -71,7 +71,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelRc =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__KernelRc __nvoc_metadata__KernelRc = {
     .rtti.pClassDef = &__nvoc_class_def_KernelRc,    // (krc) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_KernelRc,
+    .rtti.dtor      = &__nvoc_dtor_KernelRc,
     .rtti.offset    = 0,
     .metadata__OBJENGSTATE.rtti.pClassDef = &__nvoc_class_def_OBJENGSTATE,    // (engstate) super
     .metadata__OBJENGSTATE.rtti.dtor      = &__nvoc_destructFromBase,
@@ -205,13 +205,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__KernelRc =
 
 
 // Destruct KernelRc object.
-void __nvoc_dtor_OBJENGSTATE(OBJENGSTATE*);
-void __nvoc_dtor_KernelRc(KernelRc* pThis) {
+void __nvoc_dtor_OBJENGSTATE(Dynamic*);
+void __nvoc_dtor_KernelRc(Dynamic* pThis) {
+
+    KernelRc *__nvoc_this = (KernelRc *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_OBJENGSTATE(&pThis->__nvoc_base_OBJENGSTATE);
+    __nvoc_dtor_OBJENGSTATE((Dynamic *) &__nvoc_this->__nvoc_base_OBJENGSTATE);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_KernelRc(KernelRc *pThis, GpuHalspecOwner *pGpuhalspecowner, RmHalspecOwner *pRmhalspecowner) {
     ChipHal *chipHal = &pGpuhalspecowner->chipHal;
@@ -227,7 +229,7 @@ void __nvoc_init_dataField_KernelRc(KernelRc *pThis, GpuHalspecOwner *pGpuhalspe
     PORT_UNREFERENCED_VARIABLE(rmVariantHal_HalVarIdx);
 
     // NVOC Property Hal field -- PDB_PROP_KRC_IS_MISSING
-    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000a000UL) )) /* ChipHal: T234D | T264D */ 
+    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000e000UL) )) /* ChipHal: T234D | T239D | T264D */ 
     {
         pThis->setProperty(pThis, PDB_PROP_KRC_IS_MISSING, NV_TRUE);
     }
@@ -273,7 +275,7 @@ static void __nvoc_init_funcTable_KernelRc_1(KernelRc *pThis, GpuHalspecOwner *p
     PORT_UNREFERENCED_VARIABLE(rmVariantHal_HalVarIdx);
 
     // krcWatchdogInit -- halified (2 hals) body
-    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000a000UL) )) /* ChipHal: T234D | T264D */ 
+    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000e000UL) )) /* ChipHal: T234D | T239D | T264D */ 
     {
         pThis->__krcWatchdogInit__ = &krcWatchdogInit_395e98;
     }
@@ -283,7 +285,7 @@ static void __nvoc_init_funcTable_KernelRc_1(KernelRc *pThis, GpuHalspecOwner *p
     }
 
     // krcWatchdogInitPushbuffer -- halified (2 hals) body
-    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000a000UL) )) /* ChipHal: T234D | T264D */ 
+    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000e000UL) )) /* ChipHal: T234D | T239D | T264D */ 
     {
         pThis->__krcWatchdogInitPushbuffer__ = &krcWatchdogInitPushbuffer_d44104;
     }
@@ -293,7 +295,7 @@ static void __nvoc_init_funcTable_KernelRc_1(KernelRc *pThis, GpuHalspecOwner *p
     }
 
     // krcWatchdog -- halified (2 hals) body
-    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000a000UL) )) /* ChipHal: T234D | T264D */ 
+    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000e000UL) )) /* ChipHal: T234D | T239D | T264D */ 
     {
         pThis->__krcWatchdog__ = &krcWatchdog_d44104;
     }
@@ -423,11 +425,8 @@ __nvoc_objCreate_KernelRc_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_KernelRc(KernelRc **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_KernelRc(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_KernelRc(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_KernelRc((KernelRc **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

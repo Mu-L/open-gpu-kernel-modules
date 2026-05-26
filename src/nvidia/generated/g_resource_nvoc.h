@@ -189,7 +189,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_RmResourceCommon;
     ((RmResourceCommon*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(RmResourceCommon)))
 #endif //__nvoc_resource_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_RmResourceCommon(RmResourceCommon**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_RmResourceCommon(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_RmResourceCommon(RmResourceCommon**, Dynamic*, NvU32);
 #define __objCreate_RmResourceCommon(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -310,7 +310,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_RmResource;
     ((RmResource*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(RmResource)))
 #endif //__nvoc_resource_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_RmResource(RmResource**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_RmResource(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_RmResource(RmResource**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_RmResource(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

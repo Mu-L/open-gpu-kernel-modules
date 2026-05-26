@@ -65,7 +65,6 @@ static NvBool DpySetBacklightBrightness(NVDpyEvoRec *pDpyEvo, NvS64 brightness)
         return FALSE;
     }
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = nvDpyEvoGetConnectorId(pDpyEvo);
     params.brightness = brightness;
     params.brightnessType = NV0073_CTRL_SPECIFIC_BACKLIGHT_BRIGHTNESS_TYPE_PERCENT100;
@@ -97,7 +96,6 @@ static NvBool DpyGetBacklightBrightness(const NVDpyEvoRec *pDpyEvo,
     NVDevEvoPtr pDevEvo = pDispEvo->pDevEvo;
     NvU32 ret;
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = nvDpyEvoGetConnectorId(pDpyEvo);
     params.brightnessType = NV0073_CTRL_SPECIFIC_BACKLIGHT_BRIGHTNESS_TYPE_PERCENT100;
 
@@ -168,7 +166,6 @@ static NvBool GetScanLine(const NVDpyEvoRec *pDpyEvo, NvS64 *pScanLine)
     head = nvGetPrimaryHwHead(pDispEvo, pDpyEvo->apiHead);
     nvAssert(head != NV_INVALID_HEAD);
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.head = head;
 
     ret = nvRmApiControl(nvEvoGlobal.clientHandle,
@@ -445,7 +442,7 @@ static NvBool GetDigitalVibranceValidValues(
     return TRUE;
 }
 
-static NvBool ColorSpaceAndRangeAvailable(const NVDpyEvoRec *pDpyEvo)
+static NvBool ColorFormatAndRangeAvailable(const NVDpyEvoRec *pDpyEvo)
 {
     return ((pDpyEvo->pConnectorEvo->legacyType ==
              NV0073_CTRL_SPECIFIC_DISPLAY_TYPE_DFP) &&
@@ -454,18 +451,18 @@ static NvBool ColorSpaceAndRangeAvailable(const NVDpyEvoRec *pDpyEvo)
 }
 
 /*!
- * Send infoFrame with new color{Space,Range}.
+ * Send infoFrame with new color{Format,Range}.
  */
-static void DpyPostColorSpaceOrRangeSetEvo(NVDpyEvoPtr pDpyEvo)
+static void DpyPostColorFormatOrRangeSetEvo(NVDpyEvoPtr pDpyEvo)
 {
-    enum NvKmsDpyAttributeCurrentColorSpaceValue colorSpace;
+    enum NvKmsDpyAttributeCurrentColorFormatValue colorFormat;
     enum NvKmsDpyAttributeColorBpcValue colorBpc;
     enum NvKmsDpyAttributeColorRangeValue colorRange;
     NVEvoUpdateState updateState = { };
     NVDispEvoRec *pDispEvo = pDpyEvo->pDispEvo;
     NVDispApiHeadStateEvoRec *pApiHeadState;
     NvU32 head;
-    NvBool colorSpaceChanged = FALSE;
+    NvBool colorFormatChanged = FALSE;
     NvBool colorBpcChanged = FALSE;
     NVDpyAttributeColor tmpDpyColor;
 
@@ -479,39 +476,39 @@ static void DpyPostColorSpaceOrRangeSetEvo(NVDpyEvoPtr pDpyEvo)
              (nvDpyIdIsInDpyIdList(pDpyEvo->id, pApiHeadState->activeDpys)));
 
     /*
-     * Choose current colorSpace and colorRange based on the current mode
-     * timings and the requested color space and range.
+     * Choose current color format and colorRange based on the current mode
+     * timings and the requested color format and range.
      */
-    if (!nvChooseCurrentColorSpaceAndRangeEvo(pDpyEvo,
+    if (!nvChooseCurrentColorFormatAndRangeEvo(pDpyEvo,
                                               pApiHeadState->timings.yuv420Mode,
                                               pApiHeadState->attributes.color.colorimetry,
-                                              pDpyEvo->requestedColorSpace,
+                                              pDpyEvo->requestedColorFormat,
                                               NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_BPC_UNKNOWN,
                                               pDpyEvo->requestedColorRange,
-                                              &colorSpace,
+                                              &colorFormat,
                                               &colorBpc,
                                               &colorRange)) {
-        nvAssert(!"Failed to choose current color space and color range");
+        nvAssert(!"Failed to choose current color format and color range");
         return;
     }
 
-    colorSpaceChanged = (pApiHeadState->attributes.color.format != colorSpace);
+    colorFormatChanged = (pApiHeadState->attributes.color.format != colorFormat);
     colorBpcChanged = (pApiHeadState->attributes.color.bpc != colorBpc);
 
-    /* For DP and HDMI FRL, neither color space nor bpc can be changed without a modeset */
+    /* For DP and HDMI FRL, neither color format nor bpc can be changed without a modeset */
     if ((nvConnectorUsesDPLib(pDpyEvo->pConnectorEvo) ||
             (pApiHeadState->timings.protocol == NVKMS_PROTOCOL_SOR_HDMI_FRL)) &&
-        (colorSpaceChanged || colorBpcChanged)) {
+        (colorFormatChanged || colorBpcChanged)) {
         return;
     }
 
-    tmpDpyColor.format = colorSpace;
+    tmpDpyColor.format = colorFormat;
     tmpDpyColor.range = colorRange;
     tmpDpyColor.bpc = colorBpc;
 
     if (nvDpyIsHdmiEvo(pDpyEvo) &&
             ((colorBpc > pApiHeadState->attributes.color.bpc) || 
-              colorSpaceChanged)) {
+              colorFormatChanged)) {
         /*
          * For HDMI FRL, downgrade the selected color bpc to the current color
          * bpc so that the current color bpc remains unchanged.
@@ -519,37 +516,33 @@ static void DpyPostColorSpaceOrRangeSetEvo(NVDpyEvoPtr pDpyEvo)
         if (pApiHeadState->timings.protocol == NVKMS_PROTOCOL_SOR_HDMI_FRL) {
             tmpDpyColor.bpc = pApiHeadState->attributes.color.bpc;
         } else {
-            const NvKmsDpyOutputColorFormatInfo colorFormatsInfo =
-                nvDpyGetOutputColorFormatInfo(pDpyEvo);
-
-            while (!nvHdmiIsTmdsPossible(pDpyEvo,
-                                         &pApiHeadState->timings,
-                                         &tmpDpyColor)) {
-                if(!nvDowngradeColorSpaceAndBpc(pDpyEvo,
-                                                &colorFormatsInfo,
-                                                &tmpDpyColor)) {
-                    return;
-                }
+            if (!nvEvoHdmiTmdsMaxPixelClockCheck(
+                    pDpyEvo,
+                    &pApiHeadState->modeValidationParams,
+                    &tmpDpyColor,
+                    &pApiHeadState->timings,
+                    &dummyInfoString)) {
+                return;
             }
         }
-    } 
+    }
 
     pApiHeadState->attributes.color.format = tmpDpyColor.format;
     pApiHeadState->attributes.color.range = tmpDpyColor.range;
     pApiHeadState->attributes.color.bpc = tmpDpyColor.bpc;
 
-    /* Update hardware's current colorSpace and colorRange */
+    /* Update hardware's current color format and colorRange */
     FOR_EACH_EVO_HW_HEAD_IN_MASK(pApiHeadState->hwHeadsMask, head) {
         enum nvKmsPixelDepth newPixelDepth =
             nvEvoDpyColorToPixelDepth(&pApiHeadState->attributes.color);
 
-        nvUpdateCurrentHardwareColorSpaceAndRangeEvo(pDispEvo,
+        nvUpdateCurrentHardwareColorFormatAndRangeEvo(pDispEvo,
                                                      head,
                                                      &pApiHeadState->attributes.color,
                                                      &updateState);
 
         if ((newPixelDepth != pDispEvo->headState[head].pixelDepth) ||
-            colorSpaceChanged) {
+            colorFormatChanged) {
             pDispEvo->headState[head].pixelDepth = newPixelDepth;
             nvEvoHeadSetControlOR(pDispEvo,
                                   head,
@@ -567,46 +560,46 @@ static void DpyPostColorSpaceOrRangeSetEvo(NVDpyEvoPtr pDpyEvo)
     // XXX DisplayPort sets color format.
 }
 
-static NvU32 DpyGetValidColorSpaces(const NVDpyEvoRec *pDpyEvo)
+static NvU32 DpyGetValidColorFormats(const NVDpyEvoRec *pDpyEvo)
 {
-    NvU32 val = (1 << NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_SPACE_RGB);
+    NvU32 val = (1 << NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT_RGB);
 
     if (nvDpyIsHdmiEvo(pDpyEvo) ||
             nvConnectorUsesDPLib(pDpyEvo->pConnectorEvo)) {
-        val |= (1 << NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_SPACE_YCbCr422);
-        val |= (1 << NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_SPACE_YCbCr444);
+        val |= (1 << NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT_YCbCr422);
+        val |= (1 << NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT_YCbCr444);
     }
 
     return val;
 }
 
-NvBool nvDpyValidateColorSpace(const NVDpyEvoRec *pDpyEvo, NvS64 value)
+NvBool nvDpyValidateColorFormat(const NVDpyEvoRec *pDpyEvo, NvS64 value)
 {
-    NvU32 validMask = DpyGetValidColorSpaces(pDpyEvo);
+    NvU32 validMask = DpyGetValidColorFormats(pDpyEvo);
 
-    if (!ColorSpaceAndRangeAvailable(pDpyEvo) || !(validMask & (1 << value))) {
+    if (!ColorFormatAndRangeAvailable(pDpyEvo) || !(validMask & (1 << value))) {
         return FALSE;
     }
 
     return TRUE;
 }
 
-static NvBool SetRequestedColorSpace(NVDpyEvoRec *pDpyEvo, NvS64 value)
+static NvBool SetRequestedColorFormat(NVDpyEvoRec *pDpyEvo, NvS64 value)
 {
-    if (!nvDpyValidateColorSpace(pDpyEvo, value)) {
+    if (!nvDpyValidateColorFormat(pDpyEvo, value)) {
         return FALSE;
     }
 
-    pDpyEvo->requestedColorSpace = value;
+    pDpyEvo->requestedColorFormat = value;
 
-    DpyPostColorSpaceOrRangeSetEvo(pDpyEvo);
+    DpyPostColorFormatOrRangeSetEvo(pDpyEvo);
 
     return TRUE;
 }
 
-static NvBool GetCurrentColorSpace(const NVDpyEvoRec *pDpyEvo, NvS64 *pValue)
+static NvBool GetCurrentColorFormat(const NVDpyEvoRec *pDpyEvo, NvS64 *pValue)
 {
-    if (!ColorSpaceAndRangeAvailable(pDpyEvo)) {
+    if (!ColorFormatAndRangeAvailable(pDpyEvo)) {
         return FALSE;
     }
 
@@ -615,71 +608,71 @@ static NvBool GetCurrentColorSpace(const NVDpyEvoRec *pDpyEvo, NvS64 *pValue)
     return TRUE;
 }
 
-static NvBool GetRequestedColorSpace(const NVDpyEvoRec *pDpyEvo, NvS64 *pValue)
+static NvBool GetRequestedColorFormat(const NVDpyEvoRec *pDpyEvo, NvS64 *pValue)
 {
-    if (!ColorSpaceAndRangeAvailable(pDpyEvo)) {
+    if (!ColorFormatAndRangeAvailable(pDpyEvo)) {
         return FALSE;
     }
 
-    *pValue = pDpyEvo->requestedColorSpace;
+    *pValue = pDpyEvo->requestedColorFormat;
 
     return TRUE;
 }
 
-static NvBool GetCurrentColorSpaceValidValues(
+static NvBool GetCurrentColorFormatValidValues(
     const NVDpyEvoRec *pDpyEvo,
     struct NvKmsAttributeValidValuesCommonReply *pValidValues)
 {
-    if (!ColorSpaceAndRangeAvailable(pDpyEvo)) {
+    if (!ColorFormatAndRangeAvailable(pDpyEvo)) {
         return FALSE;
     }
 
     nvAssert(pValidValues->type == NV_KMS_ATTRIBUTE_TYPE_INTBITS);
 
-    pValidValues->u.bits.ints = DpyGetValidColorSpaces(pDpyEvo);
+    pValidValues->u.bits.ints = DpyGetValidColorFormats(pDpyEvo);
 
     /*
-     * The current color space may be YUV420 depending on the current mode.
+     * The current color format may be YUV420 depending on the current mode.
      * Rather than determine whether this pDpy is capable of driving any
-     * YUV420 modes, just assume this is always a valid current color space.
+     * YUV420 modes, just assume this is always a valid current color format.
      */
     pValidValues->u.bits.ints |=
-        (1 << NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr420);
+        (1 << NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr420);
 
     return TRUE;
 }
 
-static NvBool GetRequestedColorSpaceValidValues(
+static NvBool GetRequestedColorFormatValidValues(
     const NVDpyEvoRec *pDpyEvo,
     struct NvKmsAttributeValidValuesCommonReply *pValidValues)
 {
-    if (!ColorSpaceAndRangeAvailable(pDpyEvo)) {
+    if (!ColorFormatAndRangeAvailable(pDpyEvo)) {
         return FALSE;
     }
 
     nvAssert(pValidValues->type == NV_KMS_ATTRIBUTE_TYPE_INTBITS);
 
-    pValidValues->u.bits.ints = DpyGetValidColorSpaces(pDpyEvo);
+    pValidValues->u.bits.ints = DpyGetValidColorFormats(pDpyEvo);
 
     return TRUE;
 }
 
 static NvBool SetRequestedColorRange(NVDpyEvoRec *pDpyEvo, NvS64 value)
 {
-    if (!ColorSpaceAndRangeAvailable(pDpyEvo)) {
+    if (!ColorFormatAndRangeAvailable(pDpyEvo)) {
         return FALSE;
     }
 
     pDpyEvo->requestedColorRange = value;
 
-    DpyPostColorSpaceOrRangeSetEvo(pDpyEvo);
+    DpyPostColorFormatOrRangeSetEvo(pDpyEvo);
 
     return TRUE;
 }
 
 static NvBool GetCurrentColorRange(const NVDpyEvoRec *pDpyEvo, NvS64 *pValue)
 {
-    if (!ColorSpaceAndRangeAvailable(pDpyEvo)) {
+    if (!ColorFormatAndRangeAvailable(pDpyEvo)) {
         return FALSE;
     }
 
@@ -690,7 +683,7 @@ static NvBool GetCurrentColorRange(const NVDpyEvoRec *pDpyEvo, NvS64 *pValue)
 
 static NvBool GetRequestedColorRange(const NVDpyEvoRec *pDpyEvo, NvS64 *pValue)
 {
-    if (!ColorSpaceAndRangeAvailable(pDpyEvo)) {
+    if (!ColorFormatAndRangeAvailable(pDpyEvo)) {
         return FALSE;
     }
 
@@ -703,7 +696,7 @@ static NvBool GetColorRangeValidValues(
     const NVDpyEvoRec *pDpyEvo,
     struct NvKmsAttributeValidValuesCommonReply *pValidValues)
 {
-    if (!ColorSpaceAndRangeAvailable(pDpyEvo)) {
+    if (!ColorFormatAndRangeAvailable(pDpyEvo)) {
         return FALSE;
     }
 
@@ -712,7 +705,7 @@ static NvBool GetColorRangeValidValues(
     /*
      * The preferred color range may always select between full or limited
      * range, but the actual resulting color range depends on the current
-     * color space.  Both color ranges are always valid values for both
+     * color format.  Both color ranges are always valid values for both
      * preferred and current color range attributes.
      */
     pValidValues->u.bits.ints = (1 << NV_KMS_DPY_ATTRIBUTE_COLOR_RANGE_FULL) |
@@ -1193,16 +1186,16 @@ static const struct {
         .getValidValues = GetDigitalVibranceValidValues,
         .type           = NV_KMS_ATTRIBUTE_TYPE_RANGE,
     },
-    [NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_SPACE] = {
-        .set            = SetRequestedColorSpace,
-        .get            = GetRequestedColorSpace,
-        .getValidValues = GetRequestedColorSpaceValidValues,
+    [NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT] = {
+        .set            = SetRequestedColorFormat,
+        .get            = GetRequestedColorFormat,
+        .getValidValues = GetRequestedColorFormatValidValues,
         .type           = NV_KMS_ATTRIBUTE_TYPE_INTBITS,
     },
-    [NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE] = {
+    [NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT] = {
         .set            = NULL,
-        .get            = GetCurrentColorSpace,
-        .getValidValues = GetCurrentColorSpaceValidValues,
+        .get            = GetCurrentColorFormat,
+        .getValidValues = GetCurrentColorFormatValidValues,
         .type           = NV_KMS_ATTRIBUTE_TYPE_INTBITS,
     },
     [NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_RANGE] = {

@@ -38,10 +38,17 @@ static inline int pci_devid_is_self_hosted_blackwell(unsigned short devid)
            || (devid == 0x31a1);                     //
 }
 
+static inline int pci_devid_is_self_hosted_rubin(unsigned short devid)
+{
+    return (devid >= 0x3040 && devid <= 0x307f)      // GR100 Self-Hosted
+           || (devid >= 0x30c0 && devid <= 0x30ff);  // GR102 Self-Hosted
+}
+
 static inline int pci_devid_is_self_hosted(unsigned short devid)
 {
     return pci_devid_is_self_hosted_hopper(devid) ||
            pci_devid_is_self_hosted_blackwell(devid)
+           || pci_devid_is_self_hosted_rubin(devid)
            ;
 }
 

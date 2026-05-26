@@ -104,14 +104,22 @@ typedef struct {
     } read_minval;
 } NvKmsSyncPtOpParams;
 
-enum FailAllocCoreChannelMethod {
-    FAIL_ALLOC_CORE_CHANNEL_RM_SETUP_CORE_CHANNEL = 0,
-    FAIL_ALLOC_CORE_CHANNEL_RESTORE_CONSOLE = 1,
-    FAIL_ALLOC_CORE_CHANNEL_NO_CLASS = 2,
+enum NvKmsFailAllocCoreChannelMethod {
+    NVKMS_FAIL_ALLOC_CORE_CHANNEL_RM_SETUP_CORE_CHANNEL = 0,
+    NVKMS_FAIL_ALLOC_CORE_CHANNEL_RESTORE_CONSOLE = 1,
+    NVKMS_FAIL_ALLOC_CORE_CHANNEL_NO_CLASS = 2,
 };
 
-NvBool nvkms_test_fail_alloc_core_channel(enum FailAllocCoreChannelMethod method);
+enum NvKmsFrlRateForce {
+  NVKMS_FRL_RATE_FORCE_NONE,
+  NVKMS_FRL_RATE_FORCE_MAX,
+  NVKMS_FRL_RATE_FORCE_MAX_DSC,
+};
+
+NvBool nvkms_test_fail_alloc_core_channel(enum NvKmsFailAllocCoreChannelMethod method);
+enum NvKmsFrlRateForce nvkms_force_frl_rate(void);
 NvBool nvkms_conceal_vrr_caps(void);
+NvBool nvkms_enhanced_pcon_support(void);
 NvBool nvkms_output_rounding_fix(void);
 NvBool nvkms_disable_hdmi_frl(void);
 NvBool nvkms_disable_vrr_memclk_switch(void);

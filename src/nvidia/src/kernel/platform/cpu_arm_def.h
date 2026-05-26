@@ -101,6 +101,8 @@ extern void CP_WRITE_CSSELR_REGISTER(NvU32 val);
 // Efficiency Core
 #define CP_MIDR_PRIMARY_PART_NUM_NVIDIA_T254_E   0xd87
 
+#define CP_MIDR_PRIMARY_PART_NUM_OLYMPUS       0x10
+
 // Cache Size Identification Register
 #define CP_CCSIDR                     "ccsidr_el1"
 

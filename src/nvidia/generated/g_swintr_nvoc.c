@@ -31,14 +31,14 @@ void __nvoc_init__SwIntr(SwIntr*);
 void __nvoc_init_funcTable_SwIntr(SwIntr*);
 NV_STATUS __nvoc_ctor_SwIntr(SwIntr*);
 void __nvoc_init_dataField_SwIntr(SwIntr*);
-void __nvoc_dtor_SwIntr(SwIntr*);
+void __nvoc_dtor_SwIntr(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__SwIntr;
 extern const struct NVOC_EXPORT_INFO __nvoc_export_info__SwIntr;
 
 // Down-thunk(s) to bridge SwIntr methods from ancestors (if any)
-void __nvoc_down_thunk_SwIntr_intrservRegisterIntrService(OBJGPU *pGpu, struct IntrService *pSwIntr, IntrServiceRecord pRecords[180]);    // this
+void __nvoc_down_thunk_SwIntr_intrservRegisterIntrService(OBJGPU *pGpu, struct IntrService *pSwIntr, IntrServiceRecord pRecords[181]);    // this
 NvU32 __nvoc_down_thunk_SwIntr_intrservServiceInterrupt(OBJGPU *pGpu, struct IntrService *pSwIntr, IntrServiceServiceInterruptArguments *pParams);    // this
 
 // Up-thunk(s) to bridge SwIntr methods to ancestors (if any)
@@ -68,7 +68,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_SwIntr =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "SwIntr",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_SwIntr,
+    .objCreatefn =        &__nvoc_objCreateDynamic_SwIntr,
     .pCastInfo =          &__nvoc_castinfo__SwIntr,
     .pExportInfo =        &__nvoc_export_info__SwIntr
 };
@@ -77,7 +77,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_SwIntr =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__SwIntr __nvoc_metadata__SwIntr = {
     .rtti.pClassDef = &__nvoc_class_def_SwIntr,    // (swintr) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_SwIntr,
+    .rtti.dtor      = &__nvoc_dtor_SwIntr,
     .rtti.offset    = 0,
     .metadata__OBJENGSTATE.rtti.pClassDef = &__nvoc_class_def_OBJENGSTATE,    // (engstate) super
     .metadata__OBJENGSTATE.rtti.dtor      = &__nvoc_destructFromBase,
@@ -142,7 +142,7 @@ const struct NVOC_CASTINFO __nvoc_castinfo__SwIntr = {
 // 2 down-thunk(s) defined to bridge methods in SwIntr from superclasses
 
 // swintrRegisterIntrService: virtual override (intrserv) base (intrserv)
-void __nvoc_down_thunk_SwIntr_intrservRegisterIntrService(OBJGPU *pGpu, struct IntrService *pSwIntr, IntrServiceRecord pRecords[180]) {
+void __nvoc_down_thunk_SwIntr_intrservRegisterIntrService(OBJGPU *pGpu, struct IntrService *pSwIntr, IntrServiceRecord pRecords[181]) {
     swintrRegisterIntrService(pGpu, (struct SwIntr *)(((unsigned char *) pSwIntr) - NV_OFFSETOF(SwIntr, __nvoc_base_IntrService)), pRecords);
 }
 
@@ -243,15 +243,17 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__SwIntr =
 
 
 // Destruct SwIntr object.
-void __nvoc_dtor_OBJENGSTATE(OBJENGSTATE*);
-void __nvoc_dtor_IntrService(IntrService*);
-void __nvoc_dtor_SwIntr(SwIntr* pThis) {
+void __nvoc_dtor_OBJENGSTATE(Dynamic*);
+void __nvoc_dtor_IntrService(Dynamic*);
+void __nvoc_dtor_SwIntr(Dynamic* pThis) {
+
+    SwIntr *__nvoc_this = (SwIntr *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_OBJENGSTATE(&pThis->__nvoc_base_OBJENGSTATE);
-    __nvoc_dtor_IntrService(&pThis->__nvoc_base_IntrService);
+    __nvoc_dtor_OBJENGSTATE((Dynamic *) &__nvoc_this->__nvoc_base_OBJENGSTATE);
+    __nvoc_dtor_IntrService((Dynamic *) &__nvoc_this->__nvoc_base_IntrService);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_SwIntr(SwIntr *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -276,7 +278,7 @@ NV_STATUS __nvoc_ctor_SwIntr(SwIntr *pThis) {
 
     // Unwind on error.
 __nvoc_ctor_SwIntr_fail_IntrService:
-    __nvoc_dtor_OBJENGSTATE(&pThis->__nvoc_base_OBJENGSTATE);
+    __nvoc_dtor_OBJENGSTATE((Dynamic *)&pThis->__nvoc_base_OBJENGSTATE);
 __nvoc_ctor_SwIntr_fail_OBJENGSTATE:
 __nvoc_ctor_SwIntr_exit:
     return status;
@@ -385,11 +387,8 @@ __nvoc_objCreate_SwIntr_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_SwIntr(SwIntr **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_SwIntr(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_SwIntr(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_SwIntr((SwIntr **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

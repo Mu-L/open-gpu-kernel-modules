@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2012-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2012-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -1696,7 +1696,7 @@ _ceChannelScheduleWork_GM107
             if((insertFinishPayload) && (size <= pChannel->maxBlockSize))
             {
                 addFinishPayload = NV_TRUE;
-                NV_PRINTF(LEVEL_INFO, "Inserting Finish Payload!!!!!!!!!!\n");
+                NV_PRINTF(LEVEL_INFO, "Inserting Finish Payload\n");
             }
             else
             {

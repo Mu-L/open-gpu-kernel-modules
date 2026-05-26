@@ -29,7 +29,7 @@ void __nvoc_init__KernelGraphicsManager(KernelGraphicsManager*, GpuHalspecOwner 
 void __nvoc_init_funcTable_KernelGraphicsManager(KernelGraphicsManager*, GpuHalspecOwner *pGpuhalspecowner);
 NV_STATUS __nvoc_ctor_KernelGraphicsManager(KernelGraphicsManager*, GpuHalspecOwner *pGpuhalspecowner);
 void __nvoc_init_dataField_KernelGraphicsManager(KernelGraphicsManager*, GpuHalspecOwner *pGpuhalspecowner);
-void __nvoc_dtor_KernelGraphicsManager(KernelGraphicsManager*);
+void __nvoc_dtor_KernelGraphicsManager(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__KernelGraphicsManager;
@@ -62,7 +62,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelGraphicsManager =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "KernelGraphicsManager",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_KernelGraphicsManager,
+    .objCreatefn =        &__nvoc_objCreateDynamic_KernelGraphicsManager,
     .pCastInfo =          &__nvoc_castinfo__KernelGraphicsManager,
     .pExportInfo =        &__nvoc_export_info__KernelGraphicsManager
 };
@@ -71,7 +71,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelGraphicsManager =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__KernelGraphicsManager __nvoc_metadata__KernelGraphicsManager = {
     .rtti.pClassDef = &__nvoc_class_def_KernelGraphicsManager,    // (kgrmgr) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_KernelGraphicsManager,
+    .rtti.dtor      = &__nvoc_dtor_KernelGraphicsManager,
     .rtti.offset    = 0,
     .metadata__OBJENGSTATE.rtti.pClassDef = &__nvoc_class_def_OBJENGSTATE,    // (engstate) super
     .metadata__OBJENGSTATE.rtti.dtor      = &__nvoc_destructFromBase,
@@ -206,16 +206,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__KernelGraphicsManager =
 
 // Destruct KernelGraphicsManager object.
 void __nvoc_kgrmgrDestruct(KernelGraphicsManager*);
-void __nvoc_dtor_OBJENGSTATE(OBJENGSTATE*);
-void __nvoc_dtor_KernelGraphicsManager(KernelGraphicsManager* pThis) {
+void __nvoc_dtor_OBJENGSTATE(Dynamic*);
+void __nvoc_dtor_KernelGraphicsManager(Dynamic* pThis) {
+
+    KernelGraphicsManager *__nvoc_this = (KernelGraphicsManager *) pThis;
 
 // Call destructor.
-    __nvoc_kgrmgrDestruct(pThis);
+    __nvoc_kgrmgrDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_OBJENGSTATE(&pThis->__nvoc_base_OBJENGSTATE);
+    __nvoc_dtor_OBJENGSTATE((Dynamic *) &__nvoc_this->__nvoc_base_OBJENGSTATE);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_KernelGraphicsManager(KernelGraphicsManager *pThis, GpuHalspecOwner *pGpuhalspecowner) {
     ChipHal *chipHal = &pGpuhalspecowner->chipHal;
@@ -265,7 +267,7 @@ static void __nvoc_init_funcTable_KernelGraphicsManager_1(KernelGraphicsManager 
         pThis->__kgrmgrGetVeidsFromGpcCount__ = &kgrmgrGetVeidsFromGpcCount_GA100;
     }
     else if (( ((chipHal_HalVarIdx >> 5) == 1UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x98000000UL) ) ||
-             ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000003f9UL) )) /* ChipHal: GB100 | GB102 | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C */ 
+             ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000030ffUL) )) /* ChipHal: GB100 | GB102 | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C | GR100 | GR102 */ 
     {
         pThis->__kgrmgrGetVeidsFromGpcCount__ = &kgrmgrGetVeidsFromGpcCount_GB100;
     }
@@ -382,11 +384,8 @@ __nvoc_objCreate_KernelGraphicsManager_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_KernelGraphicsManager(KernelGraphicsManager **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_KernelGraphicsManager(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_KernelGraphicsManager(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_KernelGraphicsManager((KernelGraphicsManager **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

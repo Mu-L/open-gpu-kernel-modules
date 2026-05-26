@@ -1,5 +1,5 @@
 /*******************************************************************************
-    Copyright (c) 2020-2024 NVIDIA Corporation
+    Copyright (c) 2020-2025 NVIDIA Corporation
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
@@ -479,7 +479,7 @@ bool uvm_hal_hopper_ce_memcopy_is_valid(uvm_push_t *push, uvm_gpu_address_t dst,
     return true;
 }
 
-// Specialized version of uvm_hal_volta_ce_memcopy used for encryption and
+// Specialized version of uvm_hal_turing_ce_memcopy used for encryption and
 // decryption. Pre-Hopper functionality, such as validation or address patching,
 // has been removed.
 static void encrypt_or_decrypt(uvm_push_t *push, uvm_gpu_address_t dst, uvm_gpu_address_t src, NvU32 size)

@@ -27,16 +27,7 @@
 #include "nvidia-3d-types.h"
 
 struct _Nv3dHal {
-    void   (*setSpaVersion)         (Nv3dChannelRec *p3dChannel);
     void   (*initChannel)           (Nv3dChannelRec *p3dChannel);
-    void   (*uploadDataInline)      (Nv3dChannelRec *p3dChannel,
-                                     NvU64 gpuBaseAddress,
-                                     size_t offset,
-                                     const void *data,
-                                     size_t bytes);
-    void   (*setProgramOffset)      (Nv3dChannelRec *p3dChannel,
-                                     NvU32 stage,
-                                     NvU32 offset);
     void   (*assignNv3dTexture)     (Nv3dRenderTexInfo info,
                                      Nv3dTexture *tex);
     void   (*setVertexStreamEnd)    (Nv3dChannelPtr p3dChannel,

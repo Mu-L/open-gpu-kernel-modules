@@ -143,6 +143,8 @@ void __nvoc_init_halspec_DispIpHal(DispIpHal*, NvU32);
 // delete ~DISPv0401 & (GA102 | GA103 | GA104 | GA106 | GA107);
 // delete DISPv0402 & ~T234D;
 // delete ~DISPv0402 & T234D;
+// delete DISPv0403 & ~T239D;
+// delete ~DISPv0403 & T239D;
 // delete DISPv0404 & ~(AD102 | AD103 | AD104 | AD106 | AD107);
 // delete ~DISPv0404 & (AD102 | AD103 | AD104 | AD106 | AD107);
 // delete DISPv0501 & ~(GB10B | T264D);

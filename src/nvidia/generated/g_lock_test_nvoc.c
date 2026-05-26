@@ -31,7 +31,7 @@ void __nvoc_init__LockTestRelaxedDupObject(LockTestRelaxedDupObject*);
 void __nvoc_init_funcTable_LockTestRelaxedDupObject(LockTestRelaxedDupObject*);
 NV_STATUS __nvoc_ctor_LockTestRelaxedDupObject(LockTestRelaxedDupObject*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_LockTestRelaxedDupObject(LockTestRelaxedDupObject*);
-void __nvoc_dtor_LockTestRelaxedDupObject(LockTestRelaxedDupObject*);
+void __nvoc_dtor_LockTestRelaxedDupObject(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__LockTestRelaxedDupObject;
@@ -89,7 +89,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_LockTestRelaxedDupObject =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "LockTestRelaxedDupObject",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_LockTestRelaxedDupObject,
+    .objCreatefn =        &__nvoc_objCreateDynamic_LockTestRelaxedDupObject,
     .pCastInfo =          &__nvoc_castinfo__LockTestRelaxedDupObject,
     .pExportInfo =        &__nvoc_export_info__LockTestRelaxedDupObject
 };
@@ -98,7 +98,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_LockTestRelaxedDupObject =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__LockTestRelaxedDupObject __nvoc_metadata__LockTestRelaxedDupObject = {
     .rtti.pClassDef = &__nvoc_class_def_LockTestRelaxedDupObject,    // (lockTestRelaxedDupObj) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_LockTestRelaxedDupObject,
+    .rtti.dtor      = &__nvoc_dtor_LockTestRelaxedDupObject,
     .rtti.offset    = 0,
     .metadata__RmResource.rtti.pClassDef = &__nvoc_class_def_RmResource,    // (rmres) super
     .metadata__RmResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -308,16 +308,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__LockTestRelaxedDupObject =
 
 // Destruct LockTestRelaxedDupObject object.
 void __nvoc_lockTestRelaxedDupObjDestruct(LockTestRelaxedDupObject*);
-void __nvoc_dtor_RmResource(RmResource*);
-void __nvoc_dtor_LockTestRelaxedDupObject(LockTestRelaxedDupObject* pThis) {
+void __nvoc_dtor_RmResource(Dynamic*);
+void __nvoc_dtor_LockTestRelaxedDupObject(Dynamic* pThis) {
+
+    LockTestRelaxedDupObject *__nvoc_this = (LockTestRelaxedDupObject *) pThis;
 
 // Call destructor.
-    __nvoc_lockTestRelaxedDupObjDestruct(pThis);
+    __nvoc_lockTestRelaxedDupObjDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RmResource(&pThis->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *) &__nvoc_this->__nvoc_base_RmResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_LockTestRelaxedDupObject(LockTestRelaxedDupObject *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -343,7 +345,7 @@ NV_STATUS __nvoc_ctor_LockTestRelaxedDupObject(LockTestRelaxedDupObject *pResour
 
     // Unwind on error.
 __nvoc_ctor_LockTestRelaxedDupObject_fail__init:
-    __nvoc_dtor_RmResource(&pResource->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *)&pResource->__nvoc_base_RmResource);
 __nvoc_ctor_LockTestRelaxedDupObject_fail_RmResource:
 __nvoc_ctor_LockTestRelaxedDupObject_exit:
     return status;
@@ -453,13 +455,10 @@ __nvoc_objCreate_LockTestRelaxedDupObject_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_LockTestRelaxedDupObject(LockTestRelaxedDupObject **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_LockTestRelaxedDupObject(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_LockTestRelaxedDupObject(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_LockTestRelaxedDupObject((LockTestRelaxedDupObject **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

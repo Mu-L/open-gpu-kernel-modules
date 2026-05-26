@@ -324,4 +324,7 @@ void nvEvoSendDpInfoFrameSdpC8(const NVDispEvoRec *pDispEvo,
                                const NvEvoInfoFrameTransmitControl transmitCtrl,
                                const DPSDP_DESCRIPTOR *sdp);
 
+void nvEvoDisableAdaptiveSyncSdpC8(const NVDispEvoRec *pDispEvo,
+                                   const NvU32 head);
+
 #endif /* __NVKMS_EVO_3_H__ */

@@ -768,6 +768,194 @@ subdeviceCtrlCmdGbGetSemaphoreSurfaceLayout_IMPL
     return NV_OK;
 }
 
+static void _dumpFbBlockInfo(OBJGPU *pGpu, NV2080_CTRL_CMD_FB_STATS_OWNER_INFO *fbBlockInfo)
+{
+    MEM_BLOCK  *pBlock;
+    MemoryManager *pMemoryManager = GPU_GET_MEMORY_MANAGER(pGpu);
+    Heap *pHeap = GPU_GET_HEAP(pGpu);
+    pBlock = pHeap->pBlockList;
+    do
+    {
+        if (pBlock->owner == HEAP_OWNER_RM_CHANNEL_CTX_BUFFER)
+        {
+            NV_FB_ALLOC_RM_INTERNAL_OWNER tag = pBlock->pMemDesc->allocTag;
+            if ((tag > NV_FB_ALLOC_RM_INTERNAL_OWNER__MIN) && 
+                (tag < NV_FB_ALLOC_RM_INTERNAL_OWNER__MAX)) 
+            {
+                fbBlockInfo[tag - NV_FB_ALLOC_RM_INTERNAL_OWNER__MIN - 1U].allocSize += (1UL + (pBlock->end - pBlock->begin));
+                fbBlockInfo[tag - NV_FB_ALLOC_RM_INTERNAL_OWNER__MIN - 1U].numBlocks += 1U;
+            }
+            else
+            {
+                fbBlockInfo[NV2080_CTRL_CMD_FB_STATS_MAX_OWNER - 1U].allocSize += (1UL + (pBlock->end - pBlock->begin));
+                fbBlockInfo[NV2080_CTRL_CMD_FB_STATS_MAX_OWNER - 1U].numBlocks += 1U;
+            }
+        }
+        pBlock = pBlock->next;
+    } while (pBlock != pHeap->pBlockList);
+
+    // Populate reservation sizes by traversing the array of reserved blocks
+    for(unsigned int i = 0; i < NV_FB_RSVD_BLOCK_LOG_ENTRY_MAX; i++)
+    {
+        NV_FB_ALLOC_RM_INTERNAL_OWNER tag = (pMemoryManager->rsvdBlockInfo).rsvdBlockList[i].ownerId;
+        if ((tag >= NV_FB_ALLOC_RM_INTERNAL_OWNER__MIN) && 
+            (tag < NV_FB_ALLOC_RM_INTERNAL_OWNER__MAX))
+        {
+            fbBlockInfo[tag - NV_FB_ALLOC_RM_INTERNAL_OWNER__MIN - 1U].rsvdSize = (pMemoryManager->rsvdBlockInfo).rsvdBlockList[i].rsvdSize;
+        }
+    }
+}
+
+static PFB_REGION_DESCRIPTOR _findFbRegionByTag(OBJGPU *pGpu, NV2080_FB_REGION_TAG tag)
+{
+    MemoryManager *pMemoryManager = GPU_GET_MEMORY_MANAGER(pGpu);
+
+    for (unsigned int i = 0; i < pMemoryManager->Ram.numFBRegions; i++)
+    {
+        if (pMemoryManager->Ram.fbRegion[i].regionTag == tag)
+        {
+            return &(pMemoryManager->Ram.fbRegion[i]);
+        }
+    }
+
+    NV_PRINTF(LEVEL_ERROR, "Unable to find tag %d\n", tag);
+    return NULL;
+}
+
+//
+// subdeviceCtrlCmdFbStatsGet_IMPL
+//
+// This command gets the FB stats and allocation/reservation info
+// It is meant for CPU-RM FB usage, and calls subdeviceCtrlCmdGspFbStatsGet_IMPL
+// for GSP-RM FB stats.
+//
+NV_STATUS
+subdeviceCtrlCmdFbStatsGet_IMPL
+(
+    Subdevice *pSubdevice,
+    NV2080_CTRL_CMD_FB_STATS_GET_PARAMS *pParams
+)
+{
+    OBJGPU *pGpu = GPU_RES_GET_GPU(pSubdevice);
+    MemoryManager *pMemoryManager = GPU_GET_MEMORY_MANAGER(pGpu);
+    Heap *pHeap = GPU_GET_HEAP(pGpu);
+
+    PFB_REGION_DESCRIPTOR pFbRegion;
+
+    // Store total fb size (from heapGetSize)
+    NV_ASSERT_OK_OR_RETURN(heapGetSize(pHeap, &(pParams->total)));
+
+    // Store RM reserved memory size
+    pFbRegion = _findFbRegionByTag(pGpu, NV2080_FB_REGION_TAG_CPU_RM_RESERVED);
+    NV_ASSERT_OR_RETURN(pFbRegion, NV_ERR_GENERIC);
+    pParams->cpuFbInfo.reserved = (pFbRegion->rsvdSize);
+
+    // Store RM reserved heap memory size
+    pFbRegion = _findFbRegionByTag(pGpu, NV2080_FB_REGION_TAG_CPU_RM_RESERVED_HEAP);
+    NV_ASSERT_OR_RETURN(pFbRegion, NV_ERR_GENERIC);
+    pParams->cpuFbInfo.reservedHeap = pFbRegion->rsvdSize;
+
+    // Store RM heap free memory (reserved but not allocated)
+    NV_ASSERT_OK_OR_RETURN(heapGetFree(pHeap, &(pParams->cpuFbInfo.reservedHeapFree)));
+
+    //
+    // Initialize the owner allocation table to 0
+    //
+    for(unsigned int i = 0; i < NV2080_CTRL_CMD_FB_STATS_MAX_OWNER; i++)
+    {
+        pParams->cpuFbInfo.fbBlockInfo[i].allocSize = 0;
+        pParams->cpuFbInfo.fbBlockInfo[i].rsvdSize = 0;
+        pParams->cpuFbInfo.fbBlockInfo[i].numBlocks = 0;
+    }
+
+    // Check if the total number of possible owners match
+    ct_assert(NV2080_CTRL_CMD_FB_STATS_MAX_OWNER == 
+    (NV_FB_ALLOC_RM_INTERNAL_OWNER__MAX - NV_FB_ALLOC_RM_INTERNAL_OWNER__MIN));
+
+    // Populate allocation sizes by traversing the heap blocks
+    _dumpFbBlockInfo(pGpu, pParams->cpuFbInfo.fbBlockInfo);
+
+   if (IS_GSP_CLIENT(pGpu))
+   {
+        RM_API *pRmApi = GPU_GET_PHYSICAL_RMAPI(pGpu);
+
+        // Store GSP carveout memory size
+        pFbRegion = _findFbRegionByTag(pGpu, NV2080_FB_REGION_TAG_GSP_CARVEOUT);
+        NV_ASSERT_OR_RETURN(pFbRegion, NV_ERR_GENERIC);
+        pParams->gspCarveout = pFbRegion->rsvdSize;
+
+        NV_ASSERT_OK_OR_RETURN(pRmApi->Control(pRmApi,
+                                pGpu->hInternalClient,
+                                pGpu->hInternalSubdevice,
+                                NV2080_CTRL_CMD_GSP_FB_STATS_GET,
+                                &pParams->gspFbInfo,
+                                sizeof(pParams->gspFbInfo)));
+    }
+
+    // Store osSize based on regions that are not bInternalHeap and not bReserved
+    pParams->os = pParams->total;
+    // Misc reserved regions are other untagged reserved or internalHeap regions
+    pParams->miscReserved = 0;
+
+    for (unsigned int i = 0; i < pMemoryManager->Ram.numFBRegions; i++)
+    {
+        pFbRegion = &(pMemoryManager->Ram.fbRegion[i]);
+        if (pFbRegion->bRsvdRegion || pFbRegion->bInternalHeap)
+        {
+            pParams->os -= (pFbRegion->limit - pFbRegion->base + 1);
+            if (pFbRegion->regionTag == NV2080_FB_REGION_TAG_NONE)
+                pParams->miscReserved += (pFbRegion->limit - pFbRegion->base + 1);
+        }
+    }
+
+    return NV_OK;
+}
+
+//
+// subdeviceCtrlCmdGspFbStatsGet_IMPL
+//
+// This command gets the FB stats and allocation/reservation info from GSP-RM
+//
+NV_STATUS
+subdeviceCtrlCmdGspFbStatsGet_IMPL
+(
+    Subdevice *pSubdevice,
+    NV2080_CTRL_CMD_RM_FB_STATS_ENTRY *pParams
+)
+{
+    PFB_REGION_DESCRIPTOR pFbRegion;
+
+    OBJGPU *pGpu = GPU_RES_GET_GPU(pSubdevice);
+    Heap *pHeap = GPU_GET_HEAP(pGpu);
+
+    // Store RM reserved memory size
+    pFbRegion = _findFbRegionByTag(pGpu, NV2080_FB_REGION_TAG_GSP_RM_RESERVED);
+    NV_ASSERT_OR_RETURN(pFbRegion, NV_ERR_GENERIC);
+    pParams->reserved = pFbRegion->rsvdSize;
+
+    // Store RM reserved heap memory size
+    pFbRegion = _findFbRegionByTag(pGpu, NV2080_FB_REGION_TAG_GSP_RM_RESERVED_HEAP);
+    NV_ASSERT_OR_RETURN(pFbRegion, NV_ERR_GENERIC);
+    pParams->reservedHeap = pFbRegion->rsvdSize;
+
+    // Store RM heap free memory (reserved but not allocated)
+    NV_ASSERT_OK_OR_RETURN(heapGetFree(pHeap, &(pParams->reservedHeapFree)));
+
+    //
+    // Initialize the owner allocation table to 0
+    //
+    for(unsigned int i = 0; i < NV2080_CTRL_CMD_FB_STATS_MAX_OWNER; i++)
+    {
+        pParams->fbBlockInfo[i].allocSize = 0;
+        pParams->fbBlockInfo[i].rsvdSize = 0;
+        pParams->fbBlockInfo[i].numBlocks = 0;
+    }
+    // Populate allocation sizes by traversing the heap blocks
+    _dumpFbBlockInfo(pGpu, pParams->fbBlockInfo);
+
+    return NV_OK;
+}
+
 NV_STATUS subdeviceCtrlCmdFbGetCpuCoherentRange_IMPL
 (
     Subdevice *pSubdevice,
@@ -777,9 +965,7 @@ NV_STATUS subdeviceCtrlCmdFbGetCpuCoherentRange_IMPL
     OBJSYS *pSys = SYS_GET_INSTANCE();
     OBJGPU *pGpu = GPU_RES_GET_GPU(pSubdevice);
     KernelMemorySystem *pKernelMemorySystem = GPU_GET_KERNEL_MEMORY_SYSTEM(pGpu);
-
     NV_CHECK_OR_RETURN(LEVEL_INFO, pSys->getProperty(pSys, PDB_PROP_SYS_ENABLE_RM_TEST_ONLY_CODE), NV_ERR_NOT_SUPPORTED);
-
     return kmemsysGetCpuCoherentFbRange_IMPL(pGpu, pKernelMemorySystem, &pParams->coherentCpuFbBase, &pParams->coherentCpuFbEnd);
 }
 

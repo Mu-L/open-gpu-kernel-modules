@@ -34,12 +34,18 @@ typedef struct {
         NvU32 staticMetadataLayerMask;
     } hdr;
 
+    struct {
+        enum NvKmsDpyAttributeRequestedDitheringValue state;
+        enum NvKmsDpyAttributeRequestedDitheringModeValue mode;
+    } dithering;
+
     struct NvKmsPoint viewPortPointIn;
     struct NvKmsSetLutCommonParams lut;
 
     struct {
         NvU32 viewPortPointIn  : 1;
         NvU32 hdr              : 1;
+        NvU32 dithering        : 1;
     } dirty;
 } NVProposedFlipStateOneApiHead;
 

@@ -34,7 +34,7 @@ hostengHaltAndReset_IMPL
 (
     OBJGPU     *pGpu,
     OBJHOSTENG *pHosteng,
-    FIFO_CHANNEL_INFO rcChannelInfo,
+    const FIFO_CHANNEL_INFO *pRcChannelInfo,
     RMTIMEOUT  *pTimeout
 )
 {

@@ -32,7 +32,7 @@ void __nvoc_init__I2cApi(I2cApi*);
 void __nvoc_init_funcTable_I2cApi(I2cApi*);
 NV_STATUS __nvoc_ctor_I2cApi(I2cApi*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_I2cApi(I2cApi*);
-void __nvoc_dtor_I2cApi(I2cApi*);
+void __nvoc_dtor_I2cApi(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__I2cApi;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_I2cApi =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "I2cApi",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_I2cApi,
+    .objCreatefn =        &__nvoc_objCreateDynamic_I2cApi,
     .pCastInfo =          &__nvoc_castinfo__I2cApi,
     .pExportInfo =        &__nvoc_export_info__I2cApi
 };
@@ -125,6 +125,37 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_I2cApi =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+static NV_STATUS i2capiCtrlCmdI2cGetPortInfo__EXPORT(void *pI2cApi, void *pParams) {
+    return i2capiCtrlCmdI2cGetPortInfo_IMPL(pI2cApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+static NV_STATUS i2capiCtrlCmdI2cIndexed__EXPORT(void *pI2cApi, void *pParams) {
+    return i2capiCtrlCmdI2cIndexed_IMPL(pI2cApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+static NV_STATUS i2capiCtrlCmdI2cGetPortSpeed__EXPORT(void *pI2cApi, void *pParams) {
+    return i2capiCtrlCmdI2cGetPortSpeed_IMPL(pI2cApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+static NV_STATUS i2capiCtrlCmdI2cTableGetDevInfo__EXPORT(void *pI2cApi, void *pParams) {
+    return i2capiCtrlCmdI2cTableGetDevInfo_IMPL(pI2cApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+static NV_STATUS i2capiCtrlCmdI2cTransaction__EXPORT(void *pI2cApi, void *pParams) {
+    return i2capiCtrlCmdI2cTransaction_IMPL(pI2cApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_I2cApi[] = 
 {
@@ -132,7 +163,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_I2cApi[]
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &i2capiCtrlCmdI2cGetPortInfo_IMPL,
+        /*pFunc=*/      (void (*)(void)) &i2capiCtrlCmdI2cGetPortInfo__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*flags=*/      0x48u,
         /*accessRight=*/0x0u,
@@ -147,7 +178,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_I2cApi[]
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &i2capiCtrlCmdI2cIndexed_IMPL,
+        /*pFunc=*/      (void (*)(void)) &i2capiCtrlCmdI2cIndexed__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*flags=*/      0x48u,
         /*accessRight=*/0x0u,
@@ -162,7 +193,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_I2cApi[]
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &i2capiCtrlCmdI2cGetPortSpeed_IMPL,
+        /*pFunc=*/      (void (*)(void)) &i2capiCtrlCmdI2cGetPortSpeed__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*flags=*/      0x48u,
         /*accessRight=*/0x0u,
@@ -177,7 +208,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_I2cApi[]
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &i2capiCtrlCmdI2cTableGetDevInfo_IMPL,
+        /*pFunc=*/      (void (*)(void)) &i2capiCtrlCmdI2cTableGetDevInfo__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*flags=*/      0x48u,
         /*accessRight=*/0x0u,
@@ -192,7 +223,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_I2cApi[]
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &i2capiCtrlCmdI2cTransaction_IMPL,
+        /*pFunc=*/      (void (*)(void)) &i2capiCtrlCmdI2cTransaction__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*flags=*/      0x48u,
         /*accessRight=*/0x0u,
@@ -209,7 +240,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_I2cApi[]
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__I2cApi __nvoc_metadata__I2cApi = {
     .rtti.pClassDef = &__nvoc_class_def_I2cApi,    // (i2capi) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_I2cApi,
+    .rtti.dtor      = &__nvoc_dtor_I2cApi,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -469,16 +500,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__I2cApi =
 
 // Destruct I2cApi object.
 void __nvoc_i2capiDestruct(I2cApi*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_I2cApi(I2cApi* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_I2cApi(Dynamic* pThis) {
+
+    I2cApi *__nvoc_this = (I2cApi *) pThis;
 
 // Call destructor.
-    __nvoc_i2capiDestruct(pThis);
+    __nvoc_i2capiDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_I2cApi(I2cApi *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -504,7 +537,7 @@ NV_STATUS __nvoc_ctor_I2cApi(I2cApi *pI2cApi, struct CALL_CONTEXT *pCallContext,
 
     // Unwind on error.
 __nvoc_ctor_I2cApi_fail__init:
-    __nvoc_dtor_GpuResource(&pI2cApi->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pI2cApi->__nvoc_base_GpuResource);
 __nvoc_ctor_I2cApi_fail_GpuResource:
 __nvoc_ctor_I2cApi_exit:
     return status;
@@ -616,13 +649,10 @@ __nvoc_objCreate_I2cApi_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_I2cApi(I2cApi **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_I2cApi(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_I2cApi(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_I2cApi((I2cApi **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

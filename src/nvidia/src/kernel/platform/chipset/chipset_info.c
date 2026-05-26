@@ -134,12 +134,11 @@ Intel_25XX_setupFunc
     OBJCL *pCl
 )
 {
-    RmPhysAddr baseAddress;
+    NvU64 baseAddress;
 
     if (!pCl->FHBAddr.valid)
         return NV_ERR_GENERIC;
-    baseAddress = (RmPhysAddr)(osPciReadDword(pCl->FHBAddr.handle,
-                                              INTEL_25XX_CONFIG_SPACE_BASE));
+    baseAddress = osPciReadDword(pCl->FHBAddr.handle, INTEL_25XX_CONFIG_SPACE_BASE);
 
     // PCI-E enhanced config space is 256M aligned
     baseAddress &= ( ~ 0x0fffffff);
@@ -162,12 +161,11 @@ Intel_2A40_setupFunc
     OBJCL *pCl
 )
 {
-    RmPhysAddr baseAddress;
+    NvU64 baseAddress;
 
     if (!pCl->FHBAddr.valid)
         return NV_ERR_GENERIC;
-    baseAddress = (RmPhysAddr)(osPciReadDword(pCl->FHBAddr.handle,
-                                              INTEL_2A40_CONFIG_SPACE_BASE));
+    baseAddress = osPciReadDword(pCl->FHBAddr.handle, INTEL_2A40_CONFIG_SPACE_BASE);
 
     //
     // PCI-E v1.1 enhanced config space is aligned between 1M and 256M,
@@ -216,15 +214,14 @@ Intel_2E00_setupFunc
     OBJCL *pCl
 )
 {
-    RmPhysAddr baseAddress;
+    NvU64 baseAddress;
 
     if (!pCl->FHBAddr.valid)
     {
         return NV_ERR_GENERIC;
     }
 
-    baseAddress = (RmPhysAddr)(osPciReadDword(pCl->FHBAddr.handle,
-                                              INTEL_2E00_CONFIG_SPACE_BASE));
+    baseAddress = osPciReadDword(pCl->FHBAddr.handle, INTEL_2E00_CONFIG_SPACE_BASE);
 
     //
     // PCI-E v1.1 enhanced config space is aligned between 1M and 256M,
@@ -309,13 +306,12 @@ Intel_29XX_setupFunc
     OBJCL *pCl
 )
 {
-    RmPhysAddr baseAddress;
+    NvU64 baseAddress;
 
     if (!pCl->FHBAddr.valid)
         return NV_ERR_GENERIC;
 
-    baseAddress = (RmPhysAddr)(osPciReadDword(pCl->FHBAddr.handle,
-                                              INTEL_29XX_CONFIG_SPACE_BASE));
+    baseAddress = osPciReadDword(pCl->FHBAddr.handle, INTEL_29XX_CONFIG_SPACE_BASE);
 
     //
     // PCI-E v1.1 enhanced config space is aligned between 1M and 256M,
@@ -340,11 +336,11 @@ Intel_25E0_setupFunc
     OBJCL *pCl
 )
 {
-    RmPhysAddr baseAddress;
+    NvU64 baseAddress;
 
     if (!pCl->FHBAddr.valid)
         return NV_ERR_GENERIC;
-    baseAddress = (RmPhysAddr)INTEL_25E0_CONFIG_SPACE_BASE_ADDRESS;
+    baseAddress = INTEL_25E0_CONFIG_SPACE_BASE_ADDRESS;
 
     if (clInsertPcieConfigSpaceBase(pCl, baseAddress, 0, 0, (NvU8)(PCI_MAX_BUSES - 1)) == NV_OK)
         pCl->setProperty(pCl, PDB_PROP_CL_PCIE_CONFIG_ACCESSIBLE, NV_TRUE);
@@ -360,12 +356,11 @@ Intel_27XX_setupFunc
     OBJCL *pCl
 )
 {
-    RmPhysAddr baseAddress;
+    NvU64 baseAddress;
 
     if (!pCl->FHBAddr.valid)
         return NV_ERR_GENERIC;
-    baseAddress = (RmPhysAddr)(osPciReadDword(pCl->FHBAddr.handle,
-                                              INTEL_25XX_CONFIG_SPACE_BASE));
+    baseAddress = osPciReadDword(pCl->FHBAddr.handle, INTEL_25XX_CONFIG_SPACE_BASE);
 
     // PCI-E enhanced config space is 256M aligned
     baseAddress &= ( ~ 0x0fffffff);
@@ -387,12 +382,11 @@ Intel_359E_setupFunc
     OBJCL *pCl
 )
 {
-    RmPhysAddr baseAddress;
+    NvU64 baseAddress;
 
     if (!pCl->FHBAddr.valid)
         return NV_ERR_GENERIC;
-    baseAddress = (RmPhysAddr)(osPciReadDword(pCl->FHBAddr.handle,
-                                              INTEL_359E_CONFIG_SPACE_BASE));
+    baseAddress = osPciReadDword(pCl->FHBAddr.handle, INTEL_359E_CONFIG_SPACE_BASE);
 
     // PCI-E enhanced config space is 256M aligned
     baseAddress &= ( ~ 0x0fffffff);
@@ -414,12 +408,12 @@ Intel_4000_setupFunc
     OBJCL *pCl
 )
 {
-    RmPhysAddr baseAddress;
+    NvU64 baseAddress;
 
     if (!pCl->FHBAddr.valid)
         return NV_ERR_GENERIC;
 
-    baseAddress = (RmPhysAddr)INTEL_4000_CONFIG_SPACE_BASE_ADDRESS;
+    baseAddress = INTEL_4000_CONFIG_SPACE_BASE_ADDRESS;
 
     if (clInsertPcieConfigSpaceBase(pCl, baseAddress, 0, 0, (NvU8)(PCI_MAX_BUSES - 1)) == NV_OK)
         pCl->setProperty(pCl, PDB_PROP_CL_PCIE_CONFIG_ACCESSIBLE, NV_TRUE);
@@ -437,7 +431,7 @@ Intel_4003_setupFunc
 {
     void *pHandle;
     NvU32 hecbase;
-    RmPhysAddr baseAddress;
+    NvU64 baseAddress;
 
     pCl->setProperty(pCl, PDB_PROP_CL_PCIE_CONFIG_ACCESSIBLE, NV_FALSE);
 
@@ -460,7 +454,7 @@ Intel_4003_setupFunc
         // isolate the 12 bits we need and shift into place. The
         // high byte of the 40-bit address is shifted away.
 
-        baseAddress = (RmPhysAddr) (hecbase & 0x00FFF000) << 16;
+        baseAddress = (NvU64) (hecbase & 0x00FFF000) << 16;
 
         if (clInsertPcieConfigSpaceBase(pCl, baseAddress, 0, 0, (NvU8)(PCI_MAX_BUSES - 1)) == NV_OK)
             pCl->setProperty(pCl, PDB_PROP_CL_PCIE_CONFIG_ACCESSIBLE, NV_TRUE);
@@ -504,7 +498,7 @@ Intel_Core_Nehalem_Processor_setupFunc
 )
 {
     NvS32 bus;
-    RmPhysAddr baseAddress;
+    NvU64 baseAddress;
 
     pCl->setProperty(pCl, PDB_PROP_CL_PCIE_CONFIG_ACCESSIBLE, NV_FALSE);
 
@@ -553,7 +547,7 @@ Intel_Core_Nehalem_Processor_setupFunc
             if ((size != 0) && (size != 7) && (size != 6))
                 continue;
 
-            baseAddress = (RmPhysAddr)address;
+            baseAddress = address;
 
             if (clInsertPcieConfigSpaceBase(pCl, baseAddress, 0, 0, (NvU8)(PCI_MAX_BUSES - 1)) == NV_OK)
                 pCl->setProperty(pCl, PDB_PROP_CL_PCIE_CONFIG_ACCESSIBLE, NV_TRUE);
@@ -1001,21 +995,44 @@ Nvidia_TH500_setupFunc
 }
 
 static NV_STATUS
+Nvidia_TB500_setupFunc
+(
+    OBJCL *pCl
+)
+{
+    if (!pCl->FHBAddr.valid)
+        return NV_ERR_GENERIC;
+
+    if (clInsertPcieConfigSpaceBase(pCl, 0, 0, 0, (NvU8)(PCI_MAX_BUSES - 1)) == NV_OK)
+        pCl->setProperty(pCl, PDB_PROP_CL_PCIE_CONFIG_ACCESSIBLE, NV_TRUE);
+
+    // Enable Gen2 ASLM
+    pCl->setProperty(pCl, PDB_PROP_CL_ASLM_SUPPORTS_GEN2_LINK_UPGRADE, NV_TRUE);
+
+    pCl->setProperty(pCl, PDB_PROP_CL_IS_CHIPSET_IO_COHERENT, NV_TRUE);
+
+    pCl->setProperty(pCl, PDB_PROP_CL_BUG_3562968_WAR_ALLOW_PCIE_ATOMICS, NV_TRUE);
+
+    _Set_ASPM_L0S_L1(pCl, NV_FALSE, NV_FALSE);
+
+    return NV_OK;
+}
+
+static NV_STATUS
 SiS_656_setupFunc
 (
     OBJCL *pCl
 )
 {
     NvU32 PcieConfigBaseReg;
-    RmPhysAddr baseAddress;
+    NvU64 baseAddress;
 
     if (!pCl->FHBAddr.valid)
         return NV_ERR_GENERIC;
 
-    PcieConfigBaseReg = osPciReadDword(pCl->FHBAddr.handle,
-            SIS_656_CONFIG_SPACE_BASE);
+    PcieConfigBaseReg = osPciReadDword(pCl->FHBAddr.handle, SIS_656_CONFIG_SPACE_BASE);
 
-    baseAddress = (RmPhysAddr)(REF_VAL(SIS_656_CONFIG_SPACE_BASE_ADDRESS, PcieConfigBaseReg ));
+    baseAddress = REF_VAL(SIS_656_CONFIG_SPACE_BASE_ADDRESS, PcieConfigBaseReg );
 
     if (baseAddress)
     {

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -279,8 +279,8 @@ sysmemConstruct_IMPL
         memdescSetFlag(pMemDesc, MEMDESC_FLAGS_SYSMEM_OWNED_BY_CLIENT, NV_TRUE);
 
         if ((sysGetStaticConfig(SYS_GET_INSTANCE()))->bOsCCEnabled &&
-            gpuIsCCorApmFeatureEnabled(pGpu) &&
-            FLD_TEST_DRF(OS32, _ATTR2, _MEMORY_PROTECTION, _UNPROTECTED,
+            gpuIsCCorApmFeatureEnabled(pGpu) 
+            && FLD_TEST_DRF(OS32, _ATTR2, _MEMORY_PROTECTION, _UNPROTECTED,
                         pAllocData->attr2))
             {
                 memdescSetFlag(pMemDesc, MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY,
@@ -656,6 +656,10 @@ sysmemInitAllocRequest_HMM
     FB_ALLOC_INFO               *pFbAllocInfo       = NULL;
     FB_ALLOC_PAGE_FORMAT        *pFbAllocPageFormat = NULL;
     NV_STATUS                    status             = NV_OK;
+    RsResourceRef               *pDeviceRef;
+
+    NV_ASSERT_OK_OR_RETURN(
+        refFindAncestorOfType(RES_GET_REF(pSystemMemory), classId(Device), &pDeviceRef));
 
     pFbAllocInfo = portMemAllocNonPaged(sizeof(FB_ALLOC_INFO));
     NV_ASSERT_TRUE_OR_GOTO(status, pFbAllocInfo != NULL, NV_ERR_NO_MEMORY, done);
@@ -667,7 +671,7 @@ sysmemInitAllocRequest_HMM
     portMemSet(pFbAllocPageFormat, 0, sizeof(FB_ALLOC_PAGE_FORMAT));
     pFbAllocInfo->pageFormat = pFbAllocPageFormat;
 
-    memUtilsInitFBAllocInfo(pAllocRequest->pUserParams, pFbAllocInfo, pAllocRequest->hClient, pAllocRequest->hParent);
+    memUtilsInitFBAllocInfo(pAllocRequest->pUserParams, pFbAllocInfo, pAllocRequest->hClient, pDeviceRef->hResource);
 
     NV_CHECK_OK_OR_GOTO(status, LEVEL_ERROR,
         memmgrAllocResources(pGpu, pMemoryManager, pAllocRequest, pFbAllocInfo),
@@ -745,8 +749,7 @@ sysmemAllocResources
 
     if (pVidHeapAlloc->flags & NVOS32_ALLOC_FLAGS_FIXED_ADDRESS_ALLOCATE)
     {
-        NV_PRINTF(LEVEL_ERROR,
-                  "Expected fixed address allocation\n");
+        NV_PRINTF(LEVEL_ERROR, "Fixed address allocation not supported\n");
         status = NV_ERR_INVALID_ARGUMENT;
         goto failed;
     }

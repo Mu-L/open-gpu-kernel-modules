@@ -28,7 +28,7 @@
 #include "nverror.h"
 #include "vgpu/rpc.h"
 #include "gpu/fsp/kern_fsp.h"
-#include "fsp/fsp_nvdm_format.h"
+#include "nvdm_format.h"
 #include "kernel/gpu/bus/kern_bus.h"
 #include "kernel/gpu/mc/kernel_mc.h"
 

@@ -69,17 +69,6 @@ typedef union _NvPushChannelUnion
 #endif
 } NvPushChannelUnion;
 
-typedef enum _NvPushConfidentialComputeMode {
-    /* Confidential computing is not in use. */
-    NV_PUSH_CONFIDENTIAL_COMPUTE_MODE_NONE,
-
-    /*
-     * The confidential compute mode of operation is Hopper Confidential
-     * Compute (HCC).
-     */
-    NV_PUSH_CONFIDENTIAL_COMPUTE_MODE_HCC,
-} NvPushConfidentialComputeMode;
-
 typedef struct _NvPushChannelRec NvPushChannelRec;
 typedef struct _NvPushChannelRec *NvPushChannelPtr;
 
@@ -126,9 +115,6 @@ typedef struct _NvPushDeviceRec {
 
     NvPushHal hal;
     const struct _NvPushImports *pImports;
-
-    /* Provided by the host driver */
-    NvPushConfidentialComputeMode confidentialComputeMode;
 } NvPushDeviceRec, *NvPushDevicePtr;
 
 

@@ -443,6 +443,7 @@ void uvm_hal_ampere_arch_init_properties(uvm_parent_gpu_t *parent_gpu);
 void uvm_hal_ada_arch_init_properties(uvm_parent_gpu_t *parent_gpu);
 void uvm_hal_hopper_arch_init_properties(uvm_parent_gpu_t *parent_gpu);
 void uvm_hal_blackwell_arch_init_properties(uvm_parent_gpu_t *parent_gpu);
+void uvm_hal_rubin_arch_init_properties(uvm_parent_gpu_t *parent_gpu);
 
 // Retrieve the page-tree HAL for a given big page size
 typedef uvm_mmu_mode_hal_t *(*uvm_hal_lookup_mode_hal_t)(void);
@@ -453,6 +454,7 @@ uvm_mmu_mode_hal_t *uvm_hal_mmu_mode_ampere(void);
 uvm_mmu_mode_hal_t *uvm_hal_mmu_mode_hopper(void);
 uvm_mmu_mode_hal_t *uvm_hal_mmu_mode_blackwell(void);
 uvm_mmu_mode_hal_t *uvm_hal_mmu_mode_blackwell_integrated(void);
+uvm_mmu_mode_hal_t *uvm_hal_mmu_mode_rubin(void);
 
 void uvm_hal_turing_mmu_enable_prefetch_faults(uvm_parent_gpu_t *parent_gpu);
 void uvm_hal_turing_mmu_disable_prefetch_faults(uvm_parent_gpu_t *parent_gpu);
@@ -462,6 +464,7 @@ NvU16 uvm_hal_turing_mmu_client_id_to_utlb_id(NvU16 client_id);
 NvU16 uvm_hal_ampere_mmu_client_id_to_utlb_id(NvU16 client_id);
 NvU16 uvm_hal_hopper_mmu_client_id_to_utlb_id(NvU16 client_id);
 NvU16 uvm_hal_blackwell_mmu_client_id_to_utlb_id(NvU16 client_id);
+NvU16 uvm_hal_rubin_mmu_client_id_to_utlb_id(NvU16 client_id);
 
 // Replayable faults
 typedef void (*uvm_hal_enable_replayable_faults_t)(uvm_parent_gpu_t *parent_gpu);
@@ -524,6 +527,8 @@ uvm_mmu_engine_type_t uvm_hal_blackwell_fault_buffer_get_mmu_engine_type(NvU16 m
                                                                          uvm_fault_client_type_t client_type,
                                                                          NvU16 client_id);
 uvm_fault_type_t uvm_hal_blackwell_fault_buffer_get_fault_type(const NvU32 *fault_entry);
+
+void uvm_hal_rubin_fault_buffer_write_get(uvm_parent_gpu_t *parent_gpu, NvU32 index);
 
 typedef void (*uvm_hal_fault_buffer_parse_non_replayable_entry_t)(uvm_parent_gpu_t *parent_gpu,
                                                                   void *fault_packet,

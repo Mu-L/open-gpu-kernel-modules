@@ -539,8 +539,21 @@ NvBool nvDPLibDpyUsesHDMIActivePcon(const NVDpyEvoRec *pDpyEvo)
            (dev->getConnectorType() == DisplayPort::connectorHDMI);
 }
 
+NvBool nvDPLibDpyIsAdaptiveSyncSdpSupported(const NVDpyEvoRec *pDpyEvo)
+{
+    const NVDevEvoRec *pDevEvo = pDpyEvo->pDispEvo->pDevEvo;
+    NVDPLibDevicePtr pDpLibDevice = pDpyEvo->dp.pDpLibDevice;
+    DisplayPort::Device *dev = pDpLibDevice ? pDpLibDevice->device : NULL;
+
+    if (!pDevEvo->caps.adaptiveSyncSdpSupported) {
+        return FALSE;
+    }
+
+    return (dev != NULL) && (dev->getAsyncSDPSupported()); 
+}
+
 // Adaptive-Sync is enabled/disabled by setting the MSA_TIMING_PAR_IGNORE_EN
-// bit in the DOWNSPREAD_CTRL register (DP spec 1.4a appendix K)
+// bit in the DOWNSPREAD_CTRL register (DP spec 1.4a appendix K).
 void nvDPLibSetAdaptiveSync(const NVDispEvoRec *pDispEvo, NvU32 head,
                             NvBool enable)
 {

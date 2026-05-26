@@ -1291,6 +1291,8 @@ kgrctxAllocPmBuffer_IMPL
     CTX_BUF_POOL_INFO               *pCtxBufPool;
     MEMORY_DESCRIPTOR              **ppMemDesc;
     const GR_BUFFER_ATTR            *pAttr = kgraphicsGetContextBufferAttr(pGpu, pKernelGraphics, GR_CTX_BUFFER_PM);
+    const NV_ADDRESS_SPACE          *pAllocList = pAttr->pAllocList;
+    NvU32                           cpuAttr = pAttr->cpuAttr;
 
     NV_ASSERT(!gpumgrGetBcEnabledStatus(pGpu));
 
@@ -1311,6 +1313,16 @@ kgrctxAllocPmBuffer_IMPL
         pCtxBufPool = pKernelChannel->pKernelChannelGroupApi->pKernelChannelGroup->pCtxBufPool;
     }
 
+    // Handle VF - must use FB on the guest subheap
+    if (IS_GFID_VF(kchannelGetGfid(pKernelChannel)))
+    {
+        if (pAllocList[0] != ADDR_FBMEM)
+            NV_PRINTF(LEVEL_WARNING, "Forcing pm ctx to FB for SR-IOV guest\n");
+        pAllocList = ADDRLIST_FBMEM_ONLY;
+        cpuAttr = NV_MEMORY_UNCACHED;
+        flags |= MEMDESC_FLAGS_OWNED_BY_CURRENT_DEVICE;
+    }
+
     //
     // For SRIOV Heavy, the PM ctxsw buffer allocation will be redirected to
     // host RM subheap. Subheap is used by host RM to allocate memory
@@ -1328,7 +1340,7 @@ kgrctxAllocPmBuffer_IMPL
                       RM_PAGE_SIZE,
                       NV_TRUE,
                       ADDR_UNKNOWN,
-                      pAttr->cpuAttr,
+                      cpuAttr,
                       flags));
 
     if (kgraphicsIsOverrideContextBuffersToGpuCached(pGpu, pKernelGraphics))
@@ -1345,7 +1357,7 @@ kgrctxAllocPmBuffer_IMPL
     NV_ASSERT_OK_OR_GOTO(status, memdescSetCtxBufPool(*ppMemDesc, pCtxBufPool), error);
 
     memdescTagAllocList(status, NV_FB_ALLOC_RM_INTERNAL_OWNER_UNNAMED_TAG_118, 
-                        (*ppMemDesc), pAttr->pAllocList);
+                        (*ppMemDesc), pAllocList);
     NV_CHECK_OK_OR_GOTO(status, LEVEL_ERROR,
         status,
         error);

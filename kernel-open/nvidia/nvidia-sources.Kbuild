@@ -19,7 +19,6 @@ NVIDIA_SOURCES += nvidia/nv-dma.c
 NVIDIA_SOURCES += nvidia/nv-i2c.c
 NVIDIA_SOURCES += nvidia/nv-mmap.c
 NVIDIA_SOURCES += nvidia/nv-p2p.c
-NVIDIA_SOURCES += nvidia/nv-pat.c
 NVIDIA_SOURCES += nvidia/nv-procfs.c
 NVIDIA_SOURCES += nvidia/nv-usermap.c
 NVIDIA_SOURCES += nvidia/nv-vm.c

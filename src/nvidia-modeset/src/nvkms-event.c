@@ -65,8 +65,6 @@ nvHandleHotplugEventDeferredWork(void *dataPtr, NvU32 dataU32)
 
     if (!pDevEvo->displaylessHw) {
         // Get the hotplug state.
-        hotplugParams.subDeviceInstance = pDispEvo->displayOwner;
-
         if ((ret = nvRmApiControl(
                     nvEvoGlobal.clientHandle,
                     pDevEvo->displayCommonHandle,

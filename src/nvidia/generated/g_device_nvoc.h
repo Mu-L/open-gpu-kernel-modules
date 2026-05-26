@@ -117,8 +117,8 @@ struct Device {
     NV_STATUS (*__deviceCtrlCmdFifoIdleChannels__)(struct Device * /*this*/, NV0080_CTRL_FIFO_IDLE_CHANNELS_PARAMS *);  // halified (2 hals) exported (id=0x801714) body
     NV_STATUS (*__deviceCtrlCmdHostGetCapsV2__)(struct Device * /*this*/, NV0080_CTRL_HOST_GET_CAPS_V2_PARAMS *);  // halified (2 hals) exported (id=0x801402)
     NV_STATUS (*__deviceCtrlCmdGpuGetBrandCaps__)(struct Device * /*this*/, NV0080_CTRL_GPU_GET_BRAND_CAPS_PARAMS *);  // halified (2 hals) exported (id=0x800294) body
-    NV_STATUS (*__deviceCtrlCmdMsencGetCapsV2__)(struct Device * /*this*/, NV0080_CTRL_MSENC_GET_CAPS_V2_PARAMS *);  // halified (2 hals) exported (id=0x801b02) body
-    NV_STATUS (*__deviceCtrlCmdBspGetCapsV2__)(struct Device * /*this*/, NV0080_CTRL_BSP_GET_CAPS_PARAMS_V2 *);  // halified (2 hals) exported (id=0x801c02) body
+    NV_STATUS (*__deviceCtrlCmdMsencGetCapsV2__)(struct Device * /*this*/, NV0080_CTRL_NVENC_GET_CAPS_V2_PARAMS *);  // halified (2 hals) exported (id=0x801b02) body
+    NV_STATUS (*__deviceCtrlCmdBspGetCapsV2__)(struct Device * /*this*/, NV0080_CTRL_NVDEC_GET_CAPS_PARAMS_V2 *);  // halified (2 hals) exported (id=0x801c02) body
     NV_STATUS (*__deviceCtrlCmdNvjpgGetCapsV2__)(struct Device * /*this*/, NV0080_CTRL_NVJPG_GET_CAPS_V2_PARAMS *);  // halified (2 hals) exported (id=0x801f02) body
 
     // Data members
@@ -197,7 +197,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_Device;
     ((Device*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(Device)))
 #endif //__nvoc_device_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_Device(Device**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_Device(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_Device(Device**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_Device(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \
@@ -882,11 +882,11 @@ static inline NV_STATUS deviceCtrlCmdGpuGetBrandCaps_DISPATCH(struct Device *pDe
     return pDevice->__deviceCtrlCmdGpuGetBrandCaps__(pDevice, pParams);
 }
 
-static inline NV_STATUS deviceCtrlCmdMsencGetCapsV2_DISPATCH(struct Device *pDevice, NV0080_CTRL_MSENC_GET_CAPS_V2_PARAMS *pMsencCapsParams) {
+static inline NV_STATUS deviceCtrlCmdMsencGetCapsV2_DISPATCH(struct Device *pDevice, NV0080_CTRL_NVENC_GET_CAPS_V2_PARAMS *pMsencCapsParams) {
     return pDevice->__deviceCtrlCmdMsencGetCapsV2__(pDevice, pMsencCapsParams);
 }
 
-static inline NV_STATUS deviceCtrlCmdBspGetCapsV2_DISPATCH(struct Device *pDevice, NV0080_CTRL_BSP_GET_CAPS_PARAMS_V2 *pBspCapParams) {
+static inline NV_STATUS deviceCtrlCmdBspGetCapsV2_DISPATCH(struct Device *pDevice, NV0080_CTRL_NVDEC_GET_CAPS_PARAMS_V2 *pBspCapParams) {
     return pDevice->__deviceCtrlCmdBspGetCapsV2__(pDevice, pBspCapParams);
 }
 
@@ -1109,9 +1109,9 @@ NV_STATUS deviceCtrlCmdHostGetCapsV2_IMPL(struct Device *pDevice, NV0080_CTRL_HO
 
 NV_STATUS deviceCtrlCmdGpuGetBrandCaps_VF(struct Device *pDevice, NV0080_CTRL_GPU_GET_BRAND_CAPS_PARAMS *pParams);
 
-NV_STATUS deviceCtrlCmdMsencGetCapsV2_VF(struct Device *pDevice, NV0080_CTRL_MSENC_GET_CAPS_V2_PARAMS *pMsencCapsParams);
+NV_STATUS deviceCtrlCmdMsencGetCapsV2_VF(struct Device *pDevice, NV0080_CTRL_NVENC_GET_CAPS_V2_PARAMS *pMsencCapsParams);
 
-NV_STATUS deviceCtrlCmdBspGetCapsV2_VF(struct Device *pDevice, NV0080_CTRL_BSP_GET_CAPS_PARAMS_V2 *pBspCapParams);
+NV_STATUS deviceCtrlCmdBspGetCapsV2_VF(struct Device *pDevice, NV0080_CTRL_NVDEC_GET_CAPS_PARAMS_V2 *pBspCapParams);
 
 NV_STATUS deviceCtrlCmdNvjpgGetCapsV2_VF(struct Device *pDevice, NV0080_CTRL_NVJPG_GET_CAPS_V2_PARAMS *pNvjpgCapsParams);
 
@@ -1138,11 +1138,11 @@ static inline NV_STATUS deviceCtrlCmdGpuGetBrandCaps_5baef9(struct Device *pDevi
     NV_ASSERT_OR_RETURN_PRECOMP(0, NV_ERR_NOT_SUPPORTED);
 }
 
-static inline NV_STATUS deviceCtrlCmdMsencGetCapsV2_5baef9(struct Device *pDevice, NV0080_CTRL_MSENC_GET_CAPS_V2_PARAMS *pMsencCapsParams){
+static inline NV_STATUS deviceCtrlCmdMsencGetCapsV2_5baef9(struct Device *pDevice, NV0080_CTRL_NVENC_GET_CAPS_V2_PARAMS *pMsencCapsParams){
     NV_ASSERT_OR_RETURN_PRECOMP(0, NV_ERR_NOT_SUPPORTED);
 }
 
-static inline NV_STATUS deviceCtrlCmdBspGetCapsV2_5baef9(struct Device *pDevice, NV0080_CTRL_BSP_GET_CAPS_PARAMS_V2 *pBspCapParams){
+static inline NV_STATUS deviceCtrlCmdBspGetCapsV2_5baef9(struct Device *pDevice, NV0080_CTRL_NVDEC_GET_CAPS_PARAMS_V2 *pBspCapParams){
     NV_ASSERT_OR_RETURN_PRECOMP(0, NV_ERR_NOT_SUPPORTED);
 }
 

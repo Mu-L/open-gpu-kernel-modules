@@ -32,7 +32,7 @@ void __nvoc_init__MemoryList(MemoryList*);
 void __nvoc_init_funcTable_MemoryList(MemoryList*);
 NV_STATUS __nvoc_ctor_MemoryList(MemoryList*, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_MemoryList(MemoryList*);
-void __nvoc_dtor_MemoryList(MemoryList*);
+void __nvoc_dtor_MemoryList(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__MemoryList;
@@ -116,7 +116,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_MemoryList =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "MemoryList",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_MemoryList,
+    .objCreatefn =        &__nvoc_objCreateDynamic_MemoryList,
     .pCastInfo =          &__nvoc_castinfo__MemoryList,
     .pExportInfo =        &__nvoc_export_info__MemoryList
 };
@@ -125,7 +125,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_MemoryList =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__MemoryList __nvoc_metadata__MemoryList = {
     .rtti.pClassDef = &__nvoc_class_def_MemoryList,    // (memlist) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_MemoryList,
+    .rtti.dtor      = &__nvoc_dtor_MemoryList,
     .rtti.offset    = 0,
     .metadata__Memory.rtti.pClassDef = &__nvoc_class_def_Memory,    // (mem) super
     .metadata__Memory.rtti.dtor      = &__nvoc_destructFromBase,
@@ -394,13 +394,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__MemoryList =
 
 
 // Destruct MemoryList object.
-void __nvoc_dtor_Memory(Memory*);
-void __nvoc_dtor_MemoryList(MemoryList* pThis) {
+void __nvoc_dtor_Memory(Dynamic*);
+void __nvoc_dtor_MemoryList(Dynamic* pThis) {
+
+    MemoryList *__nvoc_this = (MemoryList *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Memory(&pThis->__nvoc_base_Memory);
+    __nvoc_dtor_Memory((Dynamic *) &__nvoc_this->__nvoc_base_Memory);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_MemoryList(MemoryList *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -426,7 +428,7 @@ NV_STATUS __nvoc_ctor_MemoryList(MemoryList *pMemoryList, CALL_CONTEXT *pCallCon
 
     // Unwind on error.
 __nvoc_ctor_MemoryList_fail__init:
-    __nvoc_dtor_Memory(&pMemoryList->__nvoc_base_Memory);
+    __nvoc_dtor_Memory((Dynamic *)&pMemoryList->__nvoc_base_Memory);
 __nvoc_ctor_MemoryList_fail_Memory:
 __nvoc_ctor_MemoryList_exit:
     return status;
@@ -538,13 +540,10 @@ __nvoc_objCreate_MemoryList_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_MemoryList(MemoryList **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_MemoryList(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_MemoryList(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_MemoryList((MemoryList **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

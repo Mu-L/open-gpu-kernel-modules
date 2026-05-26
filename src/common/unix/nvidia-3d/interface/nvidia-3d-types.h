@@ -319,6 +319,11 @@ typedef struct {
  */
 #define NV3D_TEXTURE_PITCH_ALIGNMENT 256
 
+/*
+ * Maximum desktop/render target size.
+ */
+#define NV3D_MAX_RENDER_DIMENSIONS 32768
+
 typedef struct _Nv3dStreamSurfaceRec {
     NvU64 gpuAddress;
     NvU64 size;
@@ -336,13 +341,6 @@ typedef struct _Nv3dVertexAttributeStreamRec {
 } Nv3dVertexAttributeStreamRec;
 
 typedef struct _Nv3dHal Nv3dHal;
-
-typedef struct _Nv3dDeviceCapsRec {
-    NvU32 maxDim;                /*
-                                  * Maximum width or height of the
-                                  * texture surface in pixels.
-                                  */
-} Nv3dDeviceCapsRec, *Nv3dDeviceCapsPtr;
 
 typedef struct  _Nv3dDeviceSpaVersionRec {
     NvU16 major;
@@ -364,7 +362,6 @@ enum Nv3dShaderArch {
 typedef struct _Nv3dDeviceRec {
 
     NvPushDevicePtr pPushDevice;
-    Nv3dDeviceCapsRec caps;
     NvU32 classNumber;
     enum Nv3dShaderArch shaderArch;
 

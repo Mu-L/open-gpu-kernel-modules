@@ -77,6 +77,10 @@ NvBool nvDpyIsAdaptiveSync(const NVDpyEvoRec *pDpyEvo);
 
 NvBool nvDpyIsAdaptiveSyncDefaultlisted(const NVDpyEvoRec *pDpyEvo);
 
+void nvDpyUpdateAdaptiveSyncSdp(const NVDpyEvoRec *pDpyEvo,
+                                const NVHwModeTimingsEvo *pTimings,
+                                const NvBool enable);
+
 enum NvKmsDpyAttributeDigitalSignalValue
 nvGetDefaultDpyAttributeDigitalSignalValue(const NVConnectorEvoRec *pConnectorEvo);
 

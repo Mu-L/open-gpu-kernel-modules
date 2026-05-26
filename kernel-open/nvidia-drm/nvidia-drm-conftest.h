@@ -87,6 +87,15 @@
 #endif
 #endif
 
+
+/*
+ * DRM color pipeline support (drm_colorop) was added by commit cfc27680ee20
+ * ("drm/colorop: Introduce new drm_colorop mode object") in Linux v6.19-rc1.
+ */
+#if defined(NV_DRM_DRM_COLOROP_H_PRESENT)
+#define NV_DRM_HAS_COLOROP
+#endif
+
 /*
  * Adapt to quirks in FreeBSD's Linux kernel compatibility layer.
  */

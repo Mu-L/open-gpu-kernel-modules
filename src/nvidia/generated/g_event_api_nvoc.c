@@ -29,7 +29,7 @@ void __nvoc_init__NotifShare(NotifShare*);
 void __nvoc_init_funcTable_NotifShare(NotifShare*);
 NV_STATUS __nvoc_ctor_NotifShare(NotifShare*);
 void __nvoc_init_dataField_NotifShare(NotifShare*);
-void __nvoc_dtor_NotifShare(NotifShare*);
+void __nvoc_dtor_NotifShare(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__NotifShare;
@@ -48,7 +48,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_NotifShare =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "NotifShare",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_NotifShare,
+    .objCreatefn =        &__nvoc_objCreateDynamic_NotifShare,
     .pCastInfo =          &__nvoc_castinfo__NotifShare,
     .pExportInfo =        &__nvoc_export_info__NotifShare
 };
@@ -57,7 +57,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_NotifShare =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__NotifShare __nvoc_metadata__NotifShare = {
     .rtti.pClassDef = &__nvoc_class_def_NotifShare,    // (shrnotif) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_NotifShare,
+    .rtti.dtor      = &__nvoc_dtor_NotifShare,
     .rtti.offset    = 0,
     .metadata__RsShared.rtti.pClassDef = &__nvoc_class_def_RsShared,    // (shr) super
     .metadata__RsShared.rtti.dtor      = &__nvoc_destructFromBase,
@@ -87,16 +87,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__NotifShare =
 
 // Destruct NotifShare object.
 void __nvoc_shrnotifDestruct(NotifShare*);
-void __nvoc_dtor_RsShared(RsShared*);
-void __nvoc_dtor_NotifShare(NotifShare* pThis) {
+void __nvoc_dtor_RsShared(Dynamic*);
+void __nvoc_dtor_NotifShare(Dynamic* pThis) {
+
+    NotifShare *__nvoc_this = (NotifShare *) pThis;
 
 // Call destructor.
-    __nvoc_shrnotifDestruct(pThis);
+    __nvoc_shrnotifDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RsShared(&pThis->__nvoc_base_RsShared);
+    __nvoc_dtor_RsShared((Dynamic *) &__nvoc_this->__nvoc_base_RsShared);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_NotifShare(NotifShare *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -122,7 +124,7 @@ NV_STATUS __nvoc_ctor_NotifShare(NotifShare *pNotifShare) {
 
     // Unwind on error.
 __nvoc_ctor_NotifShare_fail__init:
-    __nvoc_dtor_RsShared(&pNotifShare->__nvoc_base_RsShared);
+    __nvoc_dtor_RsShared((Dynamic *)&pNotifShare->__nvoc_base_RsShared);
 __nvoc_ctor_NotifShare_fail_RsShared:
 __nvoc_ctor_NotifShare_exit:
     return status;
@@ -228,12 +230,9 @@ __nvoc_objCreate_NotifShare_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_NotifShare(NotifShare **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_NotifShare(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_NotifShare(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_NotifShare((NotifShare **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 
 
@@ -253,7 +252,7 @@ void __nvoc_init__EventApi(EventApi*);
 void __nvoc_init_funcTable_EventApi(EventApi*);
 NV_STATUS __nvoc_ctor_EventApi(EventApi*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_EventApi(EventApi*);
-void __nvoc_dtor_EventApi(EventApi*);
+void __nvoc_dtor_EventApi(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__EventApi;
@@ -311,7 +310,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_EventApi =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "EventApi",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_EventApi,
+    .objCreatefn =        &__nvoc_objCreateDynamic_EventApi,
     .pCastInfo =          &__nvoc_castinfo__EventApi,
     .pExportInfo =        &__nvoc_export_info__EventApi
 };
@@ -320,7 +319,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_EventApi =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__EventApi __nvoc_metadata__EventApi = {
     .rtti.pClassDef = &__nvoc_class_def_EventApi,    // (eventapi) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_EventApi,
+    .rtti.dtor      = &__nvoc_dtor_EventApi,
     .rtti.offset    = 0,
     .metadata__RmResource.rtti.pClassDef = &__nvoc_class_def_RmResource,    // (rmres) super
     .metadata__RmResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -527,16 +526,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__EventApi =
 
 // Destruct EventApi object.
 void __nvoc_eventapiDestruct(EventApi*);
-void __nvoc_dtor_RmResource(RmResource*);
-void __nvoc_dtor_EventApi(EventApi* pThis) {
+void __nvoc_dtor_RmResource(Dynamic*);
+void __nvoc_dtor_EventApi(Dynamic* pThis) {
+
+    EventApi *__nvoc_this = (EventApi *) pThis;
 
 // Call destructor.
-    __nvoc_eventapiDestruct(pThis);
+    __nvoc_eventapiDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RmResource(&pThis->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *) &__nvoc_this->__nvoc_base_RmResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_EventApi(EventApi *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -562,7 +563,7 @@ NV_STATUS __nvoc_ctor_EventApi(EventApi *pEvent, struct CALL_CONTEXT *pCallConte
 
     // Unwind on error.
 __nvoc_ctor_EventApi_fail__init:
-    __nvoc_dtor_RmResource(&pEvent->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *)&pEvent->__nvoc_base_RmResource);
 __nvoc_ctor_EventApi_fail_RmResource:
 __nvoc_ctor_EventApi_exit:
     return status;
@@ -672,14 +673,11 @@ __nvoc_objCreate_EventApi_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_EventApi(EventApi **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_EventApi(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_EventApi(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_EventApi((EventApi **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 
 
@@ -694,7 +692,7 @@ void __nvoc_init__INotifier(INotifier*);
 void __nvoc_init_funcTable_INotifier(INotifier*);
 NV_STATUS __nvoc_ctor_INotifier(INotifier*, struct CALL_CONTEXT *pCallContext);
 void __nvoc_init_dataField_INotifier(INotifier*);
-void __nvoc_dtor_INotifier(INotifier*);
+void __nvoc_dtor_INotifier(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__INotifier;
@@ -720,7 +718,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_INotifier =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "INotifier",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) NULL,
+    .objCreatefn =        NULL,
     .pCastInfo =          &__nvoc_castinfo__INotifier,
     .pExportInfo =        &__nvoc_export_info__INotifier
 };
@@ -729,7 +727,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_INotifier =
 // Metadata with per-class RTTI and vtable
 static const struct NVOC_METADATA__INotifier __nvoc_metadata__INotifier = {
     .rtti.pClassDef = &__nvoc_class_def_INotifier,    // (inotify) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_INotifier,
+    .rtti.dtor      = &__nvoc_dtor_INotifier,
     .rtti.offset    = 0,
 
     .vtable.__inotifyGetNotificationListPtr__ = NULL,    // pure virtual
@@ -757,11 +755,13 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__INotifier =
 
 // Destruct INotifier object.
 void __nvoc_inotifyDestruct(INotifier*);
-void __nvoc_dtor_INotifier(INotifier* pThis) {
+void __nvoc_dtor_INotifier(Dynamic* pThis) {
+
+    INotifier *__nvoc_this = (INotifier *) pThis;
 
 // Call destructor.
-    __nvoc_inotifyDestruct(pThis);
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    __nvoc_inotifyDestruct(__nvoc_this);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_INotifier(INotifier *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -824,7 +824,7 @@ void __nvoc_init__Notifier(Notifier*);
 void __nvoc_init_funcTable_Notifier(Notifier*);
 NV_STATUS __nvoc_ctor_Notifier(Notifier*, struct CALL_CONTEXT *pCallContext);
 void __nvoc_init_dataField_Notifier(Notifier*);
-void __nvoc_dtor_Notifier(Notifier*);
+void __nvoc_dtor_Notifier(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__Notifier;
@@ -849,7 +849,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_Notifier =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "Notifier",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) NULL,
+    .objCreatefn =        NULL,
     .pCastInfo =          &__nvoc_castinfo__Notifier,
     .pExportInfo =        &__nvoc_export_info__Notifier
 };
@@ -858,7 +858,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_Notifier =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__Notifier __nvoc_metadata__Notifier = {
     .rtti.pClassDef = &__nvoc_class_def_Notifier,    // (notify) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_Notifier,
+    .rtti.dtor      = &__nvoc_dtor_Notifier,
     .rtti.offset    = 0,
     .metadata__INotifier.rtti.pClassDef = &__nvoc_class_def_INotifier,    // (inotify) super
     .metadata__INotifier.rtti.dtor      = &__nvoc_destructFromBase,
@@ -923,16 +923,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__Notifier =
 
 // Destruct Notifier object.
 void __nvoc_notifyDestruct(Notifier*);
-void __nvoc_dtor_INotifier(INotifier*);
-void __nvoc_dtor_Notifier(Notifier* pThis) {
+void __nvoc_dtor_INotifier(Dynamic*);
+void __nvoc_dtor_Notifier(Dynamic* pThis) {
+
+    Notifier *__nvoc_this = (Notifier *) pThis;
 
 // Call destructor.
-    __nvoc_notifyDestruct(pThis);
+    __nvoc_notifyDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_INotifier(&pThis->__nvoc_base_INotifier);
+    __nvoc_dtor_INotifier((Dynamic *) &__nvoc_this->__nvoc_base_INotifier);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_Notifier(Notifier *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -958,7 +960,7 @@ NV_STATUS __nvoc_ctor_Notifier(Notifier *pNotifier, struct CALL_CONTEXT *pCallCo
 
     // Unwind on error.
 __nvoc_ctor_Notifier_fail__init:
-    __nvoc_dtor_INotifier(&pNotifier->__nvoc_base_INotifier);
+    __nvoc_dtor_INotifier((Dynamic *)&pNotifier->__nvoc_base_INotifier);
 __nvoc_ctor_Notifier_fail_INotifier:
 __nvoc_ctor_Notifier_exit:
     return status;

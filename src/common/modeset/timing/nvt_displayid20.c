@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -117,38 +117,47 @@ NvTiming_parseDisplayId20Info(
 CODE_SEGMENT(PAGE_DD_CODE)
 NvU32
 NvTiming_DisplayID2ValidationMask(
+    const NvU8 *pDisplayId2,
     NVT_DISPLAYID_2_0_INFO *pDisplayId20Info,
     NvBool bIsStrongValidation)
 {
     NvU32 j;
     NvU32 ret = 0;
 
-    // check the DisplayId2 version and signature
-    if (pDisplayId20Info->version != 0x2)
+    const DISPLAYID_2_0_SECTION *pSection = (const DISPLAYID_2_0_SECTION *)pDisplayId2;
+
+    // check the base section of DisplayId2 version
+    if (pSection->header.version != DISPLAYID_2_0_VERSION)
     {
         ret |= NVT_DID2_VALIDATION_ERR_MASK(NVT_DID2_VALIDATION_ERR_VERSION);
     }
 
-    if (!pDisplayId20Info->valid_data_blocks.product_id_present)
+    // validate for base displayid2 section checksum
+    if (computeDisplayId20SectionCheckSum((const NvU8 *)pSection, DISPLAYID_2_0_SECTION_SIZE_TOTAL(pSection->header)) != 0)
     {
-        ret |= NVT_DID2_VALIDATION_ERR_MASK(NVT_DID2_VALIDATION_ERR_PRODUCT_IDENTIFY);
+        ret |= NVT_DID2_VALIDATION_ERR_MASK(NVT_DID2_VALIDATION_ERR_CHECKSUM);
     }
 
-    if (pDisplayId20Info->primary_use_case >= PRODUCT_PRIMARY_USE_GENERIC_DISPLAY &&
-        pDisplayId20Info->primary_use_case <= PRODUCT_PRIMARY_USE_HEAD_MOUNT_AUGMENTED_REALITY)
+    // Strong validation to follow for the displayid2 data blocks
+    if (bIsStrongValidation == NV_TRUE && pDisplayId20Info != NULL)
     {
-        if (!(pDisplayId20Info->valid_data_blocks.parameters_present        &&
-              pDisplayId20Info->valid_data_blocks.interface_feature_present &&
-              pDisplayId20Info->valid_data_blocks.type7Timing_present       &&
-              pDisplayId20Info->total_timings))
+        if (!pDisplayId20Info->valid_data_blocks.product_id_present)
         {
-            ret |= NVT_DID2_VALIDATION_ERR_MASK(NVT_DID2_VALIDATION_ERR_NO_DATA_BLOCK);
+            ret |= NVT_DID2_VALIDATION_ERR_MASK(NVT_DID2_VALIDATION_ERR_PRODUCT_IDENTIFY);
         }
-    }
 
-    // Strong validation to follow
-    if (bIsStrongValidation == NV_TRUE)
-    {
+        if (pDisplayId20Info->primary_use_case >= PRODUCT_PRIMARY_USE_GENERIC_DISPLAY &&
+            pDisplayId20Info->primary_use_case <= PRODUCT_PRIMARY_USE_HEAD_MOUNT_AUGMENTED_REALITY)
+        {
+            if (!(pDisplayId20Info->valid_data_blocks.parameters_present        &&
+                  pDisplayId20Info->valid_data_blocks.interface_feature_present &&
+                  pDisplayId20Info->valid_data_blocks.type7Timing_present       &&
+                  pDisplayId20Info->total_timings))
+            {
+                ret |= NVT_DID2_VALIDATION_ERR_MASK(NVT_DID2_VALIDATION_ERR_NO_DATA_BLOCK);
+            }
+        }
+
         // TODO : For each of the Data Block limitation
         // Type 7 Timings data block
         for (j = 0; j <= pDisplayId20Info->total_timings; j++)
@@ -175,10 +184,11 @@ NvTiming_DisplayID2ValidationMask(
 CODE_SEGMENT(PAGE_DD_CODE)
 NVT_STATUS
 NvTiming_DisplayID2ValidationDataBlocks(
-    NVT_DISPLAYID_2_0_INFO *pDisplayIdInfo,
+    const NvU8 *pDisplayId2,
+    NVT_DISPLAYID_2_0_INFO *pDisplayId20Info,
     NvBool bIsStrongValidation)
 {
-    if (NvTiming_DisplayID2ValidationMask(pDisplayIdInfo, bIsStrongValidation) != 0)
+    if (NvTiming_DisplayID2ValidationMask(pDisplayId2, pDisplayId20Info, bIsStrongValidation) != 0)
     {
         return NVT_STATUS_ERR;
     }
@@ -230,6 +240,7 @@ parseDisplayId20ExtensionSection(
     // validate for section checksum before processing the data block
     if (computeDisplayId20SectionCheckSum((const NvU8 *)pSection, DISPLAYID_2_0_SECTION_SIZE_TOTAL(pSection->header)) != 0)
     {
+        nvt_assert(0 && "DisplayID20 Extension Section checksum validation failed");
         status |= NVT_DID2_VALIDATION_ERR_MASK(NVT_DID2_VALIDATION_ERR_CHECKSUM);
         return status;
     }
@@ -829,6 +840,11 @@ parseDisplayId20Timing10(
 
     eachOfDescriptorsSize += pTiming10Block->header.payload_bytes_len;
 
+    if ((NvU32)descriptorCount * eachOfDescriptorsSize > sizeof(pTiming10Block->descriptors))
+    {
+        return NVT_STATUS_ERR;
+    }
+
     if (pDisplayIdInfo != NULL)
     {
         startSeqNumber = getExistedTimingSeqNumber(pDisplayIdInfo, NVT_TYPE_DISPLAYID_10);
@@ -1336,33 +1352,34 @@ parseDisplayId20VendorSpecific(
     block = (const DISPLAYID_2_0_VENDOR_SPECIFIC_BLOCK*)pDataBlock;
     pVendorSpecific =  &pDisplayIdInfo->vendor_specific;
 
-    ieee_oui = (NvU32)((block->vendor_id[0] << 16) |
-                        (block->vendor_id[1] << 8)  |
-                        (block->vendor_id[2]));
+    ieee_oui = (NvU32)((block->vendor_id[0] << 16) | (block->vendor_id[1] << 8) | (block->vendor_id[2]));
 
     switch (ieee_oui)
     {
     case NVT_VESA_VENDOR_SPECIFIC_IEEE_ID:
-        // TODO: below parser shall be updated if DID21 changed in the future
-        if (pDataBlock->data_bytes == NVT_VESA_VENDOR_SPECIFIC_LENGTH)
+    {
+        if(pDataBlock->data_bytes != NVT_VESA_VENDOR_SPECIFIC_FIVE_BYTES_LENGTH && 
+            pDataBlock->data_bytes != NVT_VESA_VENDOR_SPECIFIC_SEVEN_BYTES_LENGTH)
         {
-            pVendorSpecific->vesaVsdb.data_struct_type.type =
-                block->vendor_specific_data[0] & NVT_VESA_ORG_VSDB_DATA_TYPE_MASK;
-            pVendorSpecific->vesaVsdb.data_struct_type.color_space_and_eotf =
-                (block->vendor_specific_data[0] & NVT_VESA_ORG_VSDB_COLOR_SPACE_AND_EOTF_MASK) >> NVT_VESA_ORG_VSDB_COLOR_SPACE_AND_EOTF_SHIFT;
-            pVendorSpecific->vesaVsdb.overlapping.pixels_overlapping_count =
-                block->vendor_specific_data[1] & NVT_VESA_ORG_VSDB_PIXELS_OVERLAPPING_MASK;
-            pVendorSpecific->vesaVsdb.overlapping.multi_sst =
-                (block->vendor_specific_data[1] & NVT_VESA_ORG_VSDB_MULTI_SST_MODE_MASK) >> NVT_VESA_ORG_VSDB_MULTI_SST_MODE_SHIFT;
+            return NVT_STATUS_ERR;
+        }
+
+        pVendorSpecific->vesaVsdb.data_struct_type.type =
+            block->vendor_specific_data[0] & NVT_VESA_ORG_VSDB_DATA_TYPE_MASK;
+        pVendorSpecific->vesaVsdb.data_struct_type.color_space_and_eotf =
+            (block->vendor_specific_data[0] & NVT_VESA_ORG_VSDB_COLOR_SPACE_AND_EOTF_MASK) >> NVT_VESA_ORG_VSDB_COLOR_SPACE_AND_EOTF_SHIFT;
+        pVendorSpecific->vesaVsdb.overlapping.pixels_overlapping_count =
+            block->vendor_specific_data[1] & NVT_VESA_ORG_VSDB_PIXELS_OVERLAPPING_MASK;
+        pVendorSpecific->vesaVsdb.overlapping.multi_sst =
+            (block->vendor_specific_data[1] & NVT_VESA_ORG_VSDB_MULTI_SST_MODE_MASK) >> NVT_VESA_ORG_VSDB_MULTI_SST_MODE_SHIFT;
+        if (pDataBlock->data_bytes == NVT_VESA_VENDOR_SPECIFIC_SEVEN_BYTES_LENGTH)
+        {
             pVendorSpecific->vesaVsdb.pass_through_integer.pass_through_integer_dsc =
                 block->vendor_specific_data[2] & NVT_VESA_ORG_VSDB_PASS_THROUGH_INTEGER_MASK;
             pVendorSpecific->vesaVsdb.pass_through_fractional.pass_through_fraction_dsc =
                 block->vendor_specific_data[3] & NVT_VESA_ORG_VSDB_PASS_THROUGH_FRACTIOINAL_MASK;
         }
-        else
-        {
-            status = NVT_STATUS_ERR;
-        }
+    }
     break;
 
     default:

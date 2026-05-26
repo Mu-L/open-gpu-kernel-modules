@@ -106,7 +106,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_SpdmProxy;
     ((SpdmProxy*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(SpdmProxy)))
 #endif //__nvoc_spdm_proxy_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_SpdmProxy(SpdmProxy**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_SpdmProxy(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_SpdmProxy(SpdmProxy**, Dynamic*, NvU32);
 #define __objCreate_SpdmProxy(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

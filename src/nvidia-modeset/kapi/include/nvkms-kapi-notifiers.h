@@ -93,7 +93,6 @@ void nvKmsKapiSignalDisplaySemaphore(struct NvKmsKapiDevice *device,
 void nvKmsKapiCancelDisplaySemaphore(struct NvKmsKapiDevice *device,
                                      NvU32 index);
 
-NvU32 nvKmsKapiGetDisplaySemaphoreOffset(struct NvKmsKapiDevice *device,
-                                         NvU32 index);
+NvU32 nvKmsKapiGetDisplaySemaphoreOffset(NvU32 index);
 
 #endif /* __NVKMS_KAPI_NOTIFIERS_H__ */

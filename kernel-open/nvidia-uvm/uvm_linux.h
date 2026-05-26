@@ -103,6 +103,21 @@
         #define UVM_HMM_RANGE_FAULT_SUPPORTED() 0
     #endif
 
+// Prior to commit eeb8fdfcf090 ("arm64: Expose the end of the linear map in
+// PHYSMEM_END") allocating device private memory (MEMORY_DEVICE_PRIVATE) is
+// broken on aarch64 as it would incorrectly allocate device private pages
+// beyond the linear map. This does generate a warning but memremap_pages()
+// still returns successfully leading to kernel crashes. PHYSMEM_END always has
+// a ifndef definition, so we instead test for DIRECT_MAP_PHYSMEM_END which
+// renamed from PHYSMEM_END by commit afe789b7367a ("kaslr: rename physmem_end
+// and PHYSMEM_END to direct_map_physmem_end") in v6.12 in  which occurred after
+// the necessary redefinition of PHYSMEM_END for aarch64.
+    #if defined(NVCPU_AARCH64) && !defined(DIRECT_MAP_PHYSMEM_END)
+        #define UVM_CAN_USE_DEVICE_PRIVATE_MEMREMAP_PAGES() 0
+    #else
+        #define UVM_CAN_USE_DEVICE_PRIVATE_MEMREMAP_PAGES() 1
+    #endif
+
     #if defined(CONFIG_MMU_NOTIFIER)
         #define UVM_CAN_USE_MMU_NOTIFIERS() 1
     #else
@@ -240,6 +255,12 @@ static inline struct dev_pagemap *page_pgmap(const struct page *page)
 {
     return page->pgmap;
 }
+#endif
+
+#if defined(NV_HANDLE_MM_FAULT_HAS_PT_REGS_ARG)
+#define UVM_HANDLE_MM_FAULT(vma, addr, flags)       handle_mm_fault(vma, addr, flags, NULL)
+#else
+#define UVM_HANDLE_MM_FAULT(vma, addr, flags)       handle_mm_fault(vma, addr, flags)
 #endif
 
 #endif // _UVM_LINUX_H

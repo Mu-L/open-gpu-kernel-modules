@@ -58,7 +58,6 @@ NvBool nvHs3dRenderFrame(
 void nvHs3dReleaseSemaphore(
     NVHsChannelEvoPtr pHsChannel,
     const NVSurfaceEvoRec *pSurfaceEvo,
-    const enum NvKmsNIsoFormat nIsoFormat,
     const NvU16 offsetInWords,
     const NvU32 payload,
     const NvBool allPreceedingReads);

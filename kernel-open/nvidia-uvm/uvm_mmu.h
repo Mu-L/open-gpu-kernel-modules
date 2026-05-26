@@ -39,7 +39,7 @@
 // The following memory regions are not to scale. The memory layout is linear,
 // i.e., no canonical form address conversion.
 //
-// Hopper-Blackwell:
+// Hopper-Rubin:
 // +----------------+ 128PB
 // |                |
 // |   (not used)*  | * See note(1)
@@ -63,7 +63,7 @@
 // |                |
 // +----------------+ 0 (rm_va_base)
 //
-// Pascal-Ada:
+// Turing-Ada:
 // +----------------+ 512TB
 // |                |
 // |   (not used)*  | * See note(1)
@@ -88,23 +88,6 @@
 // ------------------ 128TB (peer_va_base)
 // |                |
 // | rm_mem(128TB)  | (rm_va_size)
-// |                |
-// +----------------+ 0 (rm_va_base)
-//
-// Maxwell:
-// +----------------+ 1TB
-// |                |
-// |   (not used)   |
-// |                |
-// ------------------ 896GB
-// |uvm_mem_t(128GB)| (uvm_mem_va_size)
-// ------------------ 768GB (uvm_mem_va_base)
-// |                |
-// |   (not used)   |
-// |                |
-// ------------------ 128GB
-// |                |
-// | rm_mem(128GB)  | (rm_va_size)
 // |                |
 // +----------------+ 0 (rm_va_base)
 //
@@ -229,7 +212,7 @@ struct uvm_mmu_mode_hal_struct
     void (*make_pde)(void *entry, uvm_mmu_page_table_alloc_t **allocs, uvm_page_directory_t *dir, NvU32 child_index);
 
     // size of an entry in a directory/table. Generally either 8 or 16 bytes.
-    // (in the case of Pascal dual PDEs)
+    // (in the case of Turing dual PDEs)
     NvLength (*entry_size)(NvU32 depth);
 
     // Two for dual PDEs, one otherwise.
@@ -324,7 +307,7 @@ struct uvm_page_tree_struct
 
         // PDE0 where all big-page entries are invalid, and small-page entries
         // point to ptes_invalid_4k.
-        // pde0 is used on Pascal+ GPUs, i.e., they have the same PDE format.
+        // pde0 is used on Turing+ GPUs, i.e., they have the same PDE format.
         uvm_page_directory_t *pde0;
     } map_remap;
 

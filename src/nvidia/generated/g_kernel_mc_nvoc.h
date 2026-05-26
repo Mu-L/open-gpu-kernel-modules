@@ -156,7 +156,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelMc;
 #define PDB_PROP_KMC_IS_MISSING_BASE_NAME PDB_PROP_ENGSTATE_IS_MISSING
 
 
-NV_STATUS __nvoc_objCreateDynamic_KernelMc(KernelMc**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelMc(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelMc(KernelMc**, Dynamic*, NvU32);
 #define __objCreate_KernelMc(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

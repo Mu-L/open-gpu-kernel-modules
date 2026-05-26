@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -35,6 +35,7 @@
 #include "gpu/gsp/gsp_trace_rats_macro.h"
 #include "gpu/eng_desc.h"
 #include "nv_ref.h"
+#include "nvVer.h"
 #include "os/os.h"
 #include "nvrm_registry.h"
 #include "gpu_mgr/gpu_mgr.h"
@@ -45,6 +46,8 @@
 #include "diagnostics/journal.h"
 #include "rmapi/rs_utils.h"
 #include "rmapi/rmapi_utils.h"
+#include "cper/gpu_cper.h"
+#include "diagnostics/op_event_log.h"
 #include "platform/sli/sli.h"
 #include "core/hal_mgr.h"
 #include "vgpu/rpc.h"
@@ -452,7 +455,7 @@ gpuPostConstruct_IMPL
 
     // The first time the emulation setting is checked is in timeoutInitializeGpuDefault.
     pGpu->computeModeRefCount = 0;
-    pGpu->hComputeModeReservation = NV01_NULL_OBJECT;
+    pGpu->computeModeState.hComputeModeReservation = NV01_NULL_OBJECT;
 
     // Setting default timeout values
     timeoutInitializeGpuDefault(&pGpu->timeoutData, pGpu);
@@ -2370,6 +2373,14 @@ gpuStateInit_IMPL
             {
                 pGpu->setProperty(pGpu, PDB_PROP_GPU_BUG_3007008_EMULATE_VF_MMU_TLB_INVALIDATE, NV_FALSE);
             }
+
+            // Registry override to change default mode, i.e, enable N:1 vGPU for 64K pagesize
+            data32 = NV_REG_STR_ENABLE_VGPU_64K_PAGE_SIZE_DEFAULT;
+            if ((osReadRegistryDword(pGpu, NV_REG_STR_ENABLE_VGPU_64K_PAGE_SIZE, &data32) == NV_OK) &&
+                (data32 == NV_REG_STR_ENABLE_VGPU_64K_PAGE_SIZE_YES))
+            {
+                pGpu->setProperty(pGpu, PDB_PROP_GPU_BUG_3007008_EMULATE_VF_MMU_TLB_INVALIDATE, NV_FALSE);
+            }
         }
         else
         {
@@ -2478,6 +2489,162 @@ gpuStatePreLoad
         _gpuStatePreLoadUnknownFailureStore(pGpu, rmStatus);
     }
     return rmStatus;
+}
+
+static void
+_gpuInitPcieP2PCapability
+(
+    OBJGPU *pGpu
+)
+{
+    RM_API *pRmApi = GPU_GET_PHYSICAL_RMAPI(pGpu);
+    NV2080_CTRL_INTERNAL_GET_PCIE_P2P_CAPS_PARAMS p2pCapsParams = {0};
+    NV_STATUS status;
+
+    // Skip getting p2p caps on iGPU/SOC
+    if (pGpu->pGpuArch->bGpuArchIsZeroFb || pGpu->bIsSOC)
+    {
+        return;
+    }
+
+    status = pRmApi->Control(pRmApi,
+                             pGpu->hInternalClient,
+                             pGpu->hInternalSubdevice,
+                             NV2080_CTRL_CMD_INTERNAL_GET_PCIE_P2P_CAPS,
+                             &p2pCapsParams,
+                             sizeof(NV2080_CTRL_INTERNAL_GET_PCIE_P2P_CAPS_PARAMS));
+    NV_ASSERT_OR_RETURN_VOID(status == NV_OK);
+
+    pGpu->pcieP2PReadCaps = p2pCapsParams.p2pReadCapsStatus;
+    pGpu->pcieP2PWriteCaps = p2pCapsParams.p2pWriteCapsStatus;
+}
+
+static void
+_gpuDumpGpuInitMetadataCper(OBJGPU *pGpu)
+{
+    char deviceName[NV2080_GPU_MAX_NAME_STRING_LENGTH];
+    const NvU32 cperBufferSize = 1024;
+    NV_STATUS status;
+
+    NV_CPER_GUID fruId;
+    NvBool bFruIdValid = NV_FALSE;
+    NvU32 recordSize = 0;
+    static const NV_CPER_GUID notifyType = NV_CPER_NOTIFY_NVIDIA_GPU_SW_CHECK_GUID;
+    static const NV_CPER_GUID creatorId = NV_CPER_CREATOR_NVIDIA_GPU_PF_DRIVER_GUID;
+
+    if (pGpu == NULL)
+        return;
+
+    NvU8 *pCperBytes = portMemAllocNonPaged(cperBufferSize);
+    if (pCperBytes == NULL)
+        return;
+
+    portMemSet(pCperBytes, 0, cperBufferSize);
+
+    NV_CPER_NV_GPU_INIT_METADATA metadata = {0};
+
+    //
+    // gpuGetNameString_HAL() expects a 64-byte buffer, but the NVIDIA-CPER spec
+    // only allocates 48 bytes for the device name.
+    //
+    (void)gpuGetNameString_HAL(pGpu, deviceName);
+    portStringCopy((char *)metadata.deviceName, sizeof(metadata.deviceName),
+                   deviceName, sizeof(deviceName));
+
+    KernelGsp *pKernelGsp = GPU_GET_KERNEL_GSP(pGpu);
+    const GspStaticConfigInfo *pGSCI = GPU_GET_GSP_STATIC_INFO(pGpu);
+
+    if ((pGSCI != NULL) && (pGSCI->vbiosRevision != 0))
+    {
+        NvU32 vbiosVersion = pGSCI->vbiosRevision;
+        NvU32 vbiosOemVersion = pGSCI->vbiosOemRevision;
+
+        nvDbgSnprintf((char *)metadata.firmwareVersion,
+                      sizeof(metadata.firmwareVersion),
+                      "%02X.%02X.%02X.%02X.%02X",
+                      (vbiosVersion >> 24) & 0xFF,
+                      (vbiosVersion >> 16) & 0xFF,
+                      (vbiosVersion >>  8) & 0xFF,
+                      (vbiosVersion >>  0) & 0xFF,
+                      (vbiosOemVersion) & 0xFF);
+    }
+
+    if ((pKernelGsp != NULL) && (pKernelGsp->gspRmFwVersionStr[0] != '\0'))
+    {
+        portStringCopy((char *)metadata.pfDriverMicrocodeVersion,
+                       sizeof(metadata.pfDriverMicrocodeVersion),
+                       pKernelGsp->gspRmFwVersionStr,
+                       sizeof(metadata.pfDriverMicrocodeVersion));
+    }
+
+    portStringCopy((char *)metadata.pfDriverVersion,
+                   sizeof(metadata.pfDriverVersion),
+                   NV_VERSION_STRING,
+                   sizeof(metadata.pfDriverVersion));
+
+    (void)gpuGetPdi_HAL(pGpu, &metadata.pdi);
+    metadata.architectureId = pGpu->chipId1;
+    metadata.pciDeviceId = (NvU16)DRF_VAL(_PCI, _DEVID, _DEVICE, pGpu->idInfo.PCIDeviceID);
+    metadata.pciVendorId = (NvU16)DRF_VAL(_PCI, _DEVID, _VENDOR, pGpu->idInfo.PCIDeviceID);
+    metadata.pciSubsystemId = (NvU16)DRF_VAL(_PCI, _SUBID, _DEVICE, pGpu->idInfo.PCISubDeviceID);
+    metadata.pciSubsystemVendorId = (NvU16)DRF_VAL(_PCI, _SUBID, _VENDOR, pGpu->idInfo.PCISubDeviceID);
+    metadata.pciRev = (NvU8)pGpu->idInfo.PCIRevisionID;
+
+    // TODO: get BAR info, class info
+
+    if (pGpu->gpuUuid.isInitialized)
+        bFruIdValid = cperGuidFromUuidBytes(pGpu->gpuUuid.uuid, &fruId);
+
+    NV_CPER_INIT_PARAMS initParams = {0};
+    initParams.pNotifyType = &notifyType;
+    initParams.pCreatorId = &creatorId;
+    initParams.pPlatformId = NULL;
+    initParams.pPartitionId = NULL;
+    initParams.bTimestampPrecise = NV_TRUE;
+    initParams.sectionCount = 1;
+
+    status = cperInit(pCperBytes, cperBufferSize, &initParams);
+    if (status != NV_OK)
+        goto _gpuDumpGpuInitMetadataCper_exit;
+
+    NV_CPER_NV_EVENT_PARAMS eventParams = {0};
+    eventParams.severity = NV_CPER_SEVERITY_INFORMATIONAL;
+    eventParams.sectionFlags = NV_CPER_SECTION_FLAG_PRIMARY;
+    eventParams.pFruId = bFruIdValid ? &fruId : NULL;
+    eventParams.pFruText = NULL;
+    eventParams.eventType = 0x8000;
+    eventParams.eventSubType = 0x0001;
+    eventParams.pModuleSignature = "GPU";
+    eventParams.eventLinkId = 0;
+    eventParams.originator = NV_CPER_NV_GPU_ORIGINATOR_PF_DRIVER;
+    eventParams.pdi = metadata.pdi;
+
+    NV_CPER_NV_EVENT_SECTION_STATE eventState = {0};
+    status = cperAddNvidiaEventSection(pCperBytes, cperBufferSize,
+                                       &eventParams, &eventState);
+    if (status != NV_OK)
+        goto _gpuDumpGpuInitMetadataCper_exit;
+
+    status = cperNvidiaEventAddGpuInitMetadataContext(&eventState, &metadata);
+    if (status != NV_OK)
+        goto _gpuDumpGpuInitMetadataCper_exit;
+
+    if (cperGetRecordSize(pCperBytes, cperBufferSize, &recordSize) != NV_OK)
+        goto _gpuDumpGpuInitMetadataCper_exit;
+
+    if (pGpu->bCperDumpEnabled)
+        cperDumpRecord(pCperBytes, recordSize, CPER_LOG_LEVEL_FW_INFO);
+
+    status = opEventLogAppend(pCperBytes, recordSize);
+    if (status != NV_OK)
+    {
+        goto _gpuDumpGpuInitMetadataCper_exit;
+    }
+    // Don't free pCperBytes if we're putting it in cperBufferList
+    return;
+
+_gpuDumpGpuInitMetadataCper_exit:
+    portMemFree(pCperBytes);
 }
 
 // TODO: Merge structurally equivalent code with other gpuState* functions.
@@ -2737,6 +2904,9 @@ gpuStateLoad_IMPL
     // Set a property indicating that the state load has been done
     pGpu->bStateLoaded = NV_TRUE;
 
+    if (IS_GSP_CLIENT(pGpu))
+        _gpuDumpGpuInitMetadataCper(pGpu);
+
     RMTRACE_ENGINE_PROFILE_EVENT("gpuStateLoadEnd", pGpu->gpuId, pGpu->registerAccess.regReadCount, pGpu->registerAccess.regWriteCount);
 
     //
@@ -2767,6 +2937,9 @@ gpuStateLoad_IMPL
     //
     gpuResumeRusdPollingOnLoad(pGpu);
     gpuHandleRusdPollingRegistry(pGpu);
+
+    // Initialize GPU PCIe P2P capability
+    _gpuInitPcieP2PCapability(pGpu);
 
 gpuStateLoad_exit:
     if (rmStatus != NV_OK)
@@ -3597,9 +3770,9 @@ gpuStatePostLoad
                           gpuStatePostLoad_exit);
     }
 
-    if (gpuIsSystemRebootRequired_HAL(pGpu))
+    if (gpuIsBusResetRequired_HAL(pGpu))
     {
-        gpuSetRecoveryRebootRequired(pGpu, NV_TRUE, NV_FALSE);
+        gpuSetRecoveryBusReset(pGpu, NV_TRUE, NV_FALSE);
     }
 
 // terminate the load failure test
@@ -4108,6 +4281,13 @@ gpuStateDestroy_IMPL
     return rmStatus;
 }
 
+void gpuDestroyInternalHandles_IMPL
+(
+    OBJGPU *pGpu
+)
+{
+    _gpuFreeInternalObjects(pGpu);
+}
 //
 // Logic: If arch = requested AND impl = requested --> NV_TRUE
 //
@@ -4584,6 +4764,13 @@ gpuXlateHalImplToArchImpl
             break;
         }
 
+        case HAL_IMPL_T239D:
+        {
+            *gpuArch = GPU_ARCHITECTURE_T23X;
+            *gpuImpl = GPU_IMPLEMENTATION_T239D;
+            break;
+        }
+
         case HAL_IMPL_GA100:
         {
             *gpuArch = GPU_ARCHITECTURE_AMPERE;
@@ -4757,6 +4944,20 @@ gpuXlateHalImplToArchImpl
         {
             *gpuArch = GPU_ARCHITECTURE_BLACKWELL_GB2XX;
             *gpuImpl = GPU_IMPLEMENTATION_GB20C;
+            break;
+        }
+
+        case HAL_IMPL_GR100:
+        {
+            *gpuArch = GPU_ARCHITECTURE_RUBIN_GR1XX;
+            *gpuImpl = GPU_IMPLEMENTATION_GR100;
+            break;
+        }
+
+        case HAL_IMPL_GR102:
+        {
+            *gpuArch = GPU_ARCHITECTURE_RUBIN_GR1XX;
+            *gpuImpl = GPU_IMPLEMENTATION_GR102;
             break;
         }
 
@@ -7117,28 +7318,33 @@ gpuIsDeviceMarkedForDrainAndReset_IMPL
 }
 
 const char*
-_gpuRecoveryActionName
+gpuRecoveryActionName_IMPL
 (
+    OBJGPU *pGpu,
     NV2080_CTRL_GPU_RECOVERY_ACTION action
 )
 {
     switch(action)
     {
         case NV2080_CTRL_GPU_RECOVERY_ACTION_NONE:
-            return "None";
-        case NV2080_CTRL_GPU_RECOVERY_ACTION_GPU_RESET:
-            return "GPU Reset Required";
-        case NV2080_CTRL_GPU_RECOVERY_ACTION_NODE_REBOOT:
-            return "Node Reboot Required";
+            return MAKE_NV_PRINTF_STR("None");
+        case NV2080_CTRL_GPU_RECOVERY_ACTION_GPU_PF_FLR:
+            return MAKE_NV_PRINTF_STR("PF FLR");
+        case NV2080_CTRL_GPU_RECOVERY_ACTION_OS_REBOOT:
+            return MAKE_NV_PRINTF_STR("OS Reboot");
         case NV2080_CTRL_GPU_RECOVERY_ACTION_DRAIN_P2P:
-            return "Drain P2P";
+            return MAKE_NV_PRINTF_STR("Drain P2P");
         case NV2080_CTRL_GPU_RECOVERY_ACTION_DRAIN_AND_RESET:
-            return "Drain and Reset";
+            return MAKE_NV_PRINTF_STR("Drain and Reset");
         case NV2080_CTRL_GPU_RECOVERY_ACTION_RECOVER_IMEX_DOMAIN:
-            return "Recover IMEX Domain";
+            return MAKE_NV_PRINTF_STR("Recover IMEX Domain");
+        case NV2080_CTRL_GPU_RECOVERY_ACTION_BUS_RESET:
+            return MAKE_NV_PRINTF_STR("Bus Reset");
+        case NV2080_CTRL_GPU_RECOVERY_ACTION_SYSTEM_REBOOT:
+            return MAKE_NV_PRINTF_STR("System Reboot");
         default:
             NV_ASSERT_FAILED("Unknown recovery action!");
-            return "Unknown";
+            return MAKE_NV_PRINTF_STR("Unknown");
     }
 }
 
@@ -7160,7 +7366,7 @@ gpuGetRecoveryAction_IMPL
     NV_PRINTF(LEVEL_INFO,
               "GetRecoveryAction: 0x%x (%s)\n",
               pGpu->currentRecoveryAction,
-              _gpuRecoveryActionName(pGpu->currentRecoveryAction));
+              gpuRecoveryActionName(pGpu, pGpu->currentRecoveryAction));
 
     pParams->action = pGpu->currentRecoveryAction;
 }
@@ -7183,6 +7389,7 @@ _gpuRefreshRecoveryActionInLock
 {
     OBJSYS                             *pSys = SYS_GET_INSTANCE();
     OBJGPU                             *pGpu = gpumgrGetGpu(gpuInstance);
+    RM_API                             *pRmApi = GPU_GET_PHYSICAL_RMAPI(pGpu);
     GPU_REFRESH_RECOVERY_ACTION_PARAMS *pActionParams = (GPU_REFRESH_RECOVERY_ACTION_PARAMS *)pParams;
     NV_STATUS                           rmStatus;
     NvBool                              bResetRequired;
@@ -7198,10 +7405,32 @@ _gpuRefreshRecoveryActionInLock
     }
 
     // Decide the new recovery action
-    if (pSys->getProperty(pSys, PDB_PROP_SYS_RECOVERY_REBOOT_REQUIRED)
-        || pGpu->getProperty(pGpu, PDB_PROP_GPU_RECOVERY_REBOOT_REQUIRED))
+    if (pSys->getProperty(pSys, PDB_PROP_SYS_RECOVERY_SYSTEM_REBOOT_REQUIRED))
     {
-        newAction = NV2080_CTRL_GPU_RECOVERY_ACTION_NODE_REBOOT;
+        newAction = NV2080_CTRL_GPU_RECOVERY_ACTION_SYSTEM_REBOOT;
+    }
+    else if (pSys->getProperty(pSys, PDB_PROP_SYS_RECOVERY_OS_REBOOT_REQUIRED))
+    {
+        newAction = NV2080_CTRL_GPU_RECOVERY_ACTION_OS_REBOOT;
+    }
+    else if (pGpu->getProperty(pGpu, PDB_PROP_GPU_BUS_RESET_REQUIRED))
+    {
+        newAction = NV2080_CTRL_GPU_RECOVERY_ACTION_BUS_RESET;
+        if (gpuIsSelfHosted(pGpu))
+        {
+            NV2080_CTRL_CMD_GPU_IS_RESET_COUPLED_PARAMS resetCoupledParams = {0};
+
+            NV_ASSERT_OK (pRmApi->Control(pRmApi,
+                                          pGpu->hInternalClient,
+                                          pGpu->hInternalSubdevice,
+                                          NV2080_CTRL_CMD_GPU_IS_RESET_COUPLED,
+                                          &resetCoupledParams, sizeof(resetCoupledParams)));
+
+            if (resetCoupledParams.isResetCoupled)
+            {
+                newAction = NV2080_CTRL_GPU_RECOVERY_ACTION_SYSTEM_REBOOT;
+            }
+        }
     }
     else
     {
@@ -7209,7 +7438,7 @@ _gpuRefreshRecoveryActionInLock
         if (!pGpu->getProperty(pGpu, PDB_PROP_GPU_IS_CONNECTED) ||
             ((rmStatus == NV_OK) && bResetRequired))
         {
-            newAction = NV2080_CTRL_GPU_RECOVERY_ACTION_GPU_RESET;
+            newAction = NV2080_CTRL_GPU_RECOVERY_ACTION_GPU_PF_FLR;
         }
         else
         {
@@ -7256,8 +7485,7 @@ _gpuRefreshRecoveryActionInLock
             if (!bSquashXid)
             {
                 nvErrorLog_va(pGpu, GPU_RECOVERY_ACTION_CHANGED, "GPU recovery action changed from 0x%x (%s) to 0x%x (%s)",
-                    oldAction, _gpuRecoveryActionName(oldAction), newAction, _gpuRecoveryActionName(newAction));
-
+                    oldAction, gpuRecoveryActionName(pGpu, oldAction), newAction, gpuRecoveryActionName(pGpu, newAction));
             }
         }
     }
@@ -7346,6 +7574,31 @@ gpuUnmarkDeviceForDrainP2P_KERNEL
 {
     pGpu->setProperty(pGpu, PDB_PROP_GPU_RECOVERY_DRAIN_P2P_REQUIRED, NV_FALSE);
     gpuRefreshRecoveryAction_KERNEL(pGpu, NV_FALSE);
+}
+
+/*!
+ * @brief This function sets the GPU Bus reset status
+ *
+ * @param[In]   pGpu            The GPU object
+ * @param[In]   bResetRequired  Specifies whether the GPU needs Bus reset
+ *
+ * @return      None.
+ */
+void
+gpuSetRecoveryBusReset_IMPL
+(
+    OBJGPU *pGpu,
+    NvBool  bResetRequired,
+    NvBool  bBlockNewWorkload
+)
+{
+    if (!!pGpu->getProperty(pGpu, PDB_PROP_GPU_BUS_RESET_REQUIRED) != !!bResetRequired)
+    {
+        pGpu->setProperty(pGpu, PDB_PROP_GPU_BUS_RESET_REQUIRED, bResetRequired);
+        gpuRefreshRecoveryAction_KERNEL(pGpu, NV_FALSE);
+    }
+
+    pGpu->bBlockNewWorkload = bBlockNewWorkload;
 }
 
 /*!
@@ -7460,24 +7713,6 @@ gpuValidateMIGSupport_KERNEL
     NV_ASSERT_OR_RETURN(pGSCI != NULL, NV_FALSE);
 
     return pGSCI->bIsMigSupported;
-}
-
-void
-gpuSetRecoveryRebootRequired_IMPL
-(
-    OBJGPU  *pGpu,
-    NvBool   bRebootRequired,
-    NvBool   bBlockNewWorkload
-)
-{
-    if (!!pGpu->getProperty(pGpu, PDB_PROP_GPU_RECOVERY_REBOOT_REQUIRED) != !!bRebootRequired)
-    {
-        pGpu->setProperty(pGpu, PDB_PROP_GPU_RECOVERY_REBOOT_REQUIRED, bRebootRequired);
-
-        gpuRefreshRecoveryAction_KERNEL(pGpu, NV_FALSE);
-    }
-
-    pGpu->bBlockNewWorkload = bBlockNewWorkload;
 }
 
 /*!
@@ -7661,7 +7896,8 @@ gpuBootGspRmProxy_IMPL
  */
 NvBool gpuIsInstInSysBootByAcrEnabled_IMPL(OBJGPU *pGpu)
 {
-    return NV_FALSE;
+    return ((pGpu->getProperty(pGpu, PDB_PROP_GPU_INST_IN_SYSMEM_BY_ACR_ENABLED)) &&
+            (pGpu->getProperty(pGpu, PDB_PROP_GPU_IS_ALL_INST_IN_SYSMEM)));
 
 }
 
@@ -7675,5 +7911,6 @@ NvBool gpuIsInstInSysBootByAcrEnabled_IMPL(OBJGPU *pGpu)
 NvBool gpuIsInstInSysBootByRmEnabled_IMPL(OBJGPU *pGpu)
 {
     return 1 &&
+          !(pGpu->getProperty(pGpu, PDB_PROP_GPU_INST_IN_SYSMEM_BY_ACR_ENABLED)) &&
           pGpu->getProperty(pGpu, PDB_PROP_GPU_IS_ALL_INST_IN_SYSMEM);
 }

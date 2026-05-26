@@ -29,7 +29,7 @@ void __nvoc_init__OBJGRIDDISPLAYLESS(OBJGRIDDISPLAYLESS*);
 void __nvoc_init_funcTable_OBJGRIDDISPLAYLESS(OBJGRIDDISPLAYLESS*);
 NV_STATUS __nvoc_ctor_OBJGRIDDISPLAYLESS(OBJGRIDDISPLAYLESS*);
 void __nvoc_init_dataField_OBJGRIDDISPLAYLESS(OBJGRIDDISPLAYLESS*);
-void __nvoc_dtor_OBJGRIDDISPLAYLESS(OBJGRIDDISPLAYLESS*);
+void __nvoc_dtor_OBJGRIDDISPLAYLESS(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJGRIDDISPLAYLESS;
@@ -62,7 +62,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJGRIDDISPLAYLESS =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJGRIDDISPLAYLESS",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_OBJGRIDDISPLAYLESS,
+    .objCreatefn =        &__nvoc_objCreateDynamic_OBJGRIDDISPLAYLESS,
     .pCastInfo =          &__nvoc_castinfo__OBJGRIDDISPLAYLESS,
     .pExportInfo =        &__nvoc_export_info__OBJGRIDDISPLAYLESS
 };
@@ -71,7 +71,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJGRIDDISPLAYLESS =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__OBJGRIDDISPLAYLESS __nvoc_metadata__OBJGRIDDISPLAYLESS = {
     .rtti.pClassDef = &__nvoc_class_def_OBJGRIDDISPLAYLESS,    // (griddisplayless) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJGRIDDISPLAYLESS,
+    .rtti.dtor      = &__nvoc_dtor_OBJGRIDDISPLAYLESS,
     .rtti.offset    = 0,
     .metadata__OBJENGSTATE.rtti.pClassDef = &__nvoc_class_def_OBJENGSTATE,    // (engstate) super
     .metadata__OBJENGSTATE.rtti.dtor      = &__nvoc_destructFromBase,
@@ -205,13 +205,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJGRIDDISPLAYLESS =
 
 
 // Destruct OBJGRIDDISPLAYLESS object.
-void __nvoc_dtor_OBJENGSTATE(OBJENGSTATE*);
-void __nvoc_dtor_OBJGRIDDISPLAYLESS(OBJGRIDDISPLAYLESS* pThis) {
+void __nvoc_dtor_OBJENGSTATE(Dynamic*);
+void __nvoc_dtor_OBJGRIDDISPLAYLESS(Dynamic* pThis) {
+
+    OBJGRIDDISPLAYLESS *__nvoc_this = (OBJGRIDDISPLAYLESS *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_OBJENGSTATE(&pThis->__nvoc_base_OBJENGSTATE);
+    __nvoc_dtor_OBJENGSTATE((Dynamic *) &__nvoc_this->__nvoc_base_OBJENGSTATE);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJGRIDDISPLAYLESS(OBJGRIDDISPLAYLESS *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -337,11 +339,8 @@ __nvoc_objCreate_OBJGRIDDISPLAYLESS_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_OBJGRIDDISPLAYLESS(OBJGRIDDISPLAYLESS **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_OBJGRIDDISPLAYLESS(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_OBJGRIDDISPLAYLESS(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_OBJGRIDDISPLAYLESS((OBJGRIDDISPLAYLESS **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

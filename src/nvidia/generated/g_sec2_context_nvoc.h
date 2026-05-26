@@ -154,7 +154,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_Sec2Context;
     ((Sec2Context*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(Sec2Context)))
 #endif //__nvoc_sec2_context_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_Sec2Context(Sec2Context**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_Sec2Context(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_Sec2Context(Sec2Context**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_Sec2Context(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

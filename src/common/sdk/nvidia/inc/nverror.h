@@ -168,8 +168,10 @@
 #define C2C_FATAL_LINK_FAILURE                          (173)
 #define ROBUST_CHANNEL_RESETCHANNEL_KILL_PROCESS_SILENT (174)
 #define MEMORY_SUBSYSTEM_ERROR                          (175)
-#define PCIE_CORRECTABLE_ERROR_FAULT                    (176) 
-#define ROBUST_CHANNEL_LAST_ERROR                       (176)
+#define PCIE_CORRECTABLE_ERROR_FAULT                    (176)
+#define BANK_REMAPPING_EVENT                            (177)
+#define REMOTE_TRANSLATION_POISON_ERROR                 (178)
+#define ROBUST_CHANNEL_LAST_ERROR                       (178)
 
 // Indexed CE reference
 #define ROBUST_CHANNEL_CE_ERROR(x)                                        \

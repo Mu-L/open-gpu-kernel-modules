@@ -113,6 +113,74 @@ bool MessageManager::send(MessageManager::Message * message, NakData & nakData)
     return !completion.failed;
 }
 
+bool MessageManager::send(MessageManager::Message * message, Message::MessageEventSink * sink)
+{
+    GenericMessageCompletion completion;
+    Address::StringBuffer sb;
+    DP_USED(sb);
+
+    NvU64 startTime, elapsedTime;
+    message->bBusyWaiting = true;
+    message->setMessagePriority(NV_DP_SBMSG_PRIORITY_LEVEL_1);
+    post(message, &completion);
+    startTime = timer->getTimeUs();
+
+    do
+    {
+        hal->updateDPCDOffline();
+        if (hal->isDpcdOffline())
+        {
+            DP_PRINTF(DP_WARNING, "DP-MM> Device went offline while waiting for reply and so ignoring message %p (ID = %02X, target = %s)",
+                      message, message->requestIdentifier, ((message->state).target).toString(sb));
+            completion.nakData.reason = NakDpcdFail;
+            completion.failed = true;
+            break;
+        }
+
+        hal->notifyIRQ();
+        if (hal->interruptDownReplyReady())
+            IRQDownReply();
+
+        if (completion.completed)
+        {
+            if(sink)
+            {
+                if(completion.failed == true)
+                {
+                    sink->messageFailed(message, &completion.nakData);
+                }
+                else
+                {
+                    sink->messageCompleted(message);
+                }
+            }
+            break;
+        }
+
+        elapsedTime = timer->getTimeUs() - startTime;
+
+         if (elapsedTime > (DPCD_MESSAGE_REPLY_TIMEOUT * 1000))
+        {
+            message->expired(NULL);
+            //
+            // message->expired() will call GenericMessageCompletion->messageFailed() where failed is set to true.
+            // Calling explicitly caller's (sink) messageFailed() callback when there's NACK or TIMEOUT errors.
+            //
+            if((completion.failed == true) && sink)
+            {
+                sink->messageFailed(message, &completion.nakData);
+            }
+            break;
+        }
+
+        // Sleep while processing timer callbacks
+        timer->sleep(1);
+    } while(true);
+
+    return !completion.failed;
+   
+}
+
 bool DisplayPort::extractGUID(BitStreamReader * reader, GUID * guid)
 {
     for (unsigned i=0; i < 128; i += 8)

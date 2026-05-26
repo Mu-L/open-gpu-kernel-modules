@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2006-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2006-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -188,6 +188,7 @@ typedef struct tagNVT_TIMING
     NvU16 interlaced;       //1-interlaced, 0-progressive
     NvU32 pclk;             //pixel clock in 10KHz
     NvU32 pclk1khz;         //pixel clock in 1kHz for Type7, CVT RB2, CVT RB3
+    NvU8  bIsPclkHalved;    //true if pixel clock is halved for SW YUV420 case
 
     //other timing related extras
     NVT_TIMINGEXT etc;
@@ -2464,7 +2465,8 @@ typedef struct tagNVT_DV_STATIC_METADATA
 
 // vendor specific
 #define NVT_VESA_VENDOR_SPECIFIC_IEEE_ID                 0x3A0292
-#define NVT_VESA_VENDOR_SPECIFIC_LENGTH                  7
+#define NVT_VESA_VENDOR_SPECIFIC_FIVE_BYTES_LENGTH       5
+#define NVT_VESA_VENDOR_SPECIFIC_SEVEN_BYTES_LENGTH      7
 
 #define NVT_VESA_ORG_VSDB_DATA_TYPE_MASK                 0x07
 #define NVT_VESA_ORG_VSDB_COLOR_SPACE_AND_EOTF_MASK      0x80
@@ -5715,6 +5717,12 @@ typedef enum
     NVT_STATUS_MIN_SLICE_COUNT_ERROR,
 } NVT_STATUS;
 
+typedef enum
+{
+    NVT_DESCRIPTOR_TYPE_EDID = 0,
+    NVT_DESCRIPTOR_TYPE_DISPLAYID2X,
+} NVT_DESCRIPTOR_TYPE;
+
 //*************************************
 // The EDID validation Mask
 //*************************************
@@ -5724,7 +5732,7 @@ typedef enum
 
 typedef enum
 {
-    // errors returned as a bitmask by NvTiming_EDIDValidationMask()
+    // errors returned as a bitmask by NvTiming_EDIDValidationMask() with descriptor type EDID
     NVT_EDID_VALIDATION_ERR_EXT = 0,
     NVT_EDID_VALIDATION_ERR_VERSION,
     NVT_EDID_VALIDATION_ERR_SIZE,
@@ -5761,9 +5769,13 @@ typedef enum
 //*************************************
 // The DisplayID2 validation Mask
 //*************************************
+#define NVT_DID2_VALIDATION_MASK              0xFFFFFFFF
+#define NVT_IS_DID2_VALIDATION_FLAGS(x, n)    ((((x)&NVT_DID2_VALIDATION_MASK)) & NVBIT32(n))
+#define NVT_CLEAR_DID2_VALIDATION_FLAGS(x, n) ((x)&=(~NVBIT32(n)))
+
 typedef enum
 {
-    // errors returned as a bitmask by NvTiming_DisplayID2ValidationMask()
+    // errors returned as a bitmask by NvTiming_DescriptorValidationMask() with descriptor type DisplayID2
     NVT_DID2_VALIDATION_ERR_VERSION = 0,
     NVT_DID2_VALIDATION_ERR_SIZE,
     NVT_DID2_VALIDATION_ERR_CHECKSUM,
@@ -5894,8 +5906,8 @@ NVT_STATUS NvTiming_EDIDValidation(NvU8 *pEdid, NvU32 length, NvBool bIsStrongVa
 
 // DisplayID20 standalone entry parse
 NVT_STATUS NV_STDCALL NvTiming_parseDisplayId20Info(const NvU8 *pDisplayId, NvU32 length, NVT_DISPLAYID_2_0_INFO *pDisplayIdInfo);
-NvU32 NvTiming_DisplayID2ValidationMask(NVT_DISPLAYID_2_0_INFO *pDisplayIdInfo, NvBool bIsStrongValidation);
-NVT_STATUS NvTiming_DisplayID2ValidationDataBlocks(NVT_DISPLAYID_2_0_INFO *pDisplayIdInfo, NvBool bIsStrongValidation);
+NvU32 NvTiming_DisplayID2ValidationMask(const NvU8 *pDisplayId2, NVT_DISPLAYID_2_0_INFO *pDisplayId20Info, NvBool bIsStrongValidation);
+NVT_STATUS NvTiming_DisplayID2ValidationDataBlocks(const NvU8 *pDisplayId2, NVT_DISPLAYID_2_0_INFO *pDisplayId20Info, NvBool bIsStrongValidation);
 
 NVT_STATUS NvTiming_Get18ByteLongDescriptorIndex(NVT_EDID_INFO *pEdidInfo, NvU8 tag, NvU32 *dtdIndex);
 NVT_STATUS NvTiming_GetProductName(const NVT_EDID_INFO *pEdidInfo, NvU8 *pProductName, const NvU32 productNameLength);

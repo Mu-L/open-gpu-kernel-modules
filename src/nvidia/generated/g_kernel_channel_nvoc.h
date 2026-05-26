@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -81,6 +81,8 @@ struct UserInfo;
 typedef struct UserInfo UserInfo;
 #endif /* __nvoc_class_id_UserInfo */
 
+
+typedef struct NV_CHANNEL_ALLOC_PARAMS NV_CHANNEL_ALLOC_PARAMS;
 
 /*!
  * @brief Type of hErrorContext or hEccErrorContext
@@ -312,6 +314,7 @@ struct KernelChannel {
     RM_ENGINE_TYPE engineType;
     NvU32 goldenCtxUpdateFlags;
     NvU32 disableRefCount[8];
+    NvBool bCePrefetchEnable;
     CC_KMB clientKmb;
     NvHandle hEncryptStatsBuf;
     MEMORY_DESCRIPTOR *pEncStatsBufMemDesc;
@@ -380,7 +383,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelChannel;
     ((KernelChannel*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(KernelChannel)))
 #endif //__nvoc_kernel_channel_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_KernelChannel(KernelChannel**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelChannel(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelChannel(KernelChannel**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_KernelChannel(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \
@@ -1621,12 +1624,11 @@ NV_STATUS kchannelFindChildByHandle(struct KernelChannel *pKernelChannel, NvHand
 #define KERNEL_CHANNEL_SW_STATE_ENABLE_AFTER_KEY_ROTATION  NVBIT(3) // RM should enable after key rotation
 
 // Bitmap for KernelChannel->hwState
-#define KERNEL_CHANNEL_HW_STATE_BOUND                      NVBIT(0)
-#define KERNEL_CHANNEL_HW_STATE_ENABLE                     NVBIT(1)
-#define KERNEL_CHANNEL_HW_STATE_SCHED                      NVBIT(2) // Set if channel is currently on a runlist which will soon be or is submitted to an engine
-#define KERNEL_CHANNEL_HW_STATE_DEFER_RC                   NVBIT(3) // Set if RC recovery is to be deferred till channel teardown
-#define KERNEL_CHANNEL_HW_STATE_PREV_ACTIVE                NVBIT(4) // Set if channel was previously active during suspend
-#define KERNEL_CHANNEL_HW_STATE_SUSPENDED                  NVBIT(5) // Set if channel was disabled before suspend, and must not be reenabled implicitly during resume
+#define KERNEL_CHANNEL_HW_STATE_ENABLE                     NVBIT(0)
+#define KERNEL_CHANNEL_HW_STATE_SCHED                      NVBIT(1) // Set if channel is currently on a runlist which will soon be or is submitted to an engine
+#define KERNEL_CHANNEL_HW_STATE_DEFER_RC                   NVBIT(2) // Set if RC recovery is to be deferred till channel teardown
+#define KERNEL_CHANNEL_HW_STATE_PREV_ACTIVE                NVBIT(3) // Set if channel was previously active during suspend
+#define KERNEL_CHANNEL_HW_STATE_SUSPENDED                  NVBIT(4) // Set if channel was disabled before suspend, and must not be reenabled implicitly during resume
 
 NvBool kchannelIsCpuMapped(struct OBJGPU *pGpu, struct KernelChannel *pKernelChannel);
 void kchannelSetCpuMapped(struct OBJGPU *pGpu, struct KernelChannel *pKernelChannel, NvBool bCpuMapped);

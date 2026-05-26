@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -309,7 +309,7 @@ NV_STATUS  NV_FORCERESULTCHECK osLockMem(MEMORY_DESCRIPTOR *);
 NV_STATUS  osUnlockMem(MEMORY_DESCRIPTOR *);
 NV_STATUS  NV_FORCERESULTCHECK osMapGPU(OBJGPU *, RS_PRIV_LEVEL, NvU64, NvU64, NvU32, NvP64 *, NvP64 *);
 void       osUnmapGPU(OS_GPU_INFO *, RS_PRIV_LEVEL, NvP64, NvU64, NvP64);
-NV_STATUS  NV_FORCERESULTCHECK osNotifyEvent(OBJGPU *, PEVENTNOTIFICATION, NvU32, NvU32, NV_STATUS);
+NV_STATUS  NV_FORCERESULTCHECK osNotifyEvent(OBJGPU *, PEVENTNOTIFICATION, NvU32, NvU32, NV_STATUS, NvBool);
 NV_STATUS  osReadRegistryString(OBJGPU *, const char *, NvU8 *, NvU32 *);
 NV_STATUS  osWriteRegistryBinary(OBJGPU *, const char *, NvU8 *, NvU32);
 NV_STATUS  osWriteRegistryVolatile(OBJGPU *, const char *, NvU8 *, NvU32);
@@ -334,6 +334,22 @@ NvU32      osCountTailPages(NvU64);
 NvU64      osGetPageSize(void);
 NvU64      osGetSupportedSysmemPageSizeMask(void);
 NvU8       osGetPageShift(void);
+
+typedef enum
+{
+    CGROUP_IMPL_NONE,
+    CGROUP_IMPL_FALLBACK,
+    CGROUP_IMPL_OS
+} NvCgroupImpl;
+NvCgroupImpl osCgroupImplementation(void);
+typedef NvP64 ClientGroupID;
+ClientGroupID osClientGroupID(NvU64 process, void *pidInfo); // from osGetCurrentProcess or equivalent
+void *osCgroupRegisterRegion(OBJGPU *pGpu, NvU64 size);
+void osCgroupUnregisterRegion(void *region);
+NV_STATUS osMemacctTryCharge(void *pRegion, NvLength size, void **ppPool);
+void osMemacctReleaseCharge(void *pool, NvLength size);
+void *osCgroupGetFromFd(NvS32 fd);
+void osCgroupPut(void *cgroup);
 
 NV_STATUS  NV_FORCERESULTCHECK osAcquireRmSema(void *);
 NV_STATUS  NV_FORCERESULTCHECK osCondAcquireRmSema(void *);
@@ -529,12 +545,11 @@ struct OBJOS {
     struct Object *__nvoc_pbase_Object;    // obj super
     struct OBJOS *__nvoc_pbase_OBJOS;    // os
 
-    // 7 PDB properties
+    // 6 PDB properties
     NvBool PDB_PROP_OS_WAIT_FOR_ACPI_SUBSYSTEM;
     NvBool PDB_PROP_OS_UNCACHED_MEMORY_MAPPINGS_NOT_SUPPORTED;
     NvBool PDB_PROP_OS_CACHED_MEMORY_MAPPINGS_FOR_ACPI_TABLE;
     NvBool PDB_PROP_OS_LIMIT_GPU_RESET;
-    NvBool PDB_PROP_OS_SUPPORTS_DISPLAY_REMAPPER;
     NvBool PDB_PROP_OS_DOES_NOT_ALLOW_DIRECT_PCIE_MAPPINGS;
     NvBool PDB_PROP_OS_NO_PAGED_SEGMENT_ACCESS;
 
@@ -576,15 +591,13 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJOS;
 #define PDB_PROP_OS_CACHED_MEMORY_MAPPINGS_FOR_ACPI_TABLE_BASE_NAME PDB_PROP_OS_CACHED_MEMORY_MAPPINGS_FOR_ACPI_TABLE
 #define PDB_PROP_OS_LIMIT_GPU_RESET_BASE_CAST
 #define PDB_PROP_OS_LIMIT_GPU_RESET_BASE_NAME PDB_PROP_OS_LIMIT_GPU_RESET
-#define PDB_PROP_OS_SUPPORTS_DISPLAY_REMAPPER_BASE_CAST
-#define PDB_PROP_OS_SUPPORTS_DISPLAY_REMAPPER_BASE_NAME PDB_PROP_OS_SUPPORTS_DISPLAY_REMAPPER
 #define PDB_PROP_OS_DOES_NOT_ALLOW_DIRECT_PCIE_MAPPINGS_BASE_CAST
 #define PDB_PROP_OS_DOES_NOT_ALLOW_DIRECT_PCIE_MAPPINGS_BASE_NAME PDB_PROP_OS_DOES_NOT_ALLOW_DIRECT_PCIE_MAPPINGS
 #define PDB_PROP_OS_NO_PAGED_SEGMENT_ACCESS_BASE_CAST
 #define PDB_PROP_OS_NO_PAGED_SEGMENT_ACCESS_BASE_NAME PDB_PROP_OS_NO_PAGED_SEGMENT_ACCESS
 
 
-NV_STATUS __nvoc_objCreateDynamic_OBJOS(OBJOS**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJOS(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJOS(OBJOS**, Dynamic*, NvU32);
 #define __objCreate_OBJOS(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -645,7 +658,6 @@ NvBool osIsAdministrator(void);
 NvBool osCheckAccess(RsAccessRight accessRight);
 NV_STATUS osGetSystemTime(NvU32 *pSec,NvU32 *puSec);
 NvU64 osGetMonotonicTimeNs(void);
-NvU64 osGetMonotonicTickResolutionNs(void);
 NvU64 osGetTimestamp(void);
 NvU64 osGetTimestampFreq(void);
 
@@ -1164,6 +1176,8 @@ NV_STATUS osSanityTestIsr(OBJGPU *pGpu);
 
 void osAllocatedRmClient(void* pOSInfo);
 
+NvBool osIsNonPreemptableDebuggerSessionActive(OBJGPU *pGpu);
+
 NV_STATUS osConfigurePcieReqAtomics(OS_GPU_INFO *pOsGpuInfo, NvU32 *pMask);
 NV_STATUS osGetPcieCplAtomicsCaps(OS_GPU_INFO *pOsGpuInfo, NvU32 *pMask);
 
@@ -1229,6 +1243,10 @@ NV_STATUS osDoFunctionLevelReset(OBJGPU *pGpu);
 
 void      osDisableConsoleManagement(OBJGPU *pGpu);
 
+NV_STATUS osDoCxlReset(OBJGPU *pGpu);
+void osCxlSetCaching(OBJGPU *pGpu, NvBool bEnableCache);
+NvBool osGpuIsCxlDevice(OBJGPU *pGpu);
+
 void vgpuDevWriteReg032(
         OBJGPU  *pGpu,
         NvU32    thisAddress,
@@ -1277,54 +1295,6 @@ NV_STATUS osValidateRegistryKeyPrefix(const char *regParmStr);
 #define MODSDRV_ERROR_SEVERITY_CORRECTED       2
 #define MODSDRV_ERROR_SEVERITY_RECOVERABLE     3
 #define MODSDRV_ERROR_SEVERITY_FATAL           4
-
-#define MODSDRV_NVLINK_ERROR_SOURCE_UNKNOWN     0
-#define MODSDRV_NVLINK_ERROR_SOURCE_RLW         1
-#define MODSDRV_NVLINK_ERROR_SOURCE_TLW         2
-#define MODSDRV_NVLINK_ERROR_SOURCE_TREX        3
-#define MODSDRV_NVLINK_ERROR_SOURCE_NVLPW_CTRL  4
-#define MODSDRV_NVLINK_ERROR_SOURCE_NETIR       5
-#define MODSDRV_NVLINK_ERROR_SOURCE_MSEFW       6
-#define MODSDRV_NVLINK_ERROR_SOURCE_NVLINK_SW   7
-
-#define MODSDRV_NVLINK_ERROR_CODE_INVALID              0
-#define MODSDRV_NVLINK_ERROR_CODE_SAW_MVB              1
-#define MODSDRV_NVLINK_ERROR_CODE_SAW_MSEFW            2
-#define MODSDRV_NVLINK_ERROR_CODE_RLW_CTRL             3
-#define MODSDRV_NVLINK_ERROR_CODE_RLW_REMAP            4
-#define MODSDRV_NVLINK_ERROR_CODE_RLW_RSPCOL           5
-#define MODSDRV_NVLINK_ERROR_CODE_RLW_RXPIPE           6
-#define MODSDRV_NVLINK_ERROR_CODE_RLW_SRC_TRACK        7
-#define MODSDRV_NVLINK_ERROR_CODE_RLW_TAGSTATE         8
-#define MODSDRV_NVLINK_ERROR_CODE_TLW_CTRL             9
-#define MODSDRV_NVLINK_ERROR_CODE_TLW_RX_PIPE0         10
-#define MODSDRV_NVLINK_ERROR_CODE_TLW_RX_PIPE1         11
-#define MODSDRV_NVLINK_ERROR_CODE_TLW_TX_PIPE0         12
-#define MODSDRV_NVLINK_ERROR_CODE_TLW_TX_PIPE1         13
-#define MODSDRV_NVLINK_ERROR_CODE_TREX                 14
-#define MODSDRV_NVLINK_ERROR_CODE_NVLPW                15
-#define MODSDRV_NVLINK_ERROR_CODE_NETIR_PMPE           16
-#define MODSDRV_NVLINK_ERROR_CODE_NETIR_LINK_DOWN      17
-#define MODSDRV_NVLINK_ERROR_CODE_NETIR_THERMAL_EVENT  18
-#define MODSDRV_NVLINK_ERROR_CODE_NETIR_BER_EVENT      19
-#define MODSDRV_NVLINK_ERROR_CODE_NETIR_MFDE_EVENT     20
-#define MODSDRV_NVLINK_ERROR_CODE_MVB_CTRL             21
-#define MODSDRV_NVLINK_ERROR_CODE_MVB_RX               22
-#define MODSDRV_NVLINK_ERROR_CODE_MVB_TX               23
-#define MODSDRV_NVLINK_ERROR_CODE_NETIR_INT            24
-#define MODSDRV_NVLINK_ERROR_CODE_MSE_WATCHDOG         25
-#define MODSDRV_NVLINK_ERROR_CODE_MSE_FALCON_IRQSTAT   26
-#define MODSDRV_NVLINK_ERROR_CODE_SW_DEFINED           27
-
-#define MODS_REPORT_NVLINK_ERROR(pGpu_, sev_, src_, ecode_, xcon_, inj_, link_, lane_, intr_, estat_, dsize_, dptr_) \
-    do { (void)(pGpu_); (void)(sev_); (void)(src_); (void)(ecode_); (void)(xcon_); (void)(inj_); (void)(link_); \
-         (void)(lane_); (void)(intr_); (void)(estat_); (void)(dsize_); (void)(dptr_); } while(0)
-
-#define MODS_REPORT_GENERIC_ERROR(sev_, str_) \
-    do { (void)(sev_); (void)(str_); } while(0)
-
-typedef NvU32 ModsDrvNvlinkErrorCode;
-typedef NvU32 ModsDrvNvlinkErrorSource;
 
 
 #define osAllocPages(a)     osAllocPagesInternal(a)

@@ -236,7 +236,8 @@ enum {
     X(RM, CTRL_EXEC_PARTITIONS_EXPORT,                            226)
     X(RM, CTRL_CMD_INTERNAL_GPU_CHECK_CTS_ID_VALID,               227)
     X(RM, INIT_GSP_TRACE_CRASH_BUFFER,                            228)
-    X(RM, NUM_FUNCTIONS,                                          229)
+    X(RM, CTRL_GPU_SET_MIGRATION_BLOCK,                           229)
+    X(RM, NUM_FUNCTIONS,                                          230)
 #ifdef DEFINING_X_IN_RPC_GLOBAL_ENUMS_H
 };
 #   undef X

@@ -54,6 +54,8 @@ NV_STATUS   nv_alloc_contig_pages       (nv_state_t *, nv_alloc_t *);
 void        nv_free_contig_pages        (nv_alloc_t *);
 NV_STATUS   nv_alloc_system_pages       (nv_state_t *, nv_alloc_t *);
 void        nv_free_system_pages        (nv_alloc_t *);
+int         nv_init_page_pools          (void);
+void        nv_destroy_page_pools       (void);
 
 int         nv_uvm_init                 (void);
 void        nv_uvm_exit                 (void);
@@ -83,6 +85,9 @@ void          nvidia_modeset_probe             (const nv_linux_state_t *nvl);
 NvBool        nv_is_uuid_in_gpu_exclusion_list (const char *);
 
 NV_STATUS     nv_parse_per_device_option_string(nvidia_stack_t *sp);
+void          nv_enable_cdmm_mode(nvidia_stack_t *sp);
+NvBool        nv_is_galaxy_workstation         (void);
+
 nv_linux_state_t * find_uuid(const NvU8 *uuid);
 void          nv_report_error(struct pci_dev *dev, NvU32 error_number, const char *format, va_list ap);
 void          nv_shutdown_adapter(nvidia_stack_t *, nv_state_t *, nv_linux_state_t *);

@@ -158,7 +158,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_VirtualMemory;
     ((VirtualMemory*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(VirtualMemory)))
 #endif //__nvoc_virtual_mem_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_VirtualMemory(VirtualMemory**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_VirtualMemory(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_VirtualMemory(VirtualMemory**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_VirtualMemory(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

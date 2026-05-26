@@ -32,7 +32,7 @@ void __nvoc_init__VblankCallback(VblankCallback*);
 void __nvoc_init_funcTable_VblankCallback(VblankCallback*);
 NV_STATUS __nvoc_ctor_VblankCallback(VblankCallback*, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_VblankCallback(VblankCallback*);
-void __nvoc_dtor_VblankCallback(VblankCallback*);
+void __nvoc_dtor_VblankCallback(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__VblankCallback;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_VblankCallback =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "VblankCallback",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_VblankCallback,
+    .objCreatefn =        &__nvoc_objCreateDynamic_VblankCallback,
     .pCastInfo =          &__nvoc_castinfo__VblankCallback,
     .pExportInfo =        &__nvoc_export_info__VblankCallback
 };
@@ -125,6 +125,13 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_VblankCallback =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000000u)
+static NV_STATUS vblcbCtrlSetVBlankNotification__EXPORT(void *pVblankCallback, void *pParams) {
+    return vblcbCtrlSetVBlankNotification_IMPL(pVblankCallback, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000000u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VblankCallback[] = 
 {
@@ -132,7 +139,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VblankCa
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vblcbCtrlSetVBlankNotification_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vblcbCtrlSetVBlankNotification__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0u)
         /*flags=*/      0x0u,
         /*accessRight=*/0x0u,
@@ -149,7 +156,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VblankCa
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__VblankCallback __nvoc_metadata__VblankCallback = {
     .rtti.pClassDef = &__nvoc_class_def_VblankCallback,    // (vblcb) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_VblankCallback,
+    .rtti.dtor      = &__nvoc_dtor_VblankCallback,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -409,16 +416,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__VblankCallback =
 
 // Destruct VblankCallback object.
 void __nvoc_vblcbDestruct(VblankCallback*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_VblankCallback(VblankCallback* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_VblankCallback(Dynamic* pThis) {
+
+    VblankCallback *__nvoc_this = (VblankCallback *) pThis;
 
 // Call destructor.
-    __nvoc_vblcbDestruct(pThis);
+    __nvoc_vblcbDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_VblankCallback(VblankCallback *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -444,7 +453,7 @@ NV_STATUS __nvoc_ctor_VblankCallback(VblankCallback *pVblankCallback, CALL_CONTE
 
     // Unwind on error.
 __nvoc_ctor_VblankCallback_fail__init:
-    __nvoc_dtor_GpuResource(&pVblankCallback->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pVblankCallback->__nvoc_base_GpuResource);
 __nvoc_ctor_VblankCallback_fail_GpuResource:
 __nvoc_ctor_VblankCallback_exit:
     return status;
@@ -556,13 +565,10 @@ __nvoc_objCreate_VblankCallback_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_VblankCallback(VblankCallback **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_VblankCallback(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_VblankCallback(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_VblankCallback((VblankCallback **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

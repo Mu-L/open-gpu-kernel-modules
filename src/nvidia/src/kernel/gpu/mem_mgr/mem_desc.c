@@ -1142,8 +1142,10 @@ memdescAlloc
                     (gpuIsApmFeatureEnabled(pGpu) &&
                      !memdescGetFlag(pMemDesc, MEMDESC_FLAGS_SYSMEM_OWNED_BY_CLIENT)))
                 {
-                    memdescSetFlag(pMemDesc,
-                        MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY, NV_TRUE);
+                    {
+                        memdescSetFlag(pMemDesc,
+                            MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY, NV_TRUE);
+                    }
                 }
             }
             else
@@ -4817,3 +4819,4 @@ memdescIteratorInit
     return memoryArrayIteratorInit(pPteArray, numEntries, entrySize,
         range.start, pMemDesc->ActualSize - mrangeLimit(range));
 }
+

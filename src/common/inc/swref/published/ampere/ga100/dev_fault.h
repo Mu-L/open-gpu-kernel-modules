@@ -58,6 +58,7 @@
 #define NV_PFAULT_MMU_ENG_ID_PHYSICAL          31 /*       */
 
 #define NV_PFAULT_FAULT_TYPE_UNBOUND_INST_BLOCK   0x00000004 /*       */
+#define NV_PFAULT_FAULT_TYPE_POISONED             0x0000000e /*       */
 
 #define NV_PFAULT_CLIENT_GPC_T1_0        0x00000000 /*       */
 #define NV_PFAULT_CLIENT_GPC_T1_1        0x00000001 /*       */

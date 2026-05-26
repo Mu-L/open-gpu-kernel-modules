@@ -35,13 +35,13 @@
 #include "uvm_range_tree.h"
 #include "uvm_va_policy.h"
 #include "uvm_test_ioctl.h"
-#include "uvm_range_group.h"
 #include "uvm_forward_decl.h"
 #include "uvm_mmu.h"
 #include "uvm_hal_types.h"
 #include "uvm_mem.h"
 #include "uvm_tracker.h"
 #include "uvm_ioctl.h"
+#include "uvm_devmem.h"
 
 // VA Ranges are the UVM driver equivalent of Linux kernel vmas. They represent
 // user allocations of any page-aligned size. We maintain these as a separate
@@ -85,7 +85,7 @@
 // VA ranges with type == UVM_VA_RANGE_TYPE_SKED_REFLECTED:
 //     These ranges track special SKED reflected mappings required for CNP. The
 //     mappings don't have any physical backing. They just use PTEs with a
-//     special kind, see make_sked_reflected_pte_pascal() for an example of the
+//     special kind, see make_sked_reflected_pte_turing() for an example of the
 //     PTE encoding.
 //     Notably the API that creates these ranges calls them "dynamic parallelism
 //     regions", but we use "SKED reflected ranges" internally as it's more
@@ -188,7 +188,9 @@ typedef struct
     // has to be valid.
     bool is_egm;
 
-    // GPU page tables mapping the allocation
+    // Fabric memory. If true, the allocation is a fabric allocation.
+    bool is_fabricmem;
+
     uvm_page_table_range_vec_t pt_range_vec;
 
     // Node for the deferred free list where this allocation is stored upon
@@ -390,31 +392,6 @@ struct uvm_va_range_semaphore_pool_struct
     uvm_tracker_t tracker;
     uvm_mutex_t tracker_lock;
 };
-
-// This represents a physical RM allocation used for device peer-to-peer access.
-// This is distinct from the va_range type because the physical allocations can be
-// shared by multiple va_ranges.
-typedef struct
-{
-    // The physical GPU memory backing device P2P ranges can be referenced by
-    // two entities - kernel device drivers and the va_range(s) that UVM uses
-    // to create CPU mappings. The physical memory can not be freed until after
-    // both entities have finished accessing it. This refcount tracks total
-    // kernel users of the memory.
-    nv_kref_t refcount;
-
-    // The number of va ranges referencing this physical range.
-    nv_kref_t va_range_count;
-
-    uvm_gpu_t *gpu;
-    NvHandle rm_memory_handle;
-    NvU64 *pfns;
-    NvU64 pfn_count;
-    NvLength page_size;
-    uvm_deferred_free_object_t deferred_free;
-    struct list_head *deferred_free_list;
-    wait_queue_head_t waitq;
-} uvm_device_p2p_mem_t;
 
 struct uvm_va_range_device_p2p_struct
 {
@@ -704,6 +681,9 @@ static uvm_va_range_device_p2p_t *uvm_va_range_device_p2p_find(uvm_va_space_t *v
 }
 
 // Returns true if this va_range can be mapped via the GMMU
+//
+// UVM_VA_RANGE_TYPE_DEVICE_P2P is not GMMU mappable because these ranges are
+// CPU-only virtual addresses backed by GPU memory.
 static bool uvm_va_range_is_gmmu_mappable(uvm_va_range_t *va_range)
 {
     return va_range->type != UVM_VA_RANGE_TYPE_DEVICE_P2P;
@@ -1033,10 +1013,6 @@ uvm_va_block_t *uvm_va_range_block_next(uvm_va_range_managed_t *managed_range, u
 
 // Set the managed range preferred location (or unset it if preferred location
 // is UVM_ID_INVALID).
-//
-// Unsetting the preferred location potentially changes the range group
-// association to UVM_RANGE_GROUP_ID_NONE if the managed range was previously
-// associated with a non-migratable range group.
 //
 // If mm != NULL, that mm is used for any CPU mappings which may be created as
 // a result of this call. See uvm_va_block_context_t::mm for details.

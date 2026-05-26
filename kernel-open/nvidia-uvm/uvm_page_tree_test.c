@@ -1928,6 +1928,21 @@ static NV_STATUS entry_test_blackwell(uvm_gpu_t *gpu)
     return entry_test_hopper(gpu);
 }
 
+static NV_STATUS entry_test_rubin(uvm_gpu_t *gpu)
+{
+    NV_STATUS status = NV_OK;
+    uvm_page_tree_t tree;
+
+    TEST_NV_CHECK_RET(test_page_tree_init(gpu, &tree));
+    TEST_CHECK_GOTO(tree.hal->poisoned_pte(&tree) == 0xffffbad6f9ull, cleanup);
+    TEST_CHECK_GOTO(tree.hal->unmapped_pte() == 0x18, cleanup);
+
+cleanup:
+    uvm_page_tree_deinit(&tree);
+
+    return status;
+}
+
 static NV_STATUS shrink_test(uvm_gpu_t *gpu, NvU64 page_size)
 {
     uvm_page_tree_t tree;
@@ -2133,6 +2148,15 @@ static NV_STATUS fake_gpu_init_blackwell(uvm_gpu_t *fake_gpu, u32 implementation
                          fake_gpu);
 }
 
+static NV_STATUS fake_gpu_init_rubin(uvm_gpu_t *fake_gpu)
+{
+    return fake_gpu_init(BLACKWELL_CHANNEL_GPFIFO_A,
+                         BLACKWELL_DMA_COPY_A,
+                         NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GR100,
+                         0,
+                         fake_gpu);
+}
+
 static NV_STATUS turing_test_page_tree(uvm_gpu_t *turing)
 {
     NvU32 tlb_batch_saved_max_pages;
@@ -2294,6 +2318,15 @@ static NV_STATUS blackwell_test_page_tree(uvm_gpu_t *blackwell)
     return NV_OK;
 }
 
+static NV_STATUS rubin_test_page_tree(uvm_gpu_t *rubin)
+{
+    TEST_CHECK_RET(fake_gpu_init_rubin(rubin) == NV_OK);
+
+    MEM_NV_CHECK_RET(entry_test_rubin(rubin), NV_OK);
+
+    return NV_OK;
+}
+
 NV_STATUS uvm_test_page_tree(UVM_TEST_PAGE_TREE_PARAMS *params, struct file *filp)
 {
     NV_STATUS status = NV_OK;
@@ -2327,6 +2360,7 @@ NV_STATUS uvm_test_page_tree(UVM_TEST_PAGE_TREE_PARAMS *params, struct file *fil
     TEST_NV_CHECK_GOTO(ampere_test_page_tree(gpu), done);
     TEST_NV_CHECK_GOTO(hopper_test_page_tree(gpu), done);
     TEST_NV_CHECK_GOTO(blackwell_test_page_tree(gpu), done);
+    TEST_NV_CHECK_GOTO(rubin_test_page_tree(gpu), done);
 
 done:
     fake_tlb_invals_free();

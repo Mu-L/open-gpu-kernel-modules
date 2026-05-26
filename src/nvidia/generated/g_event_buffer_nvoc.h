@@ -183,7 +183,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_EventBuffer;
     ((EventBuffer*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(EventBuffer)))
 #endif //__nvoc_event_buffer_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_EventBuffer(EventBuffer**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_EventBuffer(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_EventBuffer(EventBuffer**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_EventBuffer(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

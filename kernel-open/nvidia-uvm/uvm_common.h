@@ -1,5 +1,5 @@
 /*******************************************************************************
-    Copyright (c) 2013-2024 NVIDIA Corporation
+    Copyright (c) 2013-2025 NVIDIA Corporation
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
@@ -369,16 +369,8 @@ static void uvm_get_unaddressable_range(NvU32 num_va_bits, NvU64 *first, NvU64 *
     UVM_ASSERT(first);
     UVM_ASSERT(outer);
 
-    // Maxwell GPUs (num_va_bits == 40b) do not support canonical form address
-    // even when plugged into platforms using it.
-    if (num_va_bits > 40) {
-        *first = 1ULL << (num_va_bits - 1);
-        *outer = (NvU64)((NvS64)(1ULL << 63) >> (64 - num_va_bits));
-    }
-    else {
-        *first = 1ULL << num_va_bits;
-        *outer = ~0Ull;
-    }
+    *first = 1ULL << (num_va_bits - 1);
+    *outer = (NvU64)((NvS64)(1ULL << 63) >> (64 - num_va_bits));
 }
 
 static void uvm_cpu_get_unaddressable_range(NvU64 *first, NvU64 *outer)

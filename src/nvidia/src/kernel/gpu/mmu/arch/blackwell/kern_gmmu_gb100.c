@@ -57,6 +57,7 @@ kgmmuCommitTlbInvalidate_GB100
         kgmmuSetPdbToInvalidate_HAL(pGpu, pKernelGmmu, pParams);
     }
 
+    NV_PRINTF(LEVEL_SILENT, "Setting NV_VIRTUAL_FUNCTION_PRIV_MMU_INVALIDATE to: 0x%x\n", pParams->regVal);
     GPU_VREG_WR32(pGpu, NV_VIRTUAL_FUNCTION_PRIV_MMU_INVALIDATE, pParams->regVal);
 
     // Wait for the invalidate command to complete.

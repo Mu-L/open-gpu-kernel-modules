@@ -540,9 +540,13 @@ knvlinkCoreRemoveDevice_IMPL
         }
 
         // Set peerLinkMask from pGpu1 to pGpu to 0
-        status = knvlinkSetLinkMaskToPeer(pGpu1, pKernelNvlink1, pGpu, 0);
+        NVLINK_BIT_VECTOR emptyPeerLinkMask;
+        bitVectorClrAll(&emptyPeerLinkMask);
+        status = knvlinkSetLinkMaskToPeer(pGpu1, pKernelNvlink1, pGpu, &emptyPeerLinkMask);
         if (status != NV_OK)
-            return status;
+        {
+                return status;
+        }
     }
 
     if (pKernelNvlink->pNvlinkDev)

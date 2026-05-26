@@ -32,7 +32,7 @@ void __nvoc_init__BinaryApi(BinaryApi*);
 void __nvoc_init_funcTable_BinaryApi(BinaryApi*);
 NV_STATUS __nvoc_ctor_BinaryApi(BinaryApi*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_BinaryApi(BinaryApi*);
-void __nvoc_dtor_BinaryApi(BinaryApi*);
+void __nvoc_dtor_BinaryApi(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__BinaryApi;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_BinaryApi =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "BinaryApi",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_BinaryApi,
+    .objCreatefn =        &__nvoc_objCreateDynamic_BinaryApi,
     .pCastInfo =          &__nvoc_castinfo__BinaryApi,
     .pExportInfo =        &__nvoc_export_info__BinaryApi
 };
@@ -124,7 +124,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_BinaryApi =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__BinaryApi __nvoc_metadata__BinaryApi = {
     .rtti.pClassDef = &__nvoc_class_def_BinaryApi,    // (binapi) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_BinaryApi,
+    .rtti.dtor      = &__nvoc_dtor_BinaryApi,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -386,13 +386,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__BinaryApi =
 
 
 // Destruct BinaryApi object.
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_BinaryApi(BinaryApi* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_BinaryApi(Dynamic* pThis) {
+
+    BinaryApi *__nvoc_this = (BinaryApi *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_BinaryApi(BinaryApi *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -418,7 +420,7 @@ NV_STATUS __nvoc_ctor_BinaryApi(BinaryApi *pResource, struct CALL_CONTEXT *pCall
 
     // Unwind on error.
 __nvoc_ctor_BinaryApi_fail__init:
-    __nvoc_dtor_GpuResource(&pResource->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pResource->__nvoc_base_GpuResource);
 __nvoc_ctor_BinaryApi_fail_GpuResource:
 __nvoc_ctor_BinaryApi_exit:
     return status;
@@ -530,14 +532,11 @@ __nvoc_objCreate_BinaryApi_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_BinaryApi(BinaryApi **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_BinaryApi(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_BinaryApi(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_BinaryApi((BinaryApi **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 
 
@@ -559,7 +558,7 @@ void __nvoc_init__BinaryApiPrivileged(BinaryApiPrivileged*);
 void __nvoc_init_funcTable_BinaryApiPrivileged(BinaryApiPrivileged*);
 NV_STATUS __nvoc_ctor_BinaryApiPrivileged(BinaryApiPrivileged*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_BinaryApiPrivileged(BinaryApiPrivileged*);
-void __nvoc_dtor_BinaryApiPrivileged(BinaryApiPrivileged*);
+void __nvoc_dtor_BinaryApiPrivileged(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__BinaryApiPrivileged;
@@ -667,7 +666,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_BinaryApiPrivileged =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "BinaryApiPrivileged",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_BinaryApiPrivileged,
+    .objCreatefn =        &__nvoc_objCreateDynamic_BinaryApiPrivileged,
     .pCastInfo =          &__nvoc_castinfo__BinaryApiPrivileged,
     .pExportInfo =        &__nvoc_export_info__BinaryApiPrivileged
 };
@@ -676,7 +675,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_BinaryApiPrivileged =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__BinaryApiPrivileged __nvoc_metadata__BinaryApiPrivileged = {
     .rtti.pClassDef = &__nvoc_class_def_BinaryApiPrivileged,    // (binapipriv) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_BinaryApiPrivileged,
+    .rtti.dtor      = &__nvoc_dtor_BinaryApiPrivileged,
     .rtti.offset    = 0,
     .metadata__BinaryApi.rtti.pClassDef = &__nvoc_class_def_BinaryApi,    // (binapi) super
     .metadata__BinaryApi.rtti.dtor      = &__nvoc_destructFromBase,
@@ -967,13 +966,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__BinaryApiPrivileged =
 
 
 // Destruct BinaryApiPrivileged object.
-void __nvoc_dtor_BinaryApi(BinaryApi*);
-void __nvoc_dtor_BinaryApiPrivileged(BinaryApiPrivileged* pThis) {
+void __nvoc_dtor_BinaryApi(Dynamic*);
+void __nvoc_dtor_BinaryApiPrivileged(Dynamic* pThis) {
+
+    BinaryApiPrivileged *__nvoc_this = (BinaryApiPrivileged *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_BinaryApi(&pThis->__nvoc_base_BinaryApi);
+    __nvoc_dtor_BinaryApi((Dynamic *) &__nvoc_this->__nvoc_base_BinaryApi);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_BinaryApiPrivileged(BinaryApiPrivileged *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -999,7 +1000,7 @@ NV_STATUS __nvoc_ctor_BinaryApiPrivileged(BinaryApiPrivileged *pResource, struct
 
     // Unwind on error.
 __nvoc_ctor_BinaryApiPrivileged_fail__init:
-    __nvoc_dtor_BinaryApi(&pResource->__nvoc_base_BinaryApi);
+    __nvoc_dtor_BinaryApi((Dynamic *)&pResource->__nvoc_base_BinaryApi);
 __nvoc_ctor_BinaryApiPrivileged_fail_BinaryApi:
 __nvoc_ctor_BinaryApiPrivileged_exit:
     return status;
@@ -1113,13 +1114,10 @@ __nvoc_objCreate_BinaryApiPrivileged_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_BinaryApiPrivileged(BinaryApiPrivileged **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_BinaryApiPrivileged(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_BinaryApiPrivileged(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_BinaryApiPrivileged((BinaryApiPrivileged **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -24,9 +24,9 @@
 #ifndef NBSITBL_H
 #define NBSITBL_H
 
+#include "nvlimits.h" // NV_MAX_DEVICES
 #include "ctrl/ctrl0000/ctrl0000system.h" // NV0000_SYSTEM_MAX_APPROVAL_COOKIE_STRING_LENGTH
 #include "ctrl/ctrl2080/ctrl2080bios.h"   // NV2080_CTRL_BIOS_NBSI_NUM_MODULES
-#include "core/core.h"
 #include "platform/pci_exp_table.h"
 
 // Maximum number of NBSI OS strings (including generic)
@@ -43,7 +43,7 @@ typedef enum _NBSI_TBL_SOURCES                   // keep in sync with nvapi.spec
     NBSI_TBL_SOURCE_SBIOS    = 8,
     NBSI_TBL_SOURCE_ACPI     = 0x10,
     NBSI_TBL_SOURCE_UEFI     = 0x20
-} NBSI_TBL_SOURCES, * PNBSI_TBL_SOURCES;
+} NBSI_TBL_SOURCES;
 #define NBSI_TBL_SOURCE_MAX 6                    // number of NBSI_TBL_SOURCES entries (not including BEST FIT)
 
 #define NBSI_TBL_SOURCE_ALL      (NBSI_TBL_SOURCE_REGISTRY | \
@@ -76,7 +76,7 @@ typedef struct _NBSI_CACHE_OBJ {
     // Maximum entries we might have.
     NvU8 tblCacheMaxNumEntries;
     // Pointers to cache entries
-    PNBSI_CACHE_ENTRY_OBJ pCacheEntry[1];
+    NBSI_CACHE_ENTRY_OBJ *pCacheEntry[1];
 } NBSI_CACHE_OBJ, *PNBSI_CACHE_OBJ;
 
 //
@@ -97,14 +97,14 @@ typedef struct _DRVR_VER0
     NvU8    minVer : 8;
     NvU8    majRev : 8;
     NvU8    minRev : 8;
-} DRVR_VER0, * PDRVR_VER0;
+} DRVR_VER0;
 
 typedef struct _DRVR_VER
 {
     NvU32 Rev : 20;
     NvU32 DX : 8;
     NvU32 OS : 4;
-} DRVR_VER, * PDRVR_VER;
+} DRVR_VER;
 
 typedef struct _NBSI_OBJ {
     // Setting for current maximum OS strings in use.
@@ -127,7 +127,7 @@ typedef struct _NBSI_OBJ {
     NvU8 * nbsiDrvrTable[NV_MAX_DEVICES];
 
     // pointer to array of pointers (cache of tables)
-    PNBSI_CACHE_OBJ pTblCache[NV_MAX_DEVICES];
+    NBSI_CACHE_OBJ *pTblCache[NV_MAX_DEVICES];
 
     // pointer to override tables
     NvU8 * regOverrideList[NV_MAX_DEVICES];
@@ -135,7 +135,7 @@ typedef struct _NBSI_OBJ {
     // Current Driver version for best fit check.
     DRVR_VER DriverVer;
 
-} NBSI_OBJ, *PNBSI_OBJ;
+} NBSI_OBJ;
 
 
 #ifndef VARIABLE_SIZE_ARRAY
@@ -208,7 +208,7 @@ typedef struct _NBSI_SCOPE
 {
     NvU16   pathID;
     NvU32   offset; // Relative Offset from this member i.e. &ulOffset
-} NBSI_SCOPE, *PNBSI_SCOPE;
+} NBSI_SCOPE;
 #pragma pack()
 
 #pragma pack(1)
@@ -224,7 +224,7 @@ typedef struct _NBSI_MODULE
 {
     NvU16   moduleID;
     NvU32   offset;  // Relative Offset from this member i.e. &ulOffset
-} NBSI_MODULE, *PNBSI_MODULE;
+} NBSI_MODULE;
 #pragma pack()
 
 // Maximum understood dir version
@@ -274,7 +274,7 @@ typedef enum _NBSI_GLOB_TYPES
     NBSI_SYS_INFO       = nbsiobjtype('G','D'),  // System Info object
     NBSI_TEGRA_TMDS     = nbsiobjtype('T','T'),  // Tegra TMDS configuration block
     NBSI_OPTIMUS_PLAT   = nbsiobjtype('O','P'),  // Optimus Platform key
-} NBSI_GLOB_TYPE, * PNBSI_GLOB_TYPE;
+} NBSI_GLOB_TYPE;
 
 #pragma pack(1)
 typedef struct _NBSI_UID0
@@ -295,7 +295,7 @@ typedef struct _NBSI_UID0
           NvU8    minVer : 4;
           NvU8    majVer : 4;
       } Platform;
-} NBSI_UID0, *PNBSI_UID0;
+} NBSI_UID0;
 #pragma pack()
 
 #pragma pack(1)
@@ -317,7 +317,7 @@ typedef struct _NBSI_UID
           NvU8    minVer : 4;
           NvU8    majVer : 4;
       } Platform;
-} NBSI_UID, *PNBSI_UID;
+} NBSI_UID;
 #pragma pack()
 
 #pragma pack(1)
@@ -327,7 +327,7 @@ typedef struct _DSM_GEN_OBJ_HDR
     NvU16       globType;     // NBSI_GLOB_TYPE (i.e. NBSI_HDCP, NBSI_VALKEY etc.)
     NvU32       size;         // Entire size in bytes object, including header and object data.
     NvU16       majMinVer;    // Version of Generic Object in Maj:Min format
-} DSM_GEN_OBJ_HDR, *PDSM_GEN_OBJ_HDR;
+} DSM_GEN_OBJ_HDR;
 #pragma pack()
 #define DSM_GEN_HDR_SIZE (sizeof(DSM_GEN_OBJ_HDR))
 

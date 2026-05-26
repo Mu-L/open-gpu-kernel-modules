@@ -82,7 +82,7 @@ struct OBJHALMGR {
     struct OBJHALMGR *__nvoc_pbase_OBJHALMGR;    // halmgr
 
     // Data members
-    struct OBJHAL *pHalList[81];
+    struct OBJHAL *pHalList[84];
 };
 
 
@@ -110,7 +110,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJHALMGR;
     ((OBJHALMGR*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(OBJHALMGR)))
 #endif //__nvoc_hal_mgr_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_OBJHALMGR(OBJHALMGR**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJHALMGR(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJHALMGR(OBJHALMGR**, Dynamic*, NvU32);
 #define __objCreate_OBJHALMGR(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

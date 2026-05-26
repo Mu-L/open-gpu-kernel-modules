@@ -43,24 +43,14 @@ def round_up_to_base(x, base = 10):
     return x + (base - x) % base
 
 def parse_array(f):
-    """
-    #if defined(BINDATA_INCLUDE_DATA)
-    //
-    // FUNCTION: ksec2GetBinArchiveSecurescrubUcode_AD10X("header_prod")
-    // FILE NAME: kernel/inc/securescrub/bin/ad10x/g_securescrubuc_sec2_ad10x_boot_from_hs_prod.h
-    // FILE TYPE: TEXT
-    // VAR NAME: securescrub_ucode_header_ad10x_boot_from_hs
-    // COMPRESSION: YES
-    // COMPLEX_STRUCT: NO
-    // DATA SIZE (bytes): 36
-    // COMPRESSED SIZE (bytes): 27
-    //
+    """Parses a bindata array definition and returns its binhex as bytes
+
+    Example:
     static BINDATA_CONST NvU8 ksec2BinArchiveSecurescrubUcode_AD10X_header_prod_data[] =
     {
         0x63, 0x60, 0x00, 0x02, 0x46, 0x20, 0x96, 0x02, 0x62, 0x66, 0x08, 0x13, 0x4c, 0x48, 0x42, 0x69,
         0x20, 0x00, 0x00, 0x30, 0x39, 0x0a, 0xfc, 0x24, 0x00, 0x00, 0x00,
     };
-    #endif // defined(BINDATA_INCLUDE_DATA)
     """
     output = b''
     for line in f:
@@ -99,21 +89,45 @@ def parse_struct(f):
 
     return output
 
-def get_bytes(filename, array):
-    """Extract the bytes for the given array in the given file.
+def get_bytes(filename, array1, array2):
+    """Extract the bytes for the given array or struct in the given file.
 
     :param filename: the file to parse
-    :param array: the name of the array to parse
+    :param array1: the first half of name of the array/struct to parse
+    :param array2: the second half
     :returns: byte array
 
-    This function scans the file for the array and returns a bytearray of
-    its contents, uncompressing the data if it is tagged as compressed.
+    This function scans the file for the array or struct and returns a bytearray
+    of its contents, uncompressing the data if it is tagged as compressed.
 
-    This function assumes that each array is immediately preceded with a comment
-    section that specifies whether the array is compressed and how many bytes of
-    data there should be.  Example:
+    This function assumes that each array/struct is immediately preceded with a
+    comment section that specifies whether the array is compressed and how many
+    bytes of data there should be.  Example:
 
+    //
+    // FUNCTION: ksec2GetBinArchiveSecurescrubUcode_AD10X("header_prod")
+    // FILE NAME: kernel/inc/securescrub/bin/ad10x/g_securescrubuc_sec2_ad10x_boot_from_hs_prod.h
+    // FILE TYPE: TEXT
+    // VAR NAME: securescrub_ucode_header_ad10x_boot_from_hs
+    // COMPRESSION: YES
+    // COMPLEX_STRUCT: NO
+    // DATA SIZE (bytes): 36
+    // COMPRESSED SIZE (bytes): 27
+    //
+    static BINDATA_CONST NvU8 ksec2BinArchiveSecurescrubUcode_AD10X_header_prod_data[] =
+
+    The actual extraction of binhex bytes is handled by parse_array() or parse_struct().
     """
+
+    # Build the five possible array/struct names.  BINDATA_LABEL was added in r575,
+    # and NV_DECLARE_ALIGNED(NvU8, 8) was added in r590.
+    arrays = [
+        f"static BINDATA_CONST NvU8 {array1}_{array2}_data",
+        f"static BINDATA_CONST NvU8 {array1}_BINDATA_LABEL_{array2.upper()}_data",
+        f"static BINDATA_CONST NV_DECLARE_ALIGNED(NvU8, 8) {array1}_BINDATA_LABEL_{array2.upper()}_data",
+        f"static const {array1}_{array2}_data",
+        f"static const {array1}_BINDATA_LABEL_{array2.upper()}_data",
+    ]
 
     with open(filename) as f:
         for line in f:
@@ -135,12 +149,13 @@ def get_bytes(filename, array):
             m = re.search(r"COMPRESSED SIZE \(bytes\): (\d+)", line)
             if m:
                 compressed_size = int(m.group(1))
-            if "static BINDATA_CONST NvU8 " + array in line:
-                break
-            if "static const " + array in line:
+            m = next((a for a in arrays if a in line), None)
+            if m:
+                # We found the array, so remember its name in case we need to report an error
+                array = m
                 break
         else:
-            raise MyException(f"array {array} not found in {filename}")
+            raise MyException(f"array {array1}_{array2}_data not found in {filename}")
 
         if is_struct:
             output = parse_struct(f)
@@ -154,7 +169,7 @@ def get_bytes(filename, array):
     if len(output) == 0:
         raise MyException(f"no data found for {array} in {filename}")
 
-    # Structs are never compresed
+    # Structs are never compressed
     if is_struct and is_compressed:
         raise MyException(f"struct {array} in {filename} cannot be compressed")
 
@@ -190,15 +205,13 @@ def generic_bootloader(gpu):
 
     with open(f"{outputpath}/nvidia/{gpu}/gsp/gen_bootloader-{version}.bin", "wb") as f:
         # Extract the actual bootloader firmware
-        array = f"ksec2BinArchiveBlUcode_{GPU}_ucode_image_data"
-        firmware = get_bytes(filename, array)
+        firmware = get_bytes(filename, f"ksec2BinArchiveBlUcode_{GPU}", "ucode_image")
         firmware_size = len(firmware)
 
         # Extract the descriptor (RM_RISCV_UCODE_DESC)
         # Note: the size of RM_RISCV_UCODE_DESC varies from version to version, but Nouveau
         # only cares about the first few fields.
-        array = f"RM_FLCN_BL_DESC ksec2BinArchiveBlUcode_{GPU}_ucode_desc_data"
-        descriptor = get_bytes(filename, array)
+        descriptor = get_bytes(filename, f"RM_FLCN_BL_DESC ksec2BinArchiveBlUcode_{GPU}", "ucode_desc")
         descriptor_size = len(descriptor) # 24
 
         # First, add the nvfw_bin_hdr header
@@ -213,9 +226,13 @@ def generic_bootloader(gpu):
         f.write(firmware)
 
 # GSP bootloader
-def gsp_bootloader(gpu, fuse):
+def gsp_bootloader(gpu, fuse = ""):
     global outputpath
     global version
+
+    # Prepend an underscore if not empty
+    if len(fuse) > 0:
+        fuse = f"_{fuse}"
 
     GPU = gpu.upper()
     filename = f"src/nvidia/generated/g_bindata_kgspGetBinArchiveGspRmBoot_{GPU}.c"
@@ -225,13 +242,11 @@ def gsp_bootloader(gpu, fuse):
 
     with open(f"{outputpath}/nvidia/{gpu}/gsp/bootloader-{version}.bin", "wb") as f:
         # Extract the actual bootloader firmware
-        array = f"kgspBinArchiveGspRmBoot_{GPU}_ucode_image{fuse}data"
-        firmware = get_bytes(filename, array)
+        firmware = get_bytes(filename, f"kgspBinArchiveGspRmBoot_{GPU}", f"ucode_image{fuse}")
         firmware_size = len(firmware)
 
         # Extract the descriptor (RM_RISCV_UCODE_DESC)
-        array = f"kgspBinArchiveGspRmBoot_{GPU}_ucode_desc{fuse}data"
-        descriptor = get_bytes(filename, array)
+        descriptor = get_bytes(filename, f"kgspBinArchiveGspRmBoot_{GPU}", f"ucode_desc{fuse}")
         descriptor_size = len(descriptor) # 76 on TU10x/GA100, 84 on GA102+
 
         # First, add the nvfw_bin_hdr header
@@ -252,6 +267,7 @@ def booter(gpu, load, sigsize, fuse = "prod"):
 
     GPU = gpu.upper()
     LOAD = load.capitalize()
+    name = f"booter-{load}-{gpu}-{fuse}"
 
     filename = f"src/nvidia/generated/g_bindata_kgspGetBinArchiveBooter{LOAD}Ucode_{GPU}.c"
 
@@ -260,19 +276,25 @@ def booter(gpu, load, sigsize, fuse = "prod"):
 
     with open(f"{outputpath}/nvidia/{gpu}/gsp/booter_{load}-{version}.bin", "wb") as f:
         # Extract the actual booter firmware
-        array = f"kgspBinArchiveBooter{LOAD}Ucode_{GPU}_image_{fuse}_data"
-        firmware = get_bytes(filename, array)
+        firmware = get_bytes(filename, f"kgspBinArchiveBooter{LOAD}Ucode_{GPU}", f"image_{fuse}")
         firmware_size = len(firmware)
 
-        # Extract the signatures
-        array = f"kgspBinArchiveBooter{LOAD}Ucode_{GPU}_sig_{fuse}_data"
-        signatures = get_bytes(filename, array)
+        # Query the number of signatures.  This should be a 4-byte array (32-bit little-endian integer)
+        bytes = get_bytes(filename, f"kgspBinArchiveBooter{LOAD}Ucode_{GPU}", "num_sigs")
+        if len(bytes) != 4:
+            raise MyException(f"num_sigs array for {name} is wrong size of {len(bytes)}")
+        num_sigs = struct.unpack("<L", bytes)[0]
+        if num_sigs < 1 or num_sigs > 15:
+            raise MyException(f"out of range number of signatures ({num_sigs}) for {name}")
+
+        # Extract the signatures.  Technically, we don't need to pass the signature size to
+        # this function, but doing so allows us to double-check all the array sizes.
+        signatures = get_bytes(filename, f"kgspBinArchiveBooter{LOAD}Ucode_{GPU}", f"sig_{fuse}")
         signatures_size = len(signatures)
         if signatures_size % sigsize:
-            raise MyException(f"signature file size for {array} is uneven value of {sigsize}")
-        num_sigs = int(signatures_size / sigsize);
-        if num_sigs < 1:
-            raise MyException(f"invalid number of signatures {num_sigs}")
+            raise MyException(f"signature file size for {name} is {signatures_size}, an uneven multiple of {sigsize}")
+        if num_sigs != signatures_size // sigsize:
+            raise MyException(f"mismatch number of signatures ({signatures_size // sigsize}), should be {num_sigs}")
 
         # First, add the nvfw_bin_hdr header
         # 120 = sizeof(nvfw_bin_hdr) + sizeof(nvfw_hs_header_v2) + sizeof(meta vars) +
@@ -296,27 +318,29 @@ def booter(gpu, load, sigsize, fuse = "prod"):
         f.write(signatures)
 
         # Extract the patch location
-        array = f"kgspBinArchiveBooter{LOAD}Ucode_{GPU}_patch_loc_data"
-        bytes = get_bytes(filename, array)
+        bytes = get_bytes(filename, f"kgspBinArchiveBooter{LOAD}Ucode_{GPU}", "patch_loc")
         patchloc = struct.unpack("<L", bytes)[0]
 
         # Extract the patch meta variables
-        array = f"kgspBinArchiveBooter{LOAD}Ucode_{GPU}_patch_meta_data"
-        bytes = get_bytes(filename, array)
+        bytes = get_bytes(filename, f"kgspBinArchiveBooter{LOAD}Ucode_{GPU}", "patch_meta")
         fuse_ver, engine_id, ucode_id = struct.unpack("<LLL", bytes)
 
         # Fourth, patch_loc[], patch_sig[], fuse_ver, engine_id, ucode_id, and num_sigs
         f.write(struct.pack("<6L", patchloc, 0, fuse_ver, engine_id, ucode_id, num_sigs))
 
         # Extract the descriptor (nvfw_hs_load_header_v2)
-        array = f"kgspBinArchiveBooter{LOAD}Ucode_{GPU}_header_{fuse}_data"
-        descriptor = get_bytes(filename, array)
+        descriptor = get_bytes(filename, f"kgspBinArchiveBooter{LOAD}Ucode_{GPU}", f"header_{fuse}")
 
+        # Extract some of individual fields of nvfw_hs_load_header_v2
         # num_apps is the fifth field of struct nvfw_hs_load_header_v2
-        num_apps = struct.unpack("<L", descriptor[16:20])[0]
+        (os_code_offset, os_code_size, os_data_offset, os_data_size, num_apps,
+         app_code_offset, app_code_size, app_data_offset, app_data_size) = struct.unpack("<9L", descriptor)
         # Verify that sizeof(descriptor) == 5 * 4 + num_apps * 16
         if len(descriptor) != 5 * 4 + num_apps * 16:
-            raise MyException(f"nvfw_hs_load_header_v2 descriptor should be {5 * 4 + num_apps * 16} bytes, but is instead {len(descriptor)} bytes.")
+            raise MyException(f"nvfw_hs_load_header_v2 descriptor for {name} should be {5 * 4 + num_apps * 16} bytes, but is instead {len(descriptor)} bytes.")
+        # Nova depends on os_code_size == app_code_offset
+        if os_code_size != app_code_offset:
+            raise MyException(f"nvfw_hs_load_header_v2 descriptor for {name} has os_code_size={os_code_size} and app_code_offset={app_code_offset}, but they should be the same.")
 
         # Fifth, the descriptor
         f.write(descriptor)
@@ -332,6 +356,7 @@ def scrubber(gpu, sigsize, fuse = "prod"):
     # Unfortunately, RM breaks convention with the scrubber image and labels
     # the files and arrays with AD10X instead of AD102.
     GPUX = f"{gpu[:-1].upper()}X"
+    name = f"scrubber-{gpu}-{fuse}"
 
     filename = f"src/nvidia/generated/g_bindata_ksec2GetBinArchiveSecurescrubUcode_{GPUX}.c"
 
@@ -340,19 +365,24 @@ def scrubber(gpu, sigsize, fuse = "prod"):
 
     with open(f"{outputpath}/nvidia/{gpu}/gsp/scrubber-{version}.bin", "wb") as f:
         # Extract the actual scrubber firmware
-        array = f"ksec2BinArchiveSecurescrubUcode_{GPUX}_image_{fuse}_data[]"
-        firmware = get_bytes(filename, array)
+        firmware = get_bytes(filename, f"ksec2BinArchiveSecurescrubUcode_{GPUX}", f"image_{fuse}")
         firmware_size = len(firmware)
 
+        # Query the number of signatures.  This should be a 4-byte array (32-bit little-endian integer)
+        bytes = get_bytes(filename, f"ksec2BinArchiveSecurescrubUcode_{GPUX}", "num_sigs")
+        if len(bytes) != 4:
+            raise MyException(f"num_sigs array for {name} is wrong size of {len(bytes)}")
+        num_sigs = struct.unpack("<L", bytes)[0]
+        if num_sigs < 1 or num_sigs > 15:
+            raise MyException(f"out of range number of signatures ({num_sigs}) for {name}")
+
         # Extract the signatures
-        array = f"ksec2BinArchiveSecurescrubUcode_{GPUX}_sig_{fuse}_data"
-        signatures = get_bytes(filename, array)
+        signatures = get_bytes(filename, f"ksec2BinArchiveSecurescrubUcode_{GPUX}", f"sig_{fuse}")
         signatures_size = len(signatures)
         if signatures_size % sigsize:
-            raise MyException(f"signature file size for {array} is uneven value of {sigsize}")
-        num_sigs = int(signatures_size / sigsize);
-        if num_sigs < 1:
-            raise MyException(f"invalid number of signatures {num_sigs}")
+            raise MyException(f"signature file size for {name} is {signatures_size}, an uneven multiple of {sigsize}")
+        if num_sigs != signatures_size // sigsize:
+            raise MyException(f"mismatch number of signatures ({signatures_size // sigsize}), should be {num_sigs}")
 
         # First, add the nvfw_bin_hdr header
         total_size = round_up_to_base(120 + signatures_size + firmware_size, FLCN_BLK_ALIGNMENT)
@@ -373,21 +403,18 @@ def scrubber(gpu, sigsize, fuse = "prod"):
         f.write(signatures)
 
         # Extract the patch location
-        array = f"ksec2BinArchiveSecurescrubUcode_{GPUX}_patch_loc_data"
-        bytes = get_bytes(filename, array)
+        bytes = get_bytes(filename, f"ksec2BinArchiveSecurescrubUcode_{GPUX}", "patch_loc")
         patchloc = struct.unpack("<L", bytes)[0]
 
         # Extract the patch meta variables
-        array = f"ksec2BinArchiveSecurescrubUcode_{GPUX}_patch_meta_data"
-        bytes = get_bytes(filename, array)
+        bytes = get_bytes(filename, f"ksec2BinArchiveSecurescrubUcode_{GPUX}", "patch_meta")
         fuse_ver, engine_id, ucode_id = struct.unpack("<LLL", bytes)
 
         # Fourth, patch_loc[], patch_sig[], fuse_ver, engine_id, ucode_id, and num_sigs
         f.write(struct.pack("<6L", patchloc, 0, fuse_ver, engine_id, ucode_id, num_sigs))
 
         # Extract the descriptor (nvkm_gsp_booter_fw_hdr)
-        array = f"ksec2BinArchiveSecurescrubUcode_{GPUX}_header_{fuse}_data"
-        descriptor = get_bytes(filename, array)
+        descriptor = get_bytes(filename, f"ksec2BinArchiveSecurescrubUcode_{GPUX}", f"header_{fuse}")
 
         # Fifth, the descriptor
         f.write(descriptor)
@@ -502,20 +529,16 @@ def fmc(gpu, fuse = "Prod"):
     print(f"Creating nvidia/{gpu}/gsp/fmc-{version}.bin")
     os.makedirs(f"{outputpath}/nvidia/{gpu}/gsp/", exist_ok = True)
 
-    array = f"kgspBinArchiveGspRmFmcGfw{fuse}Signed_{GPU}_ucode_hash_data"
-    ucode_hash = get_bytes(filename, array)
+    ucode_hash = get_bytes(filename, f"kgspBinArchiveGspRmFmcGfw{fuse}Signed_{GPU}", "ucode_hash")
     (ucode_hash_size, ucode_hash_padded_size) = sizes(ucode_hash)
 
-    array = f"kgspBinArchiveGspRmFmcGfw{fuse}Signed_{GPU}_ucode_sig_data"
-    ucode_sig = get_bytes(filename, array)
+    ucode_sig = get_bytes(filename, f"kgspBinArchiveGspRmFmcGfw{fuse}Signed_{GPU}", "ucode_sig")
     (ucode_sig_size, ucode_sig_padded_size) = sizes(ucode_sig)
 
-    array = f"kgspBinArchiveGspRmFmcGfw{fuse}Signed_{GPU}_ucode_pkey_data"
-    ucode_pkey = get_bytes(filename, array)
+    ucode_pkey = get_bytes(filename, f"kgspBinArchiveGspRmFmcGfw{fuse}Signed_{GPU}", "ucode_pkey")
     (ucode_pkey_size, ucode_pkey_padded_size) = sizes(ucode_pkey)
 
-    array = f"kgspBinArchiveGspRmFmcGfw{fuse}Signed_{GPU}_ucode_image_data"
-    ucode_image = get_bytes(filename, array)
+    ucode_image = get_bytes(filename, f"kgspBinArchiveGspRmFmcGfw{fuse}Signed_{GPU}", "ucode_image")
     (ucode_image_size, ucode_image_padded_size) = sizes(ucode_image)
 
     shnum = 4 # The number of image sections
@@ -588,7 +611,6 @@ def gsp_firmware(filename):
 
     import subprocess
     import shutil
-    import time
 
     basename = os.path.basename(filename)
 
@@ -629,7 +651,7 @@ def gsp_firmware(filename):
             directory = result.stdout.strip().decode("ascii")
             os.chdir(f"{directory}/firmware")
         except subprocess.SubprocessError as e:
-            print(error.output.decode())
+            print(e.output.decode())
             raise
 
         if not os.path.exists('gsp_tu10x.bin') or not os.path.exists('gsp_ga10x.bin'):
@@ -804,7 +826,7 @@ File: nvidia/tu116/gsp/booter_load-{version}.bin
 File: nvidia/tu116/gsp/booter_unload-{version}.bin
 Link: nvidia/tu116/gsp/gen_bootloader-{version}.bin -> ../../tu102/gsp/gen_bootloader-{version}.bin
 Link: nvidia/tu116/gsp/bootloader-{version}.bin -> ../../tu102/gsp/bootloader-{version}.bin
-Link: nvidia/tu116/gsp/gen_bootloader-{version}.bin -> ../../tu102/gsp/gen_bootloader-{version}.bin
+Link: nvidia/ga100/gsp/gen_bootloader-{version}.bin -> ../../tu102/gsp/gen_bootloader-{version}.bin
 File: nvidia/ga100/gsp/bootloader-{version}.bin
 File: nvidia/ga100/gsp/booter_load-{version}.bin
 File: nvidia/ga100/gsp/booter_unload-{version}.bin
@@ -908,49 +930,47 @@ def main():
 
     os.makedirs(f"{outputpath}/nvidia", exist_ok = True)
 
-    # TU10x and GA100 do not have debug-fused versions of the bootloader
+    # TU10x and GA100 do not have debug-fused versions of the GSP bootloader
     if args.debug_fused:
-        print("Generation images for debug-fused GPUs")
-        bootloader_fuse = "_dbg_"
-        booter_fuse = "dbg" # Also used for scrubber
+        print("Generating images for debug-fused GPUs")
+        fuse = "dbg"
         fmc_fuse = "Debug"
     else:
-        bootloader_fuse = "_prod_"
-        booter_fuse = "prod"
+        fuse = "prod"
         fmc_fuse = "Prod"
 
     # The generic bootloader is only defined for TU102 but is used
     # by all TU1xx and GA100.
     generic_bootloader("tu102")
 
-    booter("tu102", "load", 16, booter_fuse)
-    booter("tu102", "unload", 16, booter_fuse)
-    gsp_bootloader("tu102", "_")
+    booter("tu102", "load", 16, fuse)
+    booter("tu102", "unload", 16, fuse)
+    gsp_bootloader("tu102")
 
-    booter("tu116", "load", 16, booter_fuse)
-    booter("tu116", "unload", 16, booter_fuse)
+    booter("tu116", "load", 16, fuse)
+    booter("tu116", "unload", 16, fuse)
     # TU11x uses the same bootloader as TU10x
 
-    booter("ga100", "load", 384, booter_fuse)
-    booter("ga100", "unload", 384, booter_fuse)
-    gsp_bootloader("ga100", "_")
+    booter("ga100", "load", 384, fuse)
+    booter("ga100", "unload", 384, fuse)
+    gsp_bootloader("ga100")
 
-    booter("ga102", "load", 384, booter_fuse)
-    booter("ga102", "unload", 384, booter_fuse)
-    gsp_bootloader("ga102", bootloader_fuse)
+    booter("ga102", "load", 384, fuse)
+    booter("ga102", "unload", 384, fuse)
+    gsp_bootloader("ga102", fuse)
 
-    booter("ad102", "load", 384, booter_fuse)
-    booter("ad102", "unload", 384, booter_fuse)
-    gsp_bootloader("ad102", bootloader_fuse)
-    scrubber("ad102", 384, booter_fuse) # Not currently used by Nouveau
+    booter("ad102", "load", 384, fuse)
+    booter("ad102", "unload", 384, fuse)
+    gsp_bootloader("ad102", fuse)
+    scrubber("ad102", 384, fuse) # Not currently used by Nouveau
 
-    gsp_bootloader("gh100", bootloader_fuse)
+    gsp_bootloader("gh100", fuse)
     fmc("gh100", fmc_fuse)
 
-    gsp_bootloader("gb100", bootloader_fuse)
+    gsp_bootloader("gb100", fuse)
     fmc("gb100", fmc_fuse)
 
-    gsp_bootloader("gb202", bootloader_fuse)
+    gsp_bootloader("gb202", fuse)
     fmc("gb202", fmc_fuse)
 
     if args.driver is not None:
@@ -979,4 +999,9 @@ def main():
         whence()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except MyException as e:
+        # The full stack trace is too noisy with MyException
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)

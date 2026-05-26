@@ -464,7 +464,15 @@ _iovaspaceCreateMapping
     {
         KernelGmmu *pKernelGmmu = GPU_GET_KERNEL_GMMU(pMappingGpu);
         if (pKernelGmmu != NULL)
-            kgmmuTlbInvalidatePostIommuMap_HAL(pMappingGpu, pKernelGmmu, pPhysMemDesc);
+        {
+            status = kgmmuTlbInvalidatePostIommuMap_HAL(pMappingGpu, pKernelGmmu,
+                                                        pPhysMemDesc);
+            if (status != NV_OK)
+            {
+                osIovaUnmap(pIovaMapping);
+                goto error;
+            }
+        }
     }
     memdescAddIommuMap(pPhysMemDesc, pIovaMapping);
     ++pIOVAS->mappingCount;

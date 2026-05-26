@@ -32,7 +32,7 @@ void __nvoc_init__RgLineCallback(RgLineCallback*);
 void __nvoc_init_funcTable_RgLineCallback(RgLineCallback*);
 NV_STATUS __nvoc_ctor_RgLineCallback(RgLineCallback*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_RgLineCallback(RgLineCallback*);
-void __nvoc_dtor_RgLineCallback(RgLineCallback*);
+void __nvoc_dtor_RgLineCallback(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__RgLineCallback;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RgLineCallback =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "RgLineCallback",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_RgLineCallback,
+    .objCreatefn =        &__nvoc_objCreateDynamic_RgLineCallback,
     .pCastInfo =          &__nvoc_castinfo__RgLineCallback,
     .pExportInfo =        &__nvoc_export_info__RgLineCallback
 };
@@ -124,7 +124,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RgLineCallback =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__RgLineCallback __nvoc_metadata__RgLineCallback = {
     .rtti.pClassDef = &__nvoc_class_def_RgLineCallback,    // (rglcb) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_RgLineCallback,
+    .rtti.dtor      = &__nvoc_dtor_RgLineCallback,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -384,16 +384,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__RgLineCallback =
 
 // Destruct RgLineCallback object.
 void __nvoc_rglcbDestruct(RgLineCallback*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_RgLineCallback(RgLineCallback* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_RgLineCallback(Dynamic* pThis) {
+
+    RgLineCallback *__nvoc_this = (RgLineCallback *) pThis;
 
 // Call destructor.
-    __nvoc_rglcbDestruct(pThis);
+    __nvoc_rglcbDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_RgLineCallback(RgLineCallback *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -419,7 +421,7 @@ NV_STATUS __nvoc_ctor_RgLineCallback(RgLineCallback *pRgLineCallback, struct CAL
 
     // Unwind on error.
 __nvoc_ctor_RgLineCallback_fail__init:
-    __nvoc_dtor_GpuResource(&pRgLineCallback->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pRgLineCallback->__nvoc_base_GpuResource);
 __nvoc_ctor_RgLineCallback_fail_GpuResource:
 __nvoc_ctor_RgLineCallback_exit:
     return status;
@@ -531,13 +533,10 @@ __nvoc_objCreate_RgLineCallback_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_RgLineCallback(RgLineCallback **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_RgLineCallback(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_RgLineCallback(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_RgLineCallback((RgLineCallback **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

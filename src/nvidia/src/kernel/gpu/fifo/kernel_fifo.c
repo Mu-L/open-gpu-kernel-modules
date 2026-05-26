@@ -25,6 +25,7 @@
 #include "kernel/gpu/fifo/kernel_channel.h"
 #include "kernel/gpu/fifo/kernel_channel_group.h"
 #include "kernel/gpu/fifo/kernel_channel_group_api.h"
+
 #include "virtualization/kernel_vgpu_mgr.h"
 #include "rmapi/rs_utils.h"
 #include "rmapi/client.h"
@@ -779,10 +780,7 @@ kfifoChidMgrAllocChid_IMPL
         /* Channel USERD manipuliation only supported without GFID */
         if (bForceUserdPage)
         {
-            NV_ASSERT_TRUE_OR_GOTO(status,
-                !bForceInternalIdx,
-                NV_ERR_INVALID_STATE,
-                fail);
+            NV_ASSERT_OR_RETURN(!bForceInternalIdx, NV_ERR_INVALID_STATE);
             ChID64 = ((NvU64)userdPageIdx) *
                          pChidMgr->pGlobalChIDHeap->ownerGranularity +
                      internalIdx;
@@ -812,9 +810,8 @@ kfifoChidMgrAllocChid_IMPL
             }
         }
 
-        NV_ASSERT_OK_OR_GOTO(status,
-            pChidMgr->pGlobalChIDHeap->eheapSetAllocRange(pChidMgr->pGlobalChIDHeap, rangeLo, rangeHi),
-            fail);
+        NV_ASSERT_OK_OR_RETURN(
+            pChidMgr->pGlobalChIDHeap->eheapSetAllocRange(pChidMgr->pGlobalChIDHeap, rangeLo, rangeHi));
 
         status = pChidMgr->pGlobalChIDHeap->eheapAlloc(
             pChidMgr->pGlobalChIDHeap, // This Heap
@@ -894,6 +891,7 @@ kfifoChidMgrAllocChid_IMPL
     return NV_OK;
 
 fail:
+    // We already know that pIsolationID is non-NULL here.
     portMemFree(pIsolationID);
     return status;
 }
@@ -3860,4 +3858,9 @@ KernelChannel *kfifoKernelChannelFromInfo_IMPL(OBJGPU *pGpu, KernelFifo *pKernel
     NV_ASSERT_OR_RETURN(pChidMgr != NULL, NULL);
 
     return kfifoChidMgrGetKernelChannel(pGpu, pKernelFifo, pChidMgr, channelInfo.chid);
+}
+
+NV_STATUS kfifoConvertInstToChannelInfo_IMPL(KernelFifo * pKernelFifo, OBJGPU *pGpu, ENGDESCRIPTOR engDesc, const INST_BLOCK_DESC *pInstblk, FIFO_CHANNEL_INFO *pChannelInfo)
+{
+    return NV_ERR_NOT_SUPPORTED;
 }

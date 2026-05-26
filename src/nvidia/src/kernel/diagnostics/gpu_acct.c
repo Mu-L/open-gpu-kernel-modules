@@ -1048,10 +1048,10 @@ gpuacctSetProcType_IMPL
 }
 
 /*!
- * Gets GPU accounting info for the process.
+ * Internal common function to gets GPU accounting info for the process.
  *
  * @param[in]     pGpuAcct    GPUACCT object pointer
- * @param[in,out] pParams     NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_PARAMS pointer.
+ * @param[in,out] pParams     NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_V2_PARAMS pointer.
  *
  * @return  NV_OK
  * @return  NV_ERR_INVALID_ARGUMENT
@@ -1062,10 +1062,10 @@ gpuacctSetProcType_IMPL
  *         * gpuacctLookupProcEntry
  */
 NV_STATUS
-gpuacctGetProcAcctInfo_IMPL
+_gpuacctGetProcAcctInfo
 (
     GpuAccounting *pGpuAcct,
-    NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_PARAMS *pParams
+    NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_V2_PARAMS *pParams
 )
 {
     GPUACCT_PROC_ENTRY *pEntry;
@@ -1193,7 +1193,76 @@ gpuacctGetProcAcctInfo_IMPL
         pParams->fbUtil /= 100;
     }
 
+    pParams->sampleCount = sampleCount;
+    pParams->sumGpuUtil  = pEntry->sumUtil;
+    pParams->sumFbUtil   = pEntry->sumFbUtil;
+
     return NV_OK;
+}
+
+/*!
+ * Gets GPU accounting info for the process.
+ *
+ * @param[in]     pGpuAcct    GPUACCT object pointer
+ * @param[in,out] pParams     NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_PARAMS pointer.
+ *
+ * @return  NV_OK
+ * @return  NV_ERR_INVALID_ARGUMENT
+ * @return  NV_ERR_INVALID_STATE
+ * @return  NV_ERR_OBJECT_NOT_FOUND
+ * @return  Other
+ *     Bubbles up errors from:
+ *         * gpuacctLookupProcEntry
+ */
+NV_STATUS
+gpuacctGetProcAcctInfo_IMPL
+(
+    GpuAccounting *pGpuAcct,
+    NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_PARAMS *pParams
+)
+{
+    NV_STATUS status;
+    NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_V2_PARAMS params = {0};
+
+    params.pid = pParams->pid;
+    params.subPid = pParams->subPid;
+    params.gpuId = pParams->gpuId;
+
+    status = _gpuacctGetProcAcctInfo(pGpuAcct, &params);
+    if (status == NV_OK)
+    {
+        pParams->maxFbUsage = params.maxFbUsage;
+        pParams->gpuUtil    = params.gpuUtil;
+        pParams->fbUtil     = params.fbUtil;
+        pParams->startTime  = params.startTime;
+        pParams->endTime    = params.endTime;
+    }
+
+    return status;
+}
+
+/*!
+ * Gets GPU accounting info (v2) for the process.
+ *
+ * @param[in]     pGpuAcct    GPUACCT object pointer
+ * @param[in,out] pParams     NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_V2_PARAMS pointer.
+ *
+ * @return  NV_OK
+ * @return  NV_ERR_INVALID_ARGUMENT
+ * @return  NV_ERR_INVALID_STATE
+ * @return  NV_ERR_OBJECT_NOT_FOUND
+ * @return  Other
+ *     Bubbles up errors from:
+ *         * gpuacctLookupProcEntry
+ */
+NV_STATUS
+gpuacctGetProcAcctInfo_v2_IMPL
+(
+    GpuAccounting *pGpuAcct,
+    NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_V2_PARAMS *pParams
+)
+{
+    return _gpuacctGetProcAcctInfo(pGpuAcct, pParams);
 }
 
 /*!

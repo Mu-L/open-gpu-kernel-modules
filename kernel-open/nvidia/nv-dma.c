@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1999-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1999-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -718,15 +718,11 @@ static NvBool nv_dma_use_map_resource
 
     if (ops == NULL)
     {
-        /* On pre-5.0 kernels, if dma_map_resource() is present, then we
-         * assume that ops != NULL.  With direct_dma handling swiotlb on 5.0+
-         * kernels, ops == NULL.
-         */
-#if defined(NV_DMA_IS_DIRECT_PRESENT)
+        //
+        // ops can be NULL on 5.0+ kernels, meaning we can utilize direct dma.
+        // On pre-5.0 kernels, ops is assumed to never be NULL.
+        //
         return NV_TRUE;
-#else
-        return NV_FALSE;
-#endif
     }
 
 #if defined(NV_DMA_MAP_OPS_HAS_MAP_PHYS)

@@ -35,7 +35,7 @@ void __nvoc_init__Sec2Context(Sec2Context*, RmHalspecOwner *pRmhalspecowner);
 void __nvoc_init_funcTable_Sec2Context(Sec2Context*, RmHalspecOwner *pRmhalspecowner);
 NV_STATUS __nvoc_ctor_Sec2Context(Sec2Context*, RmHalspecOwner *pRmhalspecowner, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_Sec2Context(Sec2Context*, RmHalspecOwner *pRmhalspecowner);
-void __nvoc_dtor_Sec2Context(Sec2Context*);
+void __nvoc_dtor_Sec2Context(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__Sec2Context;
@@ -160,7 +160,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_Sec2Context =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "Sec2Context",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_Sec2Context,
+    .objCreatefn =        &__nvoc_objCreateDynamic_Sec2Context,
     .pCastInfo =          &__nvoc_castinfo__Sec2Context,
     .pExportInfo =        &__nvoc_export_info__Sec2Context
 };
@@ -169,7 +169,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_Sec2Context =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__Sec2Context __nvoc_metadata__Sec2Context = {
     .rtti.pClassDef = &__nvoc_class_def_Sec2Context,    // (sec2ctx) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_Sec2Context,
+    .rtti.dtor      = &__nvoc_dtor_Sec2Context,
     .rtti.offset    = 0,
     .metadata__ChannelDescendant.rtti.pClassDef = &__nvoc_class_def_ChannelDescendant,    // (chandes) super
     .metadata__ChannelDescendant.rtti.dtor      = &__nvoc_destructFromBase,
@@ -525,16 +525,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__Sec2Context =
 
 // Destruct Sec2Context object.
 void __nvoc_sec2ctxDestruct(Sec2Context*);
-void __nvoc_dtor_ChannelDescendant(ChannelDescendant*);
-void __nvoc_dtor_Sec2Context(Sec2Context* pThis) {
+void __nvoc_dtor_ChannelDescendant(Dynamic*);
+void __nvoc_dtor_Sec2Context(Dynamic* pThis) {
+
+    Sec2Context *__nvoc_this = (Sec2Context *) pThis;
 
 // Call destructor.
-    __nvoc_sec2ctxDestruct(pThis);
+    __nvoc_sec2ctxDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_ChannelDescendant(&pThis->__nvoc_base_ChannelDescendant);
+    __nvoc_dtor_ChannelDescendant((Dynamic *) &__nvoc_this->__nvoc_base_ChannelDescendant);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_Sec2Context(Sec2Context *pThis, RmHalspecOwner *pRmhalspecowner) {
     RmVariantHal *rmVariantHal = &pRmhalspecowner->rmVariantHal;
@@ -565,7 +567,7 @@ NV_STATUS __nvoc_ctor_Sec2Context(Sec2Context *pSec2Context, RmHalspecOwner *pRm
 
     // Unwind on error.
 __nvoc_ctor_Sec2Context_fail__init:
-    __nvoc_dtor_ChannelDescendant(&pSec2Context->__nvoc_base_ChannelDescendant);
+    __nvoc_dtor_ChannelDescendant((Dynamic *)&pSec2Context->__nvoc_base_ChannelDescendant);
 __nvoc_ctor_Sec2Context_fail_ChannelDescendant:
 __nvoc_ctor_Sec2Context_exit:
     return status;
@@ -697,13 +699,10 @@ __nvoc_objCreate_Sec2Context_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_Sec2Context(Sec2Context **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_Sec2Context(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_Sec2Context(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_Sec2Context((Sec2Context **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

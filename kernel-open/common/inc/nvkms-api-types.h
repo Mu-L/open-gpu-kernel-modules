@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2014-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2014-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -61,6 +61,7 @@ typedef NvU32 NvKmsDeferredRequestFifoHandle;
 typedef NvU32 NvKmsSwapGroupHandle;
 typedef NvU32 NvKmsVblankSyncObjectHandle;
 typedef NvU32 NvKmsVblankSemControlHandle;
+typedef NvU32 NvKmsVblankIntrCallbackHandle;
 
 struct NvKmsSize {
     NvU16 width;
@@ -268,12 +269,6 @@ enum NvKmsLUTFormat {
     NVKMS_LUT_FORMAT_UNORM14_WAR_813188
 };
 
-enum NvKmsLUTVssSupport {
-    NVKMS_LUT_VSS_NOT_SUPPORTED,
-    NVKMS_LUT_VSS_SUPPORTED,
-    NVKMS_LUT_VSS_REQUIRED,
-};
-
 enum NvKmsLUTVssType {
     NVKMS_LUT_VSS_TYPE_NONE,
     NVKMS_LUT_VSS_TYPE_LINEAR,
@@ -285,7 +280,7 @@ struct NvKmsLUTCaps {
     NvBool supported;
 
     /*! Whether this LUT supports VSS. */
-    enum NvKmsLUTVssSupport vssSupport;
+    NvBool vssSupport;
 
     /*!
      * The type of VSS segmenting this LUT uses.
@@ -786,5 +781,29 @@ struct NvKmsVblankSemControlDataOneHead {
 struct NvKmsVblankSemControlData {
     struct NvKmsVblankSemControlDataOneHead head[NV_MAX_HEADS];
 };
+
+/*
+ * Dithering control enums, shared between NVKMS API and KAPI.
+ * These are defined here (instead of nvkms-api.h) so that nvkms-kapi.h
+ * can reference them without pulling in the full NVKMS API.
+ */
+
+/*! Values for the NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING attribute. */
+enum NvKmsDpyAttributeRequestedDitheringValue {
+    NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_AUTO = 0,
+    NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_ENABLED = 1,
+    NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_DISABLED = 2,
+};
+
+/*! Values for the NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_MODE attribute. */
+enum NvKmsDpyAttributeRequestedDitheringModeValue {
+    NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_MODE_AUTO = 0,
+    NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_MODE_DYNAMIC_2X2 = 1,
+    NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_MODE_STATIC_2X2 = 2,
+    NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_MODE_TEMPORAL = 3,
+};
+
+typedef void (*NVRgInterruptCallbackProc)(NvU64 clientData,
+                                          NvU64 timestamp);
 
 #endif /* NVKMS_API_TYPES_H */

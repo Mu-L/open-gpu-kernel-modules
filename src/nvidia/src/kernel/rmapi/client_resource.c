@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -41,6 +41,8 @@
 #include "platform/nvpcf.h"
 #include "mem_mgr/mem.h"
 #include "nvsecurityinfo.h"
+#include "diagnostics/op_event_log.h"
+#include "cper/cper.h"
 #include "kernel/gpu/rc/kernel_rc.h"
 #include "resource_desc.h"
 #include "platform/sli/sli.h"
@@ -1154,6 +1156,8 @@ cliresCtrlCmdSystemGetChipsetInfo_IMPL
     }
 #endif
 
+    pChipsetInfo->chipsetId = pCl->Chipset;
+
     return NV_OK;
 }
 
@@ -1954,6 +1958,55 @@ cliresCtrlCmdGpuAcctGetProcAccountingInfo_IMPL
     }
 
     return gpuacctGetProcAcctInfo(pGpuAcct, pAcctInfoParams);
+}
+
+NV_STATUS
+cliresCtrlCmdGpuAcctGetProcAccountingInfo_v2_IMPL
+(
+    RmClientResource *pRmCliRes,
+    NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_V2_PARAMS *pAcctInfoParams
+)
+{
+    OBJSYS        *pSys = SYS_GET_INSTANCE();
+    GpuAccounting *pGpuAcct = SYS_GET_GPUACCT(pSys);
+    OBJGPU        *pGpu;
+    CALL_CONTEXT  *pCallContext;
+    RmCtrlParams  *pRmCtrlParams;
+    RM_API        *pRmApi;
+
+    NV_ASSERT_OR_RETURN(rmapiLockIsOwner(), NV_ERR_INVALID_LOCK_STATE);
+
+    pGpu = gpumgrGetGpuFromId(pAcctInfoParams->gpuId);
+    if (pGpu == NULL)
+    {
+        return NV_ERR_INVALID_ARGUMENT;
+    }
+
+    // Only lookup pid for baremetal case
+    if (pAcctInfoParams->subPid == 0)
+        pAcctInfoParams->pid = lookupPid(pAcctInfoParams->pid);
+
+    if (IS_VIRTUAL(pGpu))
+    {
+        // vGpu team to add support here
+        return NV_ERR_NOT_READY;
+    }
+    else if (IS_GSP_CLIENT(pGpu) && IS_VGPU_GSP_PLUGIN_OFFLOAD_ENABLED(pGpu) &&
+             (pAcctInfoParams->subPid != 0))
+    {
+        pCallContext  = resservGetTlsCallContext();
+        pRmCtrlParams = pCallContext->pControlParams;
+        pRmApi        = GPU_GET_PHYSICAL_RMAPI(pGpu);
+
+        return pRmApi->Control(pRmApi,
+                               pRmCtrlParams->hClient,
+                               pRmCtrlParams->hObject,
+                               pRmCtrlParams->cmd,
+                               pRmCtrlParams->pParams,
+                               pRmCtrlParams->paramsSize);
+    }
+
+    return gpuacctGetProcAcctInfo_v2(pGpuAcct, pAcctInfoParams);
 }
 
 NV_STATUS
@@ -2914,6 +2967,10 @@ cliresCtrlCmdSystemNVPCFGetPowerModeInfo_IMPL
 
     switch (pParams->subFunc)
     {
+        case NVPCF0100_CTRL_CONFIG_DSM_1X_FUNC_GET_SUPPORTED_CASE:
+            acpiDsmFunction    = ACPI_DSM_FUNCTION_NVPCF;
+            acpiDsmSubFunction = NVPCF0100_CTRL_CONFIG_DSM_1X_FUNC_GET_SUPPORTED;
+            /* fallthrough */
         case NVPCF0100_CTRL_CONFIG_DSM_2X_FUNC_GET_SUPPORTED_CASE:
         {
             dsmDataSize = sizeof(pParams->supportedFuncs);
@@ -2943,6 +3000,40 @@ cliresCtrlCmdSystemNVPCFGetPowerModeInfo_IMPL
             }
             break;
         }
+        case NVPCF0100_CTRL_CONFIG_DSM_1X_FUNC_GET_DYNAMIC_CASE:
+        {
+            CONTROLLER_DYNAMIC_TABLE_1X_ACPI dynamicTable_1x;
+            portMemSet(&dynamicTable_1x, 0, sizeof(dynamicTable_1x));
+
+            dynamicTable_1x.header.version = NVPCF0100_CTRL_DYNAMIC_TABLE_1X_VERSION;
+            dynamicTable_1x.header.size = sizeof(NVPCF0100_CTRL_DYNAMIC_TABLE_1X_HEADER);
+            dynamicTable_1x.header.entryCnt = 2;
+            dynamicTable_1x.header.reserved = 0;
+
+            dynamicTable_1x.entries[0] = NVPCF0100_CTRL_DYNAMIC_TABLE_1X_INPUT_CMD_GET_TPP;
+            dsmDataSize = sizeof(dynamicTable_1x);
+
+            if ((rc = osCallACPI_DSM(pGpu,
+                                     ACPI_DSM_FUNCTION_NVPCF,
+                                     NVPCF0100_CTRL_CONFIG_DSM_1X_FUNC_GET_DYNAMIC_PARAMS,
+                                     (NvU32*)(&dynamicTable_1x),
+                                     &dsmDataSize)) != NV_OK)
+            {
+                NV_PRINTF(LEVEL_WARNING,
+                    "Unable to retrieve NVPCF dynamic data. Possibly not supported by SBIOS "
+                    "rc = %x\n", rc);
+                status =  NV_ERR_NOT_SUPPORTED;
+            }
+            else
+            {
+                // bit [0:15] is TPP, bit [16:31] is rated TGP
+                pParams->tpp = dynamicTable_1x.entries[1] & 0xFFFF;
+                pParams->ratedTgp = (dynamicTable_1x.entries[1] & 0xFFFF0000) >> 16;
+            }
+
+            break;
+        }
+
         case NVPCF0100_CTRL_CONFIG_DSM_2X_FUNC_GET_DYNAMIC_CASE:
         {
             NvU8 *pData = NULL;
@@ -5314,7 +5405,7 @@ cliresCtrlCmdGpuSetNvlinkBwMode_IMPL
     NV0000_CTRL_GPU_SET_NVLINK_BW_MODE_PARAMS *pParams
 )
 {
-    return gpumgrSetGpuNvlinkBwMode(pParams->mode);
+    return gpumgrSetGpuNvlinkBwMode(pParams->mode, NV_TRUE);
 }
 
 NV_STATUS
@@ -5616,4 +5707,78 @@ cliresCtrlCmdSystemGetVrrCookiePresent_IMPL
     pParams->bIsPresent = ((status == NV_ERR_BUFFER_TOO_SMALL) && (objSize != 0));
 
     return NV_OK;
+}
+
+NV_STATUS
+cliresCtrlCmdSystemReadCper_IMPL
+(
+    RmClientResource *pRmCliRes,
+    NV0000_CTRL_SYSTEM_READ_CPER_PARAMS *pParams
+)
+{
+    NV_STATUS status = NV_OK;
+    NvU32 cursor;
+    CperBufferListIter it;
+    NvBool bFound = NV_FALSE;
+    NvBool bUseUuid = NV_FALSE;
+    NV_CPER_GUID userFruId = {0};
+    NV_CPER_GUID fruId = {0};
+    NvU8 emptyUuid[RM_SHA1_GID_SIZE] = {0};
+
+    if (pParams->cperTypeMask == 0)
+        return NV_OK;
+
+    if (portMemCmp(pParams->uuid, emptyUuid, RM_SHA1_GID_SIZE) != 0)
+    {
+        cperGuidFromUuidBytes(pParams->uuid, &userFruId);
+        bUseUuid = NV_TRUE;
+    }
+
+    // User supplied cperCursor=0 means "no previous entry" so return first entry.
+    bFound = (pParams->cperCursor == 0);
+
+    portSyncSpinlockAcquire(opEventLog.pSpinlock);
+    it = listIterAll(&opEventLog.cperBufferList);
+    portSyncSpinlockRelease(opEventLog.pSpinlock);
+
+    // Index from 1 because 0 has "no previous entry" meaning
+    for (cursor = 1; listIterNext(&it); cursor++)
+    {
+        if (bFound)
+        {
+            if (it.pValue->size > sizeof(pParams->buffer))
+            {
+                return NV_ERR_BUFFER_TOO_SMALL;
+            }
+
+            if (bUseUuid)
+            {
+                cperGetFirstSectionFruId(it.pValue->pCperBuffer, it.pValue->size, &fruId);
+                // skip to next entry if UUID doesn't match
+                if (cperGuidEqual(&userFruId, &fruId) == NV_FALSE)
+                {
+                    continue;
+                }
+            }
+
+            portMemCopy(pParams->buffer, sizeof(pParams->buffer),
+                it.pValue->pCperBuffer, it.pValue->size);
+            pParams->bufferSize = it.pValue->size;
+            pParams->cperCursor = cursor;
+
+            return NV_OK;
+        }
+
+        // User supplied cursor matches current entry, so return the next entry
+        if (pParams->cperCursor == cursor)
+        {
+            bFound = NV_TRUE;
+            continue;
+        }
+    }
+
+    // If no buffer is found, return empty buffer size as signal to user
+    pParams->bufferSize = 0;
+
+    return status;
 }

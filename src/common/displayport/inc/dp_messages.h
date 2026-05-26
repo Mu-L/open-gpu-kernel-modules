@@ -359,6 +359,12 @@ namespace DisplayPort
         void cancel(Message * message);
 
         bool send(Message * message, NakData & nakData);
+
+        bool isPollingEnabledForDpMstDetection()
+        {
+            return hal->isPollingEnabledForDpMstDetection();
+        }
+        bool send(Message * message, Message::MessageEventSink * sink);
         friend class Message;
         ~MessageManager();
     };

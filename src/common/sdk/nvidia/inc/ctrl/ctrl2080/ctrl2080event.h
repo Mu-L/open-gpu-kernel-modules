@@ -370,4 +370,27 @@ typedef struct NV2080_CTRL_EVENT_RATS_GSP_TRACE_BIND_EVTBUF_PARAMS {
     NvU32    gspLoggingBufferWatermark;
 } NV2080_CTRL_EVENT_RATS_GSP_TRACE_BIND_EVTBUF_PARAMS;
 
+ /*
+  * NV2080_CTRL_CMD_EVENT_NOCAT_BIND_EVTBUF
+  *
+  * This command is used to create a NOCAT bind-point to an event buffer.
+  *
+  *  hEventBuffer[IN]
+  *      The event buffer to bind to
+  *
+  * Possible status values returned are:
+  *   NV_OK
+  *   NV_ERR_INVALID_ARGUMENT
+  *   NV_ERR_NOT_SUPPORTED
+  */
+#define NV2080_CTRL_CMD_EVENT_NOCAT_BIND_EVTBUF (0x2080030b) /* finn: Evaluated from "(FINN_NV20_SUBDEVICE_0_EVENT_INTERFACE_ID << 8) | NV2080_CTRL_EVENT_NOCAT_BIND_EVTBUF_PARAMS_MESSAGE_ID" */
+
+#define NV2080_CTRL_EVENT_NOCAT_BIND_EVTBUF_PARAMS_MESSAGE_ID (0xBU)
+
+typedef struct NV2080_CTRL_EVENT_NOCAT_BIND_EVTBUF_PARAMS {
+    NvHandle hEventBuffer;
+} NV2080_CTRL_EVENT_NOCAT_BIND_EVTBUF_PARAMS;
+
+
+
 /* _ctrl2080event_h_ */

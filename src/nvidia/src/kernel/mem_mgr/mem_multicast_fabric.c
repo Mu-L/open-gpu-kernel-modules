@@ -69,6 +69,7 @@ typedef struct mem_multicast_fabric_attach_mem_info_node
     RsInterMapping    *pInterMapping;
     NvU64              physMapLength;
     NODE               node;
+    NvU8               offsetTableIndex;
 } MEM_MULTICAST_FABRIC_ATTACH_MEM_INFO_NODE;
 
 typedef struct mem_multicast_fabric_client_info
@@ -989,6 +990,15 @@ _memorymulticastfabricDetachMem
 
     fabricvaspaceUnmapPhysMemdesc(pFabricVAS, pFabricMemDesc, pMemNode->keyStart, pAttachMemInfoNode->physMapLength);
 
+    {
+        KernelMemorySystem *pKernelMemorySystem = GPU_GET_KERNEL_MEMORY_SYSTEM(pGpu);
+
+        kmemsysMcFlaOffsetTableFree_HAL(pGpu,
+                                    pKernelMemorySystem,
+                                    pAttachMemInfoNode->offsetTableIndex);
+
+        pAttachMemInfoNode->offsetTableIndex = MC_FLA_OFFSET_TABLE_INDEX_INVALID;
+    }
 }
 
 static void
@@ -2707,6 +2717,8 @@ _memorymulticastfabricCtrlAttachMem
     NvU32 gpuMask = NVBIT(gpuGetInstance(pGpu));
     RsInterMapping *pInterMapping;
     RsResourceRef *pMemoryMulticastFabricRef = RES_GET_REF(pMemoryMulticastFabric);
+    KernelMemorySystem *pKernelMemorySystem = GPU_GET_KERNEL_MEMORY_SYSTEM(pGpu);
+    NvU8 offsetTableIndex = MC_FLA_OFFSET_TABLE_INDEX_INVALID;
     if (!rmGpuGroupLockIsOwner(0, GPU_LOCK_GRP_MASK, &gpuMask))
         return NV_ERR_INVALID_LOCK_STATE;
 
@@ -2743,6 +2755,23 @@ _memorymulticastfabricCtrlAttachMem
     pInterMapping->flags = pParams->flags;
     pInterMapping->pMemDesc = pPhysMemDesc;
 
+     //
+     // We attempt to update the offset table before the mapping since the
+     // table update is relatively cheap (a few register writes) versus
+     // potentially having to map and unmap
+     //
+     status = kmemsysMcFlaOffsetTableAlloc(pGpu,
+                                           pKernelMemorySystem,
+                                           pParams,
+                                           pFabricMemDesc,
+                                           pPhysMemDesc,
+                                           &offsetTableIndex);
+    if (status != NV_OK)
+    {
+        NV_PRINTF(LEVEL_ERROR, "Failed to setup MC FLA offset table\n");
+        goto removeIntermap;
+    }
+
     status = fabricvaspaceMapPhysMemdesc(pFabricVAS,
                                          pFabricMemDesc,
                                          pParams->offset,
@@ -2753,7 +2782,7 @@ _memorymulticastfabricCtrlAttachMem
     if (status != NV_OK)
     {
         NV_PRINTF(LEVEL_ERROR, "Failed to map FLA\n");
-        goto removeIntermap;
+        goto freeOffset;
     }
 
     pNode = portMemAllocNonPaged(sizeof(*pNode));
@@ -2770,6 +2799,7 @@ _memorymulticastfabricCtrlAttachMem
     pNode->physMapLength    = pParams->mapLength;
     pNode->pPhysMemDesc     = pPhysMemDesc;
     pNode->pInterMapping    = pInterMapping;
+    pNode->offsetTableIndex = offsetTableIndex;
     pNode->node.Data        = pNode;
 
     status = btreeInsert(&pNode->node, &pGpuInfo->pAttachMemInfoTree);
@@ -2786,6 +2816,9 @@ freeNode:
 
 unmapVas:
     fabricvaspaceUnmapPhysMemdesc(pFabricVAS, pFabricMemDesc, pParams->offset, pParams->mapLength);
+
+freeOffset:
+    kmemsysMcFlaOffsetTableFree_HAL(pGpu, pKernelMemorySystem, offsetTableIndex);
 
 removeIntermap:
     refRemoveInterMapping(pMemoryMulticastFabricRef, pInterMapping, NV_FALSE);

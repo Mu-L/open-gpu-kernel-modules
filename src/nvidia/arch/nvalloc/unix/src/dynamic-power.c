@@ -820,11 +820,8 @@ void NV_API_CALL rm_init_tegra_dynamic_power_management(
     nv_priv_t *nvp = NV_GET_NV_PRIV(nv);
     void *fp;
 
-    if (!nv->supports_tegra_igpu_rg) {
-        NV_PRINTF(LEVEL_INFO,
-            "NVRM: Tegra PCI iGPU Rail-Gating is not supported on this platform.\n");
+    if (!nv->supports_tegra_igpu_rg)
         return;
-    }
 
     NV_ENTER_RM_RUNTIME(sp,fp);
 
@@ -974,15 +971,6 @@ void NV_API_CALL rm_init_dynamic_power_management(
             nv_allow_runtime_suspend(nv);
         }
     }
-
-    // Legacy case: check if device is primary and driven by VBIOS or fb driver.
-    nv->primary_vga = NV_FALSE;
-
-    //
-    // Below function always return NV_OK and depends upon kernel flags
-    // IORESOURCE_ROM_SHADOW & PCI_ROM_RESOURCE for Primary VGA detection.
-    //
-    nv_set_primary_vga_status(nv);
 
     // UEFI case: where console is driven by GOP driver.
     bUefiConsole = rm_get_uefi_console_status(nv);
@@ -2080,8 +2068,8 @@ static NvBool RmCheckRtd3GcxSupport(
     }
 
     *bGC6Support = pGpu->getProperty(pGpu, PDB_PROP_GPU_RTD3_GC6_SUPPORTED);
-    *bGCOFFSupport = nvp->b_mobile_config_enabled ? *bGC6Support :
-                     pGpu->getProperty(pGpu, PDB_PROP_GPU_RTD3_GCOFF_SUPPORTED);
+    *bGCOFFSupport = pGpu->getProperty(pGpu, PDB_PROP_GPU_RTD3_GCOFF_SUPPORTED) ||
+                     pGpu->getProperty(pGpu, PDB_PROP_GPU_LEGACY_GCOFF_SUPPORTED);
 
     if (!(*bGC6Support) &&
         !(*bGCOFFSupport) &&

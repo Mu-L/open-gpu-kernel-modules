@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -37,8 +37,13 @@
 #include "published/blackwell/gb202/dev_fsp_addendum.h"
 #include "published/blackwell/gb202/dev_therm_addendum.h"
 
+#include "cper/gpu_cper.h"
 #include "nvRmReg.h"
 #include "nverror.h"
+
+// Keep NV_ERROR_LOG and CPER legacy-Xid text identical.
+#define KFSP_GB202_GPU_INIT_ERROR_FMT \
+    "Error status 0x%x while polling for FSP boot complete, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x"
 
 static NvBool _kfspWaitBootCond_GB202(OBJGPU *pGpu, void *pArg);
 
@@ -81,15 +86,21 @@ kfspWaitForSecureBoot_GB202
 
     if (status != NV_OK)
     {
+        NvU32 fspBootComplete = GPU_REG_RD32(pGpu, NV_THERM_I2CS_SCRATCH_FSP_BOOT_COMPLETE);
+        NvU32 s0 = GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(0));
+        NvU32 s1 = GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(1));
+        NvU32 s2 = GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(2));
+        NvU32 s3 = GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(3));
+        char xidMessage[NV_CPER_NV_GPU_LEGACY_XID_MAX_MSG_LEN + 1];
+        static const NV_CPER_GUID notifyType = NV_CPER_NOTIFY_NVIDIA_GPU_TIMEOUT_GUID;
+
         NV_ASSERT_OK(gpuMarkDeviceForReset(pGpu));
-        NV_ERROR_LOG((void*) pGpu, GPU_INIT_ERROR, "Error status 0x%x while polling for FSP boot complete, "
-                     "0x%x, 0x%x, 0x%x, 0x%x, 0x%x",
-                     status,
-                     GPU_REG_RD32(pGpu, NV_THERM_I2CS_SCRATCH_FSP_BOOT_COMPLETE),
-                     GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(0)),
-                     GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(1)),
-                     GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(2)),
-                     GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(3)));
+        NV_ERROR_LOG((void*) pGpu, GPU_INIT_ERROR, KFSP_GB202_GPU_INIT_ERROR_FMT,
+                     status, fspBootComplete, s0, s1, s2, s3);
+
+        nvDbgSnprintf(xidMessage, sizeof(xidMessage), KFSP_GB202_GPU_INIT_ERROR_FMT,
+                      status, fspBootComplete, s0, s1, s2, s3);
+        kfspEmitGpuInitErrorCper(pGpu, pKernelFsp, &notifyType, 0x0001u, xidMessage);
 
         kfspDumpDebugState_HAL(pGpu, pKernelFsp);
     }

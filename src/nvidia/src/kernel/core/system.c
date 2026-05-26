@@ -36,6 +36,7 @@
 #include "nvrm_registry.h"
 #include "core/thread_state.h"
 #include "diagnostics/tracer.h"
+#include "diagnostics/op_event_log.h"
 #include "rmosxfac.h"
 #include "tls/tls.h"
 #include "rmapi/rmapi.h"
@@ -71,6 +72,8 @@ static void         _sysInitStaticConfig(OBJSYS *pSys);;
 
 // Global pointer to instance of OBJSYS
 OBJSYS *g_pSys = NULL;
+
+OpEventLog opEventLog = {0};
 
 typedef struct
 {
@@ -238,6 +241,10 @@ sysConstruct_IMPL(OBJSYS *pSys)
     if (status != NV_OK)
         goto failed;
 
+    status = opEventLogConstruct();
+    if (status != NV_OK)
+        goto failed;
+
     bindataInitialize();
 
     return NV_OK;
@@ -245,6 +252,8 @@ sysConstruct_IMPL(OBJSYS *pSys)
 failed:
 
     _sysDestroyMemExportCache(pSys);
+
+    opEventLogDestruct();
 
     _sysDeleteChildObjects(pSys);
 
@@ -266,6 +275,8 @@ sysDestruct_IMPL(OBJSYS *pSys)
 
     _sysDestroyMemExportCache(pSys);
     _sysDestroyMemExportClient(pSys);
+
+    opEventLogDestruct();
 
     //
     // Any of these operations might fail but go ahead and
@@ -807,6 +818,12 @@ sysInitRegistryOverrides_IMPL
         pSys->setProperty(pSys, PDB_PROP_SYS_ALLOW_UNKNOWN_4PART_IDS, !!data32);
     }
 
+    if (osReadRegistryDword(pGpu, NV_REG_STR_RM_EVENT_NOTIFY_ISR_OPT_BUG_6037246,
+                            &data32) == NV_OK)
+    {
+        pSys->setProperty(pSys, PDB_PROP_SYS_EVENT_NOTIFY_ISR_OPT_ENABLED, !!data32);
+    }
+
     if (osReadRegistryDword(pGpu, NV_REG_STR_RM_USE_RW_API_LOCK_GET_MEM_ALIGNMENT_BUG_5785851_WAR,
                             &data32) == NV_OK)
     {
@@ -875,15 +892,29 @@ _sysRefreshAllGpuRecoveryAction
 }
 
 void
-sysSetRecoveryRebootRequired_IMPL
+sysSetRecoveryOsRebootRequired_IMPL
 (
     OBJSYS  *pSys,
     NvBool   bRebootRequired
 )
 {
-    if (!!pSys->getProperty(pSys, PDB_PROP_SYS_RECOVERY_REBOOT_REQUIRED) != !!bRebootRequired)
+    if (!!pSys->getProperty(pSys, PDB_PROP_SYS_RECOVERY_OS_REBOOT_REQUIRED) != !!bRebootRequired)
     {
-        pSys->setProperty(pSys, PDB_PROP_SYS_RECOVERY_REBOOT_REQUIRED, bRebootRequired);
+        pSys->setProperty(pSys, PDB_PROP_SYS_RECOVERY_OS_REBOOT_REQUIRED, bRebootRequired);
+        osQueueSystemWorkItem(_sysRefreshAllGpuRecoveryAction, NULL);
+    }
+}
+
+void
+sysSetRecoverySystemRebootRequired_IMPL
+(
+    OBJSYS  *pSys,
+    NvBool   bRebootRequired
+)
+{
+    if (!!pSys->getProperty(pSys, PDB_PROP_SYS_RECOVERY_SYSTEM_REBOOT_REQUIRED) != !!bRebootRequired)
+    {
+        pSys->setProperty(pSys, PDB_PROP_SYS_RECOVERY_SYSTEM_REBOOT_REQUIRED, bRebootRequired);
         osQueueSystemWorkItem(_sysRefreshAllGpuRecoveryAction, NULL);
     }
 }

@@ -5,7 +5,7 @@
 // Profile:  shipping-gpus-openrm
 // Template: templates/gt_rmconfig.h
 //
-// Chips:    TU10X, GA100, GA102, GA103, GA104, GA106, GA107, AD10X, GH10X, GB100, GB102, GB10B, GB110, GB112, GB202, GB203, GB205, GB206, GB207, GB20B, GB20C, T234D, T26XD
+// Chips:    TU10X, GA100, GA102, GA103, GA104, GA106, GA107, AD10X, GH10X, GB100, GB102, GB10B, GB110, GB112, GB202, GB203, GB205, GB206, GB207, GB20B, GB20C, GR10X, T23XD, T26XD
 //
 
 #ifndef _RMCFG_H_
@@ -33,6 +33,7 @@
 #define RMCFG_CHIP_GH10X     1
 #define RMCFG_CHIP_GB10X     1
 #define RMCFG_CHIP_GB20X     1
+#define RMCFG_CHIP_GR10X     1
 #define RMCFG_CHIP_T12X      0
 #define RMCFG_CHIP_T13X      0
 #define RMCFG_CHIP_T21X      0
@@ -85,9 +86,13 @@
 #define RMCFG_CHIP_GB20B     1
 #define RMCFG_CHIP_GB20C     1
 
+#define RMCFG_CHIP_GR100     1
+#define RMCFG_CHIP_GR102     1
+
 #define RMCFG_CHIP_T234      0
 
 #define RMCFG_CHIP_T234D     1
+#define RMCFG_CHIP_T239D     1
 
 #define RMCFG_CHIP_T264D     1
 
@@ -203,6 +208,12 @@
 #define RMCFG_CHIP_TEGRA_DISP 1
 #define RMCFG_CHIP_TEGRA_DISP_CLASSIC_GPUS 1
 #define RMCFG_CHIP_GB20Y     1
+#define RMCFG_CHIP_dRUBIN    1
+#define RMCFG_CHIP_DRUBIN    1
+#define RMCFG_CHIP_RUBIN     1
+#define RMCFG_CHIP_RUBIN_CLASSIC_GPUS 1
+#define RMCFG_CHIP_GR1XX     1
+#define RMCFG_CHIP_ZERO_GFX  1
 #define RMCFG_CHIP_TEGRA_BIG_GPUS 0
 #define RMCFG_CHIP_FERMI_TEGRA_BIG_GPUS 0
 #define RMCFG_CHIP_TEGRA     1
@@ -312,6 +323,7 @@
 #define RMCFG_FEATURE_NVSR_ON_NVDISPLAY           1  // NVSR on Nvdisplay 
 #define RMCFG_FEATURE_MODS_FEATURES               0  // Flag for enabling MODS required features in RM
 #define RMCFG_FEATURE_MULTINODE_FABRIC_IMEX       1  // Multinode fabric memory import/export support
+#define RMCFG_FEATURE_NVIDIA_CAP_FOR_PROFILING    1  // NVIDIA Capability for Profiling
 #define RMCFG_FEATURE_MANUAL_TRIGGER_BA_DMA_MODE  0  // Support for manually actuated BA DMA mode data collection.
 #define RMCFG_FEATURE_RM_DRIVEN_BA_DMA_MODE       0  // Support for RM-driven BA DMA mode data collection.
 #define RMCFG_FEATURE_VBLANK_CALLBACK             1  // Vblank callback functionality within RM
@@ -320,6 +332,7 @@
 #define RMCFG_FEATURE_TEGRA_SOC_SCANOUT_CARVEOUT  1  // Enable scanout carveout Tegra SOC NvDisplay Driver
 #define RMCFG_FEATURE_HEAD_REGIONAL_CRC           1  // Display Head Regional CRC support
 #define RMCFG_FEATURE_FEATURE_GH180               1  // RMconfig to encapsulate GH180 features
+#define RMCFG_FEATURE_FEATURE_VR180               1  // RMconfig to encapsulate VR180 features
 #define RMCFG_FEATURE_MIG_GFX                     1  // RMconfig to encapsulate MIG With GFX support (SMG)
 #define RMCFG_FEATURE_MULTICAST_FABRIC            1  // Support for MULTICAST_FABRIC
 #define RMCFG_FEATURE_NVLINK_ERROR_THRESHOLD      1  // Support for NVLINK_ERROR_THRESHOLD
@@ -335,6 +348,7 @@
 #define RMCFG_FEATURE_BINDATA_EXTRACTION          0  // Load bindata from disk.(Needs BINDATA_IMAGE to be enabled)
 #define RMCFG_FEATURE_SOC_PACKAGE_POWER_STATE     1  // RM support for SOC Package Power States
 #define RMCFG_FEATURE_DISP_POWER_GATING           1  // RM support for Display Power Gating
+#define RMCFG_FEATURE_INST_IN_SYS_SUPPORT_ACR_DEV_IN_PROGRESS  1  // RM support inst-in-sys mode ls engine boot via ACR
 
 
 
@@ -380,9 +394,9 @@
 #define RMCFG_CLASS_NV01_MEMORY_LIST_FBMEM        1
 #define RMCFG_CLASS_NV01_MEMORY_LIST_OBJECT       1
 #define RMCFG_CLASS_NV_IMEX_SESSION               1
-#define RMCFG_CLASS_PROFILER_DEVICE_EVENT         0
-#define RMCFG_CLASS_PROFILER_CONTEXT_EVENT        0
-#define RMCFG_CLASS_TRACE_DEVICE_EVENT            0
+#define RMCFG_CLASS_PROFILER_DEVICE_EVENT         1
+#define RMCFG_CLASS_PROFILER_CONTEXT_EVENT        1
+#define RMCFG_CLASS_TRACE_DEVICE_EVENT            1
 #define RMCFG_CLASS_NV_MEMORY_EXPORT              1
 #define RMCFG_CLASS_NV_CE_UTILS                   1
 #define RMCFG_CLASS_NV_MEMORY_FABRIC              1
@@ -447,6 +461,7 @@
 #define RMCFG_CLASS_NVC573_DISP_CAPABILITIES      1
 #define RMCFG_CLASS_NVC673_DISP_CAPABILITIES      1
 #define RMCFG_CLASS_NVC773_DISP_CAPABILITIES      1
+#define RMCFG_CLASS_NVC873_DISP_CAPABILITIES      1
 #define RMCFG_CLASS_NVC973_DISP_CAPABILITIES      1
 #define RMCFG_CLASS_NVCA73_DISP_CAPABILITIES      1
 #define RMCFG_CLASS_NVCB73_DISP_CAPABILITIES      1
@@ -481,6 +496,12 @@
 #define RMCFG_CLASS_NVC770_DISPLAY                1
 #define RMCFG_CLASS_NVC771_DISP_SF_USER           1
 #define RMCFG_CLASS_NVC77D_CORE_CHANNEL_DMA       1
+#define RMCFG_CLASS_NVC870_DISPLAY                1
+#define RMCFG_CLASS_NVC871_DISP_SF_USER           1
+#define RMCFG_CLASS_NVC87A_CURSOR_IMM_CHANNEL_PIO  1
+#define RMCFG_CLASS_NVC87B_WINDOW_IMM_CHANNEL_DMA  1
+#define RMCFG_CLASS_NVC87D_CORE_CHANNEL_DMA       1
+#define RMCFG_CLASS_NVC87E_WINDOW_CHANNEL_DMA     1
 #define RMCFG_CLASS_NVC970_DISPLAY                1
 #define RMCFG_CLASS_NVC971_DISP_SF_USER           1
 #define RMCFG_CLASS_NVC97A_CURSOR_IMM_CHANNEL_PIO  1
@@ -533,6 +554,7 @@
 #define RMCFG_CLASS_NVCEB0_VIDEO_DECODER          1  // Decoder Class for Blackwell iGPU
 #define RMCFG_CLASS_NVCFB0_VIDEO_DECODER          1  // Decoder Class for GB20X
 #define RMCFG_CLASS_NVD1B0_VIDEO_DECODER          1  // Decoder Class for GB20Y
+#define RMCFG_CLASS_NVD2B0_VIDEO_DECODER          1  // Decoder Class for Rubin
 #define RMCFG_CLASS_NVC4B7_VIDEO_ENCODER          1
 #define RMCFG_CLASS_NVB4B7_VIDEO_ENCODER          1
 #define RMCFG_CLASS_NVC7B7_VIDEO_ENCODER          1
@@ -546,6 +568,7 @@
 #define RMCFG_CLASS_NVCED0_VIDEO_NVJPG            1
 #define RMCFG_CLASS_NVCDD1_VIDEO_NVJPG            1
 #define RMCFG_CLASS_NVCFD1_VIDEO_NVJPG            1
+#define RMCFG_CLASS_NVD2D1_VIDEO_NVJPG            1
 #define RMCFG_CLASS_NVB8FA_VIDEO_OFA              1
 #define RMCFG_CLASS_NVC6FA_VIDEO_OFA              1
 #define RMCFG_CLASS_NVC7FA_VIDEO_OFA              1
@@ -554,6 +577,7 @@
 #define RMCFG_CLASS_NVCEFA_VIDEO_OFA              1
 #define RMCFG_CLASS_NVCFFA_VIDEO_OFA              1
 #define RMCFG_CLASS_NVD1FA_VIDEO_OFA              1
+#define RMCFG_CLASS_NVD2FA_VIDEO_OFA              1
 #define RMCFG_CLASS_KEPLER_INLINE_TO_MEMORY_B     1  // Kepler inline to memory
 #define RMCFG_CLASS_FERMI_CONTEXT_SHARE_A         1  // Context Share class
 #define RMCFG_CLASS_KEPLER_CHANNEL_GROUP_A        1  // Channel Group Class

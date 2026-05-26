@@ -35,7 +35,7 @@ void __nvoc_init__DispSwObject(DispSwObject*, RmHalspecOwner *pRmhalspecowner);
 void __nvoc_init_funcTable_DispSwObject(DispSwObject*, RmHalspecOwner *pRmhalspecowner);
 NV_STATUS __nvoc_ctor_DispSwObject(DispSwObject*, RmHalspecOwner *pRmhalspecowner, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_DispSwObject(DispSwObject*, RmHalspecOwner *pRmhalspecowner);
-void __nvoc_dtor_DispSwObject(DispSwObject*);
+void __nvoc_dtor_DispSwObject(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__DispSwObject;
@@ -160,7 +160,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_DispSwObject =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "DispSwObject",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_DispSwObject,
+    .objCreatefn =        &__nvoc_objCreateDynamic_DispSwObject,
     .pCastInfo =          &__nvoc_castinfo__DispSwObject,
     .pExportInfo =        &__nvoc_export_info__DispSwObject
 };
@@ -170,6 +170,13 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_DispSwObject =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+static NV_STATUS dispswCtrlCmdNotifyOnVblank__EXPORT(void *pDispSwObject, void *pNotifyParams) {
+    return dispswCtrlCmdNotifyOnVblank_IMPL(pDispSwObject, pNotifyParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_DispSwObject[] = 
 {
@@ -177,7 +184,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_DispSwOb
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &dispswCtrlCmdNotifyOnVblank_IMPL,
+        /*pFunc=*/      (void (*)(void)) &dispswCtrlCmdNotifyOnVblank__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*flags=*/      0x48u,
         /*accessRight=*/0x0u,
@@ -194,7 +201,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_DispSwOb
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__DispSwObject __nvoc_metadata__DispSwObject = {
     .rtti.pClassDef = &__nvoc_class_def_DispSwObject,    // (dispsw) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_DispSwObject,
+    .rtti.dtor      = &__nvoc_dtor_DispSwObject,
     .rtti.offset    = 0,
     .metadata__ChannelDescendant.rtti.pClassDef = &__nvoc_class_def_ChannelDescendant,    // (chandes) super
     .metadata__ChannelDescendant.rtti.dtor      = &__nvoc_destructFromBase,
@@ -553,16 +560,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__DispSwObject =
 
 // Destruct DispSwObject object.
 void __nvoc_dispswDestruct(DispSwObject*);
-void __nvoc_dtor_ChannelDescendant(ChannelDescendant*);
-void __nvoc_dtor_DispSwObject(DispSwObject* pThis) {
+void __nvoc_dtor_ChannelDescendant(Dynamic*);
+void __nvoc_dtor_DispSwObject(Dynamic* pThis) {
+
+    DispSwObject *__nvoc_this = (DispSwObject *) pThis;
 
 // Call destructor.
-    __nvoc_dispswDestruct(pThis);
+    __nvoc_dispswDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_ChannelDescendant(&pThis->__nvoc_base_ChannelDescendant);
+    __nvoc_dtor_ChannelDescendant((Dynamic *) &__nvoc_this->__nvoc_base_ChannelDescendant);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_DispSwObject(DispSwObject *pThis, RmHalspecOwner *pRmhalspecowner) {
     RmVariantHal *rmVariantHal = &pRmhalspecowner->rmVariantHal;
@@ -593,7 +602,7 @@ NV_STATUS __nvoc_ctor_DispSwObject(DispSwObject *pDispSw, RmHalspecOwner *pRmhal
 
     // Unwind on error.
 __nvoc_ctor_DispSwObject_fail__init:
-    __nvoc_dtor_ChannelDescendant(&pDispSw->__nvoc_base_ChannelDescendant);
+    __nvoc_dtor_ChannelDescendant((Dynamic *)&pDispSw->__nvoc_base_ChannelDescendant);
 __nvoc_ctor_DispSwObject_fail_ChannelDescendant:
 __nvoc_ctor_DispSwObject_exit:
     return status;
@@ -725,13 +734,10 @@ __nvoc_objCreate_DispSwObject_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_DispSwObject(DispSwObject **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_DispSwObject(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_DispSwObject(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_DispSwObject((DispSwObject **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

@@ -28,7 +28,7 @@ void __nvoc_init__KernelCrashCatEngine(KernelCrashCatEngine*, GpuHalspecOwner *p
 void __nvoc_init_funcTable_KernelCrashCatEngine(KernelCrashCatEngine*, GpuHalspecOwner *pGpuhalspecowner);
 NV_STATUS __nvoc_ctor_KernelCrashCatEngine(KernelCrashCatEngine*, GpuHalspecOwner *pGpuhalspecowner);
 void __nvoc_init_dataField_KernelCrashCatEngine(KernelCrashCatEngine*, GpuHalspecOwner *pGpuhalspecowner);
-void __nvoc_dtor_KernelCrashCatEngine(KernelCrashCatEngine*);
+void __nvoc_dtor_KernelCrashCatEngine(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__KernelCrashCatEngine;
@@ -63,7 +63,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelCrashCatEngine =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "KernelCrashCatEngine",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) NULL,
+    .objCreatefn =        NULL,
     .pCastInfo =          &__nvoc_castinfo__KernelCrashCatEngine,
     .pExportInfo =        &__nvoc_export_info__KernelCrashCatEngine
 };
@@ -72,7 +72,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelCrashCatEngine =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__KernelCrashCatEngine __nvoc_metadata__KernelCrashCatEngine = {
     .rtti.pClassDef = &__nvoc_class_def_KernelCrashCatEngine,    // (kcrashcatEngine) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_KernelCrashCatEngine,
+    .rtti.dtor      = &__nvoc_dtor_KernelCrashCatEngine,
     .rtti.offset    = 0,
     .metadata__CrashCatEngine.rtti.pClassDef = &__nvoc_class_def_CrashCatEngine,    // (crashcatEngine) super
     .metadata__CrashCatEngine.rtti.dtor      = &__nvoc_destructFromBase,
@@ -180,13 +180,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__KernelCrashCatEngine =
 
 
 // Destruct KernelCrashCatEngine object.
-void __nvoc_dtor_CrashCatEngine(CrashCatEngine*);
-void __nvoc_dtor_KernelCrashCatEngine(KernelCrashCatEngine* pThis) {
+void __nvoc_dtor_CrashCatEngine(Dynamic*);
+void __nvoc_dtor_KernelCrashCatEngine(Dynamic* pThis) {
+
+    KernelCrashCatEngine *__nvoc_this = (KernelCrashCatEngine *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_CrashCatEngine(&pThis->__nvoc_base_CrashCatEngine);
+    __nvoc_dtor_CrashCatEngine((Dynamic *) &__nvoc_this->__nvoc_base_CrashCatEngine);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_KernelCrashCatEngine(KernelCrashCatEngine *pThis, GpuHalspecOwner *pGpuhalspecowner) {
     ChipHal *chipHal = &pGpuhalspecowner->chipHal;
@@ -228,7 +230,7 @@ static void __nvoc_init_funcTable_KernelCrashCatEngine_1(KernelCrashCatEngine *p
 
     // kcrashcatEngineReadDmem -- virtual halified (2 hals) body
     if (( ((chipHal_HalVarIdx >> 5) == 1UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0xbdf0ffe0UL) ) ||
-        ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000003f9UL) )) /* ChipHal: TU102 | TU104 | TU106 | TU116 | TU117 | GA100 | GA102 | GA103 | GA104 | GA106 | GA107 | AD102 | AD103 | AD104 | AD106 | AD107 | GH100 | GB100 | GB102 | GB10B | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C */ 
+        ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000030ffUL) )) /* ChipHal: TU102 | TU104 | TU106 | TU116 | TU117 | GA100 | GA102 | GA103 | GA104 | GA106 | GA107 | AD102 | AD103 | AD104 | AD106 | AD107 | GH100 | GB100 | GB102 | GB10B | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C | GR100 | GR102 */ 
     {
         pThis->__kcrashcatEngineReadDmem__ = &kcrashcatEngineReadDmem_TU102;
     }
@@ -240,7 +242,7 @@ static void __nvoc_init_funcTable_KernelCrashCatEngine_1(KernelCrashCatEngine *p
 
     // kcrashcatEngineGetScratchOffsets -- virtual halified (2 hals) override (crashcatEngine) base (crashcatEngine) body
     if (( ((chipHal_HalVarIdx >> 5) == 1UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0xbdf0ffe0UL) ) ||
-        ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000003f9UL) )) /* ChipHal: TU102 | TU104 | TU106 | TU116 | TU117 | GA100 | GA102 | GA103 | GA104 | GA106 | GA107 | AD102 | AD103 | AD104 | AD106 | AD107 | GH100 | GB100 | GB102 | GB10B | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C */ 
+        ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000030ffUL) )) /* ChipHal: TU102 | TU104 | TU106 | TU116 | TU117 | GA100 | GA102 | GA103 | GA104 | GA106 | GA107 | AD102 | AD103 | AD104 | AD106 | AD107 | GH100 | GB100 | GB102 | GB10B | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C | GR100 | GR102 */ 
     {
         pThis->__kcrashcatEngineGetScratchOffsets__ = &kcrashcatEngineGetScratchOffsets_TU102;
     }
@@ -252,7 +254,7 @@ static void __nvoc_init_funcTable_KernelCrashCatEngine_1(KernelCrashCatEngine *p
 
     // kcrashcatEngineGetWFL0Offset -- virtual halified (2 hals) override (crashcatEngine) base (crashcatEngine) body
     if (( ((chipHal_HalVarIdx >> 5) == 1UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0xbdf0ffe0UL) ) ||
-        ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000003f9UL) )) /* ChipHal: TU102 | TU104 | TU106 | TU116 | TU117 | GA100 | GA102 | GA103 | GA104 | GA106 | GA107 | AD102 | AD103 | AD104 | AD106 | AD107 | GH100 | GB100 | GB102 | GB10B | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C */ 
+        ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000030ffUL) )) /* ChipHal: TU102 | TU104 | TU106 | TU116 | TU117 | GA100 | GA102 | GA103 | GA104 | GA106 | GA107 | AD102 | AD103 | AD104 | AD106 | AD107 | GH100 | GB100 | GB102 | GB10B | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C | GR100 | GR102 */ 
     {
         pThis->__kcrashcatEngineGetWFL0Offset__ = &kcrashcatEngineGetWFL0Offset_TU102;
     }

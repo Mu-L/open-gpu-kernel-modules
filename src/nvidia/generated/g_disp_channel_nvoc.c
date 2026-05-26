@@ -35,7 +35,7 @@ void __nvoc_init__DispChannel(DispChannel*);
 void __nvoc_init_funcTable_DispChannel(DispChannel*);
 NV_STATUS __nvoc_ctor_DispChannel(DispChannel*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams, NvU32 isDma);
 void __nvoc_init_dataField_DispChannel(DispChannel*);
-void __nvoc_dtor_DispChannel(DispChannel*);
+void __nvoc_dtor_DispChannel(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__DispChannel;
@@ -128,7 +128,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_DispChannel =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "DispChannel",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_DispChannel,
+    .objCreatefn =        &__nvoc_objCreateDynamic_DispChannel,
     .pCastInfo =          &__nvoc_castinfo__DispChannel,
     .pExportInfo =        &__nvoc_export_info__DispChannel
 };
@@ -137,7 +137,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_DispChannel =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__DispChannel __nvoc_metadata__DispChannel = {
     .rtti.pClassDef = &__nvoc_class_def_DispChannel,    // (dispchn) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_DispChannel,
+    .rtti.dtor      = &__nvoc_dtor_DispChannel,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -448,18 +448,20 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__DispChannel =
 
 // Destruct DispChannel object.
 void __nvoc_dispchnDestruct(DispChannel*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_Notifier(Notifier*);
-void __nvoc_dtor_DispChannel(DispChannel* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_Notifier(Dynamic*);
+void __nvoc_dtor_DispChannel(Dynamic* pThis) {
+
+    DispChannel *__nvoc_this = (DispChannel *) pThis;
 
 // Call destructor.
-    __nvoc_dispchnDestruct(pThis);
+    __nvoc_dispchnDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
-    __nvoc_dtor_Notifier(&pThis->__nvoc_base_Notifier);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
+    __nvoc_dtor_Notifier((Dynamic *) &__nvoc_this->__nvoc_base_Notifier);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_DispChannel(DispChannel *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -488,9 +490,9 @@ NV_STATUS __nvoc_ctor_DispChannel(DispChannel *pDispChannel, struct CALL_CONTEXT
 
     // Unwind on error.
 __nvoc_ctor_DispChannel_fail__init:
-    __nvoc_dtor_Notifier(&pDispChannel->__nvoc_base_Notifier);
+    __nvoc_dtor_Notifier((Dynamic *)&pDispChannel->__nvoc_base_Notifier);
 __nvoc_ctor_DispChannel_fail_Notifier:
-    __nvoc_dtor_GpuResource(&pDispChannel->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pDispChannel->__nvoc_base_GpuResource);
 __nvoc_ctor_DispChannel_fail_GpuResource:
 __nvoc_ctor_DispChannel_exit:
     return status;
@@ -607,15 +609,12 @@ __nvoc_objCreate_DispChannel_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_DispChannel(DispChannel **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_DispChannel(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
     NvU32 isDma = va_arg(__nvoc_args, NvU32);
 
-    __nvoc_status = __nvoc_objCreate_DispChannel(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams, isDma);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_DispChannel((DispChannel **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams, isDma);
 }
 
 
@@ -639,7 +638,7 @@ void __nvoc_init__DispChannelPio(DispChannelPio*);
 void __nvoc_init_funcTable_DispChannelPio(DispChannelPio*);
 NV_STATUS __nvoc_ctor_DispChannelPio(DispChannelPio*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_DispChannelPio(DispChannelPio*);
-void __nvoc_dtor_DispChannelPio(DispChannelPio*);
+void __nvoc_dtor_DispChannelPio(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__DispChannelPio;
@@ -762,7 +761,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_DispChannelPio =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "DispChannelPio",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_DispChannelPio,
+    .objCreatefn =        &__nvoc_objCreateDynamic_DispChannelPio,
     .pCastInfo =          &__nvoc_castinfo__DispChannelPio,
     .pExportInfo =        &__nvoc_export_info__DispChannelPio
 };
@@ -771,7 +770,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_DispChannelPio =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__DispChannelPio __nvoc_metadata__DispChannelPio = {
     .rtti.pClassDef = &__nvoc_class_def_DispChannelPio,    // (dispchnpio) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_DispChannelPio,
+    .rtti.dtor      = &__nvoc_dtor_DispChannelPio,
     .rtti.offset    = 0,
     .metadata__DispChannel.rtti.pClassDef = &__nvoc_class_def_DispChannel,    // (dispchn) super
     .metadata__DispChannel.rtti.dtor      = &__nvoc_destructFromBase,
@@ -1112,13 +1111,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__DispChannelPio =
 
 
 // Destruct DispChannelPio object.
-void __nvoc_dtor_DispChannel(DispChannel*);
-void __nvoc_dtor_DispChannelPio(DispChannelPio* pThis) {
+void __nvoc_dtor_DispChannel(Dynamic*);
+void __nvoc_dtor_DispChannelPio(Dynamic* pThis) {
+
+    DispChannelPio *__nvoc_this = (DispChannelPio *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_DispChannel(&pThis->__nvoc_base_DispChannel);
+    __nvoc_dtor_DispChannel((Dynamic *) &__nvoc_this->__nvoc_base_DispChannel);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_DispChannelPio(DispChannelPio *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -1144,7 +1145,7 @@ NV_STATUS __nvoc_ctor_DispChannelPio(DispChannelPio *pDispChannelPio, struct CAL
 
     // Unwind on error.
 __nvoc_ctor_DispChannelPio_fail__init:
-    __nvoc_dtor_DispChannel(&pDispChannelPio->__nvoc_base_DispChannel);
+    __nvoc_dtor_DispChannel((Dynamic *)&pDispChannelPio->__nvoc_base_DispChannel);
 __nvoc_ctor_DispChannelPio_fail_DispChannel:
 __nvoc_ctor_DispChannelPio_exit:
     return status;
@@ -1262,14 +1263,11 @@ __nvoc_objCreate_DispChannelPio_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_DispChannelPio(DispChannelPio **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_DispChannelPio(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_DispChannelPio(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_DispChannelPio((DispChannelPio **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 
 
@@ -1293,7 +1291,7 @@ void __nvoc_init__DispChannelDma(DispChannelDma*);
 void __nvoc_init_funcTable_DispChannelDma(DispChannelDma*);
 NV_STATUS __nvoc_ctor_DispChannelDma(DispChannelDma*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_DispChannelDma(DispChannelDma*);
-void __nvoc_dtor_DispChannelDma(DispChannelDma*);
+void __nvoc_dtor_DispChannelDma(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__DispChannelDma;
@@ -1416,7 +1414,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_DispChannelDma =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "DispChannelDma",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_DispChannelDma,
+    .objCreatefn =        &__nvoc_objCreateDynamic_DispChannelDma,
     .pCastInfo =          &__nvoc_castinfo__DispChannelDma,
     .pExportInfo =        &__nvoc_export_info__DispChannelDma
 };
@@ -1425,7 +1423,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_DispChannelDma =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__DispChannelDma __nvoc_metadata__DispChannelDma = {
     .rtti.pClassDef = &__nvoc_class_def_DispChannelDma,    // (dispchndma) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_DispChannelDma,
+    .rtti.dtor      = &__nvoc_dtor_DispChannelDma,
     .rtti.offset    = 0,
     .metadata__DispChannel.rtti.pClassDef = &__nvoc_class_def_DispChannel,    // (dispchn) super
     .metadata__DispChannel.rtti.dtor      = &__nvoc_destructFromBase,
@@ -1766,13 +1764,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__DispChannelDma =
 
 
 // Destruct DispChannelDma object.
-void __nvoc_dtor_DispChannel(DispChannel*);
-void __nvoc_dtor_DispChannelDma(DispChannelDma* pThis) {
+void __nvoc_dtor_DispChannel(Dynamic*);
+void __nvoc_dtor_DispChannelDma(Dynamic* pThis) {
+
+    DispChannelDma *__nvoc_this = (DispChannelDma *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_DispChannel(&pThis->__nvoc_base_DispChannel);
+    __nvoc_dtor_DispChannel((Dynamic *) &__nvoc_this->__nvoc_base_DispChannel);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_DispChannelDma(DispChannelDma *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -1798,7 +1798,7 @@ NV_STATUS __nvoc_ctor_DispChannelDma(DispChannelDma *pDispChannelDma, struct CAL
 
     // Unwind on error.
 __nvoc_ctor_DispChannelDma_fail__init:
-    __nvoc_dtor_DispChannel(&pDispChannelDma->__nvoc_base_DispChannel);
+    __nvoc_dtor_DispChannel((Dynamic *)&pDispChannelDma->__nvoc_base_DispChannel);
 __nvoc_ctor_DispChannelDma_fail_DispChannel:
 __nvoc_ctor_DispChannelDma_exit:
     return status;
@@ -1916,13 +1916,10 @@ __nvoc_objCreate_DispChannelDma_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_DispChannelDma(DispChannelDma **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_DispChannelDma(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_DispChannelDma(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_DispChannelDma((DispChannelDma **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

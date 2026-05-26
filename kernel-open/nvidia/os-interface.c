@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1999-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1999-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -42,6 +42,15 @@
 #if defined(CONFIG_LOCKDEP)
 #include <linux/lockdep.h>
 #endif // CONFIG_LOCKDEP
+#if defined(NV_MISC_CGROUP_PRESENT)
+#include <linux/cgroup.h>
+#define NV_USE_MISC_CGROUP
+#endif // NV_MISC_CGROUP_PRESENT
+#if defined(NV_DMEM_CGROUP_PRESENT)
+#define NV_USE_DMEM_CGROUP_API
+#undef NV_USE_MISC_CGROUP
+#include <linux/cgroup_dmem.h>
+#endif // NV_DMEM_CGROUP_PRESENT
 
 extern char *NVreg_TemporaryFilePath;
 
@@ -1265,11 +1274,6 @@ NvU32 NV_API_CALL os_get_cpu_number(void)
 NvU32 NV_API_CALL os_get_cpu_count(void)
 {
     return num_possible_cpus();
-}
-
-NvBool NV_API_CALL os_pat_supported(void)
-{
-    return (nv_pat_mode != NV_PAT_MODE_DISABLED);
 }
 
 NvBool NV_API_CALL os_is_efi_enabled(void)
@@ -2802,3 +2806,104 @@ NvBool NV_API_CALL os_supports_kernel_suspend_notifiers(void)
 {
     return (NVreg_UseKernelSuspendNotifiers == 1);
 }
+
+#if defined(NV_USE_DMEM_CGROUP_API)
+NvU32 NV_API_CALL os_cgroup_implementation(void)
+{
+    return OS_CGROUP_IMPL_DMEM;
+}
+
+void* NV_API_CALL os_dmem_cgroup_register_region(NvU64 size, const char *name)
+{
+    void *region = dmem_cgroup_register_region(size, name);
+    if (IS_ERR(region))
+    {
+        return NULL;
+    }
+    return region;
+}
+
+void NV_API_CALL os_dmem_cgroup_unregister_region(void *region)
+{
+    dmem_cgroup_unregister_region(region);
+}
+
+NV_STATUS NV_API_CALL os_dmem_cgroup_try_charge(void *region, NvU64 size, void **ret_pool, void **ret_limit_pool)
+{
+    int err = dmem_cgroup_try_charge(region, size, (struct dmem_cgroup_pool_state **)ret_pool,
+        (struct dmem_cgroup_pool_state **)ret_limit_pool);
+
+    if (err == -EAGAIN)
+        return NV_ERR_RESOURCE_ACCOUNTING_HARD_LIMIT_EXCEEDED;
+    else if (err < 0)
+        return NV_ERR_OPERATING_SYSTEM;
+
+    return NV_OK;
+}
+
+void NV_API_CALL os_dmem_cgroup_uncharge(void *pool, NvU64 size)
+{
+    dmem_cgroup_uncharge(pool, size);
+}
+
+#else // defined(NV_USE_DMEM_CGROUP_API)
+void* NV_API_CALL os_dmem_cgroup_register_region(NvU64 size, const char *name) { return NULL; }
+void NV_API_CALL os_dmem_cgroup_unregister_region(void *region) {}
+NV_STATUS NV_API_CALL os_dmem_cgroup_try_charge(void *region, NvU64 size, void **ret_pool, void **ret_limit_pool) { return NV_OK; }
+void NV_API_CALL os_dmem_cgroup_uncharge(void *pool, NvU64 size) {}
+#endif // defined(NV_USE_DMEM_CGROUP_API)
+
+#if defined(NV_USE_MISC_CGROUP)
+NvU32 NV_API_CALL os_cgroup_implementation(void)
+{
+    return OS_CGROUP_IMPL_MISC;
+}
+
+void* NV_API_CALL os_cgroup_for_pid(int pid, void *pidInfo)
+{
+    struct pid *p;
+
+    if (pidInfo)
+        p = pidInfo;
+    else
+        p = find_vpid(pid);
+
+    if (!p)
+        return NULL;
+
+    struct task_struct *task = pid_task(p, PIDTYPE_PID);
+    if (!task)
+        return NULL;
+
+    struct cgroup_subsys_state *css = task_css(task, misc_cgrp_id);
+    if (!css)
+        return NULL;
+
+    return css->cgroup;
+}
+
+void* NV_API_CALL os_cgroup_get_from_fd(NvU32 fd)
+{
+    void *cgroup = cgroup_get_from_fd(fd);
+    if (IS_ERR(cgroup))
+        return NULL;
+    return cgroup;
+}
+void NV_API_CALL os_cgroup_put(void *cgroup)
+{
+    if (cgroup != NULL)
+        cgroup_put(cgroup);
+}
+
+#else // defined(NV_USE_MISC_CGROUP)
+void* NV_API_CALL os_cgroup_for_pid(int pid, void *pidInfo) { return NULL; }
+void* NV_API_CALL os_cgroup_get_from_fd(NvU32 fd) { return NULL; }
+void NV_API_CALL os_cgroup_put(void *cgroup) {}
+#endif // defined(NV_USE_MISC_CGROUP)
+
+#if (!defined(NV_USE_MISC_CGROUP) && !defined(NV_USE_DMEM_CGROUP_API))
+NvU32 NV_API_CALL os_cgroup_implementation(void)
+{
+    return OS_CGROUP_IMPL_NONE;
+}
+#endif

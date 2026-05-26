@@ -511,7 +511,7 @@ dmaAllocMapping_GM107
 
     if (pFabricVAS != NULL)
     {
-        status = fabricvaspaceGetGpaMemdesc(pFabricVAS, pMemDesc, pGpu, &pAdjustedMemDesc);
+        status = fabricvaspaceGetGpaMemdesc(pFabricVAS, pMemDesc, pGpu, NV_FALSE, &pAdjustedMemDesc);
         if (status != NV_OK)
         {
             NV_PRINTF(LEVEL_ERROR, "Failed to get the adjusted memdesc for the fabric memdesc\n");
@@ -1598,9 +1598,9 @@ dmaFreeMapping_GM107
             vaHi         = vaLo + mapLength - 1;
 
             pDma = GPU_GET_DMA(pGpu);
-            if (vaspaceGetFlags(pVAS) & VASPACE_FLAGS_BAR_BAR1)
+            if (vaspaceGetFlags(pVAS) & VASPACE_FLAGS_SPARSIFIED)
             {
-                NV_PRINTF(LEVEL_ERROR, "Using dmaFreeMapping with sparse == False in BAR1 path!\n");
+                NV_PRINTF(LEVEL_ERROR, "Using dmaFreeMapping with sparse == False in sparse VASpace path!\n");
                 NV_ASSERT(0);
                 return status;
             }
@@ -2166,7 +2166,7 @@ dmaUpdateVASpace_GF100
     {
         OBJGVASPACE *pGVAS = dynamicCast(pVAS, OBJGVASPACE);
         if (bFillPteMem &&
-            (pGVAS->flags & VASPACE_FLAGS_BAR_BAR1) &&
+            (pGVAS->flags & VASPACE_FLAGS_SPARSIFIED) &&
             (flags & DMA_UPDATE_VASPACE_FLAGS_UPDATE_VALID) &&
             (SF_VAL(_MMU, _PTE_VALID, valid) == NV_MMU_PTE_VALID_FALSE))
         {
@@ -2320,6 +2320,12 @@ dmaUpdateVASpace_GF100
     {
         NvU32       kind = pComprInfo->kind;
         NvU32       kindNoCompression;
+
+        // Enforce uncompression if compression not supported
+        if (memmgrIsKind_HAL(pMemoryManager, FB_IS_KIND_COMPRESSIBLE, kind))
+        {
+             NV_ASSERT_OR_RETURN(memmgrComprMappingSupported_HAL(pMemoryManager, memdescGetAddressSpace(pMemDesc)) == NV_TRUE, NV_ERR_INVALID_STATE);
+        }
 
         // If the original kind is compressible we need to know what the non-compresible
         // kind is so we can fall back to that if we run out of compression tags.
@@ -2491,7 +2497,7 @@ dmaUpdateVASpace_GF100
         {
             {
                 mapIter.pAddrField =
-                    gmmuFmtPtePhysAddrFld(pFmt->pPte, mapIter.aperture, GMMU_PEER_TYPE_LEGACY);
+                    gmmuFmtPtePhysAddrFld(pFmt->pPte, mapTarget.pLevelFmt, mapIter.aperture, GMMU_PEER_TYPE_LEGACY);
             
             }
         }
@@ -2557,9 +2563,13 @@ done:
     // Invalidate VAS TLB entries.
     if ((NULL == pTgtPteMem) && DMA_TLB_INVALIDATE == deferInvalidate)
     {
+        NV_STATUS tlbStatus;
+
         kbusFlush_HAL(pGpu, pKernelBus, BUS_FLUSH_VIDEO_MEMORY |
                                         BUS_FLUSH_SYSTEM_MEMORY);
-        gvaspaceInvalidateTlb(pGVAS, pGpu, update_type);
+        tlbStatus = gvaspaceInvalidateTlb(pGVAS, pGpu, update_type);
+        if (status == NV_OK)
+            status = tlbStatus;
     }
 
 #if NV_PRINTF_LEVEL_ENABLED(LEVEL_INFO)

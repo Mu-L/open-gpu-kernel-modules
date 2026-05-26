@@ -145,7 +145,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_SystemMemory;
     ((SystemMemory*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(SystemMemory)))
 #endif //__nvoc_system_mem_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_SystemMemory(SystemMemory**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_SystemMemory(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_SystemMemory(SystemMemory**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_SystemMemory(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

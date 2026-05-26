@@ -54,6 +54,8 @@
 #include "class/clc36f.h" // VOLTA_CHANNEL_GPFIFO_A
 #include "class/clc46f.h" // TURING_CHANNEL_GPFIFO_A
 
+#include "alloc/alloc_channel.h" // NV_CHANNEL_ALLOC_PARAMS
+
 /*!
  * @brief Allocate common local/global buffers that are required by the graphics context
  *
@@ -92,12 +94,7 @@ kgraphicsAllocGrGlobalCtxBuffers_TU102
     }
 
     // Setup the Circular Buffer DB
-    allocFlags = MEMDESC_FLAGS_LOST_ON_SUSPEND;
-
-    if (kgraphicsShouldSetContextBuffersGPUPrivileged(pGpu, pKernelGraphics))
-    {
-        allocFlags |= MEMDESC_FLAGS_GPU_PRIVILEGED;
-    }
+    allocFlags = MEMDESC_FLAGS_LOST_ON_SUSPEND | MEMDESC_FLAGS_GPU_PRIVILEGED;
 
     if (pKernelGraphicsContext != NULL)
     {

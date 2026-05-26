@@ -32,7 +32,7 @@ void __nvoc_init__Griddisplayless(Griddisplayless*);
 void __nvoc_init_funcTable_Griddisplayless(Griddisplayless*);
 NV_STATUS __nvoc_ctor_Griddisplayless(Griddisplayless*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_Griddisplayless(Griddisplayless*);
-void __nvoc_dtor_Griddisplayless(Griddisplayless*);
+void __nvoc_dtor_Griddisplayless(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__Griddisplayless;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_Griddisplayless =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "Griddisplayless",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_Griddisplayless,
+    .objCreatefn =        &__nvoc_objCreateDynamic_Griddisplayless,
     .pCastInfo =          &__nvoc_castinfo__Griddisplayless,
     .pExportInfo =        &__nvoc_export_info__Griddisplayless
 };
@@ -125,6 +125,43 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_Griddisplayless =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS griddisplaylessCtrlCmdVirtualDisplayGetNumHeads__EXPORT(void *pGridDisplaylessApi, void *pParams) {
+    return griddisplaylessCtrlCmdVirtualDisplayGetNumHeads_IMPL(pGridDisplaylessApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS griddisplaylessCtrlCmdVirtualDisplayGetMaxResolution__EXPORT(void *pGridDisplaylessApi, void *pParams) {
+    return griddisplaylessCtrlCmdVirtualDisplayGetMaxResolution_IMPL(pGridDisplaylessApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS griddisplaylessCtrlCmdVirtualDisplayGetDefaultEdid__EXPORT(void *pGridDisplaylessApi, void *pEdidParams) {
+    return griddisplaylessCtrlCmdVirtualDisplayGetDefaultEdid_IMPL(pGridDisplaylessApi, pEdidParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS griddisplaylessCtrlCmdVirtualDisplayIsActive__EXPORT(void *pGridDisplaylessApi, void *pParams) {
+    return griddisplaylessCtrlCmdVirtualDisplayIsActive_IMPL(pGridDisplaylessApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS griddisplaylessCtrlCmdVirtualDisplayIsConnected__EXPORT(void *pGridDisplaylessApi, void *pParams) {
+    return griddisplaylessCtrlCmdVirtualDisplayIsConnected_IMPL(pGridDisplaylessApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS griddisplaylessCtrlCmdVirtualDisplayGetMaxPixels__EXPORT(void *pGridDisplaylessApi, void *pParams) {
+    return griddisplaylessCtrlCmdVirtualDisplayGetMaxPixels_IMPL(pGridDisplaylessApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Griddisplayless[] = 
 {
@@ -132,7 +169,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Griddisp
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &griddisplaylessCtrlCmdVirtualDisplayGetNumHeads_IMPL,
+        /*pFunc=*/      (void (*)(void)) &griddisplaylessCtrlCmdVirtualDisplayGetNumHeads__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -147,7 +184,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Griddisp
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &griddisplaylessCtrlCmdVirtualDisplayGetMaxResolution_IMPL,
+        /*pFunc=*/      (void (*)(void)) &griddisplaylessCtrlCmdVirtualDisplayGetMaxResolution__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -162,7 +199,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Griddisp
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &griddisplaylessCtrlCmdVirtualDisplayGetDefaultEdid_IMPL,
+        /*pFunc=*/      (void (*)(void)) &griddisplaylessCtrlCmdVirtualDisplayGetDefaultEdid__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -177,7 +214,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Griddisp
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &griddisplaylessCtrlCmdVirtualDisplayIsActive_IMPL,
+        /*pFunc=*/      (void (*)(void)) &griddisplaylessCtrlCmdVirtualDisplayIsActive__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -192,7 +229,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Griddisp
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &griddisplaylessCtrlCmdVirtualDisplayIsConnected_IMPL,
+        /*pFunc=*/      (void (*)(void)) &griddisplaylessCtrlCmdVirtualDisplayIsConnected__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -207,7 +244,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Griddisp
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &griddisplaylessCtrlCmdVirtualDisplayGetMaxPixels_IMPL,
+        /*pFunc=*/      (void (*)(void)) &griddisplaylessCtrlCmdVirtualDisplayGetMaxPixels__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -224,7 +261,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Griddisp
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__Griddisplayless __nvoc_metadata__Griddisplayless = {
     .rtti.pClassDef = &__nvoc_class_def_Griddisplayless,    // (griddisplayless) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_Griddisplayless,
+    .rtti.dtor      = &__nvoc_dtor_Griddisplayless,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -483,13 +520,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__Griddisplayless =
 
 
 // Destruct Griddisplayless object.
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_Griddisplayless(Griddisplayless* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_Griddisplayless(Dynamic* pThis) {
+
+    Griddisplayless *__nvoc_this = (Griddisplayless *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_Griddisplayless(Griddisplayless *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -515,7 +554,7 @@ NV_STATUS __nvoc_ctor_Griddisplayless(Griddisplayless *pResource, struct CALL_CO
 
     // Unwind on error.
 __nvoc_ctor_Griddisplayless_fail__init:
-    __nvoc_dtor_GpuResource(&pResource->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pResource->__nvoc_base_GpuResource);
 __nvoc_ctor_Griddisplayless_fail_GpuResource:
 __nvoc_ctor_Griddisplayless_exit:
     return status;
@@ -627,13 +666,10 @@ __nvoc_objCreate_Griddisplayless_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_Griddisplayless(Griddisplayless **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_Griddisplayless(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_Griddisplayless(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_Griddisplayless((Griddisplayless **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

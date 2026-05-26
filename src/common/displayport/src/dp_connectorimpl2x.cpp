@@ -153,6 +153,9 @@ bool ConnectorImpl2x::getValidLowestLinkConfig
         {
             // Get next entry.
             lowestSelected = this->allPossibleLinkCfgs[i+1];
+            // Update enhancedFraming/bDisableDownspread/bEnableFEC for target config
+            lowestSelected.enhancedFraming = lConfig.enhancedFraming;
+            lowestSelected.bDisableDownspread = lConfig.bDisableDownspread;
             lowestSelected.enableFEC(lConfig.bEnableFEC);
         }
     }
@@ -205,6 +208,45 @@ bool ConnectorImpl2x::willLinkSupportMode
         return false;
 
     DP_ASSERT(this->isFECSupported());
+
+    // SST 8b/10b config
+    if (!linkUseMultistream() && !linkConfig.bIs128b132bChannelCoding)
+    {
+        if (modesetInfo.bEnableDsc && hal->isDpInTunnelingSupported() && main->isDpTunnelingHwBugWarEnabled())
+        {
+            NvU64 bwRestriction = 0U;
+            NvU64 laneDataRate = linkConfig.convertMinRateToDataRate();
+            unsigned DSC_FACTOR = 16U;
+
+            if (linkConfig.lanes == 4U)
+            {
+                bwRestriction = 8823U;
+            }
+            else if (linkConfig.lanes == 2U)
+            {
+                bwRestriction = 8134U;
+            }
+            else if (linkConfig.lanes == 1U)
+            {
+                bwRestriction = 6860U;
+            }
+            else
+            {
+                DP_PRINTF(DP_ERROR, "Invalid lane count %u", linkConfig.lanes);
+                return false;
+            }
+
+            if (bwRestriction != 0U)
+            {
+                laneDataRate = (laneDataRate * bwRestriction) / 10000ULL;
+            }
+
+            if ((modesetInfo.pixelClockHz * modesetInfo.depth) >= (8 * laneDataRate * linkConfig.lanes * DSC_FACTOR))
+            {
+                return false;
+            }            
+        }      
+    }
 
     if (!this->bDisableWatermarkCaching)
     {

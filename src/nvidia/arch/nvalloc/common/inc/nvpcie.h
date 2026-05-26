@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2000-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2000-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -25,12 +25,37 @@
 #define NVPCIE_H
 
 
+#include "nvtypes.h"
 
 /**************** Resource Manager Defines and Structures ******************\
 *                                                                           *
 *       Private PCI Express related defines and structures.                 *
 *                                                                           *
 \***************************************************************************/
+
+typedef struct NBADDR
+{
+    NvU32  domain;
+    NvU8   bus;
+    NvU8   device;
+    NvU8   func;
+    NvU8   valid;
+    void  *handle;
+} NBADDR;
+
+typedef struct PORTDATA
+{
+    NBADDR  addr;
+    void   *vAddr;              // virtual address of the port, if it has been mapped . Not used starting with Win10 BuildXXXXX
+    NvU32   PCIECapPtr;         // offset of the PCIE capptr in the NB
+    // Capability register set in enhanced configuration space
+    //
+    NvU32   PCIEErrorCapPtr;    // offset of the Advanced Error Reporting Capability register set
+    NvU32   PCIEVCCapPtr;       // offset of the Virtual Channel (VC) Capability register set
+    NvU32   PCIEL1SsCapPtr;     // Offset of the L1 Substates Capabilities
+    NvU32   PCIEAcsCapPtr;      // Offset of the ACS redirect Capabilities
+    NvU16   DeviceID, VendorID; // device and vendor ID for port
+} PORTDATA;
 
 #define PCI_VENDOR_ID           0x00
 #ifndef PCI_DEVICE_ID

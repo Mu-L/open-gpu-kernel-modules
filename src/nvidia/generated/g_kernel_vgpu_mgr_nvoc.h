@@ -333,7 +333,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelVgpuMgr;
     ((KernelVgpuMgr*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(KernelVgpuMgr)))
 #endif //__nvoc_kernel_vgpu_mgr_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_KernelVgpuMgr(KernelVgpuMgr**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelVgpuMgr(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelVgpuMgr(KernelVgpuMgr**, Dynamic*, NvU32);
 #define __objCreate_KernelVgpuMgr(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

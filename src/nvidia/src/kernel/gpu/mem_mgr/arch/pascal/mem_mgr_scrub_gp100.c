@@ -66,7 +66,8 @@ memmgrScrubHandlePostSchedulingEnable_GP100
         NV_ASSERT_OK_OR_RETURN(scrubberConstruct(pGpu, pHeap));
     }
 
-    if (pMemoryManager->bSysmemCompressionSupportDef)
+    if (pMemoryManager->bSysmemCompressionSupportDef &&
+        pMemoryManager->pSysmemScrubber == NULL)
     {
         NV_ASSERT_OK_OR_RETURN(objCreate(&pMemoryManager->pSysmemScrubber, pMemoryManager, SysmemScrubber, pGpu));
     }

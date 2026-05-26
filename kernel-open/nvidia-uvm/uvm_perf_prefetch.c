@@ -517,28 +517,7 @@ void uvm_perf_prefetch_get_hint_va_block(uvm_va_block_t *va_block,
 
     if (va_block->prefetch_info.fault_migrations_to_last_proc >= g_uvm_perf_prefetch_min_faults &&
         pending_prefetch_pages > 0) {
-        bool changed = false;
-        uvm_range_group_range_t *rgr;
-
-        // Only prefetch in range group ranges which have pages that need to
-        // move.
-        uvm_range_group_for_each_range_in(rgr, va_space, va_block->start, va_block->end) {
-            uvm_va_block_region_t region = uvm_va_block_region_from_start_end(va_block,
-                                                                              max(rgr->node.start, va_block->start),
-                                                                              min(rgr->node.end, va_block->end));
-
-            if (uvm_page_mask_region_empty(faulted_pages, region) &&
-                !uvm_page_mask_region_empty(prefetch_pages, region)) {
-                uvm_page_mask_region_clear(prefetch_pages, region);
-                changed = true;
-            }
-        }
-
-        if (changed)
-            pending_prefetch_pages = uvm_page_mask_weight(prefetch_pages);
-
-        if (pending_prefetch_pages > 0)
-            out_hint->residency = va_block->prefetch_info.last_migration_proc_id;
+        out_hint->residency = va_block->prefetch_info.last_migration_proc_id;
     }
 }
 

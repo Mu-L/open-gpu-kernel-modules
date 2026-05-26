@@ -34,7 +34,6 @@
 #include "uvm_va_range.h"
 #include "uvm_push.h"
 #include "uvm_forward_decl.h"
-#include "uvm_range_group.h"
 #include "uvm_mem.h"
 #include "nv_speculation_barrier.h"
 
@@ -124,7 +123,6 @@ typedef struct
     NvU64 end_timestamp_cpu;
     NvU64 *start_timestamp_gpu_addr;
     NvU64 start_timestamp_gpu;
-    NvU64 range_group_id;
 } block_migration_data_t;
 
 // This object represents a specific pending migration within a VA block
@@ -949,7 +947,6 @@ static void record_migration_events(void *args)
             info->dstIndex          = uvm_parent_id_value_from_processor_id(block_mig->dst);
             info->beginTimeStamp    = block_mig->start_timestamp_cpu;
             info->endTimeStamp      = block_mig->end_timestamp_cpu;
-            info->rangeGroupId      = block_mig->range_group_id;
             info->address           = mig->address;
             info->migratedBytes     = mig->bytes;
             info->beginTimeStampGpu = gpu_timestamp;
@@ -972,7 +969,6 @@ static void record_migration_events(void *args)
             info->dstNid            = block_mig->dst_nid;
             info->beginTimeStamp    = block_mig->start_timestamp_cpu;
             info->endTimeStamp      = block_mig->end_timestamp_cpu;
-            info->rangeGroupId      = block_mig->range_group_id;
             info->address           = mig->address;
             info->migratedBytes     = mig->bytes;
             info->beginTimeStampGpu = gpu_timestamp;
@@ -1120,7 +1116,6 @@ static UvmEventMigrationCause g_make_resident_to_tools_migration_cause[UVM_MAKE_
     [UVM_MAKE_RESIDENT_CAUSE_EVICTION]             = UvmEventMigrationCauseEviction,
     [UVM_MAKE_RESIDENT_CAUSE_API_TOOLS]            = UvmEventMigrationCauseInvalid,
     [UVM_MAKE_RESIDENT_CAUSE_API_MIGRATE]          = UvmEventMigrationCauseUser,
-    [UVM_MAKE_RESIDENT_CAUSE_API_SET_RANGE_GROUP]  = UvmEventMigrationCauseCoherence,
     [UVM_MAKE_RESIDENT_CAUSE_API_HINT]             = UvmEventMigrationCauseUser,
 };
 
@@ -1144,14 +1139,6 @@ static void uvm_tools_record_migration_cpu_to_cpu(uvm_va_space_t *va_space, uvm_
         info->migrationCause = event_data->migration.cause;
         info->rangeGroupId = UVM_RANGE_GROUP_ID_NONE;
 
-        // During evictions, it is not safe to uvm_range_group_range_find()
-        // because the va_space lock is not held.
-        if (event_data->migration.cause != UVM_MAKE_RESIDENT_CAUSE_EVICTION) {
-            uvm_range_group_range_t *range = uvm_range_group_range_find(va_space, event_data->migration.address);
-            if (range != NULL)
-                info->rangeGroupId = range->range_group->id;
-        }
-
         uvm_tools_record_event(va_space, &entry);
     }
     if (tools_is_event_enabled_v2(va_space, UvmEventTypeMigration)) {
@@ -1171,14 +1158,6 @@ static void uvm_tools_record_migration_cpu_to_cpu(uvm_va_space_t *va_space, uvm_
         info->endTimeStamp = NV_GETTIME();
         info->migrationCause = event_data->migration.cause;
         info->rangeGroupId = UVM_RANGE_GROUP_ID_NONE;
-
-        // During evictions, it is not safe to uvm_range_group_range_find()
-        // because the va_space lock is not held.
-        if (event_data->migration.cause != UVM_MAKE_RESIDENT_CAUSE_EVICTION) {
-            uvm_range_group_range_t *range = uvm_range_group_range_find(va_space, event_data->migration.address);
-            if (range != NULL)
-                info->rangeGroupId = range->range_group->id;
-        }
 
         uvm_tools_record_event_v2(va_space, &entry);
     }
@@ -1390,8 +1369,6 @@ void uvm_tools_record_migration_begin(uvm_va_space_t *va_space,
                                       uvm_make_resident_cause_t cause,
                                       uvm_api_range_type_t type)
 {
-    uvm_range_group_range_t *range;
-
     // Calls from tools read/write functions to make_resident must not trigger
     // any migration
     UVM_ASSERT(cause != UVM_MAKE_RESIDENT_CAUSE_API_TOOLS);
@@ -1424,14 +1401,7 @@ void uvm_tools_record_migration_begin(uvm_va_space_t *va_space,
         block_mig->dst_nid = dst_nid;
         block_mig->src = src_id;
         block_mig->src_nid = src_nid;
-        block_mig->range_group_id = UVM_RANGE_GROUP_ID_NONE;
 
-        // During evictions, it is not safe to uvm_range_group_range_find() because the va_space lock is not held.
-        if ((type == UVM_API_RANGE_TYPE_MANAGED) && (cause != UVM_MAKE_RESIDENT_CAUSE_EVICTION)) {
-            range = uvm_range_group_range_find(va_space, start);
-            if (range != NULL)
-                block_mig->range_group_id = range->range_group->id;
-        }
         block_mig->va_space = va_space;
 
         INIT_LIST_HEAD(&block_mig->events);
@@ -2527,7 +2497,7 @@ static NV_STATUS tools_access_process_memory(uvm_va_space_t *va_space,
 
         // Make sure a CPU resident page has an up to date struct page pointer.
         if (uvm_va_block_is_hmm(block)) {
-            status = uvm_hmm_va_block_update_residency_info(block, mm, UVM_PAGE_ALIGN_DOWN(target_va_start), true);
+            status = uvm_hmm_va_block_update_residency_info_unlocked(block, mm, UVM_PAGE_ALIGN_DOWN(target_va_start), true);
             if (status != NV_OK)
                 goto unlock_and_exit;
         }

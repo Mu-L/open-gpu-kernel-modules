@@ -45,7 +45,7 @@
 
 NV_STATUS
 kmemsysGetFbInfos_VF(OBJGPU *pGpu, KernelMemorySystem *pKernelMemorySystem, RsClient *pClient, Device *pDevice, NvHandle hObject,
-                     NV2080_CTRL_FB_GET_INFO_V2_PARAMS *pParams, NvU64 *pFbInfoListIndicesUnset)
+                     NV2080_CTRL_FB_GET_INFO_V2_PARAMS *pParams, FBINFO_BITVECTOR *pFbInfoListIndicesUnset)
 {
     NV2080_CTRL_FB_INFO *pFbInfos = pParams->fbInfoList;
     NvU32 data = 0;
@@ -54,7 +54,7 @@ kmemsysGetFbInfos_VF(OBJGPU *pGpu, KernelMemorySystem *pKernelMemorySystem, RsCl
     VGPU_STATIC_INFO *pVSI = GPU_GET_STATIC_INFO(pGpu);
     NV_ASSERT_OR_RETURN(pVSI != NULL, NV_ERR_INVALID_STATE);
 
-    FOR_EACH_INDEX_IN_MASK(64, i, *pFbInfoListIndicesUnset)
+    FOR_EACH_IN_BITVECTOR(pFbInfoListIndicesUnset, i)
     {
         switch (pFbInfos[i].index)
         {
@@ -123,9 +123,9 @@ kmemsysGetFbInfos_VF(OBJGPU *pGpu, KernelMemorySystem *pKernelMemorySystem, RsCl
 
         // save off data value
         pFbInfos[i].data = data;
-        *pFbInfoListIndicesUnset &= ~NVBIT64(i);
+        bitVectorClr(pFbInfoListIndicesUnset, i);
     }
-    FOR_EACH_INDEX_IN_MASK_END;
+    FOR_EACH_IN_BITVECTOR_END();
 
     return NV_OK;
 }
@@ -162,7 +162,7 @@ _kmemsysGetFbInfos
     NvU64               largestFree;
     NvBool              bIsClientMIGMonitor = NV_FALSE;
     NvBool              bIsClientMIGProfiler = NV_FALSE;
-    NvU64               fbInfoListIndicesUnset = 0;
+    FBINFO_BITVECTOR    fbInfoListIndicesUnset;
 
     if (!RMCFG_FEATURE_PMA)
         return NV_ERR_NOT_SUPPORTED;
@@ -176,10 +176,10 @@ _kmemsysGetFbInfos
         bIsClientMIGProfiler = kmigmgrIsDeviceUsingDeviceProfiling(pGpu, pKernelMIGManager, pDevice);
     }
 
-    ct_assert(NV2080_CTRL_FB_INFO_INDEX_MAX <= NV_NBITS_IN_TYPE(fbInfoListIndicesUnset));
+    bitVectorClrAll(&fbInfoListIndicesUnset);
 
     // Construct mask of width fbInfoListSize to track which indices have been handled
-    fbInfoListIndicesUnset = NV_U64_MAX >> (NV_NBITS_IN_TYPE(fbInfoListIndicesUnset) - pParams->fbInfoListSize);
+    bitVectorSetRange(&fbInfoListIndicesUnset, rangeMake(0, pParams->fbInfoListSize - 1));
 
     //
     // Populate indices with runtime-specific logic
@@ -188,12 +188,12 @@ _kmemsysGetFbInfos
     if (pKernelMemorySystem != NULL)
     {
         status = kmemsysGetFbInfos_HAL(pGpu, pKernelMemorySystem, pClient, pDevice, hObject, pParams, &fbInfoListIndicesUnset);
-        if (status == NV_OK && nvPopCount64(fbInfoListIndicesUnset) == 0)
+        if (status == NV_OK && bitVectorCountSetBits(&fbInfoListIndicesUnset) == 0)
             return NV_OK;
     }
 
     // Load the per-GPU instance heap if MIG is enabled.
-    FOR_EACH_INDEX_IN_MASK(64, i, fbInfoListIndicesUnset)
+    FOR_EACH_IN_BITVECTOR(&fbInfoListIndicesUnset, i)
     {
         switch (pFbInfos[i].index)
         {
@@ -272,9 +272,9 @@ _kmemsysGetFbInfos
             }
         }
     }
-    FOR_EACH_INDEX_IN_MASK_END;
+    FOR_EACH_IN_BITVECTOR_END();
 
-    FOR_EACH_INDEX_IN_MASK(64, i, fbInfoListIndicesUnset)
+    FOR_EACH_IN_BITVECTOR(&fbInfoListIndicesUnset, i)
     {
         switch (pFbInfos[i].index)
         {
@@ -949,15 +949,15 @@ _kmemsysGetFbInfos
 
         // save off data value
         pFbInfos[i].data = data;
-        fbInfoListIndicesUnset &= ~NVBIT64(i);
+        bitVectorClr(&fbInfoListIndicesUnset, i);
     }
-    FOR_EACH_INDEX_IN_MASK_END;
+    FOR_EACH_IN_BITVECTOR_END();
 
     NV_CHECK_OK_OR_RETURN(LEVEL_ERROR, status);
 
     // RPC to host to populate indices that could not be yet computed
     if ((IS_VIRTUAL(pGpu) || IS_GSP_CLIENT(pGpu)) &&
-        (nvPopCount64(fbInfoListIndicesUnset) > 0))
+        (bitVectorCountSetBits(&fbInfoListIndicesUnset) > 0))
     {
         NvU32 physIdx = 0;
         NV2080_CTRL_FB_GET_INFO_V2_PARAMS *pRpcParams =
@@ -967,11 +967,11 @@ _kmemsysGetFbInfos
             return NV_ERR_NO_MEMORY;
 
         portMemSet(pRpcParams, 0, sizeof(*pRpcParams));
-        FOR_EACH_INDEX_IN_MASK(64, i, fbInfoListIndicesUnset)
+        FOR_EACH_IN_BITVECTOR(&fbInfoListIndicesUnset, i)
         {
             pRpcParams->fbInfoList[physIdx++].index = pFbInfos[i].index;
         }
-        FOR_EACH_INDEX_IN_MASK_END;
+        FOR_EACH_IN_BITVECTOR_END();
 
         pRpcParams->fbInfoListSize = physIdx;
 
@@ -984,7 +984,7 @@ _kmemsysGetFbInfos
                           status);
 
         physIdx = 0;
-        FOR_EACH_INDEX_IN_MASK(64, i, fbInfoListIndicesUnset)
+        FOR_EACH_IN_BITVECTOR(&fbInfoListIndicesUnset, i)
         {
             NV_ASSERT(pFbInfos[i].index == pRpcParams->fbInfoList[physIdx].index);
 
@@ -994,16 +994,16 @@ _kmemsysGetFbInfos
             // Assume that the RPC could handle unknown indices. Actual errors will be signaled by
             // returning status.
             //
-            fbInfoListIndicesUnset &= ~NVBIT64(i);
+            bitVectorClr(&fbInfoListIndicesUnset, i);
 
             physIdx++;
         }
-        FOR_EACH_INDEX_IN_MASK_END;
+        FOR_EACH_IN_BITVECTOR_END();
 
         portMemFree(pRpcParams);
     }
 
-    NV_CHECK(LEVEL_INFO, nvPopCount64(fbInfoListIndicesUnset) == 0);
+    NV_CHECK(LEVEL_INFO, bitVectorCountSetBits(&fbInfoListIndicesUnset) == 0);
 
     return status;
 }
@@ -1427,14 +1427,7 @@ deviceCtrlCmdFbSetZbcReferenced_IMPL
     NV0080_CTRL_INTERNAL_MEMSYS_SET_ZBC_REFERENCED_PARAMS *pParams
 )
 {
-    OBJGPU *pGpu;
-    Subdevice *pSubdevice;
-
-    NV_ASSERT_OK_OR_RETURN(subdeviceGetByInstance(RES_GET_CLIENT(pDevice), RES_GET_HANDLE(pDevice), pParams->subdevInstance, &pSubdevice));
-
-    pGpu = GPU_RES_GET_GPU(pSubdevice);
-
-    return _kmemsysSetZbcReferenced(pGpu, pDevice, pParams->bZbcSurfacesExist);
+    return _kmemsysSetZbcReferenced(GPU_RES_GET_GPU(pDevice), pDevice, pParams->bZbcSurfacesExist);
 }
 
 NV_STATUS

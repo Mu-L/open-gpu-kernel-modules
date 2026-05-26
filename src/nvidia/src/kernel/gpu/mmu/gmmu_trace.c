@@ -136,19 +136,21 @@ _gmmuGetPdePa
 static NvU64
 _gmmuGetPtePa
 (
-    OBJGPU          *pGpu,
-    const void      *pFmtPte,
-    const MMU_ENTRY *pPte
+    OBJGPU              *pGpu,
+    const void          *pFmtPte,
+    const MMU_FMT_LEVEL *pFmtLevel,
+    const MMU_ENTRY     *pPte
 )
 {
-    const GMMU_FMT_PTE     *pFmt       = (GMMU_FMT_PTE*)pFmtPte;
-    const GMMU_ENTRY_VALUE *pGmmuEntry = (GMMU_ENTRY_VALUE*)pPte;
-    GMMU_APERTURE           aperture   = gmmuFieldGetAperture(&pFmt->fldAperture,
-                                                              pGmmuEntry->v8);
+    const GMMU_FMT_PTE     *pFmt        = (GMMU_FMT_PTE*)pFmtPte;
+    const GMMU_ENTRY_VALUE *pGmmuEntry  = (GMMU_ENTRY_VALUE*)pPte;
+    GMMU_APERTURE           aperture    = gmmuFieldGetAperture(&pFmt->fldAperture, pGmmuEntry->v8);
 
     if (aperture != GMMU_APERTURE_INVALID)
     {
-        const GMMU_FIELD_ADDRESS *pAddrFld = gmmuFmtPtePhysAddrFld(pFmt, aperture, GMMU_PEER_TYPE_LEGACY);
+        GMMU_PEER_TYPE peerType = GMMU_PEER_TYPE_LEGACY;
+
+        const GMMU_FIELD_ADDRESS *pAddrFld = gmmuFmtPtePhysAddrFld(pFmt, pFmtLevel, aperture, peerType);
         if (pAddrFld)
         {
             return gmmuFieldGetAddress(pAddrFld, pGmmuEntry->v8);
@@ -352,7 +354,7 @@ _gmmuPrintPte
 #if NV_PRINTF_LEVEL_ENABLED(LEVEL_INFO)
     const GMMU_FMT_PTE     *pFmt       = (GMMU_FMT_PTE*)pFmtPte;
     const GMMU_ENTRY_VALUE *pGmmuEntry = (GMMU_ENTRY_VALUE*)pPte;
-    NvU64                   pa         = _gmmuGetPtePa(pGpu, pFmt, pPte);
+    NvU64                   pa         = _gmmuGetPtePa(pGpu, pFmt, pFmtLevel, pPte);
     GMMU_APERTURE           aperture   = gmmuFieldGetAperture(&pFmt->fldAperture,
                                                               pGmmuEntry->v8);
     NvU32                   peerIndex  = nvFieldGet32(&pFmt->fldPeerIndex,

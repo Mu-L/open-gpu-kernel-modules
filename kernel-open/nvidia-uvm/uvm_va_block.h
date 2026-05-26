@@ -449,15 +449,15 @@ struct uvm_va_block_struct
     // Mask to keep track of the pages that are read-duplicate
     uvm_page_mask_t read_duplicated_pages;
 
-    // Mask to keep track of the pages that are not mapped on any non-UVM-Lite
-    // processor. This mask is not used for HMM because the CPU can map pages
+    // Mask to keep track of the pages that are not mapped on any processor.
+    // This mask is not used for HMM because the CPU can map pages
     // at any time without notifying the driver.
     //     0: Page is definitely not mapped by any processors
     //     1: Page may or may not be mapped by a processor
     //
-    // This mask sets the bit when the page is mapped on any non-UVM-Lite
-    // processor but it is not always unset on unmap (to avoid a performance
-    // impact). Therefore, it can contain false negatives. It should be only
+    // This mask sets the bit when the page is mapped on any processor but it
+    // is not always unset on unmap (to avoid a performance impact).
+    // Therefore, it can contain false negatives. It should be only
     // used for opportunistic optimizations that have a fast path for pages
     // that are not mapped anywhere (see uvm_va_block_migrate_locked, for
     // example), but not the other way around.
@@ -1034,8 +1034,6 @@ NV_STATUS uvm_va_block_unset_read_duplication(uvm_va_block_t *va_block,
 // NV_ERR_INVALID_ADDRESS       The VA block is logically dead (zombie)
 // NV_ERR_INVALID_ACCESS_TYPE   The vma corresponding to the VA range does not
 //                              allow access_type permissions.
-// NV_ERR_INVALID_OPERATION     The access would violate the policies specified
-//                              by UvmPreventMigrationRangeGroups.
 //
 // va_block_context must not be NULL, policy must match, and if the va_block is
 // a HMM block, va_block_context->hmm.vma must be valid which also means the
@@ -1143,7 +1141,7 @@ NV_STATUS uvm_va_block_add_mappings_after_migration(uvm_va_block_t *va_block,
                                                     const uvm_processor_mask_t *processor_mask);
 
 // Maps processors using SetAccessedBy to all resident pages in the region
-// parameter. On Volta+ it is also used to map evicted pages that can be later
+// parameter. It is also used to map evicted pages that can be later
 // pulled back by using access counters.
 //
 // This function acquires/waits for the va_block tracker and updates that
@@ -1290,7 +1288,7 @@ NV_STATUS uvm_va_block_cpu_fault(uvm_va_block_t *va_block,
 // GPU is chosen as the destination and the source is a HMM CPU page that can't
 // be migrated. In that case, uvm_va_block_select_residency() should be called
 // with 'hmm_migratable' set to true so that system memory will be selected.
-NV_STATUS uvm_va_block_service_locked(uvm_processor_id_t processor_id,
+NV_STATUS uvm_va_block_service_locked(uvm_gpu_t *gpu,
                                       uvm_va_block_t *va_block,
                                       uvm_va_block_retry_t *block_retry,
                                       uvm_service_block_context_t *service_context);
@@ -1424,8 +1422,7 @@ uvm_page_mask_t *uvm_va_block_resident_mask_get(uvm_va_block_t *block, uvm_proce
 // If the processor is a GPU, this will assert that GPU state is indeed present.
 const uvm_page_mask_t *uvm_va_block_map_mask_get(uvm_va_block_t *block, uvm_processor_id_t processor);
 
-// Return a mask of non-UVM-Lite pages that are unmapped within the given
-// region.
+// Return a mask of pages that are unmapped within the given region.
 // Locking: The block lock must be held.
 void uvm_va_block_unmapped_pages_get(uvm_va_block_t *va_block,
                                      uvm_va_block_region_t region,

@@ -35,14 +35,18 @@
 #include "displayport.h"
 #include "dp_configcaps2x.h"
 
+// Source OUI is valid from 00300h - 0030Bh. Addresses starting from 0030Ch are reserved.
+// We have seen certain sinks behave unexpectedly when writing to 0030Ch onward.
+#define SOURCE_OUI_WRITE_BUFFER_SIZE 12
+
 using namespace DisplayPort;
 
 void DPCDHALImpl::updateDPCDOffline()
 {
-    NvU8 buffer[16];
+    NvU8 buffer;
     unsigned retries = 16;
-    // Burst read from 0x00 to 0x0F.
-    if (AuxRetry::ack != bus.read(NV_DPCD_REV, &buffer[0], sizeof buffer, retries))
+    // Read 0x0 (DPCD_REV) DPCD
+    if (AuxRetry::ack != bus.read(NV_DPCD_REV, &buffer, sizeof(buffer), retries))
     {
         dpcdOffline = true;
     }
@@ -98,6 +102,7 @@ void DPCDHALImpl::configureDpTunnelBwAllocation()
     if (!this->bEnableDpTunnelBwAllocationSupport)
     {
         bIsDpTunnelBwAllocationEnabled = false;
+        setDpTunnelBwAllocation(false);
         return;
     }
 
@@ -666,7 +671,7 @@ AuxRetry::status DPCDHALImpl::setOuiSource
     NvU8 chipRevision
 )
 {
-    NvU8 ouiBuffer[16];
+    NvU8 ouiBuffer[SOURCE_OUI_WRITE_BUFFER_SIZE];
 
     //  The first 3 bytes are IEEE_OUI. 2 hex digits per register.
     ouiBuffer[0] = (ouiId >> 16) & 0xFF;
@@ -691,7 +696,8 @@ AuxRetry::status DPCDHALImpl::setOuiSource
     }
     ouiBuffer[9] = chipRevision;
 
-    for (int i = 0xA; i<=0xF; ++i)
+    // Default to 00h for Firmware Sofware Revision
+    for (int i = 0xA; i< SOURCE_OUI_WRITE_BUFFER_SIZE; ++i)
         ouiBuffer[i] = 0;
 
     return bus.write(NV_DPCD_SOURCE_IEEE_OUI, &ouiBuffer[0], sizeof ouiBuffer);
@@ -1702,6 +1708,13 @@ void DPCDHALImpl::fetchLinkStatusESI()
             interrupts.laneStatusIntr.laneStatus[lane].symbolLocked             &= !!(laneBits & 4);
         }
 
+        bool bIsLastRepeater = ((caps.phyRepeaterCount != 0) && (rxIndex == (NvS32)caps.phyRepeaterCount));
+        if (isDpInTunnelingSupported() && bIsIgnoreDiaLttprInterlaneAlignStatus
+            && bIsLastRepeater)
+        {
+            // set BIT 0 of DIA's LTTPR[N] LANE_ALIGN_STATUS_UPDATED_PHY_REPEATER DPCD to 1, where N is the LTTPR Count
+            buffer[0xE] |= 1;
+        }
         interrupts.laneStatusIntr.interlaneAlignDone    &=
             FLD_TEST_DRF(_DPCD, _LANE_ALIGN_STATUS_UPDATED_ESI, _INTERLANE_ALIGN_DONE, _YES, buffer[0xE]);
         interrupts.laneStatusIntr.downstmPortChng       &=
@@ -2274,6 +2287,95 @@ bool DPCDHALImpl::clearPendingMsg()
 
     return false;
 }
+
+
+bool DPCDHALImpl::clearPendingServiceIrqs()
+{
+    NvU8 irqVector[3] = {0};
+
+    if (caps.supportsESI)
+    {
+        if (AuxRetry::ack == bus.read(NV_DPCD_DEVICE_SERVICE_IRQ_VECTOR_ESI0,
+                                      &irqVector[0], sizeof(irqVector)))
+        {
+            if (irqVector[0])
+            {
+                bus.write(NV_DPCD_DEVICE_SERVICE_IRQ_VECTOR_ESI0, &irqVector[0], sizeof(irqVector[0]));
+            }
+
+            if (FLD_TEST_DRF(_DPCD, _DEVICE_SERVICE_IRQ_VECTOR_ESI1, _PANEL_REPLAY_ERROR_STATUS, _YES, irqVector[1]))
+            {
+                NvU8 panelReplayErrorStatus = 0U;
+                if (AuxRetry::ack == bus.read(NV_DPCD20_PANEL_REPLAY_ERROR_STATUS, &panelReplayErrorStatus, sizeof(panelReplayErrorStatus)))
+               {
+                   if (panelReplayErrorStatus)
+                   {
+                        bus.write(NV_DPCD20_PANEL_REPLAY_ERROR_STATUS, &panelReplayErrorStatus, sizeof(panelReplayErrorStatus));
+                   }
+               }
+            }
+            if (FLD_TEST_DRF(_DPCD, _DEVICE_SERVICE_IRQ_VECTOR_ESI1, _DSC_ERROR_STATUS, _YES, irqVector[1]))
+            {
+                NvU8 dscErrorStatus = 0U;
+                if (AuxRetry::ack == bus.read(NV_DPCD14_DSC_STATUS, &dscErrorStatus, sizeof(dscErrorStatus)))
+               {
+                   if (dscErrorStatus)
+                   {
+                        bus.write(NV_DPCD14_DSC_STATUS, &dscErrorStatus, sizeof(dscErrorStatus));
+                   }
+               }
+            }
+
+            if (irqVector[1])
+            {
+                bus.write(NV_DPCD_DEVICE_SERVICE_IRQ_VECTOR_ESI1, &irqVector[1], sizeof(irqVector[1]));
+            }
+
+            if (FLD_TEST_DRF(_DPCD20, _LINK_SERVICE_IRQ_VECTOR_ESI0, _DP_TUNNELING_IRQ, _YES, irqVector[2]))
+            {
+                NvU8 dpTunnelingStatus = 0U;
+                if (AuxRetry::ack == bus.read(NV_DPCD20_DP_TUNNELING_STATUS,
+                                              &dpTunnelingStatus, sizeof(dpTunnelingStatus)))
+               {
+                   if (dpTunnelingStatus)
+                   {
+                        bus.write(NV_DPCD20_DP_TUNNELING_STATUS, &dpTunnelingStatus, sizeof(dpTunnelingStatus));
+                   }
+               }
+            }
+
+            if (irqVector[2])
+            {
+                bus.write(NV_DPCD_LINK_SERVICE_IRQ_VECTOR_ESI0, &irqVector[2], sizeof(irqVector[2]));
+            }
+
+            return true;
+        }
+        else
+        {
+            DP_PRINTF(DP_ERROR, "DPCONN> Clear Pending Service IRQs: Failed to read ESI0/ES1 DPCDs");
+            return false;
+        }
+    }
+    else
+    {
+        if (AuxRetry::ack == bus.read(NV_DPCD_DEVICE_SERVICE_IRQ_VECTOR,
+                                      &irqVector[0], sizeof(irqVector[0])))
+        {
+            if (irqVector[0])
+            {
+                bus.write(NV_DPCD_DEVICE_SERVICE_IRQ_VECTOR, &irqVector[0], sizeof(irqVector[0]));
+            }
+            return true;
+        }
+        else
+        {
+            DP_PRINTF(DP_ERROR, "DPCONN> Clear Pending Service IRQs: Failed to read SERVICE_IRQ DPCD");
+            return false;
+        }
+    }
+}
+
 
 bool DPCDHALImpl::isMessagingEnabled()
 {

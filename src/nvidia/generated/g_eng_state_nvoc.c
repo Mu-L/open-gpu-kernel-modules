@@ -28,7 +28,7 @@ void __nvoc_init__OBJENGSTATE(OBJENGSTATE*);
 void __nvoc_init_funcTable_OBJENGSTATE(OBJENGSTATE*);
 NV_STATUS __nvoc_ctor_OBJENGSTATE(OBJENGSTATE*);
 void __nvoc_init_dataField_OBJENGSTATE(OBJENGSTATE*);
-void __nvoc_dtor_OBJENGSTATE(OBJENGSTATE*);
+void __nvoc_dtor_OBJENGSTATE(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJENGSTATE;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJENGSTATE =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJENGSTATE",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_OBJENGSTATE,
+    .objCreatefn =        &__nvoc_objCreateDynamic_OBJENGSTATE,
     .pCastInfo =          &__nvoc_castinfo__OBJENGSTATE,
     .pExportInfo =        &__nvoc_export_info__OBJENGSTATE
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJENGSTATE =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__OBJENGSTATE __nvoc_metadata__OBJENGSTATE = {
     .rtti.pClassDef = &__nvoc_class_def_OBJENGSTATE,    // (engstate) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJENGSTATE,
+    .rtti.dtor      = &__nvoc_dtor_OBJENGSTATE,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -97,16 +97,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJENGSTATE =
 
 // Destruct OBJENGSTATE object.
 void __nvoc_engstateDestruct(OBJENGSTATE*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_OBJENGSTATE(OBJENGSTATE* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_OBJENGSTATE(Dynamic* pThis) {
+
+    OBJENGSTATE *__nvoc_this = (OBJENGSTATE *) pThis;
 
 // Call destructor.
-    __nvoc_engstateDestruct(pThis);
+    __nvoc_engstateDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJENGSTATE(OBJENGSTATE *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -230,11 +232,8 @@ __nvoc_objCreate_OBJENGSTATE_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_OBJENGSTATE(OBJENGSTATE **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_OBJENGSTATE(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_OBJENGSTATE(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_OBJENGSTATE((OBJENGSTATE **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

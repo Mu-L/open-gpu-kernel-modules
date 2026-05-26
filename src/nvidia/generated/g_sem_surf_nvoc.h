@@ -253,7 +253,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_SemaphoreSurface;
     ((SemaphoreSurface*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(SemaphoreSurface)))
 #endif //__nvoc_sem_surf_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_SemaphoreSurface(SemaphoreSurface**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_SemaphoreSurface(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_SemaphoreSurface(SemaphoreSurface**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_SemaphoreSurface(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

@@ -147,7 +147,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_VgpuApi;
     ((VgpuApi*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(VgpuApi)))
 #endif //__nvoc_vgpuapi_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_VgpuApi(VgpuApi**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_VgpuApi(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_VgpuApi(VgpuApi**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_VgpuApi(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

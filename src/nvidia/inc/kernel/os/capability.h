@@ -36,6 +36,8 @@ typedef struct OS_RM_CAPS OS_RM_CAPS;
 
 #define NV_RM_CAP_SYS_FABRIC_IMEX_MGMT          (NV_RM_CAP_SYS_BASE + 4)
 
+#define NV_RM_CAP_SYS_TRACE_DEVICE              (NV_RM_CAP_SYS_BASE + 5)
+
 #define NV_RM_CAP_SMC_PARTITION_BASE            0x100
 #define NV_RM_CAP_SMC_PARTITION_ACCESS          (NV_RM_CAP_SMC_PARTITION_BASE + 0)
 

@@ -29,7 +29,7 @@ void __nvoc_init__KernelHostVgpuDeviceShr(KernelHostVgpuDeviceShr*);
 void __nvoc_init_funcTable_KernelHostVgpuDeviceShr(KernelHostVgpuDeviceShr*);
 NV_STATUS __nvoc_ctor_KernelHostVgpuDeviceShr(KernelHostVgpuDeviceShr*);
 void __nvoc_init_dataField_KernelHostVgpuDeviceShr(KernelHostVgpuDeviceShr*);
-void __nvoc_dtor_KernelHostVgpuDeviceShr(KernelHostVgpuDeviceShr*);
+void __nvoc_dtor_KernelHostVgpuDeviceShr(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__KernelHostVgpuDeviceShr;
@@ -48,7 +48,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelHostVgpuDeviceShr =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "KernelHostVgpuDeviceShr",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_KernelHostVgpuDeviceShr,
+    .objCreatefn =        &__nvoc_objCreateDynamic_KernelHostVgpuDeviceShr,
     .pCastInfo =          &__nvoc_castinfo__KernelHostVgpuDeviceShr,
     .pExportInfo =        &__nvoc_export_info__KernelHostVgpuDeviceShr
 };
@@ -57,7 +57,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelHostVgpuDeviceShr =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__KernelHostVgpuDeviceShr __nvoc_metadata__KernelHostVgpuDeviceShr = {
     .rtti.pClassDef = &__nvoc_class_def_KernelHostVgpuDeviceShr,    // (kernelhostvgpudeviceshr) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_KernelHostVgpuDeviceShr,
+    .rtti.dtor      = &__nvoc_dtor_KernelHostVgpuDeviceShr,
     .rtti.offset    = 0,
     .metadata__RsShared.rtti.pClassDef = &__nvoc_class_def_RsShared,    // (shr) super
     .metadata__RsShared.rtti.dtor      = &__nvoc_destructFromBase,
@@ -87,16 +87,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__KernelHostVgpuDeviceShr =
 
 // Destruct KernelHostVgpuDeviceShr object.
 void __nvoc_kernelhostvgpudeviceshrDestruct(KernelHostVgpuDeviceShr*);
-void __nvoc_dtor_RsShared(RsShared*);
-void __nvoc_dtor_KernelHostVgpuDeviceShr(KernelHostVgpuDeviceShr* pThis) {
+void __nvoc_dtor_RsShared(Dynamic*);
+void __nvoc_dtor_KernelHostVgpuDeviceShr(Dynamic* pThis) {
+
+    KernelHostVgpuDeviceShr *__nvoc_this = (KernelHostVgpuDeviceShr *) pThis;
 
 // Call destructor.
-    __nvoc_kernelhostvgpudeviceshrDestruct(pThis);
+    __nvoc_kernelhostvgpudeviceshrDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RsShared(&pThis->__nvoc_base_RsShared);
+    __nvoc_dtor_RsShared((Dynamic *) &__nvoc_this->__nvoc_base_RsShared);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_KernelHostVgpuDeviceShr(KernelHostVgpuDeviceShr *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -122,7 +124,7 @@ NV_STATUS __nvoc_ctor_KernelHostVgpuDeviceShr(KernelHostVgpuDeviceShr *pKernelHo
 
     // Unwind on error.
 __nvoc_ctor_KernelHostVgpuDeviceShr_fail__init:
-    __nvoc_dtor_RsShared(&pKernelHostVgpuDeviceShr->__nvoc_base_RsShared);
+    __nvoc_dtor_RsShared((Dynamic *)&pKernelHostVgpuDeviceShr->__nvoc_base_RsShared);
 __nvoc_ctor_KernelHostVgpuDeviceShr_fail_RsShared:
 __nvoc_ctor_KernelHostVgpuDeviceShr_exit:
     return status;
@@ -228,12 +230,9 @@ __nvoc_objCreate_KernelHostVgpuDeviceShr_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_KernelHostVgpuDeviceShr(KernelHostVgpuDeviceShr **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_KernelHostVgpuDeviceShr(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_KernelHostVgpuDeviceShr(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_KernelHostVgpuDeviceShr((KernelHostVgpuDeviceShr **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 
 
@@ -257,7 +256,7 @@ void __nvoc_init__KernelHostVgpuDeviceApi(KernelHostVgpuDeviceApi*);
 void __nvoc_init_funcTable_KernelHostVgpuDeviceApi(KernelHostVgpuDeviceApi*);
 NV_STATUS __nvoc_ctor_KernelHostVgpuDeviceApi(KernelHostVgpuDeviceApi*, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_KernelHostVgpuDeviceApi(KernelHostVgpuDeviceApi*);
-void __nvoc_dtor_KernelHostVgpuDeviceApi(KernelHostVgpuDeviceApi*);
+void __nvoc_dtor_KernelHostVgpuDeviceApi(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__KernelHostVgpuDeviceApi;
@@ -350,7 +349,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelHostVgpuDeviceApi =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "KernelHostVgpuDeviceApi",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_KernelHostVgpuDeviceApi,
+    .objCreatefn =        &__nvoc_objCreateDynamic_KernelHostVgpuDeviceApi,
     .pCastInfo =          &__nvoc_castinfo__KernelHostVgpuDeviceApi,
     .pExportInfo =        &__nvoc_export_info__KernelHostVgpuDeviceApi
 };
@@ -360,6 +359,79 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelHostVgpuDeviceApi =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS kernelhostvgpudeviceapiCtrlCmdSetVgpuDeviceInfo__EXPORT(void *pKernelHostVgpuDeviceApi, void *pParams) {
+    return kernelhostvgpudeviceapiCtrlCmdSetVgpuDeviceInfo_IMPL(pKernelHostVgpuDeviceApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS kernelhostvgpudeviceapiCtrlCmdSetVgpuGuestLifeCycleState__EXPORT(void *pKernelHostVgpuDeviceApi, void *pParams) {
+    return kernelhostvgpudeviceapiCtrlCmdSetVgpuGuestLifeCycleState_IMPL(pKernelHostVgpuDeviceApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS kernelhostvgpudeviceapiCtrlCmdSetOfflinedPagePatchInfo__EXPORT(void *pKernelHostVgpuDeviceApi, void *pParams) {
+    return kernelhostvgpudeviceapiCtrlCmdSetOfflinedPagePatchInfo_IMPL(pKernelHostVgpuDeviceApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS kernelhostvgpudeviceapiCtrlCmdVfConfigSpaceAccess__EXPORT(void *pKernelHostVgpuDeviceApi, void *pParams) {
+    return kernelhostvgpudeviceapiCtrlCmdVfConfigSpaceAccess_IMPL(pKernelHostVgpuDeviceApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000808u)
+static NV_STATUS kernelhostvgpudeviceapiCtrlCmdBindFecsEvtbuf__EXPORT(void *pKernelHostVgpuDeviceApi, void *pParams) {
+    return kernelhostvgpudeviceapiCtrlCmdBindFecsEvtbuf_IMPL(pKernelHostVgpuDeviceApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000808u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS kernelhostvgpudeviceapiCtrlCmdTriggerPrivDoorbell__EXPORT(void *pKernelHostVgpuDeviceApi, void *pParams) {
+    return kernelhostvgpudeviceapiCtrlCmdTriggerPrivDoorbell_IMPL(pKernelHostVgpuDeviceApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000118u)
+static NV_STATUS kernelhostvgpudeviceapiCtrlCmdEventSetNotification__EXPORT(void *pKernelHostVgpuDeviceApi, void *pSetEventParams) {
+    return kernelhostvgpudeviceapiCtrlCmdEventSetNotification_IMPL(pKernelHostVgpuDeviceApi, pSetEventParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000118u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS kernelhostvgpudeviceapiCtrlCmdGetBarMappingRanges__EXPORT(void *pKernelHostVgpuDeviceApi, void *pParams) {
+    return kernelhostvgpudeviceapiCtrlCmdGetBarMappingRanges_IMPL(pKernelHostVgpuDeviceApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS kernelhostvgpudeviceapiCtrlCmdRestoreDefaultExecPartition__EXPORT(void *pKernelHostVgpuDeviceApi) {
+    return kernelhostvgpudeviceapiCtrlCmdRestoreDefaultExecPartition_IMPL(pKernelHostVgpuDeviceApi);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS kernelhostvgpudeviceapiCtrlCmdFreeStates__EXPORT(void *pKernelHostVgpuDeviceApi, void *pParams) {
+    return kernelhostvgpudeviceapiCtrlCmdFreeStates_IMPL(pKernelHostVgpuDeviceApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS kernelhostvgpudeviceapiCtrlCmdBootloadVgpuTask__EXPORT(void *pKernelHostVgpuDeviceApi, void *pParams) {
+    return kernelhostvgpudeviceapiCtrlCmdBootloadVgpuTask_IMPL(pKernelHostVgpuDeviceApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS kernelhostvgpudeviceapiCtrlCmdSetPlacementId__EXPORT(void *pKernelHostVgpuDeviceApi, void *pParams) {
+    return kernelhostvgpudeviceapiCtrlCmdSetPlacementId_IMPL(pKernelHostVgpuDeviceApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelHostVgpuDeviceApi[] = 
 {
@@ -367,7 +439,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelHo
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdSetVgpuDeviceInfo_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdSetVgpuDeviceInfo__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -382,7 +454,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelHo
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdSetVgpuGuestLifeCycleState_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdSetVgpuGuestLifeCycleState__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -397,7 +469,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelHo
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdSetOfflinedPagePatchInfo_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdSetOfflinedPagePatchInfo__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -412,7 +484,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelHo
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdVfConfigSpaceAccess_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdVfConfigSpaceAccess__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -427,7 +499,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelHo
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x808u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdBindFecsEvtbuf_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdBindFecsEvtbuf__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x808u)
         /*flags=*/      0x808u,
         /*accessRight=*/0x0u,
@@ -442,7 +514,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelHo
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdTriggerPrivDoorbell_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdTriggerPrivDoorbell__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -457,7 +529,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelHo
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x118u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdEventSetNotification_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdEventSetNotification__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x118u)
         /*flags=*/      0x118u,
         /*accessRight=*/0x0u,
@@ -472,7 +544,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelHo
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdGetBarMappingRanges_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdGetBarMappingRanges__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -487,7 +559,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelHo
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdRestoreDefaultExecPartition_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdRestoreDefaultExecPartition__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -502,7 +574,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelHo
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdFreeStates_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdFreeStates__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -517,7 +589,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelHo
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdBootloadVgpuTask_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdBootloadVgpuTask__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -532,7 +604,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelHo
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdSetPlacementId_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kernelhostvgpudeviceapiCtrlCmdSetPlacementId__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -549,7 +621,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelHo
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__KernelHostVgpuDeviceApi __nvoc_metadata__KernelHostVgpuDeviceApi = {
     .rtti.pClassDef = &__nvoc_class_def_KernelHostVgpuDeviceApi,    // (kernelhostvgpudeviceapi) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_KernelHostVgpuDeviceApi,
+    .rtti.dtor      = &__nvoc_dtor_KernelHostVgpuDeviceApi,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -860,18 +932,20 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__KernelHostVgpuDeviceApi =
 
 // Destruct KernelHostVgpuDeviceApi object.
 void __nvoc_kernelhostvgpudeviceapiDestruct(KernelHostVgpuDeviceApi*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_Notifier(Notifier*);
-void __nvoc_dtor_KernelHostVgpuDeviceApi(KernelHostVgpuDeviceApi* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_Notifier(Dynamic*);
+void __nvoc_dtor_KernelHostVgpuDeviceApi(Dynamic* pThis) {
+
+    KernelHostVgpuDeviceApi *__nvoc_this = (KernelHostVgpuDeviceApi *) pThis;
 
 // Call destructor.
-    __nvoc_kernelhostvgpudeviceapiDestruct(pThis);
+    __nvoc_kernelhostvgpudeviceapiDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
-    __nvoc_dtor_Notifier(&pThis->__nvoc_base_Notifier);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
+    __nvoc_dtor_Notifier((Dynamic *) &__nvoc_this->__nvoc_base_Notifier);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_KernelHostVgpuDeviceApi(KernelHostVgpuDeviceApi *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -900,9 +974,9 @@ NV_STATUS __nvoc_ctor_KernelHostVgpuDeviceApi(KernelHostVgpuDeviceApi *pKernelHo
 
     // Unwind on error.
 __nvoc_ctor_KernelHostVgpuDeviceApi_fail__init:
-    __nvoc_dtor_Notifier(&pKernelHostVgpuDeviceApi->__nvoc_base_Notifier);
+    __nvoc_dtor_Notifier((Dynamic *)&pKernelHostVgpuDeviceApi->__nvoc_base_Notifier);
 __nvoc_ctor_KernelHostVgpuDeviceApi_fail_Notifier:
-    __nvoc_dtor_GpuResource(&pKernelHostVgpuDeviceApi->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pKernelHostVgpuDeviceApi->__nvoc_base_GpuResource);
 __nvoc_ctor_KernelHostVgpuDeviceApi_fail_GpuResource:
 __nvoc_ctor_KernelHostVgpuDeviceApi_exit:
     return status;
@@ -1019,13 +1093,10 @@ __nvoc_objCreate_KernelHostVgpuDeviceApi_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_KernelHostVgpuDeviceApi(KernelHostVgpuDeviceApi **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_KernelHostVgpuDeviceApi(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_KernelHostVgpuDeviceApi(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_KernelHostVgpuDeviceApi((KernelHostVgpuDeviceApi **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

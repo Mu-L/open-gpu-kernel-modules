@@ -28,7 +28,7 @@ void __nvoc_init__OBJGPUMGR(OBJGPUMGR*);
 void __nvoc_init_funcTable_OBJGPUMGR(OBJGPUMGR*);
 NV_STATUS __nvoc_ctor_OBJGPUMGR(OBJGPUMGR*);
 void __nvoc_init_dataField_OBJGPUMGR(OBJGPUMGR*);
-void __nvoc_dtor_OBJGPUMGR(OBJGPUMGR*);
+void __nvoc_dtor_OBJGPUMGR(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJGPUMGR;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJGPUMGR =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJGPUMGR",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_OBJGPUMGR,
+    .objCreatefn =        &__nvoc_objCreateDynamic_OBJGPUMGR,
     .pCastInfo =          &__nvoc_castinfo__OBJGPUMGR,
     .pExportInfo =        &__nvoc_export_info__OBJGPUMGR
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJGPUMGR =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__OBJGPUMGR __nvoc_metadata__OBJGPUMGR = {
     .rtti.pClassDef = &__nvoc_class_def_OBJGPUMGR,    // (gpumgr) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJGPUMGR,
+    .rtti.dtor      = &__nvoc_dtor_OBJGPUMGR,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -82,16 +82,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJGPUMGR =
 
 // Destruct OBJGPUMGR object.
 void __nvoc_gpumgrDestruct(OBJGPUMGR*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_OBJGPUMGR(OBJGPUMGR* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_OBJGPUMGR(Dynamic* pThis) {
+
+    OBJGPUMGR *__nvoc_this = (OBJGPUMGR *) pThis;
 
 // Call destructor.
-    __nvoc_gpumgrDestruct(pThis);
+    __nvoc_gpumgrDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJGPUMGR(OBJGPUMGR *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -117,7 +119,7 @@ NV_STATUS __nvoc_ctor_OBJGPUMGR(OBJGPUMGR *arg_this) {
 
     // Unwind on error.
 __nvoc_ctor_OBJGPUMGR_fail__init:
-    __nvoc_dtor_Object(&arg_this->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&arg_this->__nvoc_base_Object);
 __nvoc_ctor_OBJGPUMGR_fail_Object:
 __nvoc_ctor_OBJGPUMGR_exit:
     return status;
@@ -221,11 +223,8 @@ __nvoc_objCreate_OBJGPUMGR_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_OBJGPUMGR(OBJGPUMGR **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_OBJGPUMGR(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_OBJGPUMGR(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_OBJGPUMGR((OBJGPUMGR **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

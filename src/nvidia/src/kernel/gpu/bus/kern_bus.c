@@ -779,6 +779,14 @@ kbusPatchBar1Pdb_GSPCLIENT
     MMU_WALK_USER_CTX    userCtx   = {0};
     GspStaticConfigInfo *pGSCI     = GPU_GET_GSP_STATIC_INFO(pGpu);
 
+    //
+    // Make sure the memdesc encompasses 2 extra entries if we are allocating the root memdesc.
+    // Required for WARing HW bug 5394264.
+    //
+    if (kgmmuIsBug5394264WarNeeded_HAL(pKernelGmmu))
+    {
+        rootSize += 2 * pRootFmt->entrySize;
+    }
     NV_CHECK_OK_OR_RETURN(LEVEL_ERROR,
          memdescCreate(&pMemDesc, pGpu, rootSize, RM_PAGE_SIZE, NV_TRUE, ADDR_FBMEM,
                        kgmmuGetPTEAttr(pKernelGmmu), MEMDESC_FLAGS_NONE));
@@ -1334,4 +1342,27 @@ NV_STATUS kbusGetEffectiveAddressSpace_SOC(OBJGPU *pGpu, MEMORY_DESCRIPTOR *pMem
         *pAddrSpace = memdescGetAddressSpace(pMemDesc);
 
     return NV_OK;
+}
+
+NvBool kbusIsNvlinkPeerId_IMPL
+(
+    OBJGPU    *pGpu,
+    KernelBus *pKernelBus,
+    NvU32      remotePeerId
+)
+{
+    NvU32 gpuInstance = gpuGetInstance(pGpu);
+    NvU32 peerMask = pKernelBus->p2p.busNvlinkPeerNumberMask[gpuInstance];
+    NvU32 peerId;
+
+    FOR_EACH_INDEX_IN_MASK(32, peerId, peerMask)
+    {
+        if (peerId == remotePeerId)
+        {
+            return NV_TRUE;
+        }
+    }
+    FOR_EACH_INDEX_IN_MASK_END;
+
+    return NV_FALSE;
 }

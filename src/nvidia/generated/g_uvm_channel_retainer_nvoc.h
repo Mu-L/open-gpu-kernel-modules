@@ -157,7 +157,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_UvmChannelRetainer;
     ((UvmChannelRetainer*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(UvmChannelRetainer)))
 #endif //__nvoc_uvm_channel_retainer_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_UvmChannelRetainer(UvmChannelRetainer**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_UvmChannelRetainer(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_UvmChannelRetainer(UvmChannelRetainer**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_UvmChannelRetainer(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

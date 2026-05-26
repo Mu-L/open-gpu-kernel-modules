@@ -1396,12 +1396,14 @@ compile_test() {
             #
             CODE="
             #include <linux/memremap.h>
+
             void init_page(void) {
                 struct page *page;
                 struct dev_pagemap *pgmap;
 
                 zone_device_page_init(page, pgmap, 0);
             }"
+
             compile_check_conftest "$CODE" "NV_ZONE_DEVICE_PAGE_INIT_HAS_PGMAP_AND_ORDER_ARGS" "" "types"
         ;;
 
@@ -1417,12 +1419,15 @@ compile_test() {
             #
             CODE="
             #include <linux/memremap.h>
+
             void test_folio_free(struct folio *folio) {
             }
+
             void set_folio_free_ops(void) {
                 struct dev_pagemap_ops ops;
                 ops.folio_free = test_folio_free;
             }"
+
             compile_check_conftest "$CODE" "NV_PAGEMAP_OPS_HAS_FOLIO_FREE" "" "types"
         ;;
 
@@ -2203,6 +2208,23 @@ compile_test() {
             export_symbol_gpl_conftest $(echo $1 | cut -f5- -d_)
         ;;
 
+        pcie_is_cxl)
+            #
+            # Determine if the pcie_is_cxl() function is present.
+            # This is a static inline function in linux/pci.h that checks if
+            # a PCI device is a CXL device by reading pci_dev->is_cxl field.
+            #
+            # Added by commit 7c29ba02210c ("PCI: Introduce pcie_is_cxl()") in v7.0
+            #
+            CODE="
+            #include <linux/pci.h>
+            void conftest_pcie_is_cxl(void) {
+                pcie_is_cxl();
+            }"
+
+            compile_check_conftest "$CODE" "NV_PCIE_IS_CXL_PRESENT" "" "functions"
+        ;;
+
         get_backlight_device_by_name)
             #
             # Determine if the get_backlight_device_by_name() function is present
@@ -2502,29 +2524,6 @@ compile_test() {
             }"
 
             compile_check_conftest "$CODE" "NV_PM_DOMAIN_AVAILABLE" "" "functions"
-        ;;
-
-        dma_direct_map_resource)
-            #
-            # Determine whether dma_is_direct() exists.
-            #
-            # dma_is_direct() was added by commit 356da6d0cde3 ("dma-mapping:
-            # bypass indirect calls for dma-direct") in 5.1 (2018-12-06).
-            #
-            # If dma_is_direct() does exist, then we assume that
-            # dma_direct_map_resource() exists.  Both functions were added
-            # as part of the same patchset.
-            #
-            # The presence of dma_is_direct() and dma_direct_map_resource()
-            # means that dma_direct can perform DMA mappings itself.
-            #
-            CODE="
-            #include <linux/dma-mapping.h>
-            void conftest_dma_is_direct(void) {
-                dma_is_direct();
-            }"
-
-            compile_check_conftest "$CODE" "NV_DMA_IS_DIRECT_PRESENT" "" "functions"
         ;;
 
         cmd_uphy_display_port_init)
@@ -5138,6 +5137,85 @@ compile_test() {
             compile_check_conftest "$CODE" "NV_IS_VMA_WRITE_LOCKED_HAS_MM_LOCK_SEQ_ARG" "" "types"
         ;;
 
+        pfn_is_map_memory)
+            #
+            # Determine if pfn_is_map_memory() function is present.
+            # It only exists on aarch64.
+            #
+            # pfn_is_map_memory() was added by commit id 873ba463914c ("arm64:
+            # decouple check whether pfn is in linear map from pfn_valid()") in
+            # 5.14 (2021-08-29) for aarch64.
+            #
+            CODE="
+            #include <asm/page.h>
+            int conftest_pfn_is_map_memory(void) {
+                return pfn_is_map_memory();
+            }"
+            compile_check_conftest "$CODE" "NV_PFN_IS_MAP_MEMORY_PRESENT" "" "functions"
+        ;;
+
+        dmem_cgrp_id)
+            #
+            # Check to see if the dmem cgroup type is available
+            #
+            # dmem_cgrp_id was added by commit id b168ed4 ("kernel/cgroup: Add "dmem"
+            # memory accounting cgroup") in 6.14
+            #
+            CODE="
+            #include <linux/cgroup.h>
+            enum cgroup_subsys_id cgrpid = dmem_cgrp_id;
+            "
+
+            compile_check_conftest "$CODE" "NV_DMEM_CGROUP_PRESENT" "" "types"
+        ;;
+
+        misc_cgrp_id)
+            #
+            # Check to see if the misc cgroup type is available
+            #
+            # dmem_cgrp_id was added by commit id a72232e ("cgroup: Add misc cgroup
+            # controller") in 5.13
+            #
+            CODE="
+            #include <linux/cgroup.h>
+            enum cgroup_subsys_id cgrpid = misc_cgrp_id;
+            "
+
+            compile_check_conftest "$CODE" "NV_MISC_CGROUP_PRESENT" "" "types"
+        ;;
+
+        drm_color_lut32_present)
+            # Determine if struct drm_color_lut32 is present.
+            #
+            # struct drm_color_lut32 was added by commit 621c45ca12ed ("drm: Add
+            # Enhanced LUT precision structure"), expected in v6.19.
+            CODE="
+            #include <uapi/drm/drm_mode.h>
+            struct drm_color_lut32 lut;"
+
+            compile_check_conftest "$CODE" "NV_DRM_COLOR_LUT32_PRESENT" "" "types"
+        ;;
+
+        drm_colorop_has_funcs)
+            #
+            # Determine if the 'drm_colorop' structure has a
+            # 'funcs' field.
+            #
+            # Added by commit 2864667476a4 ("drm: Allow driver-managed
+            # destruction of colorop objects"), expected in v7.1.
+            #
+            CODE="
+            #if defined(NV_DRM_DRM_COLOROP_H_PRESENT)
+            #include <drm/drm_colorop.h>
+            #endif
+
+            int conftest_drm_colorop_has_funcs(void) {
+                return offsetof(struct drm_colorop, funcs);
+            }"
+
+            compile_check_conftest "$CODE" "NV_DRM_COLOROP_HAS_FUNCS" "" "types"
+        ;;
+
         # When adding a new conftest entry, please use the correct format for
         # specifying the relevant upstream Linux kernel commit.  Please
         # avoid specifying -rc kernels, and only use SHAs that actually exist
@@ -5419,7 +5497,7 @@ case "$5" in
 
         if [ -n "$VGX_BUILD" ]; then
             if [ -f /proc/xen/capabilities ]; then
-                if [ "`cat /proc/xen/capabilities`" == "control_d" ]; then
+                if [ "`cat /proc/xen/capabilities`" = "control_d" ]; then
                     exit 0
                 fi
             else

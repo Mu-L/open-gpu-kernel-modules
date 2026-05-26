@@ -39,6 +39,7 @@
 #include "gpu/mem_mgr/ce_utils.h"
 
 #include "kernel/gpu/conf_compute/ccsl.h"
+#include "gpu/conf_compute/conf_compute.h"
 
 #include "kernel/gpu/mig_mgr/kernel_mig_manager.h"
 #include "virtualization/hypervisor/hypervisor.h"
@@ -158,7 +159,10 @@ _memmgrAllocAndMapSurface
     NV_ASSERT_OR_RETURN(ppMap != NULL, NV_ERR_INVALID_ARGUMENT);
     NV_ASSERT_OR_RETURN(ppPriv != NULL, NV_ERR_INVALID_ARGUMENT);
 
-    flags = MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    if (confComputeForceUnprotAlloc(pGpu))
+    {
+        flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    }
 
     NV_ASSERT_OK_OR_RETURN(
         memdescCreate(ppMemDesc, pGpu, size, RM_PAGE_SIZE, NV_TRUE,

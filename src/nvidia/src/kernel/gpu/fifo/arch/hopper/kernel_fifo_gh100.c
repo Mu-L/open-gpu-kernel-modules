@@ -623,6 +623,19 @@ kfifoWriteRamfcGpfifo_GH100
     MEM_WR32(pInstMem + SF_OFFSET(NV_RAMFC_GP_GET), 0);
 }
 
+void
+kfifoGetRamfcFaultMethodBufferAddrOffset_GH100
+(
+    OBJGPU     *pGpu,
+    KernelFifo *pKernelFifo,
+    NvU32      *pOffsetAddrLo,
+    NvU32      *pOffsetAddrHi
+)
+{
+    *pOffsetAddrLo = SF_OFFSET(NV_RAMIN_ENG_METHOD_BUFFER_ADDR_LO);
+    *pOffsetAddrHi = SF_OFFSET(NV_RAMIN_ENG_METHOD_BUFFER_ADDR_HI);
+}
+
 NV_STATUS
 kfifoDisableChannelsForKeyRotation_GH100
 (

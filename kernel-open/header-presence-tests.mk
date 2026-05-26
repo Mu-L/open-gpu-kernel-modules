@@ -44,5 +44,6 @@ NV_HEADER_PRESENCE_TESTS = \
   linux/of_gpio.h \
   asm/cpufeature.h \
   asm/mshyperv.h \
-  crypto/sig.h
+  crypto/sig.h \
+  drm/drm_colorop.h
 

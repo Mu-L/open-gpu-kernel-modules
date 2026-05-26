@@ -21,6 +21,7 @@
 
 *******************************************************************************/
 
+#include "uvm_extern_decl.h"
 #include "uvm_va_space.h"
 #include "uvm_ats.h"
 #include "uvm_global.h"

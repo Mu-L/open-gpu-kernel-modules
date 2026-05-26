@@ -29,7 +29,7 @@ void __nvoc_init__KernelGsplite(KernelGsplite*, GpuHalspecOwner *pGpuhalspecowne
 void __nvoc_init_funcTable_KernelGsplite(KernelGsplite*, GpuHalspecOwner *pGpuhalspecowner);
 NV_STATUS __nvoc_ctor_KernelGsplite(KernelGsplite*, GpuHalspecOwner *pGpuhalspecowner);
 void __nvoc_init_dataField_KernelGsplite(KernelGsplite*, GpuHalspecOwner *pGpuhalspecowner);
-void __nvoc_dtor_KernelGsplite(KernelGsplite*);
+void __nvoc_dtor_KernelGsplite(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__KernelGsplite;
@@ -62,7 +62,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelGsplite =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "KernelGsplite",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_KernelGsplite,
+    .objCreatefn =        &__nvoc_objCreateDynamic_KernelGsplite,
     .pCastInfo =          &__nvoc_castinfo__KernelGsplite,
     .pExportInfo =        &__nvoc_export_info__KernelGsplite
 };
@@ -71,7 +71,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelGsplite =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__KernelGsplite __nvoc_metadata__KernelGsplite = {
     .rtti.pClassDef = &__nvoc_class_def_KernelGsplite,    // (kgsplite) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_KernelGsplite,
+    .rtti.dtor      = &__nvoc_dtor_KernelGsplite,
     .rtti.offset    = 0,
     .metadata__OBJENGSTATE.rtti.pClassDef = &__nvoc_class_def_OBJENGSTATE,    // (engstate) super
     .metadata__OBJENGSTATE.rtti.dtor      = &__nvoc_destructFromBase,
@@ -206,16 +206,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__KernelGsplite =
 
 // Destruct KernelGsplite object.
 void __nvoc_kgspliteDestruct(KernelGsplite*);
-void __nvoc_dtor_OBJENGSTATE(OBJENGSTATE*);
-void __nvoc_dtor_KernelGsplite(KernelGsplite* pThis) {
+void __nvoc_dtor_OBJENGSTATE(Dynamic*);
+void __nvoc_dtor_KernelGsplite(Dynamic* pThis) {
+
+    KernelGsplite *__nvoc_this = (KernelGsplite *) pThis;
 
 // Call destructor.
-    __nvoc_kgspliteDestruct(pThis);
+    __nvoc_kgspliteDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_OBJENGSTATE(&pThis->__nvoc_base_OBJENGSTATE);
+    __nvoc_dtor_OBJENGSTATE((Dynamic *) &__nvoc_this->__nvoc_base_OBJENGSTATE);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_KernelGsplite(KernelGsplite *pThis, GpuHalspecOwner *pGpuhalspecowner) {
     ChipHal *chipHal = &pGpuhalspecowner->chipHal;
@@ -226,7 +228,7 @@ void __nvoc_init_dataField_KernelGsplite(KernelGsplite *pThis, GpuHalspecOwner *
     PORT_UNREFERENCED_VARIABLE(chipHal_HalVarIdx);
 
     // NVOC Property Hal field -- PDB_PROP_KGSPLITE_IS_MISSING
-    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000a000UL) )) /* ChipHal: T234D | T264D */ 
+    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000e000UL) )) /* ChipHal: T234D | T239D | T264D */ 
     {
         pThis->setProperty(pThis, PDB_PROP_KGSPLITE_IS_MISSING, NV_TRUE);
     }
@@ -372,11 +374,8 @@ __nvoc_objCreate_KernelGsplite_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_KernelGsplite(KernelGsplite **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_KernelGsplite(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_KernelGsplite(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_KernelGsplite((KernelGsplite **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

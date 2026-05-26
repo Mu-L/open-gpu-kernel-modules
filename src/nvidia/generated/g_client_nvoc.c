@@ -29,7 +29,7 @@ void __nvoc_init__UserInfo(UserInfo*);
 void __nvoc_init_funcTable_UserInfo(UserInfo*);
 NV_STATUS __nvoc_ctor_UserInfo(UserInfo*);
 void __nvoc_init_dataField_UserInfo(UserInfo*);
-void __nvoc_dtor_UserInfo(UserInfo*);
+void __nvoc_dtor_UserInfo(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__UserInfo;
@@ -48,7 +48,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_UserInfo =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "UserInfo",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_UserInfo,
+    .objCreatefn =        &__nvoc_objCreateDynamic_UserInfo,
     .pCastInfo =          &__nvoc_castinfo__UserInfo,
     .pExportInfo =        &__nvoc_export_info__UserInfo
 };
@@ -57,7 +57,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_UserInfo =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__UserInfo __nvoc_metadata__UserInfo = {
     .rtti.pClassDef = &__nvoc_class_def_UserInfo,    // (userinfo) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_UserInfo,
+    .rtti.dtor      = &__nvoc_dtor_UserInfo,
     .rtti.offset    = 0,
     .metadata__RsShared.rtti.pClassDef = &__nvoc_class_def_RsShared,    // (shr) super
     .metadata__RsShared.rtti.dtor      = &__nvoc_destructFromBase,
@@ -87,16 +87,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__UserInfo =
 
 // Destruct UserInfo object.
 void __nvoc_userinfoDestruct(UserInfo*);
-void __nvoc_dtor_RsShared(RsShared*);
-void __nvoc_dtor_UserInfo(UserInfo* pThis) {
+void __nvoc_dtor_RsShared(Dynamic*);
+void __nvoc_dtor_UserInfo(Dynamic* pThis) {
+
+    UserInfo *__nvoc_this = (UserInfo *) pThis;
 
 // Call destructor.
-    __nvoc_userinfoDestruct(pThis);
+    __nvoc_userinfoDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RsShared(&pThis->__nvoc_base_RsShared);
+    __nvoc_dtor_RsShared((Dynamic *) &__nvoc_this->__nvoc_base_RsShared);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_UserInfo(UserInfo *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -122,7 +124,7 @@ NV_STATUS __nvoc_ctor_UserInfo(UserInfo *pUserInfo) {
 
     // Unwind on error.
 __nvoc_ctor_UserInfo_fail__init:
-    __nvoc_dtor_RsShared(&pUserInfo->__nvoc_base_RsShared);
+    __nvoc_dtor_RsShared((Dynamic *)&pUserInfo->__nvoc_base_RsShared);
 __nvoc_ctor_UserInfo_fail_RsShared:
 __nvoc_ctor_UserInfo_exit:
     return status;
@@ -228,12 +230,9 @@ __nvoc_objCreate_UserInfo_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_UserInfo(UserInfo **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_UserInfo(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_UserInfo(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_UserInfo((UserInfo **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 
 
@@ -251,7 +250,7 @@ void __nvoc_init__RmClient(RmClient*);
 void __nvoc_init_funcTable_RmClient(RmClient*);
 NV_STATUS __nvoc_ctor_RmClient(RmClient*, struct PORT_MEM_ALLOCATOR *pAllocator, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_RmClient(RmClient*);
-void __nvoc_dtor_RmClient(RmClient*);
+void __nvoc_dtor_RmClient(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__RmClient;
@@ -282,7 +281,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RmClient =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "RmClient",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_RmClient,
+    .objCreatefn =        &__nvoc_objCreateDynamic_RmClient,
     .pCastInfo =          &__nvoc_castinfo__RmClient,
     .pExportInfo =        &__nvoc_export_info__RmClient
 };
@@ -291,7 +290,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RmClient =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__RmClient __nvoc_metadata__RmClient = {
     .rtti.pClassDef = &__nvoc_class_def_RmClient,    // (rmclient) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_RmClient,
+    .rtti.dtor      = &__nvoc_dtor_RmClient,
     .rtti.offset    = 0,
     .metadata__RsClient.rtti.pClassDef = &__nvoc_class_def_RsClient,    // (client) super
     .metadata__RsClient.rtti.dtor      = &__nvoc_destructFromBase,
@@ -412,16 +411,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__RmClient =
 
 // Destruct RmClient object.
 void __nvoc_rmclientDestruct(RmClient*);
-void __nvoc_dtor_RsClient(RsClient*);
-void __nvoc_dtor_RmClient(RmClient* pThis) {
+void __nvoc_dtor_RsClient(Dynamic*);
+void __nvoc_dtor_RmClient(Dynamic* pThis) {
+
+    RmClient *__nvoc_this = (RmClient *) pThis;
 
 // Call destructor.
-    __nvoc_rmclientDestruct(pThis);
+    __nvoc_rmclientDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RsClient(&pThis->__nvoc_base_RsClient);
+    __nvoc_dtor_RsClient((Dynamic *) &__nvoc_this->__nvoc_base_RsClient);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_RmClient(RmClient *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -447,7 +448,7 @@ NV_STATUS __nvoc_ctor_RmClient(RmClient *pClient, struct PORT_MEM_ALLOCATOR *pAl
 
     // Unwind on error.
 __nvoc_ctor_RmClient_fail__init:
-    __nvoc_dtor_RsClient(&pClient->__nvoc_base_RsClient);
+    __nvoc_dtor_RsClient((Dynamic *)&pClient->__nvoc_base_RsClient);
 __nvoc_ctor_RmClient_fail_RsClient:
 __nvoc_ctor_RmClient_exit:
     return status;
@@ -553,13 +554,10 @@ __nvoc_objCreate_RmClient_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_RmClient(RmClient **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_RmClient(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct PORT_MEM_ALLOCATOR *pAllocator = va_arg(__nvoc_args, struct PORT_MEM_ALLOCATOR *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_RmClient(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pAllocator, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_RmClient((RmClient **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pAllocator, pParams);
 }
 

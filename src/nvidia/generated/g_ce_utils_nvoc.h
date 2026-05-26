@@ -173,7 +173,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_CeUtils;
     ((CeUtils*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(CeUtils)))
 #endif //__nvoc_ce_utils_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_CeUtils(CeUtils**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_CeUtils(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_CeUtils(CeUtils**, Dynamic*, NvU32, struct OBJGPU *pGpu, KERNEL_MIG_GPU_INSTANCE *pKernelMIGGPUInstance, NV0050_ALLOCATION_PARAMETERS *pAllocParams);
 #define __objCreate_CeUtils(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pGpu, pKernelMIGGPUInstance, pAllocParams) \
@@ -377,7 +377,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_CeUtilsApi;
     ((CeUtilsApi*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(CeUtilsApi)))
 #endif //__nvoc_ce_utils_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_CeUtilsApi(CeUtilsApi**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_CeUtilsApi(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_CeUtilsApi(CeUtilsApi**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_CeUtilsApi(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

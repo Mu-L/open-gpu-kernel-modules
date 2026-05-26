@@ -356,7 +356,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_Heap;
 #define PDB_PROP_HEAP_PAGE_SHUFFLE_BASE_NAME PDB_PROP_HEAP_PAGE_SHUFFLE
 
 
-NV_STATUS __nvoc_objCreateDynamic_Heap(Heap**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_Heap(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_Heap(Heap**, Dynamic*, NvU32);
 #define __objCreate_Heap(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

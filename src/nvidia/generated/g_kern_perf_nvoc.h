@@ -166,7 +166,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelPerf;
 #define PDB_PROP_KPERF_IS_MISSING_BASE_NAME PDB_PROP_ENGSTATE_IS_MISSING
 
 
-NV_STATUS __nvoc_objCreateDynamic_KernelPerf(KernelPerf**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelPerf(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelPerf(KernelPerf**, Dynamic*, NvU32);
 #define __objCreate_KernelPerf(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

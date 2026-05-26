@@ -31,7 +31,7 @@ void __nvoc_init__MemoryExport(MemoryExport*);
 void __nvoc_init_funcTable_MemoryExport(MemoryExport*);
 NV_STATUS __nvoc_ctor_MemoryExport(MemoryExport*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_MemoryExport(MemoryExport*);
-void __nvoc_dtor_MemoryExport(MemoryExport*);
+void __nvoc_dtor_MemoryExport(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__MemoryExport;
@@ -89,7 +89,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_MemoryExport =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "MemoryExport",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_MemoryExport,
+    .objCreatefn =        &__nvoc_objCreateDynamic_MemoryExport,
     .pCastInfo =          &__nvoc_castinfo__MemoryExport,
     .pExportInfo =        &__nvoc_export_info__MemoryExport
 };
@@ -99,6 +99,25 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_MemoryExport =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+static NV_STATUS memoryexportCtrlExportMem__EXPORT(void *pMemoryExport, void *pParams) {
+    return memoryexportCtrlExportMem_IMPL(pMemoryExport, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+static NV_STATUS memoryexportCtrlImportMem__EXPORT(void *pMemoryExport, void *pParams) {
+    return memoryexportCtrlImportMem_IMPL(pMemoryExport, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0000010bu)
+static NV_STATUS memoryexportCtrlGetInfo__EXPORT(void *pMemoryExport, void *pParams) {
+    return memoryexportCtrlGetInfo_IMPL(pMemoryExport, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0000010bu)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MemoryExport[] = 
 {
@@ -106,7 +125,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MemoryEx
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &memoryexportCtrlExportMem_IMPL,
+        /*pFunc=*/      (void (*)(void)) &memoryexportCtrlExportMem__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*flags=*/      0x109u,
         /*accessRight=*/0x0u,
@@ -121,7 +140,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MemoryEx
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &memoryexportCtrlImportMem_IMPL,
+        /*pFunc=*/      (void (*)(void)) &memoryexportCtrlImportMem__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*flags=*/      0x109u,
         /*accessRight=*/0x0u,
@@ -136,7 +155,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MemoryEx
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10bu)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &memoryexportCtrlGetInfo_IMPL,
+        /*pFunc=*/      (void (*)(void)) &memoryexportCtrlGetInfo__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10bu)
         /*flags=*/      0x10bu,
         /*accessRight=*/0x0u,
@@ -153,7 +172,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MemoryEx
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__MemoryExport __nvoc_metadata__MemoryExport = {
     .rtti.pClassDef = &__nvoc_class_def_MemoryExport,    // (memoryexport) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_MemoryExport,
+    .rtti.dtor      = &__nvoc_dtor_MemoryExport,
     .rtti.offset    = 0,
     .metadata__RmResource.rtti.pClassDef = &__nvoc_class_def_RmResource,    // (rmres) super
     .metadata__RmResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -363,16 +382,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__MemoryExport =
 
 // Destruct MemoryExport object.
 void __nvoc_memoryexportDestruct(MemoryExport*);
-void __nvoc_dtor_RmResource(RmResource*);
-void __nvoc_dtor_MemoryExport(MemoryExport* pThis) {
+void __nvoc_dtor_RmResource(Dynamic*);
+void __nvoc_dtor_MemoryExport(Dynamic* pThis) {
+
+    MemoryExport *__nvoc_this = (MemoryExport *) pThis;
 
 // Call destructor.
-    __nvoc_memoryexportDestruct(pThis);
+    __nvoc_memoryexportDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RmResource(&pThis->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *) &__nvoc_this->__nvoc_base_RmResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_MemoryExport(MemoryExport *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -398,7 +419,7 @@ NV_STATUS __nvoc_ctor_MemoryExport(MemoryExport *pMemoryExport, struct CALL_CONT
 
     // Unwind on error.
 __nvoc_ctor_MemoryExport_fail__init:
-    __nvoc_dtor_RmResource(&pMemoryExport->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *)&pMemoryExport->__nvoc_base_RmResource);
 __nvoc_ctor_MemoryExport_fail_RmResource:
 __nvoc_ctor_MemoryExport_exit:
     return status;
@@ -508,13 +529,10 @@ __nvoc_objCreate_MemoryExport_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_MemoryExport(MemoryExport **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_MemoryExport(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_MemoryExport(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_MemoryExport((MemoryExport **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

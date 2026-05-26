@@ -90,7 +90,7 @@ knvlinkGetUniquePeerIdMask_GP100
 
     for (i = 0; i < NV_ARRAY_ELEMENTS(pKernelNvlink->peerLinkMasks); i++)
     {
-        NvU32 peerLinkMask = KNVLINK_GET_MASK(pKernelNvlink, peerLinkMasks[i], 32);
+        NvU32 peerLinkMask = KNVLINK_BITVECTOR_TO_MASK(pKernelNvlink, peerLinkMasks[i], 32);
         if (peerLinkMask != 0)
         {
             uniqueIdMask |= LOWESTBIT(peerLinkMask);
@@ -125,7 +125,7 @@ knvlinkGetUniquePeerId_GP100
 {
     NvU32 peerLinkMask;
 
-    peerLinkMask = KNVLINK_GET_MASK(pKernelNvlink, peerLinkMasks[gpuGetInstance(pRemoteGpu)], 32);
+    peerLinkMask = KNVLINK_BITVECTOR_TO_MASK(pKernelNvlink, peerLinkMasks[gpuGetInstance(pRemoteGpu)], 32);
     if (peerLinkMask == 0)
     {
         return BUS_INVALID_PEER;
@@ -259,7 +259,6 @@ knvlinkSetupPeerMapping_GP100
 )
 {
     NV_STATUS status = NV_OK;
-    NvU64 peerLinkMask;
     NVLINK_BIT_VECTOR peerLinkMaskVec;
 
     NV2080_CTRL_INTERNAL_NVLINK_PRE_SETUP_NVLINK_PEER_PARAMS  preSetupNvlinkPeerParams;
@@ -277,10 +276,7 @@ knvlinkSetupPeerMapping_GP100
             return;
         }
 
-        peerLinkMask = KNVLINK_GET_MASK(pKernelNvlink, peerLinkMasks[gpuGetInstance(pRemoteGpu)], 64);
-        NV_CHECK_OK_OR_ELSE(status, LEVEL_ERROR,
-            convertMaskToBitVector(peerLinkMask, &peerLinkMaskVec),
-            return; );
+        bitVectorCopy(&peerLinkMaskVec, &pKernelNvlink->peerLinkMasks[gpuGetInstance(pRemoteGpu)]);
         knvlinkGetEffectivePeerLinkMask_HAL(pGpu, pKernelNvlink, pRemoteGpu, &peerLinkMaskVec);
 
         if (!bitVectorTestAllCleared(&peerLinkMaskVec))

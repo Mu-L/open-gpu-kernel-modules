@@ -31,7 +31,7 @@ void __nvoc_init__FmSessionApi(FmSessionApi*);
 void __nvoc_init_funcTable_FmSessionApi(FmSessionApi*);
 NV_STATUS __nvoc_ctor_FmSessionApi(FmSessionApi*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_FmSessionApi(FmSessionApi*);
-void __nvoc_dtor_FmSessionApi(FmSessionApi*);
+void __nvoc_dtor_FmSessionApi(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__FmSessionApi;
@@ -89,7 +89,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_FmSessionApi =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "FmSessionApi",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_FmSessionApi,
+    .objCreatefn =        &__nvoc_objCreateDynamic_FmSessionApi,
     .pCastInfo =          &__nvoc_castinfo__FmSessionApi,
     .pExportInfo =        &__nvoc_export_info__FmSessionApi
 };
@@ -99,6 +99,19 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_FmSessionApi =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS fmsessionapiCtrlCmdSetFmState__EXPORT(void *pFmSessionApi) {
+    return fmsessionapiCtrlCmdSetFmState_IMPL(pFmSessionApi);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS fmsessionapiCtrlCmdClearFmState__EXPORT(void *pFmSessionApi) {
+    return fmsessionapiCtrlCmdClearFmState_IMPL(pFmSessionApi);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_FmSessionApi[] = 
 {
@@ -106,7 +119,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_FmSessio
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &fmsessionapiCtrlCmdSetFmState_IMPL,
+        /*pFunc=*/      (void (*)(void)) &fmsessionapiCtrlCmdSetFmState__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -121,7 +134,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_FmSessio
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &fmsessionapiCtrlCmdClearFmState_IMPL,
+        /*pFunc=*/      (void (*)(void)) &fmsessionapiCtrlCmdClearFmState__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -138,7 +151,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_FmSessio
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__FmSessionApi __nvoc_metadata__FmSessionApi = {
     .rtti.pClassDef = &__nvoc_class_def_FmSessionApi,    // (fmsessionapi) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_FmSessionApi,
+    .rtti.dtor      = &__nvoc_dtor_FmSessionApi,
     .rtti.offset    = 0,
     .metadata__RmResource.rtti.pClassDef = &__nvoc_class_def_RmResource,    // (rmres) super
     .metadata__RmResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -345,16 +358,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__FmSessionApi =
 
 // Destruct FmSessionApi object.
 void __nvoc_fmsessionapiDestruct(FmSessionApi*);
-void __nvoc_dtor_RmResource(RmResource*);
-void __nvoc_dtor_FmSessionApi(FmSessionApi* pThis) {
+void __nvoc_dtor_RmResource(Dynamic*);
+void __nvoc_dtor_FmSessionApi(Dynamic* pThis) {
+
+    FmSessionApi *__nvoc_this = (FmSessionApi *) pThis;
 
 // Call destructor.
-    __nvoc_fmsessionapiDestruct(pThis);
+    __nvoc_fmsessionapiDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RmResource(&pThis->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *) &__nvoc_this->__nvoc_base_RmResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_FmSessionApi(FmSessionApi *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -380,7 +395,7 @@ NV_STATUS __nvoc_ctor_FmSessionApi(FmSessionApi *pFmSessionApi, struct CALL_CONT
 
     // Unwind on error.
 __nvoc_ctor_FmSessionApi_fail__init:
-    __nvoc_dtor_RmResource(&pFmSessionApi->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *)&pFmSessionApi->__nvoc_base_RmResource);
 __nvoc_ctor_FmSessionApi_fail_RmResource:
 __nvoc_ctor_FmSessionApi_exit:
     return status;
@@ -490,13 +505,10 @@ __nvoc_objCreate_FmSessionApi_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_FmSessionApi(FmSessionApi **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_FmSessionApi(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_FmSessionApi(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_FmSessionApi((FmSessionApi **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

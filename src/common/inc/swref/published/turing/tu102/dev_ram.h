@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -24,4 +24,10 @@
 #ifndef __tu102_dev_ram_h__
 #define __tu102_dev_ram_h__
 #define NV_PRAMIN                             0x007FFFFF:0x00700000 /* RW--M */
+#define NV_RAMFC                                                    /* ----G */
+#define NV_RAMFC_SIGNATURE                       (4*32+31):(4*32+0) /* RWXUF */
+#define NV_RAMFC_PB_HEADER                     (33*32+31):(33*32+0) /* RWXUF */
+#define NV_RAMIN_ENG_METHOD_BUFFER_ADDR_LO       (136*32+31):(136*32+0)  /* RWXUF */
+#define NV_RAMIN_ENG_METHOD_BUFFER_ADDR_HI       (137*32+(((49-1)-32))):(137*32+0)  /* RWXUF */
+#define NV_RAMFC_CONFIG                          (61*32+31):(61*32+0) /* RWXUF */
 #endif // __tu102_dev_ram_h__

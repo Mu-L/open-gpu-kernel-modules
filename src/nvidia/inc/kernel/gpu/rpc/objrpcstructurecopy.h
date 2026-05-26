@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2015-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2015-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -25,7 +25,7 @@
 #define _OBJRPCSTRUCTURECOPY_H_
 
 #include "vgpu/sdk-structures.h"
-#include "ctrl/ctrl0080/ctrl0080bsp.h" // rmcontrol params (from hal)
+#include "ctrl/ctrl0080/ctrl0080nvdec.h" // rmcontrol params (from hal)
 #include "ctrl/ctrl2080/ctrl2080gr.h" // rmcontrol params (from hal)
 #include "ctrl/ctrl2080/ctrl2080clk.h" // rmcontrol params (from hal)
 #include "g_rpcstructurecopy_hal.h" // For RPCSTRUCTURECOPY_HAL_IFACES

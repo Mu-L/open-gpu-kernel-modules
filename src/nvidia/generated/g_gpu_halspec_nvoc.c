@@ -28,7 +28,7 @@ void __nvoc_init__RmHalspecOwner(RmHalspecOwner*,
 void __nvoc_init_funcTable_RmHalspecOwner(RmHalspecOwner*);
 NV_STATUS __nvoc_ctor_RmHalspecOwner(RmHalspecOwner*);
 void __nvoc_init_dataField_RmHalspecOwner(RmHalspecOwner*);
-void __nvoc_dtor_RmHalspecOwner(RmHalspecOwner*);
+void __nvoc_dtor_RmHalspecOwner(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__RmHalspecOwner;
@@ -48,7 +48,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RmHalspecOwner =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "RmHalspecOwner",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) NULL,
+    .objCreatefn =        NULL,
     .pCastInfo =          &__nvoc_castinfo__RmHalspecOwner,
     .pExportInfo =        &__nvoc_export_info__RmHalspecOwner
 };
@@ -57,7 +57,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RmHalspecOwner =
 // Metadata with per-class RTTI
 static const struct NVOC_METADATA__RmHalspecOwner __nvoc_metadata__RmHalspecOwner = {
     .rtti.pClassDef = &__nvoc_class_def_RmHalspecOwner,    // (rmhalspecowner) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_RmHalspecOwner,
+    .rtti.dtor      = &__nvoc_dtor_RmHalspecOwner,
     .rtti.offset    = 0,
 };
 
@@ -78,8 +78,10 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__RmHalspecOwner =
 
 
 // Destruct RmHalspecOwner object.
-void __nvoc_dtor_RmHalspecOwner(RmHalspecOwner* pThis) {
-    PORT_UNREFERENCED_VARIABLE(pThis);
+void __nvoc_dtor_RmHalspecOwner(Dynamic* pThis) {
+
+    RmHalspecOwner *__nvoc_this = (RmHalspecOwner *) pThis;
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_RmHalspecOwner(RmHalspecOwner *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -143,7 +145,7 @@ void __nvoc_init__GpuHalspecOwner(GpuHalspecOwner*,
 void __nvoc_init_funcTable_GpuHalspecOwner(GpuHalspecOwner*);
 NV_STATUS __nvoc_ctor_GpuHalspecOwner(GpuHalspecOwner*);
 void __nvoc_init_dataField_GpuHalspecOwner(GpuHalspecOwner*);
-void __nvoc_dtor_GpuHalspecOwner(GpuHalspecOwner*);
+void __nvoc_dtor_GpuHalspecOwner(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__GpuHalspecOwner;
@@ -163,7 +165,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_GpuHalspecOwner =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "GpuHalspecOwner",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) NULL,
+    .objCreatefn =        NULL,
     .pCastInfo =          &__nvoc_castinfo__GpuHalspecOwner,
     .pExportInfo =        &__nvoc_export_info__GpuHalspecOwner
 };
@@ -172,7 +174,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_GpuHalspecOwner =
 // Metadata with per-class RTTI
 static const struct NVOC_METADATA__GpuHalspecOwner __nvoc_metadata__GpuHalspecOwner = {
     .rtti.pClassDef = &__nvoc_class_def_GpuHalspecOwner,    // (gpuhalspecowner) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_GpuHalspecOwner,
+    .rtti.dtor      = &__nvoc_dtor_GpuHalspecOwner,
     .rtti.offset    = 0,
 };
 
@@ -193,8 +195,10 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__GpuHalspecOwner =
 
 
 // Destruct GpuHalspecOwner object.
-void __nvoc_dtor_GpuHalspecOwner(GpuHalspecOwner* pThis) {
-    PORT_UNREFERENCED_VARIABLE(pThis);
+void __nvoc_dtor_GpuHalspecOwner(Dynamic* pThis) {
+
+    GpuHalspecOwner *__nvoc_this = (GpuHalspecOwner *) pThis;
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_GpuHalspecOwner(GpuHalspecOwner *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);

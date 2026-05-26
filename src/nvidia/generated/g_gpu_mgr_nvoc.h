@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2005-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2005-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -235,6 +235,8 @@ typedef struct GPUMGR_SAVE_COMPUTE_INSTANCE
     NvU32 id;
     // "Opaque" pointer to os-specific capabilities
     OS_RM_CAPS *pOsRmCaps;
+    // Compute Mode rules
+    NvU32 computeModeRules;
 } GPUMGR_SAVE_COMPUTE_INSTANCE;
 
 /*!
@@ -308,7 +310,11 @@ typedef struct
     NvU32 gpuInstance;
 } GPUMGR_CURRENT_GPU_INSTANCE;
 
-#define NVLINK_NVLE_MAX_REMAP_TABLE_ENTRIES  32
+//
+// Maximum number of ALIDs that can be present in any fabric is 576.
+// Setting value at 640, so mappings can be updated in chunks of 128
+//
+#define NVLINK_NVLE_MAX_ALID_CLID_TABLE_ENTRIES  640
 
 typedef struct ALID_CLID_MAP
 {
@@ -318,7 +324,7 @@ typedef struct ALID_CLID_MAP
 
 typedef struct ALID_CLID_TABLE
 {
-    ALID_CLID_MAP alidClidMap[NVLINK_NVLE_MAX_REMAP_TABLE_ENTRIES];
+    ALID_CLID_MAP alidClidMap[NVLINK_NVLE_MAX_ALID_CLID_TABLE_ENTRIES];
     NvU32         numEntries;
 } ALID_CLID_TABLE;
 
@@ -371,7 +377,7 @@ struct OBJGPUMGR {
     NvU8 powerDisconnectedGpuCount;
     NvU8 powerDisconnectedGpuBus[32];
     NVLINK_TOPOLOGY_INFO nvlinkTopologyInfo[32];
-    NvU16 nvlinkBwMode;
+    NvU8 nvlinkBwMode;
     NvU8 bwModeScope;
     NVLINK_UNCONTAINED_ERROR_RECOVERY_INFO nvlinkUncontainedErrorRecoveryInfo[32];
     GPUMGR_SAVE_MIG_INSTANCE_TOPOLOGY MIGTopologyInfo[32];
@@ -413,7 +419,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJGPUMGR;
     ((OBJGPUMGR*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(OBJGPUMGR)))
 #endif //__nvoc_gpu_mgr_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_OBJGPUMGR(OBJGPUMGR**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJGPUMGR(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJGPUMGR(OBJGPUMGR**, Dynamic*, NvU32);
 #define __objCreate_OBJGPUMGR(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -454,11 +460,11 @@ NvU8 gpumgrGetGpuNvlinkBwModeScope_IMPL(void);
 void gpumgrSetGpuNvlinkBwModeFromRegistry_IMPL(struct OBJGPU *pGpu);
 #define gpumgrSetGpuNvlinkBwModeFromRegistry(pGpu) gpumgrSetGpuNvlinkBwModeFromRegistry_IMPL(pGpu)
 
-NV_STATUS gpumgrSetGpuNvlinkBwMode_IMPL(NvU16 mode);
-#define gpumgrSetGpuNvlinkBwMode(mode) gpumgrSetGpuNvlinkBwMode_IMPL(mode)
+NV_STATUS gpumgrSetGpuNvlinkBwMode_IMPL(NvU16 mode, NvBool bSync);
+#define gpumgrSetGpuNvlinkBwMode(mode, bSync) gpumgrSetGpuNvlinkBwMode_IMPL(mode, bSync)
 
-NV_STATUS gpumgrSetGpuNvlinkBwModePerGpu_IMPL(struct OBJGPU *pGpu, NvU16 mode);
-#define gpumgrSetGpuNvlinkBwModePerGpu(pGpu, mode) gpumgrSetGpuNvlinkBwModePerGpu_IMPL(pGpu, mode)
+NV_STATUS gpumgrSetGpuNvlinkBwModePerGpu_IMPL(struct OBJGPU *pGpu, NvU16 mode, NvBool bSync);
+#define gpumgrSetGpuNvlinkBwModePerGpu(pGpu, mode, bSync) gpumgrSetGpuNvlinkBwModePerGpu_IMPL(pGpu, mode, bSync)
 
 NvBool gpumgrCheckIndirectPeer_IMPL(struct OBJGPU *pGpu, struct OBJGPU *pRemoteGpu);
 #define gpumgrCheckIndirectPeer(pGpu, pRemoteGpu) gpumgrCheckIndirectPeer_IMPL(pGpu, pRemoteGpu)
@@ -686,7 +692,7 @@ NvBool      gpumgrAreAllGpusInOffloadMode(void);
 NvBool      gpumgrIsSafeToReadGpuInfo(void);
 NvBool      gpumgrIsDeviceMsixAllowed(RmPhysAddr bar0BaseAddr, NvU32 pmcBoot1, NvU32 pmcBoot42);
 NvBool      gpumgrWaitForBarFirewall(NvU32 domain, NvU8 bus, NvU8 device, NvU8 function, NvU16 devId, NvU16 subsystemId);
-NvBool      gpuMgrIsNvleAlidPresent(struct OBJGPUMGR *pGpuMgr, NvU32 alid);
+NvBool      gpuMgrIsNvleAlidPresent(struct OBJGPUMGR *pGpuMgr, NvU32 alid, NvU32 *pClid);
 NvBool      gpuMgrCacheNvleAlidClid(struct OBJGPUMGR *pGpuMgr, NvU32 alid, NvU32 clid);
 
 //

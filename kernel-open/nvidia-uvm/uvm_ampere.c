@@ -73,15 +73,17 @@ void uvm_hal_ampere_arch_init_properties(uvm_parent_gpu_t *parent_gpu)
 
     parent_gpu->smc.supported = true;
 
-    parent_gpu->access_bits_supported = false;
-
     UVM_ASSERT(parent_gpu->rm_info.gpuArch == NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GA100);
     if (parent_gpu->rm_info.gpuImplementation == NV2080_CTRL_MC_ARCH_INFO_IMPLEMENTATION_GA100 ||
         parent_gpu->rm_info.gpuImplementation == NV2080_CTRL_MC_ARCH_INFO_IMPLEMENTATION_GA000) {
         parent_gpu->map_remap_larger_page_promotion = true;
+        parent_gpu->access_bits_supported = false;
     }
     else {
         parent_gpu->map_remap_larger_page_promotion = false;
+
+        // Note that access bits are only supported GA10x onwards
+        parent_gpu->access_bits_supported = false;
     }
 
     parent_gpu->ats.no_ats_range_required = false;

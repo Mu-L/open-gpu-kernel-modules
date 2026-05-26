@@ -509,6 +509,7 @@ typedef struct nvGpuOpsLockSet
     NvBool isRmSemaAcquired;
     GPU_MASK gpuMask;
     CLIENT_ENTRY *pClientEntryLocked;
+    CLIENT_ENTRY *pSecondClientEntryLocked;
     NvU32 clientLockFlags;
 } nvGpuOpsLockSet;
 
@@ -525,9 +526,22 @@ static void _nvGpuOpsLocksRelease(nvGpuOpsLockSet *acquiredLocks)
 
     if (acquiredLocks->pClientEntryLocked != NULL)
     {
-        serverReleaseClient(&g_resServ, acquiredLocks->clientLockFlags,
-            acquiredLocks->pClientEntryLocked);
-        acquiredLocks->pClientEntryLocked = NULL;
+        if (acquiredLocks->pSecondClientEntryLocked == NULL)
+        {
+            serverReleaseClient(&g_resServ, acquiredLocks->clientLockFlags,
+                acquiredLocks->pClientEntryLocked);
+            acquiredLocks->pClientEntryLocked = NULL;
+        }
+        else
+        {
+            serverReleaseClient(&g_resServ, acquiredLocks->clientLockFlags, acquiredLocks->pSecondClientEntryLocked);
+
+            if (acquiredLocks->pClientEntryLocked->pClient->hClient != acquiredLocks->pSecondClientEntryLocked->pClient->hClient)
+                serverReleaseClient(&g_resServ, acquiredLocks->clientLockFlags, acquiredLocks->pClientEntryLocked);
+
+            acquiredLocks->pClientEntryLocked = NULL;
+            acquiredLocks->pSecondClientEntryLocked = NULL;
+        }
     }
 
     if (acquiredLocks->isRmLockAcquired == NV_TRUE)
@@ -546,7 +560,9 @@ static void _nvGpuOpsLocksRelease(nvGpuOpsLockSet *acquiredLocks)
 static NV_STATUS _nvGpuOpsLocksAcquireWithClientLockFlags(NvU32 rmApiLockFlags,
                                                           NvU32 clientLockFlags,
                                                           NvHandle hClient,
+                                                          NvHandle hSecondClient,
                                                           RsClient **ppClient,
+                                                          RsClient **ppSecondClient,
                                                           NvU32 numLocksNeeded,
                                                           NvU32 deviceInstance1,
                                                           NvU32 deviceInstance2,
@@ -561,6 +577,7 @@ static NV_STATUS _nvGpuOpsLocksAcquireWithClientLockFlags(NvU32 rmApiLockFlags,
     acquiredLocks->isRmLockAcquired = NV_FALSE;
     acquiredLocks->gpuMask = 0;
     acquiredLocks->pClientEntryLocked = NULL;
+    acquiredLocks->pSecondClientEntryLocked = NULL;
 
     pSys = SYS_GET_INSTANCE();
     if (pSys == NULL)
@@ -585,17 +602,78 @@ static NV_STATUS _nvGpuOpsLocksAcquireWithClientLockFlags(NvU32 rmApiLockFlags,
 
     if (hClient != NV01_NULL_OBJECT)
     {
-        status = serverAcquireClient(&g_resServ, hClient, clientLockFlags, &acquiredLocks->pClientEntryLocked);
-
-        if (status != NV_OK)
+        if (hSecondClient == NV01_NULL_OBJECT)
         {
-            _nvGpuOpsLocksRelease(acquiredLocks);
-            return status;
-        }
-        acquiredLocks->clientLockFlags = clientLockFlags;
+            status = serverAcquireClient(&g_resServ, hClient, clientLockFlags, &acquiredLocks->pClientEntryLocked);
 
-        if (ppClient != NULL)
-            *ppClient = acquiredLocks->pClientEntryLocked->pClient;
+            if (status != NV_OK)
+            {
+                _nvGpuOpsLocksRelease(acquiredLocks);
+                return status;
+            }
+            acquiredLocks->clientLockFlags = clientLockFlags;
+
+            if (ppClient != NULL)
+                *ppClient = acquiredLocks->pClientEntryLocked->pClient;
+        }
+        else
+        {
+            NvHandle       hClient1st;
+            NvHandle       hClient2nd;
+
+            if (hClient <= hSecondClient)
+            {
+                hClient1st = hClient;
+                hClient2nd = hSecondClient;
+            }
+            else
+            {
+                hClient1st = hSecondClient;
+                hClient2nd = hClient;
+            }
+
+            status = serverAcquireClient(&g_resServ, hClient1st, clientLockFlags, &acquiredLocks->pClientEntryLocked);
+
+            if (status != NV_OK)
+            {
+                _nvGpuOpsLocksRelease(acquiredLocks);
+                return status;
+            }
+
+            acquiredLocks->clientLockFlags = clientLockFlags;
+
+            if (hClient1st != hClient2nd)
+            {
+                status = serverAcquireClient(&g_resServ, hClient2nd, clientLockFlags, &acquiredLocks->pSecondClientEntryLocked);
+
+                if (status != NV_OK)
+                {
+                    _nvGpuOpsLocksRelease(acquiredLocks);
+                    return status;
+                }
+            }
+            else
+            {
+                acquiredLocks->pSecondClientEntryLocked = acquiredLocks->pClientEntryLocked;
+            }
+
+            if (ppClient != NULL)
+            {
+                *ppClient = (hClient <= hSecondClient ? acquiredLocks->pClientEntryLocked->pClient :
+                                                        acquiredLocks->pSecondClientEntryLocked->pClient);
+            }
+
+            if (ppSecondClient != NULL)
+            {
+                *ppSecondClient = (hSecondClient <= hClient ? acquiredLocks->pClientEntryLocked->pClient :
+                                                              acquiredLocks->pSecondClientEntryLocked->pClient);
+            }
+        }
+    }
+    else
+    {
+        // Make sure second client is also NULL since if there is only one client to lock, it must be the first client handle.
+        NV_ASSERT_OR_ELSE(hSecondClient == NV01_NULL_OBJECT, _nvGpuOpsLocksRelease(acquiredLocks); return NV_ERR_INVALID_ARGUMENT);
     }
 
     //
@@ -673,7 +751,8 @@ static NV_STATUS _nvGpuOpsLocksAcquire(NvU32 rmApiLockFlags,
                                        NvU32 deviceInstance2,
                                        nvGpuOpsLockSet *acquiredLocks)
 {
-    return _nvGpuOpsLocksAcquireWithClientLockFlags(rmApiLockFlags, LOCK_ACCESS_WRITE, hClient, ppClient, numLocksNeeded, deviceInstance1, deviceInstance2, acquiredLocks);
+    return _nvGpuOpsLocksAcquireWithClientLockFlags(rmApiLockFlags, LOCK_ACCESS_WRITE, hClient, NV01_NULL_OBJECT,
+            ppClient, NULL, numLocksNeeded, deviceInstance1, deviceInstance2, acquiredLocks);
 }
 
 static NV_STATUS _nvGpuOpsLocksAcquireAll(NvU32 rmApiLockFlags,
@@ -683,12 +762,22 @@ static NV_STATUS _nvGpuOpsLocksAcquireAll(NvU32 rmApiLockFlags,
     return _nvGpuOpsLocksAcquire(rmApiLockFlags, hClient, ppClient, 3, 0, 0, acquiredLocks);
 }
 
+static NV_STATUS _nvGpuOpsLocksAcquireAllDualClient(NvU32 rmApiLockFlags,
+                                                    NvHandle hClient, NvHandle hSecondClient,
+                                                    RsClient **ppClient, RsClient **ppSecondClient,
+                                                    nvGpuOpsLockSet *acquiredLocks)
+{
+    return _nvGpuOpsLocksAcquireWithClientLockFlags(rmApiLockFlags, LOCK_ACCESS_WRITE, hClient, hSecondClient,
+            ppClient, ppSecondClient, 3, 0, 0, acquiredLocks);
+}
+
 static NV_STATUS _nvGpuOpsLocksAcquireAllWithClientLockFlags(NvU32 rmApiLockFlags,
                                                              NvU32 clientLockFlags,
                                                              NvHandle hClient, RsClient **ppClient,
                                                              nvGpuOpsLockSet *acquiredLocks)
 {
-    return _nvGpuOpsLocksAcquireWithClientLockFlags(rmApiLockFlags, clientLockFlags, hClient, ppClient, 3, 0, 0, acquiredLocks);
+    return _nvGpuOpsLocksAcquireWithClientLockFlags(rmApiLockFlags, clientLockFlags, hClient, NV01_NULL_OBJECT,
+            ppClient, NULL, 3, 0, 0, acquiredLocks);
 }
 
 static NV_STATUS _nvGpuOpsGetGpuFromDevice(struct gpuDevice *device, OBJGPU **ppGpu)
@@ -1928,6 +2017,8 @@ static UVM_LINK_TYPE rmControlToUvmNvlinkVersion(NvU32 nvlinkVersion)
         return UVM_LINK_TYPE_NVLINK_4;
     else if (nvlinkVersion == NV2080_CTRL_NVLINK_STATUS_NVLINK_VERSION_5_0)
         return UVM_LINK_TYPE_NVLINK_5;
+    else if (nvlinkVersion == NV2080_CTRL_NVLINK_STATUS_NVLINK_VERSION_6_0)
+        return UVM_LINK_TYPE_NVLINK_6;
     NV_ASSERT(0);
     return (NvU32)-1;
 }
@@ -2545,11 +2636,8 @@ NV_STATUS nvGpuOpsAddressSpaceCreate(struct gpuDevice *device,
     vaParams.flags  = gpuVaSpace->vaSize ?
                       NV_VASPACE_ALLOCATION_FLAGS_SHARED_MANAGEMENT :
                       NV_VASPACE_ALLOCATION_FLAGS_NONE;
-    if (enableAts)
-    {
-        NV_ASSERT_TRUE_OR_GOTO(status,
-            vaParams.flags != NV_VASPACE_ALLOCATION_FLAGS_NONE,
-            NV_ERR_INVALID_ARGUMENT, cleanup_struct);
+    if (enableAts) {
+        NV_ASSERT_OR_RETURN(vaParams.flags != NV_VASPACE_ALLOCATION_FLAGS_NONE, NV_ERR_INVALID_ARGUMENT);
         vaParams.flags |= NV_VASPACE_ALLOCATION_FLAGS_ENABLE_NVLINK_ATS;
     }
 
@@ -2572,7 +2660,7 @@ NV_STATUS nvGpuOpsAddressSpaceCreate(struct gpuDevice *device,
                             sizeof(vaParams));
     if (status != NV_OK)
     {
-        goto cleanup_vaspace;
+        goto cleanup_struct;
     }
 
     // If base & Size were not provided before, they would have been filled now
@@ -3125,12 +3213,17 @@ static NV_STATUS getNvlinkP2PCaps(struct gpuDevice *device1,
         return NV_OK;
     }
 
+    // NVLink1 devices cannot be mixed with other versions. NVLink3 supports
+    // mixing NVLink2 and NVLink3 devices. NVLink4, NVLink5, and NVLink6 devices
+    // cannot be mixed with prior NVLink versions or with each other.
     if (nvlinkVersion1 == NV2080_CTRL_NVLINK_STATUS_NVLINK_VERSION_1_0 ||
         nvlinkVersion2 == NV2080_CTRL_NVLINK_STATUS_NVLINK_VERSION_1_0 ||
         nvlinkVersion1 == NV2080_CTRL_NVLINK_STATUS_NVLINK_VERSION_4_0 ||
         nvlinkVersion2 == NV2080_CTRL_NVLINK_STATUS_NVLINK_VERSION_4_0 ||
         nvlinkVersion1 == NV2080_CTRL_NVLINK_STATUS_NVLINK_VERSION_5_0 ||
         nvlinkVersion2 == NV2080_CTRL_NVLINK_STATUS_NVLINK_VERSION_5_0
+        || nvlinkVersion1 == NV2080_CTRL_NVLINK_STATUS_NVLINK_VERSION_6_0 ||
+        nvlinkVersion2 == NV2080_CTRL_NVLINK_STATUS_NVLINK_VERSION_6_0
        )
     {
         NV_ASSERT(nvlinkVersion1 == nvlinkVersion2);
@@ -3554,7 +3647,7 @@ static NV_STATUS nvGpuOpsGetExternalAllocP2pInfo(struct gpuSession *session,
 
     *isPeerSupported =
             (REF_VAL(NV0000_CTRL_SYSTEM_GET_P2P_CAPS_WRITES_SUPPORTED, p2pCapsParams->p2pCaps) &&
-             REF_VAL(NV0000_CTRL_SYSTEM_GET_P2P_CAPS_READS_SUPPORTED, p2pCapsParams->p2pCaps));
+                        REF_VAL(NV0000_CTRL_SYSTEM_GET_P2P_CAPS_READS_SUPPORTED, p2pCapsParams->p2pCaps));
 
     *isBar1Supported = REF_VAL(NV0000_CTRL_SYSTEM_GET_P2P_CAPS_PCI_BAR1_SUPPORTED, p2pCapsParams->p2pCaps);
 
@@ -3867,13 +3960,13 @@ nvGpuOpsBuildExternalAllocPtes
     struct gpuSession *session,
     OBJGPU     *pMappingGpu,
     MEMORY_DESCRIPTOR *pMemDesc,
-    Memory     *pMemory,
-    NvU64       offset,
-    NvU64       size,
-    NvBool      isIndirectPeerSupported,
-    NvBool      isPeerSupported,
-    NvBool      isBar1P2PSupported,
-    NvU32       peerId,
+    Memory        *pMemory,
+    NvU64          offset,
+    NvU64          size,
+    NvBool         isIndirectPeerSupported,
+    NvBool         isPeerSupported,
+    NvBool         isBar1P2PSupported,
+    NvU32          peerId,
     gpuExternalMappingInfo *pGpuExternalMappingInfo
 )
 {
@@ -3886,7 +3979,6 @@ nvGpuOpsBuildExternalAllocPtes
     COMPR_INFO              comprInfo;
     GMMU_ENTRY_VALUE        pte                 = {{0}};
     GMMU_PEER_TYPE          peerType = GMMU_PEER_TYPE_LEGACY;
-
     NvU64         fabricBaseAddress   = NVLINK_INVALID_FABRIC_ADDR;
     NvU32         kind;
     NvU64         pageSize;
@@ -4247,7 +4339,7 @@ nvGpuOpsBuildExternalAllocPtes
     {
         physAddr = physicalAddresses[iter];
 
-        gmmuFieldSetAddress(gmmuFmtPtePhysAddrFld(pPteFmt, aperture, peerType),
+        gmmuFieldSetAddress(gmmuFmtPtePhysAddrFld(pPteFmt, pLevelFmt, aperture, peerType),
                             physAddr,
                             pte.v8);
 
@@ -4635,7 +4727,7 @@ NV_STATUS nvGpuOpsGetExternalAllocPtesOrPhysAddrs(struct gpuAddressSpace *vaSpac
     pFabricVAS       = dynamicCast(pMappingGpu->pFabricVAS, FABRIC_VASPACE);
     if (pFabricVAS != NULL)
     {
-        status = fabricvaspaceGetGpaMemdesc(pFabricVAS, pMemDesc, pMappingGpu, &pAdjustedMemDesc);
+        status = fabricvaspaceGetGpaMemdesc(pFabricVAS, pMemDesc, pMappingGpu, NV_FALSE, &pAdjustedMemDesc);
         if (status != NV_OK)
             goto done;
     }
@@ -7277,10 +7369,10 @@ static NV_STATUS getAtsInfo(OBJGPU *pGpu,
     return NV_OK;
 }
 
-static NV_STATUS getCdmmInfo(OBJGPU *pGpu,
-                             NvHandle hClient,
-                             NvHandle hSubDevice,
-                             gpuInfo *pGpuInfo)
+static NV_STATUS getPerGpuCdmmInfo(OBJGPU *pGpu,
+                                   NvHandle hClient,
+                                   NvHandle hSubDevice,
+                                   gpuInfo *pGpuInfo)
 {
     NvU32 coherentModeInfo;
     NV2080_CTRL_GPU_GET_INFO_V2_PARAMS *gpuInfoParams;
@@ -7776,7 +7868,7 @@ NV_STATUS nvGpuOpsGetGpuInfo(const NvProcessorUuid *pUuid,
     if (status != NV_OK)
         goto cleanup;
 
-    status = getCdmmInfo(pGpu, clientHandle, subDeviceHandle, pGpuInfo);
+    status = getPerGpuCdmmInfo(pGpu, clientHandle, subDeviceHandle, pGpuInfo);
     if (status != NV_OK)
         goto cleanup;
 
@@ -8008,6 +8100,9 @@ static NV_STATUS nvGpuOpsFillGpuMemoryInfo(PMEMORY_DESCRIPTOR pMemDesc,
 
     pGpuMemoryInfo->sysmem = (memdescGetAddressSpace(pMemDesc) == ADDR_SYSMEM);
 
+    pGpuMemoryInfo->fabricmem = ((memdescGetAddressSpace(pMemDesc) == ADDR_FABRIC_V2) ||
+                                 (memdescGetAddressSpace(pMemDesc) == ADDR_FABRIC_MC));
+
     pGpuMemoryInfo->deviceDescendant = pRootMemDesc->pGpu != NULL;
 
     if (pGpuMemoryInfo->deviceDescendant)
@@ -8233,9 +8328,8 @@ static NV_STATUS dupMemory(struct gpuDevice *device,
     if (!pThreadState)
         return NV_ERR_NO_MEMORY;
 
-    // RS-TODO use dual client locking
-    status = _nvGpuOpsLocksAcquireAll(RMAPI_LOCK_FLAGS_NONE, device->session->handle,
-        &pSessionClient, &acquiredLocks);
+    status = _nvGpuOpsLocksAcquireAllDualClient(RMAPI_LOCK_FLAGS_NONE, device->session->handle, hClient,
+        &pSessionClient, NULL, &acquiredLocks);
     if (status != NV_OK)
     {
         threadStateFree(pThreadState, THREAD_STATE_FLAGS_NONE);
@@ -8265,7 +8359,7 @@ static NV_STATUS dupMemory(struct gpuDevice *device,
     pFabricVAS       = dynamicCast(pMappingGpu->pFabricVAS, FABRIC_VASPACE);
     if (pFabricVAS != NULL)
     {
-        status = fabricvaspaceGetGpaMemdesc(pFabricVAS, pMemDesc, pMappingGpu, &pAdjustedMemDesc);
+        status = fabricvaspaceGetGpaMemdesc(pFabricVAS, pMemDesc, pMappingGpu, NV_FALSE, &pAdjustedMemDesc);
         if (status != NV_OK)
             goto done;
     }
@@ -10259,18 +10353,21 @@ NV_STATUS nvGpuOpsRetainChannel(struct gpuAddressSpace *vaSpace,
     if (!vaSpace || !channelInstanceInfo)
         return NV_ERR_INVALID_ARGUMENT;
 
+    device = vaSpace->device;
+
     threadStateInit(&threadState, THREAD_STATE_FLAGS_NONE);
-    status = _nvGpuOpsLocksAcquireAll(RMAPI_LOCK_FLAGS_READ,
-                                      hClient,
-                                      &pClient,
-                                      &acquiredLocks);
+    status = _nvGpuOpsLocksAcquireAllDualClient(RMAPI_LOCK_FLAGS_READ,
+                                                hClient,
+                                                device->session->handle,
+                                                &pClient,
+                                                NULL,
+                                                &acquiredLocks);
     if (status != NV_OK)
     {
         threadStateFree(&threadState, THREAD_STATE_FLAGS_NONE);
         return status;
     }
 
-    device = vaSpace->device;
     rmSubDevice = device->rmSubDevice;
 
     status = nvGpuOpsVerifyChannel(vaSpace, pClient, hKernelChannel, &pGpu,
@@ -11685,7 +11782,7 @@ void nvGpuOpsReportFatalError(NV_STATUS error)
               "uvm encountered global fatal error 0x%x, requiring os reboot to recover.\n",
               error);
 
-    sysSetRecoveryRebootRequired(pSys, NV_TRUE);
+    sysSetRecoveryOsRebootRequired(pSys, NV_TRUE);
 }
 
 // Ensure that's UVM's enum values match RM's.

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2023-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -26,8 +26,8 @@
 
 #include "fsp/fsp_emem_channels.h"
 #include "fsp/nvdm_payload_cmd_response.h"
-#include "fsp/fsp_nvdm_format.h"
-#include "fsp/fsp_mctp_format.h"
+#include "mctp_format.h"
+#include "nvdm_format.h"
 #include "fsp/fsp_tnvl_rpc.h"
 
 #define FSP_OK                          (0x00U)

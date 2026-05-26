@@ -314,7 +314,7 @@ kdispIsChannelIdle_v03_00
 
         if (gpuCheckTimeout(pGpu, &timeout) == NV_ERR_TIMEOUT)
         {
-            NV_PRINTF(LEVEL_ERROR, "timeout! current Channel state = 0x%x\n", hwChannelState);
+            NV_PRINTF(LEVEL_ERROR, "timeout! dumping channel status register: 0x%x\n", chnStatusRegRead);
             return NV_FALSE;
         }
 
@@ -323,6 +323,43 @@ kdispIsChannelIdle_v03_00
     } while (!(NVBIT(hwChannelState) & channelState));
 
     return NV_TRUE;
+}
+
+NvBool
+kdispIsChannelBusyForCheckPendingLoadV_v03_00
+(
+    OBJGPU *pGpu,
+    KernelDisplay *pKernelDisplay,
+    NvU32  channelClass,
+    NvU32  channelInstance
+)
+{
+    NV_STATUS status = NV_OK;
+    NvU32 chnStatusOffset = 0;
+    NvU32 chnStatusRegRead;
+    NvU32 chnUpdState;
+    NvBool bIsCheckPendingLoadV = NV_FALSE;
+
+    status = _kdispGetChnStatusRegs(pKernelDisplay, channelClass, channelInstance, &chnStatusOffset);
+    NV_ASSERT_OR_RETURN(status == NV_OK, NV_FALSE);
+
+    chnStatusRegRead = GPU_REG_RD32(pGpu, chnStatusOffset);
+
+    switch (channelClass)
+    {
+        case dispChnClass_Win:
+            chnUpdState = DRF_VAL(_PDISP, _FE_CHNSTATUS_WIN, _UPD_STATE, chnStatusRegRead);
+            bIsCheckPendingLoadV = (chnUpdState == NV_PDISP_FE_CHNSTATUS_WIN_UPD_STATE_CHECK_PEND_LOADV);
+            break;
+        // fall through to default. This is only used for window channel.
+        case dispChnClass_Curs:
+        case dispChnClass_Winim:
+        case dispChnClass_Core:
+        default:
+            break;
+    }
+
+    return bIsCheckPendingLoadV;
 }
 
 void

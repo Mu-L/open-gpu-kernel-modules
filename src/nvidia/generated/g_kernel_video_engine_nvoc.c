@@ -28,7 +28,7 @@ void __nvoc_init__KernelVideoEngine(KernelVideoEngine*, RmHalspecOwner *pRmhalsp
 void __nvoc_init_funcTable_KernelVideoEngine(KernelVideoEngine*, RmHalspecOwner *pRmhalspecowner);
 NV_STATUS __nvoc_ctor_KernelVideoEngine(KernelVideoEngine*, RmHalspecOwner *pRmhalspecowner, struct OBJGPU *pGpu, ENGDESCRIPTOR physEngDesc);
 void __nvoc_init_dataField_KernelVideoEngine(KernelVideoEngine*, RmHalspecOwner *pRmhalspecowner);
-void __nvoc_dtor_KernelVideoEngine(KernelVideoEngine*);
+void __nvoc_dtor_KernelVideoEngine(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__KernelVideoEngine;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelVideoEngine =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "KernelVideoEngine",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_KernelVideoEngine,
+    .objCreatefn =        &__nvoc_objCreateDynamic_KernelVideoEngine,
     .pCastInfo =          &__nvoc_castinfo__KernelVideoEngine,
     .pExportInfo =        &__nvoc_export_info__KernelVideoEngine
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelVideoEngine =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__KernelVideoEngine __nvoc_metadata__KernelVideoEngine = {
     .rtti.pClassDef = &__nvoc_class_def_KernelVideoEngine,    // (kvideng) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_KernelVideoEngine,
+    .rtti.dtor      = &__nvoc_dtor_KernelVideoEngine,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -81,13 +81,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__KernelVideoEngine =
 
 
 // Destruct KernelVideoEngine object.
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_KernelVideoEngine(KernelVideoEngine* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_KernelVideoEngine(Dynamic* pThis) {
+
+    KernelVideoEngine *__nvoc_this = (KernelVideoEngine *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_KernelVideoEngine(KernelVideoEngine *pThis, RmHalspecOwner *pRmhalspecowner) {
     RmVariantHal *rmVariantHal = &pRmhalspecowner->rmVariantHal;
@@ -118,7 +120,7 @@ NV_STATUS __nvoc_ctor_KernelVideoEngine(KernelVideoEngine *pKernelVideoEngine, R
 
     // Unwind on error.
 __nvoc_ctor_KernelVideoEngine_fail__init:
-    __nvoc_dtor_Object(&pKernelVideoEngine->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&pKernelVideoEngine->__nvoc_base_Object);
 __nvoc_ctor_KernelVideoEngine_fail_Object:
 __nvoc_ctor_KernelVideoEngine_exit:
     return status;
@@ -145,7 +147,7 @@ NvBool kvidengIsVideoTraceLogSupported_STATIC_DISPATCH(struct OBJGPU *pGpu) {
     const unsigned long chipHal_HalVarIdx = (unsigned long)chipHal->__nvoc_HalVarIdx;
 
     if (( ((chipHal_HalVarIdx >> 5) == 1UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0xbdf0ffe0UL) ) ||
-        ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000003f9UL) )) /* ChipHal: TU102 | TU104 | TU106 | TU116 | TU117 | GA100 | GA102 | GA103 | GA104 | GA106 | GA107 | AD102 | AD103 | AD104 | AD106 | AD107 | GH100 | GB100 | GB102 | GB10B | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C */ 
+        ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000030ffUL) )) /* ChipHal: TU102 | TU104 | TU106 | TU116 | TU117 | GA100 | GA102 | GA103 | GA104 | GA106 | GA107 | AD102 | AD103 | AD104 | AD106 | AD107 | GH100 | GB100 | GB102 | GB10B | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C | GR100 | GR102 */ 
     {
         return kvidengIsVideoTraceLogSupported_IMPL(pGpu);
     }
@@ -256,13 +258,10 @@ __nvoc_objCreate_KernelVideoEngine_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_KernelVideoEngine(KernelVideoEngine **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_KernelVideoEngine(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct OBJGPU *pGpu = va_arg(__nvoc_args, struct OBJGPU *);
     ENGDESCRIPTOR physEngDesc = va_arg(__nvoc_args, ENGDESCRIPTOR);
 
-    __nvoc_status = __nvoc_objCreate_KernelVideoEngine(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pGpu, physEngDesc);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_KernelVideoEngine((KernelVideoEngine **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pGpu, physEngDesc);
 }
 

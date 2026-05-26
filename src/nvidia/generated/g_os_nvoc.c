@@ -28,7 +28,7 @@ void __nvoc_init__OBJOS(OBJOS*);
 void __nvoc_init_funcTable_OBJOS(OBJOS*);
 NV_STATUS __nvoc_ctor_OBJOS(OBJOS*);
 void __nvoc_init_dataField_OBJOS(OBJOS*);
-void __nvoc_dtor_OBJOS(OBJOS*);
+void __nvoc_dtor_OBJOS(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJOS;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJOS =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJOS",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_OBJOS,
+    .objCreatefn =        &__nvoc_objCreateDynamic_OBJOS,
     .pCastInfo =          &__nvoc_castinfo__OBJOS,
     .pExportInfo =        &__nvoc_export_info__OBJOS
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJOS =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__OBJOS __nvoc_metadata__OBJOS = {
     .rtti.pClassDef = &__nvoc_class_def_OBJOS,    // (os) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJOS,
+    .rtti.dtor      = &__nvoc_dtor_OBJOS,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -81,17 +81,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJOS =
 
 
 // Destruct OBJOS object.
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_OBJOS(OBJOS* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_OBJOS(Dynamic* pThis) {
+
+    OBJOS *__nvoc_this = (OBJOS *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJOS(OBJOS *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
-    pThis->setProperty(pThis, PDB_PROP_OS_SUPPORTS_DISPLAY_REMAPPER, !(1));
 }
 
 
@@ -212,11 +213,8 @@ __nvoc_objCreate_OBJOS_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_OBJOS(OBJOS **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_OBJOS(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_OBJOS(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_OBJOS((OBJOS **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

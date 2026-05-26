@@ -207,9 +207,6 @@ static void EvoSetRasterParams9(NVDevEvoPtr pDevEvo, int head,
     const NvU32 pixelClockHi = (pixelClockHz >> DRF_SIZE(NVC97D_HEAD_SET_PIXEL_CLOCK_FREQUENCY_HERTZ)) &
         DRF_MASK(NVC97D_HEAD_SET_PIXEL_CLOCK_FREQUENCY_HI_HERTZ);
 
-    /* These methods should only apply to a single pDpy */
-    nvAssert(pDevEvo->subDevMaskStackDepth > 0);
-
     nvUpdateUpdateState(pDevEvo, updateState, pChannel);
 
     // XXX[AGP]: These methods are sequential and could use an incrementing
@@ -399,9 +396,6 @@ static void EvoSetProcAmpC9(NVDispEvoPtr pDispEvo, const NvU32 head,
     NVT_COLORIMETRY nvtColorimetry = pHeadState->procAmp.colorimetry;
     NVT_COLOR_RANGE nvtColorRange = pHeadState->procAmp.colorRange;
 
-    /* These methods should only apply to a single pDpyEvo */
-    nvAssert(pDevEvo->subDevMaskStackDepth > 0);
-
     nvUpdateUpdateState(pDevEvo, updateState, pChannel);
 
     switch (nvtColorimetry) {
@@ -460,9 +454,6 @@ static void EvoSetHeadControlC9(NVDevEvoPtr pDevEvo, int sd, int head,
     NVEvoHeadControlPtr pHC = &pEvoSubDev->headControl[head];
     NvU32 data = 0, pin;
     NvU32 serverLockMode, clientLockMode;
-
-    /* These methods should only apply to a single subdevice */
-    nvAssert(pDevEvo->subDevMaskStackDepth > 0);
 
     nvUpdateUpdateState(pDevEvo, updateState, pChannel);
 
@@ -619,9 +610,6 @@ static void EvoHeadSetDisplayIdC9(NVDevEvoPtr pDevEvo,
 {
     NVEvoChannelPtr pChannel = pDevEvo->core;
 
-    /* These methods should only apply to a single pDpy */
-    nvAssert(pDevEvo->subDevMaskStackDepth > 0);
-
     nvUpdateUpdateState(pDevEvo, updateState, pChannel);
 
     nvDmaSetStartEvoMethod(pChannel, NVC97D_HEAD_SET_DISPLAY_ID(head, 0), 1);
@@ -739,9 +727,6 @@ static void EvoSetViewportPointInC9(NVDevEvoPtr pDevEvo, const int head,
 {
     NVEvoChannelPtr pChannel = pDevEvo->core;
 
-    /* These methods should only apply to a single pDpy */
-    nvAssert(pDevEvo->subDevMaskStackDepth > 0);
-
     nvUpdateUpdateState(pDevEvo, updateState, pChannel);
 
     /* Set the input viewport point */
@@ -758,9 +743,6 @@ static void EvoSetOutputScalerC9(const NVDispEvoRec *pDispEvo, const NvU32 head,
     NVEvoChannelPtr pChannel = pDevEvo->core;
     const NVDispHeadStateEvoRec *pHeadState = &pDispEvo->headState[head];
     const NVHwModeViewPortEvo *pViewPort = &pHeadState->timings.viewPort;
-
-    /* These methods should only apply to a single pDpyEvo */
-    nvAssert(pDevEvo->subDevMaskStackDepth > 0);
 
     nvUpdateUpdateState(pDevEvo, updateState, pChannel);
 
@@ -788,9 +770,6 @@ static NvBool EvoSetViewportInOut9(NVDevEvoPtr pDevEvo, const int head,
     NVEvoChannelPtr pChannel = pDevEvo->core;
     struct NvKmsScalingUsageBounds scalingUsageBounds = { };
     NvU32 win;
-
-    /* These methods should only apply to a single pDpy */
-    nvAssert(pDevEvo->subDevMaskStackDepth > 0);
 
     nvUpdateUpdateState(pDevEvo, updateState, pChannel);
 
@@ -942,8 +921,6 @@ static void EvoSetCursorImageC9(NVDevEvoPtr pDevEvo, const int head,
                 NVKMS_COMPOSITION_COLOR_KEY_SELECT_DISABLE);
     nvAssert(NVBIT(pCursorCompParams->blendingMode[1]) &
                 NV_EVO3_SUPPORTED_CURSOR_COMP_BLEND_MODES);
-    /* These methods should only apply to a single pDpy */
-    nvAssert(pDevEvo->subDevMaskStackDepth > 0);
 
     ret = nvEvoGetHeadSetControlCursorValueC3(pDevEvo, pSurfaceEvo,
                                             &headSetControlCursorValue);
@@ -1202,9 +1179,6 @@ static void EvoStartHeadCRC32CaptureC9(NVDevEvoPtr pDevEvo,
     NVEvoChannelPtr pChannel = pDevEvo->core;
     NvU32 orOutput = 0;
 
-    /* These method should only apply to a single pDpy */
-    nvAssert(pDevEvo->subDevMaskStackDepth > 0);
-
     /* The window channel should fit in
      * NVC97D_HEAD_SET_CRC_CONTROL_CONTROLLING_CHANNEL */
     nvAssert(winChannel < DRF_MASK(NVC97D_HEAD_SET_CRC_CONTROL_CONTROLLING_CHANNEL));
@@ -1252,9 +1226,6 @@ static void EvoStopHeadCRC32CaptureC9(NVDevEvoPtr pDevEvo,
                                       NVEvoUpdateState *updateState)
 {
     NVEvoChannelPtr pChannel = pDevEvo->core;
-
-    /* These method should only apply to a single pDpy */
-    nvAssert(pDevEvo->subDevMaskStackDepth > 0);
 
     nvUpdateUpdateState(pDevEvo, updateState, pChannel);
 
@@ -1413,10 +1384,10 @@ static void EvoSetDpDscParamsC9(const NVDispEvoRec *pDispEvo,
 
     nvAssert(pDscInfo->type == NV_DSC_INFO_EVO_TYPE_DP);
 
-    // XXX: I'm pretty sure that this is wrong.
-    // BitsPerPixelx16 is something like (24 * 16) = 384, and 2 << (384 - 8) is
-    // an insanely large number.
-    flatnessDetThresh = (2 << (pDscInfo->dp.bitsPerPixelX16 - 8)); /* ??? */
+    const NvU32 bpc =
+        DRF_VAL(C57D, _HEAD_SET_DSC_PPS_DATA0, _BITS_PER_COMPONENT, pDscInfo->dp.pps[0]);
+
+    flatnessDetThresh = (2 << (NV_MAX(bpc, 8) - 8));
 
     nvAssert((pDscInfo->dp.dscMode == NV_DSC_EVO_MODE_DUAL) ||
                 (pDscInfo->dp.dscMode == NV_DSC_EVO_MODE_SINGLE));
@@ -1697,8 +1668,7 @@ static void EvoSetCoreNotifierSurfaceAddressAndControlC9(
     NvU32 value = 0;
 
     // The unit of the notifierOffset is size of the notifier. Convert it to bytes.
-    notifierOffset *=
-        nvKmsSizeOfNotifier(NVKMS_NISO_FORMAT_FOUR_WORD_NVDISPLAY,  FALSE /* overlay */);
+    notifierOffset *= nvKmsSizeOfNotifier();
     GetSurfaceAddress(pDevEvo, pSurfaceDesc, notifierOffset, &addrHi, &addrLo,
                       &enable, &target);
 
@@ -1731,8 +1701,7 @@ static void EvoSetWinNotifierSurfaceAddressAndControlC9(
     NvU8 target;
     NvU32 value = 0;
 
-    notifierOffset *=
-        nvKmsSizeOfNotifier(NVKMS_NISO_FORMAT_FOUR_WORD_NVDISPLAY,  FALSE /* overlay */);
+    notifierOffset *= nvKmsSizeOfNotifier();
     GetSurfaceAddress(pDevEvo, pSurfaceDesc, notifierOffset, &addrHi, &addrLo,
                       &enable, &target);
 
@@ -1766,8 +1735,7 @@ static void EvoSetSemaphoreSurfaceAddressAndControlC9(
     NvU32 value = 0;
 
     // The unit of the semaphoreOffset is size of the semaphore. Convert it to bytes.
-    semaphoreOffset *=
-        nvKmsSizeOfSemaphore(NVKMS_NISO_FORMAT_FOUR_WORD_NVDISPLAY);
+    semaphoreOffset *= nvKmsSizeOfSemaphore();
     GetSurfaceAddress(pDevEvo, pSurfaceDesc, semaphoreOffset, &addrHi, &addrLo,
                       &enable, &target);
 
@@ -1801,8 +1769,7 @@ static void EvoSetAcqSemaphoreSurfaceAddressAndControlC9(
     NvU32 value = 0;
 
     // The unit of the semaphoreOffset is size of the semaphore. Convert it to bytes.
-    semaphoreOffset *=
-        nvKmsSizeOfSemaphore(NVKMS_NISO_FORMAT_FOUR_WORD_NVDISPLAY);
+    semaphoreOffset *= nvKmsSizeOfSemaphore();
     GetSurfaceAddress(pDevEvo, pSurfaceDesc, semaphoreOffset, &addrHi, &addrLo,
                       &enable, &target);
 
@@ -1821,6 +1788,51 @@ static void EvoSetAcqSemaphoreSurfaceAddressAndControlC9(
 
     nvDmaSetStartEvoMethod(pChannel, NVC97E_SET_ACQ_SEMAPHORE_CONTROL, 1);
     nvDmaSetEvoMethodData(pChannel, ctrlVal);
+}
+
+static void EvoSetupVBlankRgSemaphoreInterruptC9 (
+    NVDispEvoPtr pDispEvo,
+    NvU32 head,
+    NvU16 rasterLine,
+    NVSurfaceDescriptor *pSurfaceDesc,
+    NVEvoUpdateState *pUpdateState)
+{
+    NVDevEvoRec *pDevEvo = pDispEvo->pDevEvo;
+    NVEvoChannelPtr pChannel = pDevEvo->core;
+    NvU32 addrHi, addrLo;
+    NvBool enable;
+    NvU8 target;
+    NvU32 value = 0;
+
+    nvUpdateUpdateState(pDevEvo, pUpdateState, pChannel);
+
+    GetSurfaceAddress(pDevEvo, pSurfaceDesc, 0, &addrHi, &addrLo, &enable, &target);
+
+    nvDmaSetStartEvoMethod(pChannel,
+        NVC97D_HEAD_SET_SURFACE_ADDRESS_HI_RG_REL_SEMAPHORE(head, NVKMS_VBLANK_INTR_SEMAPHORE_INDEX), 1);
+    nvDmaSetEvoMethodData(pChannel,
+        DRF_NUM(C97D, _HEAD_SET_SURFACE_ADDRESS_HI_RG_REL_SEMAPHORE, _ADDRESS_HI, addrHi));
+
+    value = FLD_SET_DRF_NUM(C97D, _HEAD_SET_SURFACE_ADDRESS_LO_RG_REL_SEMAPHORE,
+                            _ADDRESS_LO, addrLo, value);
+    value = FLD_SET_DRF_NUM(C97D, _HEAD_SET_SURFACE_ADDRESS_LO_RG_REL_SEMAPHORE,
+                            _TARGET, target, value);
+    value = FLD_SET_DRF_NUM(C97D, _HEAD_SET_SURFACE_ADDRESS_LO_RG_REL_SEMAPHORE,
+                            _ENABLE, enable, value);
+    nvDmaSetStartEvoMethod(pChannel,
+            NVC97D_HEAD_SET_SURFACE_ADDRESS_LO_RG_REL_SEMAPHORE(head, NVKMS_VBLANK_INTR_SEMAPHORE_INDEX), 1);
+    nvDmaSetEvoMethodData(pChannel, value);
+
+    if (enable) {
+        nvDmaSetStartEvoMethod(pChannel,
+                               NVC97D_HEAD_SET_RG_REL_SEMAPHORE_CONTROL(head, NVKMS_VBLANK_INTR_SEMAPHORE_INDEX),
+                               1);
+        nvDmaSetEvoMethodData(pChannel,
+                DRF_DEF(C97D, _HEAD_SET_RG_REL_SEMAPHORE_CONTROL, _PAYLOAD_SIZE, _PAYLOAD_32BIT) |
+                DRF_DEF(C97D, _HEAD_SET_RG_REL_SEMAPHORE_CONTROL, _REL_MODE, _WRITE_AWAKEN) |
+                DRF_DEF(C97D, _HEAD_SET_RG_REL_SEMAPHORE_CONTROL, _RUN_MODE, _CONTINUOUS) |
+                DRF_NUM(C97D, _HEAD_SET_RG_REL_SEMAPHORE_CONTROL, _RASTER_LINE, rasterLine));
+    }
 }
 
 static NVEvoHwTileType EvoGetHwTileType(const NvU32 capA)
@@ -2487,8 +2499,6 @@ static void EvoInitWindowMappingCA(const NVDispEvoRec *pDispEvo,
     NVEvoUpdateState *updateState = &pModesetUpdateState->updateState;
     NVEvoChannelPtr pChannel = pDevEvo->core;
 
-    nvPushEvoSubDevMaskDisp(pDispEvo);
-
     nvUpdateUpdateState(pDevEvo, updateState, pChannel);
 
     nvEvoInitWindowMappingC5(pDispEvo,
@@ -2550,8 +2560,6 @@ static void EvoInitWindowMappingCA(const NVDispEvoRec *pDispEvo,
             nvDmaSetEvoMethodData(pChannel, 0x0);
         }
     }
-
-    nvPopEvoSubDevMask(pDevEvo);
 }
 
 static void EvoSetDpVscSdpCA(const NVDispEvoRec *pDispEvo,
@@ -2564,15 +2572,13 @@ static void EvoSetDpVscSdpCA(const NVDispEvoRec *pDispEvo,
     NVEvoChannelPtr pChannel = pDevEvo->core;
     const DPSDP_DESCRIPTOR *pSdp = (const DPSDP_DESCRIPTOR*)pVscSdp;
 
-    nvPushEvoSubDevMaskDisp(pDispEvo);
-
     nvUpdateUpdateState(pDevEvo, pUpdateState, pChannel);
 
     if (pSdp == NULL) {
         nvDmaSetStartEvoMethod(pChannel, NVCA7D_HEAD_SET_VSC_SDP_CTRL(head), 1);
         nvDmaSetEvoMethodData(pChannel,
             DRF_DEF(CA7D, _HEAD_SET_VSC_SDP_CTRL, _ENABLE, _DISABLE));
-        goto done;
+        return;
     }
 
     nvDmaSetStartEvoMethod(pChannel, NVCA7D_HEAD_SET_VSC_SDP_CTRL(head), 1);
@@ -2597,46 +2603,33 @@ static void EvoSetDpVscSdpCA(const NVDispEvoRec *pDispEvo,
         nvDmaSetEvoMethodData(pChannel,
             nvPackNvU32(data[3], data[2], data[1], data[0]));
     }
-
-done:
-    nvPopEvoSubDevMask(pDevEvo);
 }
 
 static void EvoSetHeadRefClkCA(NVDevEvoPtr pDevEvo, int head, NvBool external,
                                NVEvoUpdateState *updateState)
 {
     NVEvoChannelPtr pChannel = pDevEvo->core;
-    NvU32 sd;
-
-    /* These methods should only apply to a single subdevice */
-    nvAssert(pDevEvo->subDevMaskStackDepth > 0);
 
     nvUpdateUpdateState(pDevEvo, updateState, pChannel);
 
-    for (sd = 0; sd < pDevEvo->numSubDevices; sd++) {
-        if (nvPeekEvoSubDevMask(pDevEvo) & (1 << sd)) {
-            if (external) {
-                pDevEvo->gpus[sd].setSwSpareA[head] =
-                    FLD_SET_DRF(C97D,
-                                _HEAD_SET_SW_SPARE_A_CODE,
-                                _VPLL_REF,
-                                _QSYNC,
-                                pDevEvo->gpus[sd].setSwSpareA[head]);
-            } else {
-                pDevEvo->gpus[sd].setSwSpareA[head] =
-                    FLD_SET_DRF(C97D,
-                                _HEAD_SET_SW_SPARE_A_CODE,
-                                _VPLL_REF,
-                                _NO_PREF,
-                                pDevEvo->gpus[sd].setSwSpareA[head]);
-            }
-
-            nvPushEvoSubDevMask(pDevEvo, NVBIT(sd));
-            nvDmaSetStartEvoMethod(pChannel, NVCA7D_HEAD_SET_SW_SPARE_A(head), 1);
-            nvDmaSetEvoMethodData(pChannel, pDevEvo->gpus[sd].setSwSpareA[head]);
-            nvPopEvoSubDevMask(pDevEvo);
-        }
+    if (external) {
+        pDevEvo->setSwSpareA[head] =
+            FLD_SET_DRF(C97D,
+                        _HEAD_SET_SW_SPARE_A_CODE,
+                        _VPLL_REF,
+                        _QSYNC,
+                        pDevEvo->setSwSpareA[head]);
+    } else {
+        pDevEvo->setSwSpareA[head] =
+            FLD_SET_DRF(C97D,
+                        _HEAD_SET_SW_SPARE_A_CODE,
+                        _VPLL_REF,
+                        _NO_PREF,
+                        pDevEvo->setSwSpareA[head]);
     }
+
+    nvDmaSetStartEvoMethod(pChannel, NVCA7D_HEAD_SET_SW_SPARE_A(head), 1);
+    nvDmaSetEvoMethodData(pChannel, pDevEvo->setSwSpareA[head]);
 }
 
 /*
@@ -2783,8 +2776,6 @@ static void EvoSetMultiTileConfigCA(const NVDispEvoRec *pDispEvo,
     NVDevEvoRec *pDevEvo = pDispEvo->pDevEvo;
     NVEvoChannel *pCoreChannel = pDevEvo->core;
 
-    nvPushEvoSubDevMaskDisp(pDispEvo);
-
     nvUpdateUpdateState(pDevEvo, pUpdateState, pCoreChannel);
 
     nvDmaSetStartEvoMethod(pCoreChannel, NVCA7D_HEAD_SET_TILE_MASK(head), 1);
@@ -2806,8 +2797,6 @@ static void EvoSetMultiTileConfigCA(const NVDispEvoRec *pDispEvo,
     if (pTimings != NULL) {
         SetTileSize(pCoreChannel, pTimings, pDscInfo, pConfig);
     }
-
-    nvPopEvoSubDevMask(pDevEvo);
 }
 
 NVEvoHAL nvEvoC9 = {
@@ -2866,6 +2855,7 @@ NVEvoHAL nvEvoC9 = {
     nvEvoSendHdmiInfoFrameC8,                     /* SendHdmiInfoFrame */
     nvEvoDisableHdmiInfoFrameC8,                  /* DisableHdmiInfoFrame */
     nvEvoSendDpInfoFrameSdpC8,                    /* SendDpInfoFrameSdp */
+    nvEvoDisableAdaptiveSyncSdpC8,                /* DisableAdaptiveSyncSdp */
     NULL,                                         /* SetDpVscSdp */
     NULL,                                         /* InitHwHeadMultiTileConfig */
     NULL,                                         /* SetMultiTileConfig */
@@ -2879,6 +2869,7 @@ NVEvoHAL nvEvoC9 = {
     EvoSetWinNotifierSurfaceAddressAndControlC9,  /* SetWinNotifierSurfaceAddressAndControl */
     EvoSetSemaphoreSurfaceAddressAndControlC9,    /* SetSemaphoreSurfaceAddressAndControl */
     EvoSetAcqSemaphoreSurfaceAddressAndControlC9, /* SetAcqSemaphoreSurfaceAddressAndControl */
+    EvoSetupVBlankRgSemaphoreInterruptC9,         /* SetupVBlankRgSemaphoreInterrupt */
     {                                             /* caps */
         TRUE,                                     /* supportsHDMIFRL */
         FALSE,                                    /* supportsSetStorageMemoryLayout */
@@ -2948,6 +2939,7 @@ NVEvoHAL nvEvoCA = {
     nvEvoSendHdmiInfoFrameC8,                     /* SendHdmiInfoFrame */
     nvEvoDisableHdmiInfoFrameC8,                  /* DisableHdmiInfoFrame */
     nvEvoSendDpInfoFrameSdpC8,                    /* SendDpInfoFrameSdp */
+    nvEvoDisableAdaptiveSyncSdpC8,                /* DisableAdaptiveSyncSdp */
     EvoSetDpVscSdpCA,                             /* SetDpVscSdp */
     EvoInitHwHeadMultiTileConfigCA,               /* InitHwHeadMultiTileConfig */
     EvoSetMultiTileConfigCA,                      /* SetMultiTileConfig */
@@ -2961,6 +2953,7 @@ NVEvoHAL nvEvoCA = {
     EvoSetWinNotifierSurfaceAddressAndControlC9,  /* SetWinNotifierSurfaceAddressAndControl */
     EvoSetSemaphoreSurfaceAddressAndControlC9,    /* SetSemaphoreSurfaceAddressAndControl */
     EvoSetAcqSemaphoreSurfaceAddressAndControlC9, /* SetAcqSemaphoreSurfaceAddressAndControl */
+    EvoSetupVBlankRgSemaphoreInterruptC9,         /* SetupVBlankRgSemaphoreInterrupt */
     {                                             /* caps */
         TRUE,                                     /* supportsHDMIFRL */
         FALSE,                                    /* supportsSetStorageMemoryLayout */

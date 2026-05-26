@@ -415,17 +415,18 @@ typedef struct
 
 typedef struct
 {
-    NvU64   base;               // Base/start address of the region
-    NvU64   limit;              // Last/end address of region
-    NvU64   rsvdSize;           // Memory RM may be required to allocate in this region
-    NvBool  bRsvdRegion;        // Reserved region -- not publicly usable
-    NvU32   performance;        // Relative performance.  Higher is faster
-    NvBool  bSupportCompressed; // Support compressed kinds
-    NvBool  bSupportISO;        // Support ISO (display, cursor, video) surfaces
-    NvBool  bProtected;         // Represents a protected region of memory.
-    NvBool  bInternalHeap;      // PMA:Used for internal RM allocations
-    NvBool  bLostOnSuspend;     // Not required to be Saved during S/R.
-    NvBool  bPreserveOnSuspend; // Required to be Saved during S/R.
+    NvU64                base;               // Base/start address of the region
+    NvU64                limit;              // Last/end address of region
+    NvU64                rsvdSize;           // Memory RM may be required to allocate in this region
+    NvBool               bRsvdRegion;        // Reserved region -- not publicly usable
+    NvU32                performance;        // Relative performance.  Higher is faster
+    NvBool               bSupportCompressed; // Support compressed kinds
+    NvBool               bSupportISO;        // Support ISO (display, cursor, video) surfaces
+    NvBool               bProtected;         // Represents a protected region of memory.
+    NvBool               bInternalHeap;      // PMA:Used for internal RM allocations
+    NvBool               bLostOnSuspend;     // Not required to be Saved during S/R.
+    NvBool               bPreserveOnSuspend; // Required to be Saved during S/R.
+    NV2080_FB_REGION_TAG regionTag;          // Tag for region
 } FB_REGION_DESCRIPTOR, *PFB_REGION_DESCRIPTOR;
 
 #define MAX_FB_REGIONS  16
@@ -539,12 +540,13 @@ struct MemoryManager {
     struct OBJENGSTATE *__nvoc_pbase_OBJENGSTATE;    // engstate super
     struct MemoryManager *__nvoc_pbase_MemoryManager;    // memmgr
 
-    // Vtable with 88 per-object function pointers
+    // Vtable with 89 per-object function pointers
     NvU64 (*__memmgrDeterminePageSize__)(struct MemoryManager * /*this*/, NvHandle, NvU64, NvU32, NvU32, NvU32 *, NvU32 *);  // halified (2 hals) body
     NV_STATUS (*__memmgrFreeHwResources__)(OBJGPU *, struct MemoryManager * /*this*/, FB_ALLOC_INFO *);  // halified (2 hals) body
     NV_STATUS (*__memmgrCreateHeap__)(struct MemoryManager * /*this*/);  // halified (2 hals) body
     NV_STATUS (*__memmgrInitFbRegions__)(OBJGPU *, struct MemoryManager * /*this*/);  // halified (2 hals) body
     NV_STATUS (*__memmgrAllocateConsoleRegion__)(OBJGPU *, struct MemoryManager * /*this*/);  // halified (4 hals) body
+    NvBool (*__memmgrComprMappingSupported__)(struct MemoryManager * /*this*/, NV_ADDRESS_SPACE);  // halified (2 hals) body
     NV_STATUS (*__memmgrScrubHandlePostSchedulingEnable__)(OBJGPU *, struct MemoryManager * /*this*/);  // halified (2 hals) body
     NV_STATUS (*__memmgrScrubHandlePreSchedulingDisable__)(OBJGPU *, struct MemoryManager * /*this*/);  // halified (2 hals) body
     NV_STATUS (*__memmgrMemUtilsChannelInitialize__)(OBJGPU *, struct MemoryManager * /*this*/, OBJCHANNEL *);  // halified (2 hals) body
@@ -580,7 +582,7 @@ struct MemoryManager {
     NvU32 (*__memmgrGetUncompressedKind__)(OBJGPU *, struct MemoryManager * /*this*/, NvU32, NvBool);  // halified (4 hals) body
     NvU32 (*__memmgrGetCompressedKind__)(struct MemoryManager * /*this*/, NvU32, NvBool);  // halified (4 hals) body
     NV_STATUS (*__memmgrChooseKind__)(OBJGPU *, struct MemoryManager * /*this*/, FB_ALLOC_PAGE_FORMAT *, NvU32, NvU32 *);  // halified (2 hals) body
-    NvBool (*__memmgrIsKind__)(struct MemoryManager * /*this*/, FB_IS_KIND_OP, NvU32);  // halified (3 hals)
+    NvBool (*__memmgrIsKind__)(struct MemoryManager * /*this*/, FB_IS_KIND_OP, NvU32);  // halified (4 hals)
     NvU32 (*__memmgrGetMessageKind__)(OBJGPU *, struct MemoryManager * /*this*/);  // halified (2 hals) body
     NvU32 (*__memmgrGetDefaultPteKindForNoHandle__)(OBJGPU *, struct MemoryManager * /*this*/);  // halified (2 hals) body
     NV_STATUS (*__memmgrGetFlaKind__)(OBJGPU *, struct MemoryManager * /*this*/, NvU32 *);  // halified (2 hals) body
@@ -614,7 +616,7 @@ struct MemoryManager {
     NV_STATUS (*__memmgrGetBlackListPagesForHeap__)(OBJGPU *, struct MemoryManager * /*this*/, struct Heap *);  // halified (2 hals) body
     NV_STATUS (*__memmgrGetBlackListPages__)(OBJGPU *, struct MemoryManager * /*this*/, BLACKLIST_ADDRESS *, NvU32 *);  // halified (3 hals) body
     NV_STATUS (*__memmgrDiscoverMIGPartitionableMemoryRange__)(OBJGPU *, struct MemoryManager * /*this*/, struct NV_RANGE *);  // halified (2 hals) body
-    NvU32 (*__memmgrGetFBEndReserveSizeEstimate__)(OBJGPU *, struct MemoryManager * /*this*/);  // halified (2 hals)
+    NvU32 (*__memmgrGetFBEndReserveSizeEstimate__)(OBJGPU *, struct MemoryManager * /*this*/);  // halified (3 hals) body
     NV_STATUS (*__memmgrInitZeroFbRegionsHal__)(OBJGPU *, struct MemoryManager * /*this*/);  // halified (2 hals) body
     NV_STATUS (*__memmgrAllocScanoutCarveoutRegionResources__)(struct MemoryManager * /*this*/, NV_MEMORY_ALLOCATION_PARAMS *, NvU32, NvU32 *, MEMORY_DESCRIPTOR *);  // halified (2 hals) body
     NV_STATUS (*__memmgrAllocFromScanoutCarveoutRegion__)(POBJGPU, struct MemoryManager * /*this*/, NvU32, NV_MEMORY_ALLOCATION_PARAMS *, NvU32 *, PMEMORY_DESCRIPTOR *);  // halified (2 hals) body
@@ -625,8 +627,8 @@ struct MemoryManager {
     NV_STATUS (*__memmgrDuplicateFromScanoutCarveoutRegion__)(POBJGPU, struct MemoryManager * /*this*/, PMEMORY_DESCRIPTOR);  // halified (2 hals) body
     NvBool (*__memmgrIsMemoryIoCoherent__)(OBJGPU *, struct MemoryManager * /*this*/, NV_MEMORY_ALLOCATION_PARAMS *);  // halified (2 hals) body
     NV_STATUS (*__memmgrSc7SrInitGsp__)(OBJGPU *, struct MemoryManager * /*this*/);  // halified (2 hals) body
-    NvU8 (*__memmgrGetLocalizedOffset__)(OBJGPU *, struct MemoryManager * /*this*/);  // halified (2 hals) body
-    NvBool (*__memmgrIsFlaSysmemSupported__)(OBJGPU *, struct MemoryManager * /*this*/);  // halified (2 hals) body
+    NvU8 (*__memmgrGetLocalizedOffset__)(OBJGPU *, struct MemoryManager * /*this*/);  // halified (3 hals) body
+    NvBool (*__memmgrIsFlaSysmemSupported__)(OBJGPU *, struct MemoryManager * /*this*/);  // halified (3 hals) body
     NvBool (*__memmgrGetLocalizedMemorySupported__)(OBJGPU *, struct MemoryManager * /*this*/);  // halified (2 hals) body
 
     // 1 PDB property
@@ -666,6 +668,8 @@ struct MemoryManager {
     NvS32 localEgmNodeId;
     NvU64 localEgmBasePhysAddr;
     NvU64 localEgmSize;
+    NvBool bAllocFabricAsSparse;
+    NvBool bSparseFabricSupported;
     NvBool bForceEnableFlaSysmem;
     NvBool bEccInterleavedVidmemScrub;
     NvBool bScrubberInitialized;
@@ -770,7 +774,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_MemoryManager;
 #define PDB_PROP_MEMMGR_IS_MISSING_BASE_NAME PDB_PROP_ENGSTATE_IS_MISSING
 
 
-NV_STATUS __nvoc_objCreateDynamic_MemoryManager(MemoryManager**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_MemoryManager(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_MemoryManager(MemoryManager**, Dynamic*, NvU32);
 #define __objCreate_MemoryManager(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -1192,15 +1196,6 @@ static inline NV_STATUS memmgrGetKindComprForGpu(struct MemoryManager *pMemoryMa
 }
 #else // __nvoc_mem_mgr_h_disabled
 #define memmgrGetKindComprForGpu(pMemoryManager, arg2, pGpu, offset, kind, pComprInfo) memmgrGetKindComprForGpu_KERNEL(pMemoryManager, arg2, pGpu, offset, kind, pComprInfo)
-#endif // __nvoc_mem_mgr_h_disabled
-
-#ifdef __nvoc_mem_mgr_h_disabled
-static inline NvBool memmgrComprMappingSupported(struct MemoryManager *pMemoryManager, NV_ADDRESS_SPACE arg2) {
-    NV_ASSERT_FAILED_PRECOMP("MemoryManager was disabled!");
-    return NV_FALSE;
-}
-#else // __nvoc_mem_mgr_h_disabled
-#define memmgrComprMappingSupported(pMemoryManager, arg2) memmgrComprMappingSupported_e661f0(pMemoryManager, arg2)
 #endif // __nvoc_mem_mgr_h_disabled
 
 NV_STATUS memmgrGetKindComprFromMemDesc_IMPL(struct MemoryManager *pMemoryManager, MEMORY_DESCRIPTOR *arg2, NvU64 offset, NvU32 *kind, COMPR_INFO *pComprInfo);
@@ -1806,7 +1801,9 @@ static inline NV_STATUS memmgrGetCarveoutRegionInfo(POBJGPU pGpu, struct MemoryM
 #define memmgrAllocateConsoleRegion(pGpu, pMemoryManager) memmgrAllocateConsoleRegion_DISPATCH(pGpu, pMemoryManager)
 #define memmgrAllocateConsoleRegion_HAL(pGpu, pMemoryManager) memmgrAllocateConsoleRegion_DISPATCH(pGpu, pMemoryManager)
 #define memmgrGetKindComprForGpu_HAL(pMemoryManager, arg2, pGpu, offset, kind, pComprInfo) memmgrGetKindComprForGpu(pMemoryManager, arg2, pGpu, offset, kind, pComprInfo)
-#define memmgrComprMappingSupported_HAL(pMemoryManager, arg2) memmgrComprMappingSupported(pMemoryManager, arg2)
+#define memmgrComprMappingSupported_FNPTR(pMemoryManager) pMemoryManager->__memmgrComprMappingSupported__
+#define memmgrComprMappingSupported(pMemoryManager, arg2) memmgrComprMappingSupported_DISPATCH(pMemoryManager, arg2)
+#define memmgrComprMappingSupported_HAL(pMemoryManager, arg2) memmgrComprMappingSupported_DISPATCH(pMemoryManager, arg2)
 #define memmgrScrubInit_HAL(pGpu, pMemoryManager) memmgrScrubInit(pGpu, pMemoryManager)
 #define memmgrScrubHandlePostSchedulingEnable_FNPTR(pMemoryManager) pMemoryManager->__memmgrScrubHandlePostSchedulingEnable__
 #define memmgrScrubHandlePostSchedulingEnable(pGpu, pMemoryManager) memmgrScrubHandlePostSchedulingEnable_DISPATCH(pGpu, pMemoryManager)
@@ -2152,6 +2149,10 @@ static inline NV_STATUS memmgrInitFbRegions_DISPATCH(OBJGPU *pGpu, struct Memory
 
 static inline NV_STATUS memmgrAllocateConsoleRegion_DISPATCH(OBJGPU *pGpu, struct MemoryManager *pMemoryManager) {
     return pMemoryManager->__memmgrAllocateConsoleRegion__(pGpu, pMemoryManager);
+}
+
+static inline NvBool memmgrComprMappingSupported_DISPATCH(struct MemoryManager *pMemoryManager, NV_ADDRESS_SPACE arg2) {
+    return pMemoryManager->__memmgrComprMappingSupported__(pMemoryManager, arg2);
 }
 
 static inline NV_STATUS memmgrScrubHandlePostSchedulingEnable_DISPATCH(OBJGPU *pGpu, struct MemoryManager *pMemoryManager) {
@@ -2549,6 +2550,8 @@ NV_STATUS memmgrAllocateConsoleRegion_GM107(OBJGPU *pGpu, struct MemoryManager *
 
 NV_STATUS memmgrGetKindComprForGpu_KERNEL(struct MemoryManager *pMemoryManager, MEMORY_DESCRIPTOR *arg2, OBJGPU *pGpu, NvU64 offset, NvU32 *kind, COMPR_INFO *pComprInfo);
 
+NvBool memmgrComprMappingSupported_GR100(struct MemoryManager *pMemoryManager, NV_ADDRESS_SPACE arg2);
+
 NV_STATUS memmgrScrubHandlePostSchedulingEnable_GP100(OBJGPU *pGpu, struct MemoryManager *pMemoryManager);
 
 NvBool memmgrEccScrubInProgress_GP100(OBJGPU *pGpu, struct MemoryManager *pMemoryManager);
@@ -2662,6 +2665,8 @@ NvU32 memmgrGetCompressedKind_TU102(struct MemoryManager *pMemoryManager, NvU32 
 NV_STATUS memmgrChooseKind_TU102(OBJGPU *pGpu, struct MemoryManager *pMemoryManager, FB_ALLOC_PAGE_FORMAT *arg3, NvU32 arg4, NvU32 *pKind);
 
 NvBool memmgrIsKind_GB20B(struct MemoryManager *pMemoryManager, FB_IS_KIND_OP arg2, NvU32 arg3);
+
+NvBool memmgrIsKind_GR100(struct MemoryManager *pMemoryManager, FB_IS_KIND_OP arg2, NvU32 arg3);
 
 NvBool memmgrIsKind_GB202(struct MemoryManager *pMemoryManager, FB_IS_KIND_OP arg2, NvU32 arg3);
 
@@ -2786,6 +2791,10 @@ NvBool memmgrIsMemoryIoCoherent_GB20B(OBJGPU *pGpu, struct MemoryManager *pMemor
 NV_STATUS memmgrSc7SrInitGsp_GB10B(OBJGPU *pGpu, struct MemoryManager *pMemoryManager);
 
 NvU8 memmgrGetLocalizedOffset_GB100(OBJGPU *pGpu, struct MemoryManager *pMemoryManager);
+
+NvU8 memmgrGetLocalizedOffset_GR100(OBJGPU *pGpu, struct MemoryManager *pMemoryManager);
+
+NvBool memmgrIsFlaSysmemSupported_GR100(OBJGPU *pGpu, struct MemoryManager *pMemoryManager);
 
 NvBool memmgrIsFlaSysmemSupported_GB100(OBJGPU *pGpu, struct MemoryManager *pMemoryManager);
 
@@ -3200,6 +3209,10 @@ static inline NV_STATUS memmgrGetBlackListPages_395e98(OBJGPU *pGpu, struct Memo
 
 static inline NV_STATUS memmgrDiscoverMIGPartitionableMemoryRange_395e98(OBJGPU *pGpu, struct MemoryManager *pMemoryManager, struct NV_RANGE *pMemoryRange){
     return NV_ERR_NOT_SUPPORTED;
+}
+
+static inline NvU32 memmgrGetFBEndReserveSizeEstimate_3b8996(OBJGPU *pGpu, struct MemoryManager *pMemoryManager){
+    return 5767168;
 }
 
 static inline NV_STATUS memmgrValidateFBEndReservation_ac1694(OBJGPU *pGpu, struct MemoryManager *pMemoryManager){

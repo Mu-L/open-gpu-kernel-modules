@@ -252,4 +252,68 @@ typedef struct NV0000_CTRL_GPUACCT_CLEAR_ACCOUNTING_DATA_PARAMS {
     NvU32 pid;
 } NV0000_CTRL_GPUACCT_CLEAR_ACCOUNTING_DATA_PARAMS;
 
+/*
+ * NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_V2_PARAMS
+ *
+ * This command returns GPU accounting data (V2) for the process.
+ *
+ *   gpuId
+ *     This parameter should specify a valid GPU ID value. Refer to the
+ *     description of NV0000_CTRL_CMD_GPU_GET_ATTACHED_IDS for more
+ *     information. If there is no GPU present with the specified ID,
+ *     a status of NV_ERR_INVALID_ARGUMENT is returned.
+ *   pid
+ *     This parameter specifies the PID of the process for which information is
+ *     to be queried.
+ *     In case of VGX host, this parameter specifies VGPU plugin(VM) pid inside 
+ *     which the subPid is running. This parameter is set to VGPU plugin pid 
+ *     when this RM control is called from VGPU plugin. 
+ *   subPid
+ *     In case of VGX host, this parameter specifies the PID of the process for
+ *     which information is to be queried. In other cases, it is zero.
+ *   gpuUtil
+ *     This parameter returns the average GR utilization during the process's
+ *     lifetime.
+ *   fbUtil
+ *     This parameter returns the average FB bandwidth utilization during the
+ *     process's lifetime.
+ *   sampleCount
+ *     This parameter returns the samples count during the process's lifetime.
+ *   maxFbUsage
+ *     This parameter returns the maximum FB allocated (in bytes) by the process.
+ *   startTime
+ *     This parameter returns the time stamp value in micro seconds at the time
+ *     process started utilizing GPU.
+ *   stopTime
+ *     This parameter returns the time stamp value in micro seconds at the time
+ *     process stopped utilizing GPU.
+ *   sumGpuUtil
+ *     This parameter returns the sum of GR utilization during the process's
+ *     lifetime.
+ *   sumFbUtil
+ *     This parameter returns the sum of FB bandwidth utilization during the
+ *     process's lifetime.
+ *
+ * Possible status values returned are:
+ *   NV_OK
+ *   NV_ERR_INVALID_PARAM_STRUCT
+ *   NV_ERR_INVALID_ARGUMENT
+ */
+#define NV0000_CTRL_CMD_GPUACCT_GET_PROC_ACCOUNTING_INFO_V2 (0xb06) /* finn: Evaluated from "(FINN_NV01_ROOT_GPUACCT_INTERFACE_ID << 8) | NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_V2_PARAMS_MESSAGE_ID" */
+
+#define NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_V2_PARAMS_MESSAGE_ID (0x6U)
+
+typedef struct NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_V2_PARAMS {
+    NvU32 gpuId;
+    NvU32 pid;
+    NvU32 subPid;
+    NvU32 gpuUtil;
+    NvU32 fbUtil;
+    NvU32 sampleCount;
+    NV_DECLARE_ALIGNED(NvU64 maxFbUsage, 8);
+    NV_DECLARE_ALIGNED(NvU64 startTime, 8);
+    NV_DECLARE_ALIGNED(NvU64 endTime, 8);
+    NV_DECLARE_ALIGNED(NvU64 sumGpuUtil, 8);
+    NV_DECLARE_ALIGNED(NvU64 sumFbUtil, 8);
+} NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_V2_PARAMS;
 

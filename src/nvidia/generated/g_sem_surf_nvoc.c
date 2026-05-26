@@ -32,7 +32,7 @@ void __nvoc_init__SemaphoreSurface(SemaphoreSurface*);
 void __nvoc_init_funcTable_SemaphoreSurface(SemaphoreSurface*);
 NV_STATUS __nvoc_ctor_SemaphoreSurface(SemaphoreSurface*, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_SemaphoreSurface(SemaphoreSurface*);
-void __nvoc_dtor_SemaphoreSurface(SemaphoreSurface*);
+void __nvoc_dtor_SemaphoreSurface(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__SemaphoreSurface;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_SemaphoreSurface =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "SemaphoreSurface",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_SemaphoreSurface,
+    .objCreatefn =        &__nvoc_objCreateDynamic_SemaphoreSurface,
     .pCastInfo =          &__nvoc_castinfo__SemaphoreSurface,
     .pExportInfo =        &__nvoc_export_info__SemaphoreSurface
 };
@@ -125,6 +125,43 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_SemaphoreSurface =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS semsurfCtrlCmdRefMemory__EXPORT(void *pSemaphoreSurf, void *pParams) {
+    return semsurfCtrlCmdRefMemory_IMPL(pSemaphoreSurf, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000108u)
+static NV_STATUS semsurfCtrlCmdBindChannel__EXPORT(void *pSemaphoreSurf, void *pParams) {
+    return semsurfCtrlCmdBindChannel_IMPL(pSemaphoreSurf, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000108u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000108u)
+static NV_STATUS semsurfCtrlCmdUnbindChannel__EXPORT(void *pSemaphoreSurf, void *pParams) {
+    return semsurfCtrlCmdUnbindChannel_IMPL(pSemaphoreSurf, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000108u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00400009u)
+static NV_STATUS semsurfCtrlCmdRegisterWaiter__EXPORT(void *pSemaphoreSurf, void *pParams) {
+    return semsurfCtrlCmdRegisterWaiter_IMPL(pSemaphoreSurf, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00400009u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+static NV_STATUS semsurfCtrlCmdSetValue__EXPORT(void *pSemaphoreSurf, void *pParams) {
+    return semsurfCtrlCmdSetValue_IMPL(pSemaphoreSurf, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+static NV_STATUS semsurfCtrlCmdUnregisterWaiter__EXPORT(void *pSemaphoreSurf, void *pParams) {
+    return semsurfCtrlCmdUnregisterWaiter_IMPL(pSemaphoreSurf, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_SemaphoreSurface[] = 
 {
@@ -132,7 +169,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Semaphor
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &semsurfCtrlCmdRefMemory_IMPL,
+        /*pFunc=*/      (void (*)(void)) &semsurfCtrlCmdRefMemory__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -147,7 +184,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Semaphor
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x108u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &semsurfCtrlCmdBindChannel_IMPL,
+        /*pFunc=*/      (void (*)(void)) &semsurfCtrlCmdBindChannel__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x108u)
         /*flags=*/      0x108u,
         /*accessRight=*/0x0u,
@@ -162,7 +199,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Semaphor
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x400009u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &semsurfCtrlCmdRegisterWaiter_IMPL,
+        /*pFunc=*/      (void (*)(void)) &semsurfCtrlCmdRegisterWaiter__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x400009u)
         /*flags=*/      0x400009u,
         /*accessRight=*/0x0u,
@@ -177,7 +214,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Semaphor
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &semsurfCtrlCmdSetValue_IMPL,
+        /*pFunc=*/      (void (*)(void)) &semsurfCtrlCmdSetValue__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*flags=*/      0x109u,
         /*accessRight=*/0x0u,
@@ -192,7 +229,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Semaphor
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &semsurfCtrlCmdUnregisterWaiter_IMPL,
+        /*pFunc=*/      (void (*)(void)) &semsurfCtrlCmdUnregisterWaiter__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*flags=*/      0x109u,
         /*accessRight=*/0x0u,
@@ -207,7 +244,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Semaphor
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x108u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &semsurfCtrlCmdUnbindChannel_IMPL,
+        /*pFunc=*/      (void (*)(void)) &semsurfCtrlCmdUnbindChannel__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x108u)
         /*flags=*/      0x108u,
         /*accessRight=*/0x0u,
@@ -224,7 +261,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Semaphor
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__SemaphoreSurface __nvoc_metadata__SemaphoreSurface = {
     .rtti.pClassDef = &__nvoc_class_def_SemaphoreSurface,    // (semsurf) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_SemaphoreSurface,
+    .rtti.dtor      = &__nvoc_dtor_SemaphoreSurface,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -487,16 +524,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__SemaphoreSurface =
 
 // Destruct SemaphoreSurface object.
 void __nvoc_semsurfDestruct(SemaphoreSurface*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_SemaphoreSurface(SemaphoreSurface* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_SemaphoreSurface(Dynamic* pThis) {
+
+    SemaphoreSurface *__nvoc_this = (SemaphoreSurface *) pThis;
 
 // Call destructor.
-    __nvoc_semsurfDestruct(pThis);
+    __nvoc_semsurfDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_SemaphoreSurface(SemaphoreSurface *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -522,7 +561,7 @@ NV_STATUS __nvoc_ctor_SemaphoreSurface(SemaphoreSurface *semaphoreSurf, CALL_CON
 
     // Unwind on error.
 __nvoc_ctor_SemaphoreSurface_fail__init:
-    __nvoc_dtor_GpuResource(&semaphoreSurf->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&semaphoreSurf->__nvoc_base_GpuResource);
 __nvoc_ctor_SemaphoreSurface_fail_GpuResource:
 __nvoc_ctor_SemaphoreSurface_exit:
     return status;
@@ -634,13 +673,10 @@ __nvoc_objCreate_SemaphoreSurface_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_SemaphoreSurface(SemaphoreSurface **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_SemaphoreSurface(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_SemaphoreSurface(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_SemaphoreSurface((SemaphoreSurface **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

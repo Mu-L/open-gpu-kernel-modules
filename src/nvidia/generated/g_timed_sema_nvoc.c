@@ -35,7 +35,7 @@ void __nvoc_init__TimedSemaSwObject(TimedSemaSwObject*, RmHalspecOwner *pRmhalsp
 void __nvoc_init_funcTable_TimedSemaSwObject(TimedSemaSwObject*);
 NV_STATUS __nvoc_ctor_TimedSemaSwObject(TimedSemaSwObject*, RmHalspecOwner *pRmhalspecowner, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_TimedSemaSwObject(TimedSemaSwObject*);
-void __nvoc_dtor_TimedSemaSwObject(TimedSemaSwObject*);
+void __nvoc_dtor_TimedSemaSwObject(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__TimedSemaSwObject;
@@ -160,7 +160,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_TimedSemaSwObject =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "TimedSemaSwObject",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_TimedSemaSwObject,
+    .objCreatefn =        &__nvoc_objCreateDynamic_TimedSemaSwObject,
     .pCastInfo =          &__nvoc_castinfo__TimedSemaSwObject,
     .pExportInfo =        &__nvoc_export_info__TimedSemaSwObject
 };
@@ -170,6 +170,25 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_TimedSemaSwObject =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+static NV_STATUS tsemaCtrlCmdFlush__EXPORT(void *pTimedSemaSwObject, void *pFlushParams) {
+    return tsemaCtrlCmdFlush_IMPL(pTimedSemaSwObject, pFlushParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS tsemaCtrlCmdGetTime__EXPORT(void *pTimedSemaSwObject, void *pGetTimeParams) {
+    return tsemaCtrlCmdGetTime_IMPL(pTimedSemaSwObject, pGetTimeParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+static NV_STATUS tsemaCtrlCmdRelease__EXPORT(void *pTimedSemaSwObject, void *pReleaseParams) {
+    return tsemaCtrlCmdRelease_IMPL(pTimedSemaSwObject, pReleaseParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_TimedSemaSwObject[] = 
 {
@@ -177,7 +196,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_TimedSem
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &tsemaCtrlCmdFlush_IMPL,
+        /*pFunc=*/      (void (*)(void)) &tsemaCtrlCmdFlush__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*flags=*/      0x48u,
         /*accessRight=*/0x0u,
@@ -192,7 +211,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_TimedSem
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &tsemaCtrlCmdGetTime_IMPL,
+        /*pFunc=*/      (void (*)(void)) &tsemaCtrlCmdGetTime__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -207,7 +226,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_TimedSem
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &tsemaCtrlCmdRelease_IMPL,
+        /*pFunc=*/      (void (*)(void)) &tsemaCtrlCmdRelease__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*flags=*/      0x48u,
         /*accessRight=*/0x0u,
@@ -224,7 +243,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_TimedSem
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__TimedSemaSwObject __nvoc_metadata__TimedSemaSwObject = {
     .rtti.pClassDef = &__nvoc_class_def_TimedSemaSwObject,    // (tsema) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_TimedSemaSwObject,
+    .rtti.dtor      = &__nvoc_dtor_TimedSemaSwObject,
     .rtti.offset    = 0,
     .metadata__ChannelDescendant.rtti.pClassDef = &__nvoc_class_def_ChannelDescendant,    // (chandes) super
     .metadata__ChannelDescendant.rtti.dtor      = &__nvoc_destructFromBase,
@@ -583,16 +602,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__TimedSemaSwObject =
 
 // Destruct TimedSemaSwObject object.
 void __nvoc_tsemaDestruct(TimedSemaSwObject*);
-void __nvoc_dtor_ChannelDescendant(ChannelDescendant*);
-void __nvoc_dtor_TimedSemaSwObject(TimedSemaSwObject* pThis) {
+void __nvoc_dtor_ChannelDescendant(Dynamic*);
+void __nvoc_dtor_TimedSemaSwObject(Dynamic* pThis) {
+
+    TimedSemaSwObject *__nvoc_this = (TimedSemaSwObject *) pThis;
 
 // Call destructor.
-    __nvoc_tsemaDestruct(pThis);
+    __nvoc_tsemaDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_ChannelDescendant(&pThis->__nvoc_base_ChannelDescendant);
+    __nvoc_dtor_ChannelDescendant((Dynamic *) &__nvoc_this->__nvoc_base_ChannelDescendant);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_TimedSemaSwObject(TimedSemaSwObject *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -618,7 +639,7 @@ NV_STATUS __nvoc_ctor_TimedSemaSwObject(TimedSemaSwObject *pTimedSemSw, RmHalspe
 
     // Unwind on error.
 __nvoc_ctor_TimedSemaSwObject_fail__init:
-    __nvoc_dtor_ChannelDescendant(&pTimedSemSw->__nvoc_base_ChannelDescendant);
+    __nvoc_dtor_ChannelDescendant((Dynamic *)&pTimedSemSw->__nvoc_base_ChannelDescendant);
 __nvoc_ctor_TimedSemaSwObject_fail_ChannelDescendant:
 __nvoc_ctor_TimedSemaSwObject_exit:
     return status;
@@ -745,13 +766,10 @@ __nvoc_objCreate_TimedSemaSwObject_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_TimedSemaSwObject(TimedSemaSwObject **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_TimedSemaSwObject(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_TimedSemaSwObject(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_TimedSemaSwObject((TimedSemaSwObject **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

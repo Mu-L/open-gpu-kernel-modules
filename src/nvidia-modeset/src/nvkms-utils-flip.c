@@ -82,19 +82,17 @@ NvBool nvAssignSurfaceArray(
  * \param[in]  pOpenDevSurfaceHandles  The client's surfaces.
  * \param[in]  pParamsNIso    The client's description of the NISO surface.
  * \param[in]  notifier       Whether the NISO surface is a notifier.
- * \param[in]  pChannel       The channel where the surface will be used.
  * \param[out] pNIsoState     The NVKMS presentation of the NISO surface.
  *
  * \return  Return TRUE if the NVFlipNIsoSurfaceEvoHwState could be
  *          assigned and validated.  Otherwise, return FALSE and leave
  *          the NVFlipNIsoSurfaceEvoHwState untouched.
  */
-NvBool nvAssignNIsoEvoHwState(
+static NvBool nvAssignNIsoEvoHwState(
     const NVDevEvoRec *pDevEvo,
     const NVEvoApiHandlesRec *pOpenDevSurfaceHandles,
     const struct NvKmsNIsoSurface *pParamsNIso,
     const NvBool notifier, /* TRUE=notifier; FALSE=semaphore */
-    const NvU32 layer,
     NVFlipNIsoSurfaceEvoHwState *pNIsoState)
 {
     NVSurfaceEvoPtr pSurfaceEvo;
@@ -123,44 +121,21 @@ NvBool nvAssignNIsoEvoHwState(
         return FALSE;
     }
 
-    if ((pParamsNIso->format != NVKMS_NISO_FORMAT_FOUR_WORD) &&
-        (pParamsNIso->format != NVKMS_NISO_FORMAT_FOUR_WORD_NVDISPLAY) &&
-        (pParamsNIso->format != NVKMS_NISO_FORMAT_LEGACY)) {
-        return FALSE;
-    }
-
-    if ((pDevEvo->caps.validNIsoFormatMask &
-         (1 << pParamsNIso->format)) == 0) {
+    if (pParamsNIso->format != NVKMS_NISO_FORMAT_FOUR_WORD_NVDISPLAY) {
         return FALSE;
     }
 
     /* Check that the item fits within the surface. */
-    switch (pParamsNIso->format) {
-    case NVKMS_NISO_FORMAT_FOUR_WORD:
-    case NVKMS_NISO_FORMAT_FOUR_WORD_NVDISPLAY:
-        elementSizeInBytes = 16;
-        break;
-    case NVKMS_NISO_FORMAT_LEGACY:
-        if (notifier) {
-            /* Legacy notifier size depends on the layer. */
-            elementSizeInBytes =
-                pDevEvo->caps.legacyNotifierFormatSizeBytes[layer];
-        } else {
-            /* Legacy semaphores are always 4 bytes. */
-            elementSizeInBytes = 4;
-        }
-        break;
-    }
+    elementSizeInBytes = 16;
 
 #if defined(DEBUG)
     /* Assert that the size calculated by nvkms-sync library is the same as the
      * one we derived from channel caps above. */
     if (notifier) {
-        NvBool overlay = (layer != NVKMS_MAIN_LAYER);
-        NvU32 libSize = nvKmsSizeOfNotifier(pParamsNIso->format, overlay);
+        NvU32 libSize = nvKmsSizeOfNotifier();
         nvAssert(libSize == elementSizeInBytes);
     } else {
-        nvAssert(nvKmsSizeOfSemaphore(pParamsNIso->format) == elementSizeInBytes);
+        nvAssert(nvKmsSizeOfSemaphore() == elementSizeInBytes);
     }
 #endif
     /*
@@ -202,7 +177,6 @@ NvBool nvAssignCompletionNotifierEvoHwState(
     const NVDevEvoRec *pDevEvo,
     const NVEvoApiHandlesRec *pOpenDevSurfaceHandles,
     const struct NvKmsCompletionNotifierDescription *pParamsNotif,
-    const NvU32 layer,
     NVFlipCompletionNotifierEvoHwState *pNotif)
 {
     NvBool ret;
@@ -218,7 +192,6 @@ NvBool nvAssignCompletionNotifierEvoHwState(
                                  pOpenDevSurfaceHandles,
                                  &pParamsNotif->surface,
                                  TRUE, /* notifier */
-                                 layer,
                                  &pNotif->surface);
     if (ret) {
         pNotif->awaken = pParamsNotif->awaken;
@@ -230,7 +203,6 @@ NvBool nvAssignCompletionNotifierEvoHwState(
 NvBool nvAssignSemaphoreEvoHwState(
     const NVDevEvoRec *pDevEvo,
     const NVEvoApiHandlesRec *pOpenDevSurfaceHandles,
-    const NvU32 layer,
     const NvU32 sd,
     const struct NvKmsChannelSyncObjects *pChannelSyncObjects,
     NVFlipSyncObjectEvoHwState *pFlipSyncObject)
@@ -265,7 +237,6 @@ NvBool nvAssignSemaphoreEvoHwState(
                     pOpenDevSurfaceHandles,
                     &pChannelSyncObjects->u.semaphores.acquire.surface,
                     FALSE, /* notifier */
-                    layer,
                     &pFlipSyncObject->u.semaphores.acquireSurface);
         if (ret) {
             pFlipSyncObject->u.semaphores.acquireValue =
@@ -283,7 +254,6 @@ NvBool nvAssignSemaphoreEvoHwState(
                     pOpenDevSurfaceHandles,
                     &pChannelSyncObjects->u.semaphores.release.surface,
                     FALSE, /* notifier */
-                    layer,
                     &pFlipSyncObject->u.semaphores.releaseSurface);
         if (ret) {
             pFlipSyncObject->u.semaphores.releaseValue =

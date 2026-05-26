@@ -77,6 +77,7 @@ static inline struct nv_drm_connector *to_nv_connector(
 
 struct nv_drm_connector_state {
        struct drm_connector_state base;
+       enum nv_drm_dithering_mode dithering_mode;
 };
 
 static inline struct nv_drm_connector_state *to_nv_drm_connector_state(

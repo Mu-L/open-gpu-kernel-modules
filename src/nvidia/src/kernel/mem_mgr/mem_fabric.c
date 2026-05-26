@@ -1187,7 +1187,7 @@ _memoryfabricGetPhysAttrsUsingFabricMemdesc
     }
 
     status = fabricvaspaceGetGpaMemdesc(pFabricVAS, pFabricMemDesc, pGpu,
-                                        &pPhysMemDesc);
+                                        NV_TRUE, &pPhysMemDesc);
     if (status == NV_OK)
     {
         *pPhysPageSize = memdescGetPageSize(pPhysMemDesc, AT_GPU);

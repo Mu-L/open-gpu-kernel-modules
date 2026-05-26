@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -150,6 +150,15 @@ AuxRetry::status AuxRetry::writeTransaction(int address, NvU8 * buffer, unsigned
         //
         if ((s == AuxBus::success) && (completed == size) && (completed != 0))
         {
+            return ack;
+        }
+        else if ((s == AuxBus::success) && (completed > size))
+        {
+            // Per hardware team, ACK (AuxBus::success) means all the data has been written succesfully, 
+            // and we could ignore the unexpected completed value as long as aux transaction itself is succesful.
+            DP_PRINTF(DP_WARNING, "AuxBus write completed size (%d) is larger than expected (%d) for address 0x%x",
+                      completed, size, address);
+
             return ack;
         }
         else

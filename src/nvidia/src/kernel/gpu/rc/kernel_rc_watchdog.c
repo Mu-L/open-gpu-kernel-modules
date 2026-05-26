@@ -62,6 +62,8 @@
 
 #include "class/clc96f.h" // BLACKWELL_CHANNEL_GPFIFO_A
 
+#include "alloc/alloc_channel.h"
+
 #include "deprecated/rmapi_deprecated.h"
 #include "nvrm_registry.h"
 

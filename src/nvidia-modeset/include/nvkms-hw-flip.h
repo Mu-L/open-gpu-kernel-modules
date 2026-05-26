@@ -115,7 +115,7 @@ NvBool nvAssignNVFlipEvoHwState(NVDevEvoRec *pDevEvo,
 
 void nvIdleMainLayerChannels(
     NVDevEvoPtr pDevEvo,
-    const NVEvoChannelMask *idleChannelMaskPerSd,
+    const NVEvoChannelMask idleChannelMask,
     NvBool allowStopBase);
 
 NvBool nvNeedToToggleFlipLock(const NVDispEvoRec *pDispEvo,

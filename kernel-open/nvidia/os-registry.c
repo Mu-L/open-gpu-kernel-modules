@@ -162,6 +162,28 @@ done:
 }
 
 /*!
+ * @brief This function checks NVreg_CoherentGPUMemoryMode on GPU initialization
+ * to set the right defaults, which can be platform specific and implied. Previously
+ * the default was CDMM is an opt-in. The new logic is called on GPU initialization
+ * and if the user has not provided a preference, CDMM mode is enabled.
+ *
+ * @param[in] sp        Pointer to nvidia_stack_t
+ */
+void nv_enable_cdmm_mode(nvidia_stack_t *sp)
+{
+    // The user has made a preference, just return
+    if (NVreg_CoherentGPUMemoryMode != NULL)
+    {
+        return;
+    }
+
+    NVreg_EnableUserNUMAManagement = 0;
+    rm_write_registry_dword(sp, NULL, NV_REG_ENABLE_USER_NUMA_MANAGEMENT,
+                            NVreg_EnableUserNUMAManagement);
+    return;
+}
+
+/*!
  * @brief This function parses the registry keys per GPU device. It accepts a
  * semicolon separated list of key=value pairs. The first key value pair MUST be
  * "pci=DDDD:BB:DD.F;" where DDDD is Domain, BB is Bus Id, DD is device slot

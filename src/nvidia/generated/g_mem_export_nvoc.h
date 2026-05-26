@@ -153,7 +153,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_MemoryExport;
     ((MemoryExport*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(MemoryExport)))
 #endif //__nvoc_mem_export_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_MemoryExport(MemoryExport**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_MemoryExport(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_MemoryExport(MemoryExport**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_MemoryExport(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

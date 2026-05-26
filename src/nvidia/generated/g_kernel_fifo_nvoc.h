@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -439,7 +439,7 @@ struct KernelFifo {
     struct OBJENGSTATE *__nvoc_pbase_OBJENGSTATE;    // engstate super
     struct KernelFifo *__nvoc_pbase_KernelFifo;    // kfifo
 
-    // Vtable with 64 per-object function pointers
+    // Vtable with 71 per-object function pointers
     NV_STATUS (*__kfifoConstructHal__)(struct OBJGPU *, struct KernelFifo * /*this*/);  // halified (2 hals) body
     NV_STATUS (*__kfifoStatePostLoad__)(struct OBJGPU *, struct KernelFifo * /*this*/, NvU32);  // virtual halified (2 hals) override (engstate) base (engstate) body
     NV_STATUS (*__kfifoStatePreUnload__)(struct OBJGPU *, struct KernelFifo * /*this*/, NvU32);  // virtual halified (2 hals) override (engstate) base (engstate) body
@@ -499,11 +499,18 @@ struct KernelFifo {
     const char * (*__kfifoPrintPbdmaId__)(struct OBJGPU *, struct KernelFifo * /*this*/, NvU32);  // halified (2 hals) body
     const char * (*__kfifoPrintInternalEngine__)(struct OBJGPU *, struct KernelFifo * /*this*/, NvU32);  // halified (6 hals) body
     const char * (*__kfifoPrintInternalEngineCheck__)(struct OBJGPU *, struct KernelFifo * /*this*/, NvU32);  // halified (3 hals) body
-    const char * (*__kfifoGetClientIdStringCommon__)(struct OBJGPU *, struct KernelFifo * /*this*/, FIFO_MMU_EXCEPTION_DATA *);  // halified (2 hals) body
+    const char * (*__kfifoGetClientIdStringCommon__)(struct OBJGPU *, struct KernelFifo * /*this*/, FIFO_MMU_EXCEPTION_DATA *);  // halified (3 hals) body
     const char * (*__kfifoGetClientIdString__)(struct OBJGPU *, struct KernelFifo * /*this*/, FIFO_MMU_EXCEPTION_DATA *);  // halified (8 hals) body
-    const char * (*__kfifoGetClientIdStringCheck__)(struct OBJGPU *, struct KernelFifo * /*this*/, NvU32);  // halified (2 hals) body
+    const char * (*__kfifoGetClientIdStringCheck__)(struct OBJGPU *, struct KernelFifo * /*this*/, NvU32);  // halified (3 hals) body
     const char * (*__kfifoGetFaultAccessTypeString__)(struct OBJGPU *, struct KernelFifo * /*this*/, NvU32);  // halified (2 hals) body
     void (*__kfifoWriteRamfcGpfifo__)(struct OBJGPU *, struct KernelFifo * /*this*/, NvU8 *, NvU64, NvU32);  // halified (4 hals) body
+    void (*__kfifoInitRamfcSignature__)(struct OBJGPU *, struct KernelFifo * /*this*/, NvU8 *);  // halified (3 hals) body
+    void (*__kfifoInitRamfcPbHeader__)(struct OBJGPU *, struct KernelFifo * /*this*/, NvU8 *);  // halified (3 hals) body
+    NV_STATUS (*__kfifoInitRamfcFaultMethodBuffers__)(struct OBJGPU *, struct KernelFifo * /*this*/, struct KernelChannel *, NvU8 *);  // halified (2 hals) body
+    void (*__kfifoGetRamfcFaultMethodBufferAddrOffset__)(struct OBJGPU *, struct KernelFifo * /*this*/, NvU32 *, NvU32 *);  // halified (3 hals) body
+    void (*__kfifoInitRamfcUserdWriteback__)(struct KernelFifo * /*this*/, NvU8 *, NvBool);  // halified (2 hals) body
+    void (*__kfifoInitRamfcCEThrottleMode__)(struct OBJGPU *, struct KernelFifo * /*this*/, NvU8 *);  // halified (2 hals) body
+    void (*__kfifoInitCePrefetch__)(struct OBJGPU *, struct KernelFifo * /*this*/, struct KernelChannel *, NvU8 *);  // halified (2 hals) body
 
     // 1 PDB property
 //  NvBool PDB_PROP_KFIFO_IS_MISSING inherited from OBJENGSTATE
@@ -527,6 +534,7 @@ struct KernelFifo {
     NvBool bGuestGenenratesWorkSubmitToken;
     NvBool bIsPbdmaMmuEngineIdContiguous;
     NvBool bDoorbellsSupported;
+    NvU32 fifoIdleTimeout;
     NvBool bWddmInterleavingPolicyEnabled;
     NvBool bUserdInSystemMemory;
     NvBool bUserdMapDmaSupported;
@@ -592,7 +600,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelFifo;
 #define PDB_PROP_KFIFO_IS_MISSING_BASE_NAME PDB_PROP_ENGSTATE_IS_MISSING
 
 
-NV_STATUS __nvoc_objCreateDynamic_KernelFifo(KernelFifo**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelFifo(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelFifo(KernelFifo**, Dynamic*, NvU32);
 #define __objCreate_KernelFifo(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -1118,6 +1126,16 @@ static inline NV_STATUS kfifoIdleChannelsPerDevice(struct OBJGPU *pGpu, struct K
 #define kfifoIdleChannelsPerDevice(pGpu, pKernelFifo, phClients, phDevices, phChannels, numChannels, flags, timeout) kfifoIdleChannelsPerDevice_KERNEL(pGpu, pKernelFifo, phClients, phDevices, phChannels, numChannels, flags, timeout)
 #endif // __nvoc_kernel_fifo_h_disabled
 
+NV_STATUS kfifoConvertInstToChannelInfo_IMPL(struct KernelFifo *arg_this, struct OBJGPU *arg2, ENGDESCRIPTOR arg3, const INST_BLOCK_DESC *arg4, FIFO_CHANNEL_INFO *arg5);
+#ifdef __nvoc_kernel_fifo_h_disabled
+static inline NV_STATUS kfifoConvertInstToChannelInfo(struct KernelFifo *arg_this, struct OBJGPU *arg2, ENGDESCRIPTOR arg3, const INST_BLOCK_DESC *arg4, FIFO_CHANNEL_INFO *arg5) {
+    NV_ASSERT_FAILED_PRECOMP("KernelFifo was disabled!");
+    return NV_ERR_NOT_SUPPORTED;
+}
+#else // __nvoc_kernel_fifo_h_disabled
+#define kfifoConvertInstToChannelInfo(arg_this, arg2, arg3, arg4, arg5) kfifoConvertInstToChannelInfo_IMPL(arg_this, arg2, arg3, arg4, arg5)
+#endif // __nvoc_kernel_fifo_h_disabled
+
 #ifdef __nvoc_kernel_fifo_h_disabled
 static inline NvU32 kfifoGetMaxSubcontextFromGr(struct OBJGPU *pGpu, struct KernelFifo *pKernel) {
     NV_ASSERT_FAILED_PRECOMP("KernelFifo was disabled!");
@@ -1249,12 +1267,21 @@ static inline NV_STATUS kfifoWaitForRunlistPreempt(struct OBJGPU *pGpu, struct K
 #endif // __nvoc_kernel_fifo_h_disabled
 
 #ifdef __nvoc_kernel_fifo_h_disabled
-static inline NV_STATUS kfifoIssueRunlistPreemptHw(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, THREAD_STATE_NODE *pThreadState) {
+static inline NV_STATUS kfifoIssueRunlistPreemptHwCpu(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, THREAD_STATE_NODE *pThreadState) {
     NV_ASSERT_FAILED_PRECOMP("KernelFifo was disabled!");
     return NV_ERR_NOT_SUPPORTED;
 }
 #else // __nvoc_kernel_fifo_h_disabled
-#define kfifoIssueRunlistPreemptHw(pGpu, pKernelFifo, runlistId, pThreadState) kfifoIssueRunlistPreemptHw_5baef9(pGpu, pKernelFifo, runlistId, pThreadState)
+#define kfifoIssueRunlistPreemptHwCpu(pGpu, pKernelFifo, runlistId, pThreadState) kfifoIssueRunlistPreemptHwCpu_5baef9(pGpu, pKernelFifo, runlistId, pThreadState)
+#endif // __nvoc_kernel_fifo_h_disabled
+
+#ifdef __nvoc_kernel_fifo_h_disabled
+static inline NV_STATUS kfifoIssueRunlistPreempt(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, THREAD_STATE_NODE *pThreadState) {
+    NV_ASSERT_FAILED_PRECOMP("KernelFifo was disabled!");
+    return NV_ERR_NOT_SUPPORTED;
+}
+#else // __nvoc_kernel_fifo_h_disabled
+#define kfifoIssueRunlistPreempt(pGpu, pKernelFifo, runlistId, pThreadState) kfifoIssueRunlistPreempt_5baef9(pGpu, pKernelFifo, runlistId, pThreadState)
 #endif // __nvoc_kernel_fifo_h_disabled
 
 #ifdef __nvoc_kernel_fifo_h_disabled
@@ -1284,28 +1311,64 @@ static inline NV_STATUS kfifoWaitForTsgPreemptHwCpu(struct OBJGPU *pGpu, struct 
 #endif // __nvoc_kernel_fifo_h_disabled
 
 #ifdef __nvoc_kernel_fifo_h_disabled
-static inline NV_STATUS kfifoSetRunlistSchedulingCpu(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, NvBool bEnable) {
+static inline NV_STATUS kfifoSetRunlistSchedulingHwCpu(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, NvBool bEnable) {
     NV_ASSERT_FAILED_PRECOMP("KernelFifo was disabled!");
     return NV_ERR_NOT_SUPPORTED;
 }
 #else // __nvoc_kernel_fifo_h_disabled
-#define kfifoSetRunlistSchedulingCpu(pGpu, pKernelFifo, runlistId, bEnable) kfifoSetRunlistSchedulingCpu_5baef9(pGpu, pKernelFifo, runlistId, bEnable)
+#define kfifoSetRunlistSchedulingHwCpu(pGpu, pKernelFifo, runlistId, bEnable) kfifoSetRunlistSchedulingHwCpu_5baef9(pGpu, pKernelFifo, runlistId, bEnable)
 #endif // __nvoc_kernel_fifo_h_disabled
 
 #ifdef __nvoc_kernel_fifo_h_disabled
-static inline void kfifoChannelDisableInHWCpu(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, struct KernelChannel *pKernelChannel) {
+static inline NV_STATUS kfifoGetRunlistSchedulingHwCpu(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, NvBool *pEnable) {
     NV_ASSERT_FAILED_PRECOMP("KernelFifo was disabled!");
+    return NV_ERR_NOT_SUPPORTED;
 }
 #else // __nvoc_kernel_fifo_h_disabled
-#define kfifoChannelDisableInHWCpu(pGpu, pKernelFifo, pKernelChannel) kfifoChannelDisableInHWCpu_d44104(pGpu, pKernelFifo, pKernelChannel)
+#define kfifoGetRunlistSchedulingHwCpu(pGpu, pKernelFifo, runlistId, pEnable) kfifoGetRunlistSchedulingHwCpu_5baef9(pGpu, pKernelFifo, runlistId, pEnable)
 #endif // __nvoc_kernel_fifo_h_disabled
 
 #ifdef __nvoc_kernel_fifo_h_disabled
-static inline void kfifoChannelEnableInHWCpu(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, struct KernelChannel *pKernelChannel) {
+static inline NV_STATUS kfifoSetRunlistScheduling(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, NvBool bEnable) {
+    NV_ASSERT_FAILED_PRECOMP("KernelFifo was disabled!");
+    return NV_ERR_NOT_SUPPORTED;
+}
+#else // __nvoc_kernel_fifo_h_disabled
+#define kfifoSetRunlistScheduling(pGpu, pKernelFifo, runlistId, bEnable) kfifoSetRunlistScheduling_5baef9(pGpu, pKernelFifo, runlistId, bEnable)
+#endif // __nvoc_kernel_fifo_h_disabled
+
+#ifdef __nvoc_kernel_fifo_h_disabled
+static inline NV_STATUS kfifoGetRunlistScheduling(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, NvBool *pEnable) {
+    NV_ASSERT_FAILED_PRECOMP("KernelFifo was disabled!");
+    return NV_ERR_NOT_SUPPORTED;
+}
+#else // __nvoc_kernel_fifo_h_disabled
+#define kfifoGetRunlistScheduling(pGpu, pKernelFifo, runlistId, pEnable) kfifoGetRunlistScheduling_5baef9(pGpu, pKernelFifo, runlistId, pEnable)
+#endif // __nvoc_kernel_fifo_h_disabled
+
+#ifdef __nvoc_kernel_fifo_h_disabled
+static inline NV_STATUS kfifoIsolateForRc(struct OBJGPU *arg1, struct KernelFifo *arg_this, struct KernelChannel *arg3) {
+    NV_ASSERT_FAILED_PRECOMP("KernelFifo was disabled!");
+    return NV_ERR_NOT_SUPPORTED;
+}
+#else // __nvoc_kernel_fifo_h_disabled
+#define kfifoIsolateForRc(arg1, arg_this, arg3) kfifoIsolateForRc_5baef9(arg1, arg_this, arg3)
+#endif // __nvoc_kernel_fifo_h_disabled
+
+#ifdef __nvoc_kernel_fifo_h_disabled
+static inline void kfifoChannelDisableInHwCpu(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, FIFO_CHANNEL_INFO arg3) {
     NV_ASSERT_FAILED_PRECOMP("KernelFifo was disabled!");
 }
 #else // __nvoc_kernel_fifo_h_disabled
-#define kfifoChannelEnableInHWCpu(pGpu, pKernelFifo, pKernelChannel) kfifoChannelEnableInHWCpu_d44104(pGpu, pKernelFifo, pKernelChannel)
+#define kfifoChannelDisableInHwCpu(pGpu, pKernelFifo, arg3) kfifoChannelDisableInHwCpu_d44104(pGpu, pKernelFifo, arg3)
+#endif // __nvoc_kernel_fifo_h_disabled
+
+#ifdef __nvoc_kernel_fifo_h_disabled
+static inline void kfifoChannelEnableInHwCpu(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, FIFO_CHANNEL_INFO arg3) {
+    NV_ASSERT_FAILED_PRECOMP("KernelFifo was disabled!");
+}
+#else // __nvoc_kernel_fifo_h_disabled
+#define kfifoChannelEnableInHwCpu(pGpu, pKernelFifo, arg3) kfifoChannelEnableInHwCpu_d44104(pGpu, pKernelFifo, arg3)
 #endif // __nvoc_kernel_fifo_h_disabled
 
 #ifdef __nvoc_kernel_fifo_h_disabled
@@ -1336,12 +1399,12 @@ static inline NvU32 kfifoReadChramHwCpu(struct OBJGPU *pGpu, struct KernelFifo *
 #endif // __nvoc_kernel_fifo_h_disabled
 
 #ifdef __nvoc_kernel_fifo_h_disabled
-static inline NV_STATUS kfifoClearChramHwCpu(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, struct KernelChannel *pKernelChannel, NvBool bClearPbdmaFaulted, NvBool bClearEngFaulted) {
+static inline NV_STATUS kfifoClearChramHwCpu(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, FIFO_CHANNEL_INFO arg3, NvBool bClearPbdmaFaulted, NvBool bClearEngFaulted) {
     NV_ASSERT_FAILED_PRECOMP("KernelFifo was disabled!");
     return NV_ERR_NOT_SUPPORTED;
 }
 #else // __nvoc_kernel_fifo_h_disabled
-#define kfifoClearChramHwCpu(pGpu, pKernelFifo, pKernelChannel, bClearPbdmaFaulted, bClearEngFaulted) kfifoClearChramHwCpu_5baef9(pGpu, pKernelFifo, pKernelChannel, bClearPbdmaFaulted, bClearEngFaulted)
+#define kfifoClearChramHwCpu(pGpu, pKernelFifo, arg3, bClearPbdmaFaulted, bClearEngFaulted) kfifoClearChramHwCpu_5baef9(pGpu, pKernelFifo, arg3, bClearPbdmaFaulted, bClearEngFaulted)
 #endif // __nvoc_kernel_fifo_h_disabled
 
 
@@ -1524,11 +1587,16 @@ static inline NV_STATUS kfifoClearChramHwCpu(struct OBJGPU *pGpu, struct KernelF
 #define kfifoRunlistSubmit_HAL(pGpu, pKernelFifo, arg3, arg4, arg5, arg6, pPremptedOffset, arg8, arg9, arg10) kfifoRunlistSubmit(pGpu, pKernelFifo, arg3, arg4, arg5, arg6, pPremptedOffset, arg8, arg9, arg10)
 #define kfifoRunlistWriteSubmitRegistersCpu_HAL(pGpu, pKernelFifo, runlistBase, aperture, runlistId, numEntries, currentRLSubmitOffset, pPreviousRLPreemptedOffset, pThreadState) kfifoRunlistWriteSubmitRegistersCpu(pGpu, pKernelFifo, runlistBase, aperture, runlistId, numEntries, currentRLSubmitOffset, pPreviousRLPreemptedOffset, pThreadState)
 #define kfifoWaitForRunlistPreempt_HAL(pGpu, pKernelFifo, pTimeout, runlistId) kfifoWaitForRunlistPreempt(pGpu, pKernelFifo, pTimeout, runlistId)
-#define kfifoIssueRunlistPreemptHw_HAL(pGpu, pKernelFifo, runlistId, pThreadState) kfifoIssueRunlistPreemptHw(pGpu, pKernelFifo, runlistId, pThreadState)
+#define kfifoIssueRunlistPreemptHwCpu_HAL(pGpu, pKernelFifo, runlistId, pThreadState) kfifoIssueRunlistPreemptHwCpu(pGpu, pKernelFifo, runlistId, pThreadState)
+#define kfifoIssueRunlistPreempt_HAL(pGpu, pKernelFifo, runlistId, pThreadState) kfifoIssueRunlistPreempt(pGpu, pKernelFifo, runlistId, pThreadState)
 #define kfifoIssueTsgPreempt_HAL(pGpu, pKernelFifo, arg3, bWaitForPreempt, pTimeout) kfifoIssueTsgPreempt(pGpu, pKernelFifo, arg3, bWaitForPreempt, pTimeout)
 #define kfifoIssueTsgPreemptHwCpu_HAL(pGpu, pKernelFifo, arg3) kfifoIssueTsgPreemptHwCpu(pGpu, pKernelFifo, arg3)
 #define kfifoWaitForTsgPreemptHwCpu_HAL(pGpu, pKernelFifo, arg3, pTimeout) kfifoWaitForTsgPreemptHwCpu(pGpu, pKernelFifo, arg3, pTimeout)
-#define kfifoSetRunlistSchedulingCpu_HAL(pGpu, pKernelFifo, runlistId, bEnable) kfifoSetRunlistSchedulingCpu(pGpu, pKernelFifo, runlistId, bEnable)
+#define kfifoSetRunlistSchedulingHwCpu_HAL(pGpu, pKernelFifo, runlistId, bEnable) kfifoSetRunlistSchedulingHwCpu(pGpu, pKernelFifo, runlistId, bEnable)
+#define kfifoGetRunlistSchedulingHwCpu_HAL(pGpu, pKernelFifo, runlistId, pEnable) kfifoGetRunlistSchedulingHwCpu(pGpu, pKernelFifo, runlistId, pEnable)
+#define kfifoSetRunlistScheduling_HAL(pGpu, pKernelFifo, runlistId, bEnable) kfifoSetRunlistScheduling(pGpu, pKernelFifo, runlistId, bEnable)
+#define kfifoGetRunlistScheduling_HAL(pGpu, pKernelFifo, runlistId, pEnable) kfifoGetRunlistScheduling(pGpu, pKernelFifo, runlistId, pEnable)
+#define kfifoIsolateForRc_HAL(arg1, arg_this, arg3) kfifoIsolateForRc(arg1, arg_this, arg3)
 #define kfifoUserdNeedsIsolation_FNPTR(pKernelFifo) pKernelFifo->__kfifoUserdNeedsIsolation__
 #define kfifoUserdNeedsIsolation(pKernelFifo) kfifoUserdNeedsIsolation_DISPATCH(pKernelFifo)
 #define kfifoUserdNeedsIsolation_HAL(pKernelFifo) kfifoUserdNeedsIsolation_DISPATCH(pKernelFifo)
@@ -1568,15 +1636,36 @@ static inline NV_STATUS kfifoClearChramHwCpu(struct OBJGPU *pGpu, struct KernelF
 #define kfifoGetFaultAccessTypeString_FNPTR(pKernelFifo) pKernelFifo->__kfifoGetFaultAccessTypeString__
 #define kfifoGetFaultAccessTypeString(pGpu, pKernelFifo, arg3) kfifoGetFaultAccessTypeString_DISPATCH(pGpu, pKernelFifo, arg3)
 #define kfifoGetFaultAccessTypeString_HAL(pGpu, pKernelFifo, arg3) kfifoGetFaultAccessTypeString_DISPATCH(pGpu, pKernelFifo, arg3)
-#define kfifoChannelDisableInHWCpu_HAL(pGpu, pKernelFifo, pKernelChannel) kfifoChannelDisableInHWCpu(pGpu, pKernelFifo, pKernelChannel)
-#define kfifoChannelEnableInHWCpu_HAL(pGpu, pKernelFifo, pKernelChannel) kfifoChannelEnableInHWCpu(pGpu, pKernelFifo, pKernelChannel)
+#define kfifoChannelDisableInHwCpu_HAL(pGpu, pKernelFifo, arg3) kfifoChannelDisableInHwCpu(pGpu, pKernelFifo, arg3)
+#define kfifoChannelEnableInHwCpu_HAL(pGpu, pKernelFifo, arg3) kfifoChannelEnableInHwCpu(pGpu, pKernelFifo, arg3)
 #define kfifoChannelTest_HAL(pGpu, pKernelFifo, pKernelChannel, testState, bTestAll) kfifoChannelTest(pGpu, pKernelFifo, pKernelChannel, testState, bTestAll)
 #define kfifoChannelTestHwCpu_HAL(pGpu, pKernelFifo, pKernelChannel, testState, bTestAll) kfifoChannelTestHwCpu(pGpu, pKernelFifo, pKernelChannel, testState, bTestAll)
 #define kfifoReadChramHwCpu_HAL(pGpu, pKernelFifo, runlistId, vchID) kfifoReadChramHwCpu(pGpu, pKernelFifo, runlistId, vchID)
-#define kfifoClearChramHwCpu_HAL(pGpu, pKernelFifo, pKernelChannel, bClearPbdmaFaulted, bClearEngFaulted) kfifoClearChramHwCpu(pGpu, pKernelFifo, pKernelChannel, bClearPbdmaFaulted, bClearEngFaulted)
+#define kfifoClearChramHwCpu_HAL(pGpu, pKernelFifo, arg3, bClearPbdmaFaulted, bClearEngFaulted) kfifoClearChramHwCpu(pGpu, pKernelFifo, arg3, bClearPbdmaFaulted, bClearEngFaulted)
 #define kfifoWriteRamfcGpfifo_FNPTR(pKernelFifo) pKernelFifo->__kfifoWriteRamfcGpfifo__
 #define kfifoWriteRamfcGpfifo(pGpu, pKernelFifo, pInstMem, gpFifoOffset, gpFifoEntries) kfifoWriteRamfcGpfifo_DISPATCH(pGpu, pKernelFifo, pInstMem, gpFifoOffset, gpFifoEntries)
 #define kfifoWriteRamfcGpfifo_HAL(pGpu, pKernelFifo, pInstMem, gpFifoOffset, gpFifoEntries) kfifoWriteRamfcGpfifo_DISPATCH(pGpu, pKernelFifo, pInstMem, gpFifoOffset, gpFifoEntries)
+#define kfifoInitRamfcSignature_FNPTR(pKernelFifo) pKernelFifo->__kfifoInitRamfcSignature__
+#define kfifoInitRamfcSignature(pGpu, pKernelFifo, pInstMem) kfifoInitRamfcSignature_DISPATCH(pGpu, pKernelFifo, pInstMem)
+#define kfifoInitRamfcSignature_HAL(pGpu, pKernelFifo, pInstMem) kfifoInitRamfcSignature_DISPATCH(pGpu, pKernelFifo, pInstMem)
+#define kfifoInitRamfcPbHeader_FNPTR(pKernelFifo) pKernelFifo->__kfifoInitRamfcPbHeader__
+#define kfifoInitRamfcPbHeader(pGpu, pKernelFifo, arg3) kfifoInitRamfcPbHeader_DISPATCH(pGpu, pKernelFifo, arg3)
+#define kfifoInitRamfcPbHeader_HAL(pGpu, pKernelFifo, arg3) kfifoInitRamfcPbHeader_DISPATCH(pGpu, pKernelFifo, arg3)
+#define kfifoInitRamfcFaultMethodBuffers_FNPTR(pKernelFifo) pKernelFifo->__kfifoInitRamfcFaultMethodBuffers__
+#define kfifoInitRamfcFaultMethodBuffers(pGpu, pKernelFifo, pKernelChannel, arg4) kfifoInitRamfcFaultMethodBuffers_DISPATCH(pGpu, pKernelFifo, pKernelChannel, arg4)
+#define kfifoInitRamfcFaultMethodBuffers_HAL(pGpu, pKernelFifo, pKernelChannel, arg4) kfifoInitRamfcFaultMethodBuffers_DISPATCH(pGpu, pKernelFifo, pKernelChannel, arg4)
+#define kfifoGetRamfcFaultMethodBufferAddrOffset_FNPTR(pKernelFifo) pKernelFifo->__kfifoGetRamfcFaultMethodBufferAddrOffset__
+#define kfifoGetRamfcFaultMethodBufferAddrOffset(pGpu, pKernelFifo, pOffsetAddrLo, pOffsetAddrHi) kfifoGetRamfcFaultMethodBufferAddrOffset_DISPATCH(pGpu, pKernelFifo, pOffsetAddrLo, pOffsetAddrHi)
+#define kfifoGetRamfcFaultMethodBufferAddrOffset_HAL(pGpu, pKernelFifo, pOffsetAddrLo, pOffsetAddrHi) kfifoGetRamfcFaultMethodBufferAddrOffset_DISPATCH(pGpu, pKernelFifo, pOffsetAddrLo, pOffsetAddrHi)
+#define kfifoInitRamfcUserdWriteback_FNPTR(pKernelFifo) pKernelFifo->__kfifoInitRamfcUserdWriteback__
+#define kfifoInitRamfcUserdWriteback(pKernelFifo, arg2, arg3) kfifoInitRamfcUserdWriteback_DISPATCH(pKernelFifo, arg2, arg3)
+#define kfifoInitRamfcUserdWriteback_HAL(pKernelFifo, arg2, arg3) kfifoInitRamfcUserdWriteback_DISPATCH(pKernelFifo, arg2, arg3)
+#define kfifoInitRamfcCEThrottleMode_FNPTR(pKernelFifo) pKernelFifo->__kfifoInitRamfcCEThrottleMode__
+#define kfifoInitRamfcCEThrottleMode(pGpu, pKernelFifo, arg3) kfifoInitRamfcCEThrottleMode_DISPATCH(pGpu, pKernelFifo, arg3)
+#define kfifoInitRamfcCEThrottleMode_HAL(pGpu, pKernelFifo, arg3) kfifoInitRamfcCEThrottleMode_DISPATCH(pGpu, pKernelFifo, arg3)
+#define kfifoInitCePrefetch_FNPTR(pKernelFifo) pKernelFifo->__kfifoInitCePrefetch__
+#define kfifoInitCePrefetch(pGpu, pKernelFifo, pKernelChannel, pInstMem) kfifoInitCePrefetch_DISPATCH(pGpu, pKernelFifo, pKernelChannel, pInstMem)
+#define kfifoInitCePrefetch_HAL(pGpu, pKernelFifo, pKernelChannel, pInstMem) kfifoInitCePrefetch_DISPATCH(pGpu, pKernelFifo, pKernelChannel, pInstMem)
 #define kfifoInitMissing_FNPTR(pEngstate) pEngstate->__nvoc_base_OBJENGSTATE.__nvoc_metadata_ptr->vtable.__engstateInitMissing__
 #define kfifoInitMissing(pGpu, pEngstate) kfifoInitMissing_DISPATCH(pGpu, pEngstate)
 #define kfifoStatePreInitLocked_FNPTR(pEngstate) pEngstate->__nvoc_base_OBJENGSTATE.__nvoc_metadata_ptr->vtable.__engstateStatePreInitLocked__
@@ -1869,6 +1958,34 @@ static inline void kfifoWriteRamfcGpfifo_DISPATCH(struct OBJGPU *pGpu, struct Ke
     pKernelFifo->__kfifoWriteRamfcGpfifo__(pGpu, pKernelFifo, pInstMem, gpFifoOffset, gpFifoEntries);
 }
 
+static inline void kfifoInitRamfcSignature_DISPATCH(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU8 *pInstMem) {
+    pKernelFifo->__kfifoInitRamfcSignature__(pGpu, pKernelFifo, pInstMem);
+}
+
+static inline void kfifoInitRamfcPbHeader_DISPATCH(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU8 *arg3) {
+    pKernelFifo->__kfifoInitRamfcPbHeader__(pGpu, pKernelFifo, arg3);
+}
+
+static inline NV_STATUS kfifoInitRamfcFaultMethodBuffers_DISPATCH(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, struct KernelChannel *pKernelChannel, NvU8 *arg4) {
+    return pKernelFifo->__kfifoInitRamfcFaultMethodBuffers__(pGpu, pKernelFifo, pKernelChannel, arg4);
+}
+
+static inline void kfifoGetRamfcFaultMethodBufferAddrOffset_DISPATCH(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 *pOffsetAddrLo, NvU32 *pOffsetAddrHi) {
+    pKernelFifo->__kfifoGetRamfcFaultMethodBufferAddrOffset__(pGpu, pKernelFifo, pOffsetAddrLo, pOffsetAddrHi);
+}
+
+static inline void kfifoInitRamfcUserdWriteback_DISPATCH(struct KernelFifo *pKernelFifo, NvU8 *arg2, NvBool arg3) {
+    pKernelFifo->__kfifoInitRamfcUserdWriteback__(pKernelFifo, arg2, arg3);
+}
+
+static inline void kfifoInitRamfcCEThrottleMode_DISPATCH(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU8 *arg3) {
+    pKernelFifo->__kfifoInitRamfcCEThrottleMode__(pGpu, pKernelFifo, arg3);
+}
+
+static inline void kfifoInitCePrefetch_DISPATCH(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, struct KernelChannel *pKernelChannel, NvU8 *pInstMem) {
+    pKernelFifo->__kfifoInitCePrefetch__(pGpu, pKernelFifo, pKernelChannel, pInstMem);
+}
+
 static inline void kfifoInitMissing_DISPATCH(struct OBJGPU *pGpu, struct KernelFifo *pEngstate) {
     pEngstate->__nvoc_metadata_ptr->vtable.__kfifoInitMissing__(pGpu, pEngstate);
 }
@@ -2054,7 +2171,21 @@ void kfifoCompleteChannelHalt_GA100(struct OBJGPU *pGpu, struct KernelFifo *pKer
 
 NV_STATUS kfifoRunlistSubmit_GP102(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, PRMTIMEOUT arg3, NvU32 arg4, PMEMORY_DESCRIPTOR arg5, NvU32 arg6, NvU32 *pPremptedOffset, NvU32 arg8, NvBool arg9, THREAD_STATE_NODE *arg10);
 
+NV_STATUS kfifoIssueRunlistPreempt_GM107(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, THREAD_STATE_NODE *pThreadState);
+
 NV_STATUS kfifoIssueTsgPreempt_GM107(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, FIFO_TSG_INFO arg3, NvBool bWaitForPreempt, PRMTIMEOUT pTimeout);
+
+NV_STATUS kfifoSetRunlistScheduling_GM107(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, NvBool bEnable);
+
+NV_STATUS kfifoSetRunlistScheduling_GB202(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, NvBool bEnable);
+
+NV_STATUS kfifoSetRunlistScheduling_GA100(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, NvBool bEnable);
+
+NV_STATUS kfifoGetRunlistScheduling_GM107(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, NvBool *pEnable);
+
+NV_STATUS kfifoGetRunlistScheduling_GB202(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, NvBool *pEnable);
+
+NV_STATUS kfifoGetRunlistScheduling_GA100(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, NvBool *pEnable);
 
 NV_STATUS kfifoRunlistSetId_GM107(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, struct KernelChannel *arg3, NvU32 runlistId);
 
@@ -2084,6 +2215,8 @@ const char * kfifoPrintInternalEngineCheck_GB202(struct OBJGPU *pGpu, struct Ker
 
 const char * kfifoPrintInternalEngineCheck_GA100(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 arg3);
 
+const char * kfifoGetClientIdStringCommon_GR100(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, FIFO_MMU_EXCEPTION_DATA *arg3);
+
 const char * kfifoGetClientIdStringCommon_GH100(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, FIFO_MMU_EXCEPTION_DATA *arg3);
 
 const char * kfifoGetClientIdString_GH100(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, FIFO_MMU_EXCEPTION_DATA *arg3);
@@ -2100,6 +2233,8 @@ const char * kfifoGetClientIdString_GB202(struct OBJGPU *pGpu, struct KernelFifo
 
 const char * kfifoGetClientIdString_GB100(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, FIFO_MMU_EXCEPTION_DATA *arg3);
 
+const char * kfifoGetClientIdStringCheck_GR100(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 arg3);
+
 const char * kfifoGetClientIdStringCheck_GA100(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 arg3);
 
 const char * kfifoGetFaultAccessTypeString_GV100(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 arg3);
@@ -2111,6 +2246,26 @@ void kfifoWriteRamfcGpfifo_GH100(struct OBJGPU *pGpu, struct KernelFifo *pKernel
 void kfifoWriteRamfcGpfifo_GM107(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU8 *pInstMem, NvU64 gpFifoOffset, NvU32 gpFifoEntries);
 
 void kfifoWriteRamfcGpfifo_GB100(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU8 *pInstMem, NvU64 gpFifoOffset, NvU32 gpFifoEntries);
+
+void kfifoInitRamfcSignature_TU102(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU8 *pInstMem);
+
+void kfifoInitRamfcSignature_GB100(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU8 *pInstMem);
+
+void kfifoInitRamfcPbHeader_TU102(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU8 *arg3);
+
+void kfifoInitRamfcPbHeader_GB100(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU8 *arg3);
+
+NV_STATUS kfifoInitRamfcFaultMethodBuffers_TU102(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, struct KernelChannel *pKernelChannel, NvU8 *arg4);
+
+void kfifoGetRamfcFaultMethodBufferAddrOffset_TU102(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 *pOffsetAddrLo, NvU32 *pOffsetAddrHi);
+
+void kfifoGetRamfcFaultMethodBufferAddrOffset_GH100(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 *pOffsetAddrLo, NvU32 *pOffsetAddrHi);
+
+void kfifoInitRamfcUserdWriteback_TU102(struct KernelFifo *pKernelFifo, NvU8 *arg2, NvBool arg3);
+
+void kfifoInitRamfcCEThrottleMode_TU102(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU8 *arg3);
+
+void kfifoInitCePrefetch_AD102(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, struct KernelChannel *pKernelChannel, NvU8 *pInstMem);
 
 // Inline HAL method definitions
 static inline NV_STATUS kfifoConstructHal_ac1694(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo){
@@ -2370,7 +2525,11 @@ static inline NV_STATUS kfifoWaitForRunlistPreempt_5baef9(struct OBJGPU *pGpu, s
     NV_ASSERT_OR_RETURN_PRECOMP(0, NV_ERR_NOT_SUPPORTED);
 }
 
-static inline NV_STATUS kfifoIssueRunlistPreemptHw_5baef9(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, THREAD_STATE_NODE *pThreadState){
+static inline NV_STATUS kfifoIssueRunlistPreemptHwCpu_5baef9(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, THREAD_STATE_NODE *pThreadState){
+    NV_ASSERT_OR_RETURN_PRECOMP(0, NV_ERR_NOT_SUPPORTED);
+}
+
+static inline NV_STATUS kfifoIssueRunlistPreempt_5baef9(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, THREAD_STATE_NODE *pThreadState){
     NV_ASSERT_OR_RETURN_PRECOMP(0, NV_ERR_NOT_SUPPORTED);
 }
 
@@ -2386,7 +2545,23 @@ static inline NV_STATUS kfifoWaitForTsgPreemptHwCpu_5baef9(struct OBJGPU *pGpu, 
     NV_ASSERT_OR_RETURN_PRECOMP(0, NV_ERR_NOT_SUPPORTED);
 }
 
-static inline NV_STATUS kfifoSetRunlistSchedulingCpu_5baef9(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, NvBool bEnable){
+static inline NV_STATUS kfifoSetRunlistSchedulingHwCpu_5baef9(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, NvBool bEnable){
+    NV_ASSERT_OR_RETURN_PRECOMP(0, NV_ERR_NOT_SUPPORTED);
+}
+
+static inline NV_STATUS kfifoGetRunlistSchedulingHwCpu_5baef9(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, NvBool *pEnable){
+    NV_ASSERT_OR_RETURN_PRECOMP(0, NV_ERR_NOT_SUPPORTED);
+}
+
+static inline NV_STATUS kfifoSetRunlistScheduling_5baef9(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, NvBool bEnable){
+    NV_ASSERT_OR_RETURN_PRECOMP(0, NV_ERR_NOT_SUPPORTED);
+}
+
+static inline NV_STATUS kfifoGetRunlistScheduling_5baef9(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 runlistId, NvBool *pEnable){
+    NV_ASSERT_OR_RETURN_PRECOMP(0, NV_ERR_NOT_SUPPORTED);
+}
+
+static inline NV_STATUS kfifoIsolateForRc_5baef9(struct OBJGPU *arg1, struct KernelFifo *arg_this, struct KernelChannel *arg3){
     NV_ASSERT_OR_RETURN_PRECOMP(0, NV_ERR_NOT_SUPPORTED);
 }
 
@@ -2446,11 +2621,11 @@ static inline const char * kfifoGetFaultAccessTypeString_741da0(struct OBJGPU *p
     NV_ASSERT_OR_RETURN_PRECOMP(0, "UNKNOWN_ACCESS_TYPE");
 }
 
-static inline void kfifoChannelDisableInHWCpu_d44104(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, struct KernelChannel *pKernelChannel){
+static inline void kfifoChannelDisableInHwCpu_d44104(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, FIFO_CHANNEL_INFO arg3){
     return;
 }
 
-static inline void kfifoChannelEnableInHWCpu_d44104(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, struct KernelChannel *pKernelChannel){
+static inline void kfifoChannelEnableInHwCpu_d44104(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, FIFO_CHANNEL_INFO arg3){
     return;
 }
 
@@ -2466,11 +2641,39 @@ static inline NvU32 kfifoReadChramHwCpu_86b752(struct OBJGPU *pGpu, struct Kerne
     NV_ASSERT_OR_RETURN_PRECOMP(0, NV_FALSE);
 }
 
-static inline NV_STATUS kfifoClearChramHwCpu_5baef9(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, struct KernelChannel *pKernelChannel, NvBool bClearPbdmaFaulted, NvBool bClearEngFaulted){
+static inline NV_STATUS kfifoClearChramHwCpu_5baef9(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, FIFO_CHANNEL_INFO arg3, NvBool bClearPbdmaFaulted, NvBool bClearEngFaulted){
     NV_ASSERT_OR_RETURN_PRECOMP(0, NV_ERR_NOT_SUPPORTED);
 }
 
 static inline void kfifoWriteRamfcGpfifo_d44104(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU8 *pInstMem, NvU64 gpFifoOffset, NvU32 gpFifoEntries){
+    return;
+}
+
+static inline void kfifoInitRamfcSignature_f2d351(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU8 *pInstMem){
+    NV_ASSERT_PRECOMP(0);
+}
+
+static inline void kfifoInitRamfcPbHeader_d44104(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU8 *arg3){
+    return;
+}
+
+static inline NV_STATUS kfifoInitRamfcFaultMethodBuffers_ac1694(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, struct KernelChannel *pKernelChannel, NvU8 *arg4){
+    return NV_OK;
+}
+
+static inline void kfifoGetRamfcFaultMethodBufferAddrOffset_d44104(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU32 *pOffsetAddrLo, NvU32 *pOffsetAddrHi){
+    return;
+}
+
+static inline void kfifoInitRamfcUserdWriteback_d44104(struct KernelFifo *pKernelFifo, NvU8 *arg2, NvBool arg3){
+    return;
+}
+
+static inline void kfifoInitRamfcCEThrottleMode_d44104(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, NvU8 *arg3){
+    return;
+}
+
+static inline void kfifoInitCePrefetch_d44104(struct OBJGPU *pGpu, struct KernelFifo *pKernelFifo, struct KernelChannel *pKernelChannel, NvU8 *pInstMem){
     return;
 }
 

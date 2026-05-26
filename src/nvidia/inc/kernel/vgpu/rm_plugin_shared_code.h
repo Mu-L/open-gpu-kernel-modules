@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2015-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2015-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -421,35 +421,6 @@ return_t deserialize_NVA06F_CTRL_INTERLEAVE_LEVEL_PARAMS_v17_02(NVA06F_CTRL_INTE
 }
 
 static
-return_t deserialize_NV2080_CTRL_GR_CTXSW_PREEMPTION_BIND_PARAMS_v12_01(NV2080_CTRL_GR_CTXSW_PREEMPTION_BIND_PARAMS *pParams,
-                                                                        NvU8 *buffer,
-                                                                        NvU32 bufferSize,
-                                                                        NvU32 *offset)
-{
-#ifdef COPY_INPUT_PARAMETERS
-     NV2080_CTRL_GR_CTXSW_PREEMPTION_BIND_PARAMS_v12_01 *src = (void*)(buffer);
-     NV2080_CTRL_GR_CTXSW_PREEMPTION_BIND_PARAMS       *dest = pParams;
-
-    if (src && dest) {
-        NvU32 i;
-
-        dest->flags           = src->flags;
-        dest->hClient         = src->hClient;
-        dest->hChannel        = src->hChannel;
-        for (i = 0; i < NV2080_CTRL_CMD_GR_CTXSW_PREEMPTION_BIND_BUFFERS_END_v03_00; ++i)
-            dest->vMemPtrs[i] = src->vMemPtrs[i];
-        dest->gfxpPreemptMode = src->gfxpPreemptMode;
-        dest->cilpPreemptMode = src->cilpPreemptMode;
-        dest->grRouteInfo.flags = src->grRouteInfo.flags;
-        dest->grRouteInfo.route = src->grRouteInfo.route;
-    }
-    else
-        return FAILURE_T;
-#endif
-    return SUCCESS_T;
-}
-
-static
 return_t deserialize_NV2080_CTRL_GR_CTXSW_PREEMPTION_BIND_PARAMS_v28_07(NV2080_CTRL_GR_CTXSW_PREEMPTION_BIND_PARAMS* pParams,
     NvU8* buffer,
     NvU32 bufferSize,
@@ -548,6 +519,27 @@ return_t deserialize_NV2080_CTRL_GPU_INITIALIZE_CTX_PARAMS_v03_00(NV2080_CTRL_GP
     }
     else
         return FAILURE_T;
+#endif
+    return SUCCESS_T;
+}
+
+static
+return_t deserialize_NV2080_CTRL_GPU_SET_MIGRATION_BLOCK_PARAMS_v2E_0B(NV2080_CTRL_GPU_SET_MIGRATION_BLOCK_PARAMS *pParams,
+                                                                        NvU8 *buffer,
+                                                                        NvU32 bufferSize,
+                                                                        NvU32 *offset)
+{
+#ifdef COPY_INPUT_PARAMETERS
+    NV2080_CTRL_GPU_SET_MIGRATION_BLOCK_PARAMS_v2E_0B *src = (void*)(buffer);
+    NV2080_CTRL_GPU_SET_MIGRATION_BLOCK_PARAMS        *dest = pParams;
+
+    if (src && dest) {
+        dest->bIsDevtoolInUse = src->bIsDevtoolInUse;
+    }
+    else
+    {
+        return FAILURE_T;
+    }
 #endif
     return SUCCESS_T;
 }
@@ -1046,83 +1038,6 @@ return_t deserialize_NV9096_CTRL_GET_ZBC_CLEAR_TABLE_ENTRY_PARAMS_v1A_07(NV9096_
 }
 
 static
-return_t deserialize_NV2080_CTRL_CMD_NVLINK_GET_NVLINK_STATUS_PARAMS_v23_04(NV2080_CTRL_CMD_NVLINK_GET_NVLINK_STATUS_PARAMS *pParams,
-                                                                            NvU8 *buffer,
-                                                                            NvU32 bufferSize,
-                                                                            NvU32 *offset)
-{
-    NV2080_CTRL_CMD_NVLINK_GET_NVLINK_STATUS_PARAMS_v23_04 *src  = (void*)(buffer);
-    NV2080_CTRL_CMD_NVLINK_GET_NVLINK_STATUS_PARAMS        *dest = pParams;
-
-    if (src && dest) {
-#ifdef COPY_OUTPUT_PARAMETERS
-        NvU32 i;
-
-        dest->enabledLinkMask = src->enabledLinkMask;
-
-        FOR_EACH_INDEX_IN_MASK(32, i, src->enabledLinkMask)
-        {
-            NV2080_CTRL_NVLINK_DEVICE_INFO        *deviceInfo_d = NULL;
-            NV2080_CTRL_NVLINK_DEVICE_INFO_v15_02 *deviceInfo_s = NULL;
-
-            if (i >= NV2080_CTRL_NVLINK_MAX_LINKS_v23_04)
-                break;
-
-            dest->linkInfo[i].capsTbl                   = src->linkInfo[i].capsTbl;
-            dest->linkInfo[i].phyType                   = src->linkInfo[i].phyType;
-            dest->linkInfo[i].subLinkWidth              = src->linkInfo[i].subLinkWidth;
-            dest->linkInfo[i].linkState                 = src->linkInfo[i].linkState;
-            dest->linkInfo[i].rxSublinkStatus           = src->linkInfo[i].rxSublinkStatus;
-            dest->linkInfo[i].txSublinkStatus           = src->linkInfo[i].txSublinkStatus;
-            dest->linkInfo[i].nvlinkVersion             = src->linkInfo[i].nvlinkVersion;
-            dest->linkInfo[i].nciVersion                = src->linkInfo[i].nciVersion;
-            dest->linkInfo[i].phyVersion                = src->linkInfo[i].phyVersion;
-            dest->linkInfo[i].nvlinkLinkClockKHz        = src->linkInfo[i].nvlinkLinkClockKHz;
-            dest->linkInfo[i].nvlinkLineRateMbps        = src->linkInfo[i].nvlinkLineRateMbps;
-            dest->linkInfo[i].connected                 = src->linkInfo[i].connected;
-            dest->linkInfo[i].remoteDeviceLinkNumber    = src->linkInfo[i].remoteDeviceLinkNumber;
-            dest->linkInfo[i].localDeviceLinkNumber     = src->linkInfo[i].localDeviceLinkNumber;
-
-            deviceInfo_d = &dest->linkInfo[i].remoteDeviceInfo;
-            deviceInfo_s = &src->linkInfo[i].remoteDeviceInfo;
-
-            deviceInfo_d->deviceIdFlags = deviceInfo_s->deviceIdFlags;
-            deviceInfo_d->domain        = deviceInfo_s->domain;
-            deviceInfo_d->bus           = deviceInfo_s->bus;
-            deviceInfo_d->device        = deviceInfo_s->device;
-            deviceInfo_d->function      = deviceInfo_s->function;
-            deviceInfo_d->pciDeviceId   = deviceInfo_s->pciDeviceId;
-            deviceInfo_d->deviceType    = deviceInfo_s->deviceType;
-            portMemCopy(deviceInfo_d->deviceUUID,
-                        sizeof(deviceInfo_d->deviceUUID),
-                        deviceInfo_s->deviceUUID,
-                        sizeof(deviceInfo_s->deviceUUID));
-
-            deviceInfo_d = &dest->linkInfo[i].localDeviceInfo;
-            deviceInfo_s = &src->linkInfo[i].localDeviceInfo;
-
-            deviceInfo_d->deviceIdFlags = deviceInfo_s->deviceIdFlags;
-            deviceInfo_d->domain        = deviceInfo_s->domain;
-            deviceInfo_d->bus           = deviceInfo_s->bus;
-            deviceInfo_d->device        = deviceInfo_s->device;
-            deviceInfo_d->function      = deviceInfo_s->function;
-            deviceInfo_d->pciDeviceId   = deviceInfo_s->pciDeviceId;
-            deviceInfo_d->deviceType    = deviceInfo_s->deviceType;
-            portMemCopy(deviceInfo_d->deviceUUID,
-                        sizeof(deviceInfo_d->deviceUUID),
-                        deviceInfo_s->deviceUUID,
-                        sizeof(deviceInfo_s->deviceUUID));
-        }
-        FOR_EACH_INDEX_IN_MASK_END;
-#endif
-    }
-    else
-        return FAILURE_T;
-
-    return SUCCESS_T;
-}
-
-static
 return_t deserialize_NV2080_CTRL_CMD_NVLINK_GET_NVLINK_STATUS_PARAMS_v28_09(NV2080_CTRL_CMD_NVLINK_GET_NVLINK_STATUS_PARAMS *pParams,
                                                                             NvU8 *buffer,
                                                                             NvU32 bufferSize,
@@ -1321,13 +1236,13 @@ return_t deserialize_NV2080_CTRL_CMD_NVLINK_GET_NVLINK_STATUS_PARAMS_v2D_01(NV20
         {
             NV2080_CTRL_NVLINK_DEVICE_INFO        *deviceInfo_d = NULL;
             NV2080_CTRL_NVLINK_DEVICE_INFO_v28_09 *deviceInfo_s = NULL;
-            
+
             if (i >= NV2080_CTRL_NVLINK_MAX_LINKS_v2D_01) {
-                NV_PRINTF(LEVEL_ERROR, "NVRM_RPC: Invalid link index - link: %u, max: %u\n", 
+                NV_PRINTF(LEVEL_ERROR, "NVRM_RPC: Invalid link index - link: %u, max: %u\n",
                           i, NV2080_CTRL_NVLINK_MAX_LINKS_v2D_01);
                  return FAILURE_T;
             }
-            
+
             // Copy from RPC buffer (relative) to output array (absolute)
             dest->linkInfo[i].capsTbl                   = src->linkInfo[rpcBufferIndex].capsTbl;
             dest->linkInfo[i].phyType                   = src->linkInfo[rpcBufferIndex].phyType;
@@ -1342,7 +1257,7 @@ return_t deserialize_NV2080_CTRL_CMD_NVLINK_GET_NVLINK_STATUS_PARAMS_v2D_01(NV20
             dest->linkInfo[i].nvlinkLineRateMbps        = src->linkInfo[rpcBufferIndex].nvlinkLineRateMbps;
             dest->linkInfo[i].connected                 = src->linkInfo[rpcBufferIndex].connected;
             dest->linkInfo[i].remoteDeviceLinkNumber    = src->linkInfo[rpcBufferIndex].remoteDeviceLinkNumber;
-            dest->linkInfo[i].localDeviceLinkNumber     = src->linkInfo[rpcBufferIndex].localDeviceLinkNumber;            
+            dest->linkInfo[i].localDeviceLinkNumber     = src->linkInfo[rpcBufferIndex].localDeviceLinkNumber;
 
             deviceInfo_d = &dest->linkInfo[i].remoteDeviceInfo;
             deviceInfo_s = &src->linkInfo[rpcBufferIndex].remoteDeviceInfo;
@@ -1386,7 +1301,6 @@ return_t deserialize_NV2080_CTRL_CMD_NVLINK_GET_NVLINK_STATUS_PARAMS_v2D_01(NV20
     return SUCCESS_T;
 }
 
-
 static
 return_t deserialize_NV0000_CTRL_SYSTEM_GET_P2P_CAPS_PARAMS_v1F_0D(NV0000_CTRL_SYSTEM_GET_P2P_CAPS_PARAMS *pParams,
                                                                    NvU8 *buffer,
@@ -1400,7 +1314,7 @@ return_t deserialize_NV0000_CTRL_SYSTEM_GET_P2P_CAPS_PARAMS_v1F_0D(NV0000_CTRL_S
 #ifdef COPY_INPUT_PARAMETERS
         if (portMemCopy(dest->gpuIds, sizeof(dest->gpuIds),
                         src->gpuIds, (sizeof(NvU32) * NV0000_CTRL_SYSTEM_MAX_ATTACHED_GPUS)) == NULL) {
-                NV_PRINTF(LEVEL_ERROR,                                                                  
+                NV_PRINTF(LEVEL_ERROR,
                           "Error in copying GPU Id's source size is %lu and destination size is %lu \n",
                           (sizeof(NvU32) * NV0000_CTRL_SYSTEM_MAX_ATTACHED_GPUS), sizeof(dest->gpuIds));
             return FAILURE_T;
@@ -1657,35 +1571,6 @@ return_t deserialize_NVB0CC_CTRL_ALLOC_PMA_STREAM_PARAMS_v1A_14(NVB0CC_CTRL_ALLO
 #ifdef COPY_OUTPUT_PARAMETERS
         dest->pmaChannelIdx             = src->pmaChannelIdx;
         dest->pmaBufferVA               = src->pmaBufferVA;
-#endif
-    }
-    else
-        return FAILURE_T;
-
-    return SUCCESS_T;
-}
-
-static
-return_t deserialize_NVB0CC_CTRL_PMA_STREAM_UPDATE_GET_PUT_PARAMS_v1A_14(NVB0CC_CTRL_PMA_STREAM_UPDATE_GET_PUT_PARAMS *pParams,
-                                                                         NvU8 *buffer,
-                                                                         NvU32 bufferSize,
-                                                                         NvU32 *offset)
-{
-    NVB0CC_CTRL_PMA_STREAM_UPDATE_GET_PUT_PARAMS_v1A_14 *src = (void*)(buffer);
-    NVB0CC_CTRL_PMA_STREAM_UPDATE_GET_PUT_PARAMS        *dest = pParams;
-
-    if (src && dest)
-    {
-#ifdef COPY_INPUT_PARAMETERS
-        dest->bytesConsumed         = src->bytesConsumed;
-        dest->bUpdateAvailableBytes = src->bUpdateAvailableBytes;
-        dest->bWait                 = src->bWait;
-        dest->bReturnPut            = src->bReturnPut;
-        dest->pmaChannelIdx         = src->pmaChannelIdx;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-        dest->bytesAvailable        = src->bytesAvailable;
-        dest->putPtr                = src->putPtr;
 #endif
     }
     else
@@ -2087,171 +1972,6 @@ return_t deserialize_NV2080_CTRL_GRMGR_GET_GR_FS_INFO_PARAMS_v2B_09(NV2080_CTRL_
 #endif
 #ifdef COPY_OUTPUT_PARAMETERS
                     dest->queries[idx].queryData.gfxGpcMaskData.gpcEnMask = src->queries[idx].queryData.gfxGpcMaskData.gpcEnMask;
-#endif
-                    break;
-                }
-                default:
-                {
-                    // Unknown query
-                    return FAILURE_T;
-                }
-            }
-        }
-    }
-    else
-        return FAILURE_T;
-
-    return SUCCESS_T;
-}
-
-static
-return_t deserialize_NV2080_CTRL_FB_GET_FS_INFO_PARAMS_v24_00(NV2080_CTRL_FB_GET_FS_INFO_PARAMS *pParams,
-                                                                    NvU8 *buffer,
-                                                                    NvU32 bufferSize,
-                                                                    NvU32 *offset)
-{
-    NV2080_CTRL_FB_GET_FS_INFO_PARAMS_v24_00 *src  = (void*)(buffer);
-    NV2080_CTRL_FB_GET_FS_INFO_PARAMS        *dest = pParams;
-    NvU32 idx = 0;
-
-    if (src && dest)
-    {
-        if (src->numQueries > NV2080_CTRL_FB_FS_INFO_MAX_QUERIES_v24_00) {
-            return FAILURE_T;
-        }
-
-#ifdef COPY_INPUT_PARAMETERS
-        dest->numQueries        = src->numQueries;
-#endif
-        for (idx = 0; idx < dest->numQueries; idx++) {
-#ifdef COPY_INPUT_PARAMETERS
-            dest->queries[idx].queryType = src->queries[idx].queryType;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-            dest->queries[idx].status = src->queries[idx].status;
-#endif
-            switch(dest->queries[idx].queryType)
-            {
-                case NV2080_CTRL_FB_FS_INFO_INVALID_QUERY: {
-#ifdef COPY_OUTPUT_PARAMETERS
-                    NvU32 i = 0;
-                    for (i = 0; i < NV2080_CTRL_FB_FS_INFO_MAX_QUERY_SIZE_v1A_1D; i++) {
-                        dest->queries[idx].queryParams.inv.data[i] = src->queries[idx].queryParams.inv.data[i];
-                    }
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_FBP_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.fbp.swizzId = src->queries[idx].queryParams.fbp.swizzId;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.fbp.fbpEnMask = src->queries[idx].queryParams.fbp.fbpEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_LTC_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.ltc.fbpIndex = src->queries[idx].queryParams.ltc.fbpIndex;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.ltc.ltcEnMask = src->queries[idx].queryParams.ltc.ltcEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_LTS_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.lts.fbpIndex = src->queries[idx].queryParams.lts.fbpIndex;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.lts.ltsEnMask = src->queries[idx].queryParams.lts.ltsEnMask;
-#endif
-
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_FBPA_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.fbpa.fbpIndex = src->queries[idx].queryParams.fbpa.fbpIndex;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.fbpa.fbpaEnMask = src->queries[idx].queryParams.fbpa.fbpaEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_ROP_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.rop.fbpIndex = src->queries[idx].queryParams.rop.fbpIndex;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.rop.ropEnMask = src->queries[idx].queryParams.rop.ropEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_PROFILER_MON_LTC_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmLtc.fbpIndex = src->queries[idx].queryParams.dmLtc.fbpIndex;
-                    dest->queries[idx].queryParams.dmLtc.swizzId = src->queries[idx].queryParams.dmLtc.swizzId;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmLtc.ltcEnMask = src->queries[idx].queryParams.dmLtc.ltcEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_PROFILER_MON_LTS_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmLts.fbpIndex = src->queries[idx].queryParams.dmLts.fbpIndex;
-                    dest->queries[idx].queryParams.dmLts.swizzId = src->queries[idx].queryParams.dmLts.swizzId;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmLts.ltsEnMask = src->queries[idx].queryParams.dmLts.ltsEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_PROFILER_MON_FBPA_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmFbpa.fbpIndex = src->queries[idx].queryParams.dmFbpa.fbpIndex;
-                    dest->queries[idx].queryParams.dmFbpa.swizzId = src->queries[idx].queryParams.dmFbpa.swizzId;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmFbpa.fbpaEnMask = src->queries[idx].queryParams.dmFbpa.fbpaEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_PROFILER_MON_ROP_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmRop.fbpIndex = src->queries[idx].queryParams.dmRop.fbpIndex;
-                    dest->queries[idx].queryParams.dmRop.swizzId = src->queries[idx].queryParams.dmRop.swizzId;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmRop.ropEnMask = src->queries[idx].queryParams.dmRop.ropEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_PROFILER_MON_FBPA_SUBP_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmFbpaSubp.fbpIndex = src->queries[idx].queryParams.dmFbpaSubp.fbpIndex;
-                    dest->queries[idx].queryParams.dmFbpaSubp.swizzId = src->queries[idx].queryParams.dmFbpaSubp.swizzId;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmFbpaSubp.fbpaSubpEnMask = src->queries[idx].queryParams.dmFbpaSubp.fbpaSubpEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_FBPA_SUBP_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.fbpaSubp.fbpIndex = src->queries[idx].queryParams.fbpaSubp.fbpIndex;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.fbpaSubp.fbpaSubpEnMask = src->queries[idx].queryParams.fbpaSubp.fbpaSubpEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_FBP_LOGICAL_MAP: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.fbpLogicalMap.fbpIndex = src->queries[idx].queryParams.fbpLogicalMap.fbpIndex;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.fbpLogicalMap.fbpLogicalIndex = src->queries[idx].queryParams.fbpLogicalMap.fbpLogicalIndex;
 #endif
                     break;
                 }
@@ -3037,11 +2757,11 @@ return_t deserialize_NV2080_CTRL_PERF_GET_LEVEL_INFO_V2_PARAMS_v2B_0D(
         dest->flags = src->flags;
 #endif
         for (i = 0; i < src->perfGetClkInfoListSize ; i++)
-        { 
+        {
 #ifdef COPY_INPUT_PARAMETERS
             dest->perfGetClkInfoList[i].domain      = src->perfGetClkInfoList[i].domain;
             dest->perfGetClkInfoList[i].flags       = src->perfGetClkInfoList[i].flags;
-#endif            
+#endif
 
 #ifdef COPY_OUTPUT_PARAMETERS
             dest->perfGetClkInfoList[i].currentFreq = src->perfGetClkInfoList[i].currentFreq;
@@ -3053,7 +2773,7 @@ return_t deserialize_NV2080_CTRL_PERF_GET_LEVEL_INFO_V2_PARAMS_v2B_0D(
     }
     else
         return FAILURE_T;
-    
+
     return SUCCESS_T;
 }
 #endif
@@ -3071,7 +2791,29 @@ return_t deserialize_NV0080_CTRL_INTERNAL_MEMSYS_SET_ZBC_REFERENCED_PARAMS_v2B_0
 
     if (src && dest)
     {
-        dest->subdevInstance = src->subdevInstance;
+        dest->bZbcSurfacesExist = src->bZbcSurfacesExist;
+    }
+    else
+        return FAILURE_T;
+#endif
+
+    return SUCCESS_T;
+}
+#endif
+
+#ifdef BUILD_COMMON_RPCS
+return_t deserialize_NV0080_CTRL_INTERNAL_MEMSYS_SET_ZBC_REFERENCED_PARAMS_v2E_08(
+                                                                    NV0080_CTRL_INTERNAL_MEMSYS_SET_ZBC_REFERENCED_PARAMS *pParams,
+                                                                    NvU8 *buffer,
+                                                                    NvU32 bufferSize,
+                                                                    NvU32 *offset)
+{
+#ifdef COPY_INPUT_PARAMETERS
+    NV0080_CTRL_CMD_INTERNAL_MEMSYS_SET_ZBC_REFERENCED_v2E_08 *src  = (void*)(buffer);
+    NV0080_CTRL_INTERNAL_MEMSYS_SET_ZBC_REFERENCED_PARAMS     *dest = pParams;
+
+    if (src && dest)
+    {
         dest->bZbcSurfacesExist = src->bZbcSurfacesExist;
     }
     else
@@ -3263,6 +3005,55 @@ return_t deserialize_NVC637_CTRL_CMD_EXEC_PARTITIONS_CREATE_v24_05(NVC637_CTRL_E
     return SUCCESS_T;
 }
 
+return_t deserialize_NVC637_CTRL_CMD_EXEC_PARTITIONS_CREATE_v2E_01(NVC637_CTRL_EXEC_PARTITIONS_CREATE_PARAMS *pParams,
+                                                                   NvU8 *buffer,
+                                                                   NvU32 bufferSize,
+                                                                   NvU32 *offset)
+{
+    NVC637_CTRL_EXEC_PARTITIONS_CREATE_PARAMS_v2E_01  *src = (void *) buffer;
+    NVC637_CTRL_EXEC_PARTITIONS_CREATE_PARAMS         *dest  = pParams;
+    NvU32 i;
+
+
+    if (src && dest)
+    {
+        if (src->execPartCount > NVC637_CTRL_MAX_EXEC_PARTITIONS_v18_05) {
+            return FAILURE_T;
+        }
+#ifdef COPY_INPUT_PARAMETERS
+        dest->bQuery = src->bQuery;
+        dest->execPartCount = src->execPartCount;
+
+        for (i = 0; i < dest->execPartCount; i++) {
+            dest->execPartInfo[i].gpcCount      = src->execPartInfo[i].gpcCount;
+            dest->execPartInfo[i].gfxGpcCount   = src->execPartInfo[i].gfxGpcCount;
+            dest->execPartInfo[i].veidCount     = src->execPartInfo[i].veidCount;
+            dest->execPartInfo[i].ceCount       = src->execPartInfo[i].ceCount;
+            dest->execPartInfo[i].nvEncCount    = src->execPartInfo[i].nvEncCount;
+            dest->execPartInfo[i].nvDecCount    = src->execPartInfo[i].nvDecCount;
+            dest->execPartInfo[i].nvJpgCount    = src->execPartInfo[i].nvJpgCount;
+            dest->execPartInfo[i].ofaCount      = src->execPartInfo[i].ofaCount;
+            dest->execPartInfo[i].sharedEngFlag = src->execPartInfo[i].sharedEngFlag;
+            dest->execPartInfo[i].smCount       = src->execPartInfo[i].smCount;
+            dest->execPartInfo[i].spanStart     = src->execPartInfo[i].spanStart;
+            dest->execPartInfo[i].computeSize   = src->execPartInfo[i].computeSize;
+            dest->execPartInfo[i].execPartFlags = src->execPartInfo[i].execPartFlags;
+        }
+#endif
+
+#ifdef COPY_OUTPUT_PARAMETERS
+        for (i = 0; i < src->execPartCount; i++) {
+            dest->execPartId[i] = src->execPartId[i];
+            dest->execPartInfo[i].computeSize = src->execPartInfo[i].computeSize;
+        }
+#endif
+    }
+    else
+        return FAILURE_T;
+
+    return SUCCESS_T;
+}
+
 return_t deserialize_NVC637_CTRL_CMD_EXEC_PARTITIONS_DELETE_v1F_0A(NVC637_CTRL_EXEC_PARTITIONS_DELETE_PARAMS *pParams,
                                                                    NvU8 *buffer,
                                                                    NvU32 bufferSize,
@@ -3320,6 +3111,42 @@ return_t deserialize_NVC637_CTRL_CMD_EXEC_PARTITIONS_EXPORT_v29_0C(NVC637_CTRL_E
         dest->info.spanStart = src->info.spanStart;
         dest->info.computeSize = src->info.computeSize;
 
+#endif
+    }
+    else
+        return FAILURE_T;
+
+    return SUCCESS_T;
+}
+
+return_t deserialize_NVC637_CTRL_CMD_EXEC_PARTITIONS_EXPORT_v2E_01(NVC637_CTRL_EXEC_PARTITIONS_IMPORT_EXPORT_PARAMS *pParams,
+                                                                   NvU8 *buffer,
+                                                                   NvU32 bufferSize,
+                                                                   NvU32 *offset)
+{
+    NVC637_CTRL_EXEC_PARTITIONS_IMPORT_EXPORT_PARAMS_v2E_01 *src = (void *) buffer;
+    NVC637_CTRL_EXEC_PARTITIONS_IMPORT_EXPORT_PARAMS        *dest  = pParams;
+
+    if (src && dest)
+    {
+#ifdef COPY_INPUT_PARAMETERS
+        dest->id = src->id;
+        dest->bCreateCap = src->bCreateCap;
+#endif
+
+#ifdef COPY_OUTPUT_PARAMETERS
+        for (int i = 0; i < NVC637_CTRL_EXEC_PARTITIONS_EXPORT_MAX_ENGINES_MASK_SIZE; i++) {
+            dest->info.enginesMask[i] = src->info.enginesMask[i];
+        }
+        dest->info.sharedEngFlags = src->info.sharedEngFlags;
+        dest->info.gpcMask = src->info.gpcMask;
+        dest->info.gfxGpcCount = src->info.gfxGpcCount;
+        dest->info.veidOffset = src->info.veidOffset;
+        dest->info.veidCount = src->info.veidCount;
+        dest->info.smCount = src->info.smCount;
+        dest->info.spanStart = src->info.spanStart;
+        dest->info.computeSize = src->info.computeSize;
+        dest->info.execPartFlags = src->info.execPartFlags;
 #endif
     }
     else
@@ -3392,33 +3219,6 @@ return_t deserialize_NVC36F_CTRL_CMD_GPFIFO_SET_WORK_SUBMIT_TOKEN_NOTIF_INDEX_v1
     else
         return FAILURE_T;
 
-    return SUCCESS_T;
-}
-
-return_t deserialize_NV2080_CTRL_BUS_SET_P2P_MAPPING_PARAMS_v21_03(NV2080_CTRL_BUS_SET_P2P_MAPPING_PARAMS *pParams,
-                                                                   NvU8 *buffer,
-                                                                   NvU32 bufferSize,
-                                                                   NvU32 *offset)
-{
-#ifdef COPY_INPUT_PARAMETERS
-    NV2080_CTRL_BUS_SET_P2P_MAPPING_PARAMS_v21_03 *src  = (void*)(buffer);
-    NV2080_CTRL_BUS_SET_P2P_MAPPING_PARAMS        *dest = pParams;
-
-    if (src && dest)
-    {
-        dest->connectionType    = src->connectionType;
-        dest->peerId            = src->peerId;
-        dest->bSpaAccessOnly    = (NvBool)src->bSpaAccessOnly;
-        dest->bUseUuid          = src->bUseUuid;
-
-        portMemCopy(dest->remoteGpuUuid,
-                    VM_UUID_SIZE_v21_02,
-                    src->remoteGpuUuid,
-                    VM_UUID_SIZE_v21_02);
-    }
-    else
-        return FAILURE_T;
-#endif
     return SUCCESS_T;
 }
 
@@ -3648,6 +3448,37 @@ return_t deserialize_NV2080_CTRL_GPU_GET_INFO_V2_PARAMS_v2B_13(NV2080_CTRL_GPU_G
 #endif
 
         for (i = 0; i < NV2080_CTRL_GPU_INFO_MAX_LIST_SIZE_v2B_13; i++) {
+#ifdef COPY_INPUT_PARAMETERS
+             dest->gpuInfoList[i].index = src->gpuInfoList[i].index;
+#endif
+             dest->gpuInfoList[i].data  = src->gpuInfoList[i].data;
+        }
+    }
+    else
+        return FAILURE_T;
+    return SUCCESS_T;
+}
+
+return_t deserialize_NV2080_CTRL_GPU_GET_INFO_V2_PARAMS_v2E_0C(NV2080_CTRL_GPU_GET_INFO_V2_PARAMS *pParams,
+                                                               NvU8 *buffer,
+                                                               NvU32 bufferSize,
+                                                               NvU32 *offset)
+{
+    NV2080_CTRL_GPU_GET_INFO_V2_PARAMS_v2E_0C *src  = (void*)(buffer);
+    NV2080_CTRL_GPU_GET_INFO_V2_PARAMS        *dest = pParams;
+
+    if (src && dest)
+    {
+        NvU32 i;
+        if (src->gpuInfoListSize > NV2080_CTRL_GPU_INFO_MAX_LIST_SIZE_v2E_0C) {
+            return FAILURE_T;
+        }
+
+#ifdef COPY_INPUT_PARAMETERS
+        dest->gpuInfoListSize = src->gpuInfoListSize;
+#endif
+
+        for (i = 0; i < NV2080_CTRL_GPU_INFO_MAX_LIST_SIZE_v2E_0C; i++) {
 #ifdef COPY_INPUT_PARAMETERS
              dest->gpuInfoList[i].index = src->gpuInfoList[i].index;
 #endif
@@ -4220,35 +4051,6 @@ return_t serialize_NVA06F_CTRL_INTERLEAVE_LEVEL_PARAMS_v17_02(NVA06F_CTRL_INTERL
 }
 
 static
-return_t serialize_NV2080_CTRL_GR_CTXSW_PREEMPTION_BIND_PARAMS_v12_01(NV2080_CTRL_GR_CTXSW_PREEMPTION_BIND_PARAMS *pParams,
-                                                                      NvU8 *buffer,
-                                                                      NvU32 bufferSize,
-                                                                      NvU32 *offset)
-{
-#ifdef COPY_INPUT_PARAMETERS
-     NV2080_CTRL_GR_CTXSW_PREEMPTION_BIND_PARAMS         *src = pParams;
-     NV2080_CTRL_GR_CTXSW_PREEMPTION_BIND_PARAMS_v12_01 *dest = (void*)(buffer);
-
-    if (src && dest) {
-        NvU32 i;
-
-        dest->flags           = src->flags;
-        dest->hClient         = src->hClient;
-        dest->hChannel        = src->hChannel;
-        for (i = 0; i < NV2080_CTRL_CMD_GR_CTXSW_PREEMPTION_BIND_BUFFERS_END_v03_00; ++i)
-            dest->vMemPtrs[i] = src->vMemPtrs[i];
-        dest->gfxpPreemptMode = src->gfxpPreemptMode;
-        dest->cilpPreemptMode = src->cilpPreemptMode;
-        dest->grRouteInfo.flags = src->grRouteInfo.flags;
-        dest->grRouteInfo.route = src->grRouteInfo.route;
-    }
-    else
-        return FAILURE_T;
-#endif
-    return SUCCESS_T;
-}
-
-static
 return_t serialize_NV2080_CTRL_GR_CTXSW_PREEMPTION_BIND_PARAMS_v28_07(NV2080_CTRL_GR_CTXSW_PREEMPTION_BIND_PARAMS* pParams,
     NvU8* buffer,
     NvU32 bufferSize,
@@ -4347,6 +4149,27 @@ return_t serialize_NV2080_CTRL_GPU_INITIALIZE_CTX_PARAMS_v03_00(NV2080_CTRL_GPU_
     }
     else
         return FAILURE_T;
+#endif
+    return SUCCESS_T;
+}
+
+static
+return_t serialize_NV2080_CTRL_GPU_SET_MIGRATION_BLOCK_PARAMS_v2E_0B(NV2080_CTRL_GPU_SET_MIGRATION_BLOCK_PARAMS *pParams,
+                                                                      NvU8 *buffer,
+                                                                      NvU32 bufferSize,
+                                                                      NvU32 *offset)
+{
+#ifdef COPY_INPUT_PARAMETERS
+    NV2080_CTRL_GPU_SET_MIGRATION_BLOCK_PARAMS         *src = pParams;
+    NV2080_CTRL_GPU_SET_MIGRATION_BLOCK_PARAMS_v2E_0B *dest = (void*)(buffer);
+
+    if (src && dest) {
+        dest->bIsDevtoolInUse = src->bIsDevtoolInUse;
+    }
+    else
+    {
+        return FAILURE_T;
+    }
 #endif
     return SUCCESS_T;
 }
@@ -4840,83 +4663,6 @@ return_t serialize_NV9096_CTRL_GET_ZBC_CLEAR_TABLE_ENTRY_PARAMS_v1A_07(NV9096_CT
 }
 
 static
-return_t serialize_NV2080_CTRL_CMD_NVLINK_GET_NVLINK_STATUS_PARAMS_v23_04(NV2080_CTRL_CMD_NVLINK_GET_NVLINK_STATUS_PARAMS *pParams,
-                                                                          NvU8 *buffer,
-                                                                          NvU32 bufferSize,
-                                                                          NvU32 *offset)
-{
-    NV2080_CTRL_CMD_NVLINK_GET_NVLINK_STATUS_PARAMS        *src  = pParams;
-    NV2080_CTRL_CMD_NVLINK_GET_NVLINK_STATUS_PARAMS_v23_04 *dest = (void*)(buffer);
-
-    if (src && dest) {
-#ifdef COPY_OUTPUT_PARAMETERS
-        NvU32 i;
-
-        dest->enabledLinkMask = src->enabledLinkMask;
-
-        FOR_EACH_INDEX_IN_MASK(32, i, src->enabledLinkMask)
-        {
-            NV2080_CTRL_NVLINK_DEVICE_INFO        *deviceInfo_s = NULL;
-            NV2080_CTRL_NVLINK_DEVICE_INFO_v15_02 *deviceInfo_d = NULL;
-
-            if (i >= NV2080_CTRL_NVLINK_MAX_LINKS_v23_04)
-                break;
-
-            dest->linkInfo[i].capsTbl                   = src->linkInfo[i].capsTbl;
-            dest->linkInfo[i].phyType                   = src->linkInfo[i].phyType;
-            dest->linkInfo[i].subLinkWidth              = src->linkInfo[i].subLinkWidth;
-            dest->linkInfo[i].linkState                 = src->linkInfo[i].linkState;
-            dest->linkInfo[i].rxSublinkStatus           = src->linkInfo[i].rxSublinkStatus;
-            dest->linkInfo[i].txSublinkStatus           = src->linkInfo[i].txSublinkStatus;
-            dest->linkInfo[i].nvlinkVersion             = src->linkInfo[i].nvlinkVersion;
-            dest->linkInfo[i].nciVersion                = src->linkInfo[i].nciVersion;
-            dest->linkInfo[i].phyVersion                = src->linkInfo[i].phyVersion;
-            dest->linkInfo[i].nvlinkLinkClockKHz        = src->linkInfo[i].nvlinkLinkClockKHz;
-            dest->linkInfo[i].nvlinkLineRateMbps        = src->linkInfo[i].nvlinkLineRateMbps;
-            dest->linkInfo[i].connected                 = src->linkInfo[i].connected;
-            dest->linkInfo[i].remoteDeviceLinkNumber    = src->linkInfo[i].remoteDeviceLinkNumber;
-            dest->linkInfo[i].localDeviceLinkNumber     = src->linkInfo[i].localDeviceLinkNumber;
-
-            deviceInfo_d = &dest->linkInfo[i].localDeviceInfo;
-            deviceInfo_s = &src->linkInfo[i].localDeviceInfo;
-
-            deviceInfo_d->deviceIdFlags = deviceInfo_s->deviceIdFlags;
-            deviceInfo_d->domain        = deviceInfo_s->domain;
-            deviceInfo_d->bus           = deviceInfo_s->bus;
-            deviceInfo_d->device        = deviceInfo_s->device;
-            deviceInfo_d->function      = deviceInfo_s->function;
-            deviceInfo_d->pciDeviceId   = deviceInfo_s->pciDeviceId;
-            deviceInfo_d->deviceType    = deviceInfo_s->deviceType;
-            portMemCopy(deviceInfo_d->deviceUUID,
-                        sizeof(deviceInfo_d->deviceUUID),
-                        deviceInfo_s->deviceUUID,
-                        sizeof(deviceInfo_s->deviceUUID));
-
-            deviceInfo_d = &dest->linkInfo[i].remoteDeviceInfo;
-            deviceInfo_s = &src->linkInfo[i].remoteDeviceInfo;
-
-            deviceInfo_d->deviceIdFlags = deviceInfo_s->deviceIdFlags;
-            deviceInfo_d->domain        = deviceInfo_s->domain;
-            deviceInfo_d->bus           = deviceInfo_s->bus;
-            deviceInfo_d->device        = deviceInfo_s->device;
-            deviceInfo_d->function      = deviceInfo_s->function;
-            deviceInfo_d->pciDeviceId   = deviceInfo_s->pciDeviceId;
-            deviceInfo_d->deviceType    = deviceInfo_s->deviceType;
-            portMemCopy(deviceInfo_d->deviceUUID,
-                        sizeof(deviceInfo_d->deviceUUID),
-                        deviceInfo_s->deviceUUID,
-                        sizeof(deviceInfo_s->deviceUUID));
-        }
-        FOR_EACH_INDEX_IN_MASK_END;
-#endif
-    }
-    else
-        return FAILURE_T;
-
-    return SUCCESS_T;
-}
-
-static
 return_t serialize_NV2080_CTRL_CMD_NVLINK_GET_NVLINK_STATUS_PARAMS_v28_09(NV2080_CTRL_CMD_NVLINK_GET_NVLINK_STATUS_PARAMS *pParams,
                                                                           NvU8 *buffer,
                                                                           NvU32 bufferSize,
@@ -5113,7 +4859,7 @@ return_t serialize_NV2080_CTRL_CMD_NVLINK_GET_NVLINK_STATUS_PARAMS_v2D_01(NV2080
 
             if (i >= NV2080_CTRL_NVLINK_MAX_LINKS_v2D_01)
                 break;
-            
+
             // Copy from source array (absolute) to RPC buffer (relative)
             dest->linkInfo[rpcBufferIndex].capsTbl                   = src->linkInfo[i].capsTbl;
             dest->linkInfo[rpcBufferIndex].phyType                   = src->linkInfo[i].phyType;
@@ -5193,7 +4939,7 @@ return_t serialize_NV0000_CTRL_SYSTEM_GET_P2P_CAPS_PARAMS_v1F_0D(NV0000_CTRL_SYS
             dest->p2pOptimalWriteCEs    = src->p2pOptimalWriteCEs;
             if (portMemCopy(dest->p2pCapsStatus, sizeof(dest->p2pCapsStatus),
                             src->p2pCapsStatus, NV0000_CTRL_P2P_CAPS_INDEX_TABLE_SIZE_v1F_0D) == NULL) {
-                    NV_PRINTF(LEVEL_ERROR,                                                                  
+                    NV_PRINTF(LEVEL_ERROR,
                                "Error in copying P2P capability status. source size is %u and destination size is %u \n",
                                NV0000_CTRL_P2P_CAPS_INDEX_TABLE_SIZE_v1F_0D, sizeof(dest->p2pCapsStatus));
                 return FAILURE_T;
@@ -5442,35 +5188,6 @@ return_t serialize_NVB0CC_CTRL_ALLOC_PMA_STREAM_PARAMS_v1A_14(NVB0CC_CTRL_ALLOC_
 #ifdef COPY_OUTPUT_PARAMETERS
         dest->pmaChannelIdx             = src->pmaChannelIdx;
         dest->pmaBufferVA               = src->pmaBufferVA;
-#endif
-    }
-    else
-        return FAILURE_T;
-
-    return SUCCESS_T;
-}
-
-static
-return_t serialize_NVB0CC_CTRL_PMA_STREAM_UPDATE_GET_PUT_PARAMS_v1A_14(NVB0CC_CTRL_PMA_STREAM_UPDATE_GET_PUT_PARAMS *pParams,
-                                                                       NvU8 *buffer,
-                                                                       NvU32 bufferSize,
-                                                                       NvU32 *offset)
-{
-    NVB0CC_CTRL_PMA_STREAM_UPDATE_GET_PUT_PARAMS_v1A_14 *dest = (void*)(buffer);
-    NVB0CC_CTRL_PMA_STREAM_UPDATE_GET_PUT_PARAMS        *src  = pParams;
-
-    if (src && dest)
-    {
-#ifdef COPY_INPUT_PARAMETERS
-        dest->bytesConsumed         = src->bytesConsumed;
-        dest->bUpdateAvailableBytes = src->bUpdateAvailableBytes;
-        dest->bWait                 = src->bWait;
-        dest->bReturnPut            = src->bReturnPut;
-        dest->pmaChannelIdx         = src->pmaChannelIdx;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-        dest->bytesAvailable        = src->bytesAvailable;
-        dest->putPtr                = src->putPtr;
 #endif
     }
     else
@@ -5871,171 +5588,6 @@ return_t serialize_NV2080_CTRL_GRMGR_GET_GR_FS_INFO_PARAMS_v2B_09(NV2080_CTRL_GR
 #endif
 #ifdef COPY_OUTPUT_PARAMETERS
                     dest->queries[idx].queryData.gfxGpcMaskData.gpcEnMask = src->queries[idx].queryData.gfxGpcMaskData.gpcEnMask;
-#endif
-                    break;
-                }
-                default:
-                {
-                    // Unknown query
-                    return FAILURE_T;
-                }
-            }
-        }
-    }
-    else
-        return FAILURE_T;
-
-    return SUCCESS_T;
-}
-
-static
-return_t serialize_NV2080_CTRL_FB_GET_FS_INFO_PARAMS_v24_00(NV2080_CTRL_FB_GET_FS_INFO_PARAMS *pParams,
-                                                                    NvU8 *buffer,
-                                                                    NvU32 bufferSize,
-                                                                    NvU32 *offset)
-{
-    NV2080_CTRL_FB_GET_FS_INFO_PARAMS_v24_00 *dest  = (void*)(buffer);
-    NV2080_CTRL_FB_GET_FS_INFO_PARAMS        *src = pParams;
-    NvU32 idx = 0;
-
-    if (src && dest)
-    {
-        if (src->numQueries > NV2080_CTRL_FB_FS_INFO_MAX_QUERIES_v24_00) {
-            return FAILURE_T;
-        }
-
-#ifdef COPY_INPUT_PARAMETERS
-        dest->numQueries        = src->numQueries;
-#endif
-        for (idx = 0; idx < dest->numQueries; idx++) {
-#ifdef COPY_INPUT_PARAMETERS
-            dest->queries[idx].queryType = src->queries[idx].queryType;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-            dest->queries[idx].status = src->queries[idx].status;
-#endif
-            switch(dest->queries[idx].queryType)
-            {
-                case NV2080_CTRL_FB_FS_INFO_INVALID_QUERY: {
-#ifdef COPY_OUTPUT_PARAMETERS
-                    NvU32 i = 0;
-                    for (i = 0; i < NV2080_CTRL_FB_FS_INFO_MAX_QUERY_SIZE_v1A_1D; i++) {
-                        dest->queries[idx].queryParams.inv.data[i] = src->queries[idx].queryParams.inv.data[i];
-                    }
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_FBP_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.fbp.swizzId = src->queries[idx].queryParams.fbp.swizzId;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.fbp.fbpEnMask = src->queries[idx].queryParams.fbp.fbpEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_LTC_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.ltc.fbpIndex = src->queries[idx].queryParams.ltc.fbpIndex;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.ltc.ltcEnMask = src->queries[idx].queryParams.ltc.ltcEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_LTS_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.lts.fbpIndex = src->queries[idx].queryParams.lts.fbpIndex;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.lts.ltsEnMask = src->queries[idx].queryParams.lts.ltsEnMask;
-#endif
-
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_FBPA_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.fbpa.fbpIndex = src->queries[idx].queryParams.fbpa.fbpIndex;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.fbpa.fbpaEnMask = src->queries[idx].queryParams.fbpa.fbpaEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_ROP_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.rop.fbpIndex = src->queries[idx].queryParams.rop.fbpIndex;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.rop.ropEnMask = src->queries[idx].queryParams.rop.ropEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_PROFILER_MON_LTC_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmLtc.fbpIndex = src->queries[idx].queryParams.dmLtc.fbpIndex;
-                    dest->queries[idx].queryParams.dmLtc.swizzId = src->queries[idx].queryParams.dmLtc.swizzId;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmLtc.ltcEnMask = src->queries[idx].queryParams.dmLtc.ltcEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_PROFILER_MON_LTS_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmLts.fbpIndex = src->queries[idx].queryParams.dmLts.fbpIndex;
-                    dest->queries[idx].queryParams.dmLts.swizzId = src->queries[idx].queryParams.dmLts.swizzId;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmLts.ltsEnMask = src->queries[idx].queryParams.dmLts.ltsEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_PROFILER_MON_FBPA_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmFbpa.fbpIndex = src->queries[idx].queryParams.dmFbpa.fbpIndex;
-                    dest->queries[idx].queryParams.dmFbpa.swizzId = src->queries[idx].queryParams.dmFbpa.swizzId;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmFbpa.fbpaEnMask = src->queries[idx].queryParams.dmFbpa.fbpaEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_PROFILER_MON_ROP_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmRop.fbpIndex = src->queries[idx].queryParams.dmRop.fbpIndex;
-                    dest->queries[idx].queryParams.dmRop.swizzId = src->queries[idx].queryParams.dmRop.swizzId;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmRop.ropEnMask = src->queries[idx].queryParams.dmRop.ropEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_PROFILER_MON_FBPA_SUBP_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmFbpaSubp.fbpIndex = src->queries[idx].queryParams.dmFbpaSubp.fbpIndex;
-                    dest->queries[idx].queryParams.dmFbpaSubp.swizzId = src->queries[idx].queryParams.dmFbpaSubp.swizzId;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.dmFbpaSubp.fbpaSubpEnMask = src->queries[idx].queryParams.dmFbpaSubp.fbpaSubpEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_FBPA_SUBP_MASK: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.fbpaSubp.fbpIndex = src->queries[idx].queryParams.fbpaSubp.fbpIndex;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.fbpaSubp.fbpaSubpEnMask = src->queries[idx].queryParams.fbpaSubp.fbpaSubpEnMask;
-#endif
-                    break;
-                }
-                case NV2080_CTRL_FB_FS_INFO_FBP_LOGICAL_MAP: {
-#ifdef COPY_INPUT_PARAMETERS
-                    dest->queries[idx].queryParams.fbpLogicalMap.fbpIndex = src->queries[idx].queryParams.fbpLogicalMap.fbpIndex;
-#endif
-#ifdef COPY_OUTPUT_PARAMETERS
-                    dest->queries[idx].queryParams.fbpLogicalMap.fbpLogicalIndex = src->queries[idx].queryParams.fbpLogicalMap.fbpLogicalIndex;
 #endif
                     break;
                 }
@@ -6875,6 +6427,55 @@ return_t serialize_NVC637_CTRL_CMD_EXEC_PARTITIONS_CREATE_v24_05(NVC637_CTRL_EXE
     return SUCCESS_T;
 }
 
+return_t serialize_NVC637_CTRL_CMD_EXEC_PARTITIONS_CREATE_v2E_01(NVC637_CTRL_EXEC_PARTITIONS_CREATE_PARAMS *pParams,
+                                                                 NvU8 *buffer,
+                                                                 NvU32 bufferSize,
+                                                                 NvU32 *offset)
+{
+    NVC637_CTRL_EXEC_PARTITIONS_CREATE_PARAMS_v2E_01  *dest = (void *) buffer;
+    NVC637_CTRL_EXEC_PARTITIONS_CREATE_PARAMS         *src  = pParams;
+    NvU32 i;
+
+    if (src && dest)
+    {
+        if (src->execPartCount > NVC637_CTRL_MAX_EXEC_PARTITIONS_v18_05) {
+            return FAILURE_T;
+        }
+
+#ifdef COPY_INPUT_PARAMETERS
+        dest->bQuery = src->bQuery;
+        dest->execPartCount = src->execPartCount;
+
+        for (i = 0; i < dest->execPartCount; i++) {
+            dest->execPartInfo[i].gpcCount      = src->execPartInfo[i].gpcCount;
+            dest->execPartInfo[i].gfxGpcCount   = src->execPartInfo[i].gfxGpcCount;
+            dest->execPartInfo[i].veidCount     = src->execPartInfo[i].veidCount;
+            dest->execPartInfo[i].ceCount       = src->execPartInfo[i].ceCount;
+            dest->execPartInfo[i].nvEncCount    = src->execPartInfo[i].nvEncCount;
+            dest->execPartInfo[i].nvDecCount    = src->execPartInfo[i].nvDecCount;
+            dest->execPartInfo[i].nvJpgCount    = src->execPartInfo[i].nvJpgCount;
+            dest->execPartInfo[i].ofaCount      = src->execPartInfo[i].ofaCount;
+            dest->execPartInfo[i].sharedEngFlag = src->execPartInfo[i].sharedEngFlag;
+            dest->execPartInfo[i].smCount       = src->execPartInfo[i].smCount;
+            dest->execPartInfo[i].spanStart     = src->execPartInfo[i].spanStart;
+            dest->execPartInfo[i].computeSize   = src->execPartInfo[i].computeSize;
+            dest->execPartInfo[i].execPartFlags = src->execPartInfo[i].execPartFlags;
+        }
+#endif
+
+#ifdef COPY_OUTPUT_PARAMETERS
+        for (i = 0; i < src->execPartCount; i++) {
+            dest->execPartId[i] = src->execPartId[i];
+            dest->execPartInfo[i].computeSize   = src->execPartInfo[i].computeSize;
+        }
+#endif
+    }
+    else
+        return FAILURE_T;
+
+    return SUCCESS_T;
+}
+
 return_t serialize_NVC637_CTRL_CMD_EXEC_PARTITIONS_DELETE_v1F_0A(NVC637_CTRL_EXEC_PARTITIONS_DELETE_PARAMS *pParams,
                                                                  NvU8 *buffer,
                                                                  NvU32 bufferSize,
@@ -6931,6 +6532,44 @@ return_t serialize_NVC637_CTRL_CMD_EXEC_PARTITIONS_EXPORT_v29_0C(NVC637_CTRL_EXE
         dest->info.smCount = src->info.smCount;
         dest->info.spanStart = src->info.spanStart;
         dest->info.computeSize = src->info.computeSize;
+
+        // UUID will not be copied as Guest will choose uuid by itself.
+#endif
+    }
+    else
+        return FAILURE_T;
+
+    return SUCCESS_T;
+}
+
+return_t serialize_NVC637_CTRL_CMD_EXEC_PARTITIONS_EXPORT_v2E_01(NVC637_CTRL_EXEC_PARTITIONS_IMPORT_EXPORT_PARAMS *pParams,
+                                                                 NvU8 *buffer,
+                                                                 NvU32 bufferSize,
+                                                                 NvU32 *offset)
+{
+    NVC637_CTRL_EXEC_PARTITIONS_IMPORT_EXPORT_PARAMS_v2E_01 *dest = (void *) buffer;
+    NVC637_CTRL_EXEC_PARTITIONS_IMPORT_EXPORT_PARAMS        *src  = pParams;
+
+    if (src && dest)
+    {
+#ifdef COPY_INPUT_PARAMETERS
+        dest->id = src->id;
+        dest->bCreateCap = src->bCreateCap;
+#endif
+
+#ifdef COPY_OUTPUT_PARAMETERS
+        for (int i = 0; i < NVC637_CTRL_EXEC_PARTITIONS_EXPORT_MAX_ENGINES_MASK_SIZE; i++) {
+            dest->info.enginesMask[i] = src->info.enginesMask[i];
+        }
+        dest->info.sharedEngFlags = src->info.sharedEngFlags;
+        dest->info.gpcMask = src->info.gpcMask;
+        dest->info.gfxGpcCount = src->info.gfxGpcCount;
+        dest->info.veidOffset = src->info.veidOffset;
+        dest->info.veidCount = src->info.veidCount;
+        dest->info.smCount = src->info.smCount;
+        dest->info.spanStart = src->info.spanStart;
+        dest->info.computeSize = src->info.computeSize;
+        dest->info.execPartFlags = src->info.execPartFlags;
 
         // UUID will not be copied as Guest will choose uuid by itself.
 #endif
@@ -7096,7 +6735,7 @@ return_t serialize_NV2080_CTRL_PERF_GET_LEVEL_INFO_V2_PARAMS_v2B_0D(
     }
     else
         return FAILURE_T;
-    
+
     return SUCCESS_T;
 }
 #endif
@@ -7114,7 +6753,28 @@ return_t serialize_NV0080_CTRL_INTERNAL_MEMSYS_SET_ZBC_REFERENCED_PARAMS_v2B_0E(
 
     if (src && dest)
     {
-        dest->subdevInstance = src->subdevInstance;
+        dest->bZbcSurfacesExist = src->bZbcSurfacesExist;
+    }
+    else
+        return FAILURE_T;
+#endif
+    return SUCCESS_T;
+}
+#endif
+
+#ifdef BUILD_COMMON_RPCS
+return_t serialize_NV0080_CTRL_INTERNAL_MEMSYS_SET_ZBC_REFERENCED_PARAMS_v2E_08(
+                                                                  NV0080_CTRL_INTERNAL_MEMSYS_SET_ZBC_REFERENCED_PARAMS *pParams,
+                                                                  NvU8 *buffer,
+                                                                  NvU32 bufferSize,
+                                                                  NvU32 *offset)
+{
+#ifdef COPY_INPUT_PARAMETERS
+    NV0080_CTRL_CMD_INTERNAL_MEMSYS_SET_ZBC_REFERENCED_v2E_08 *dest = (void*)(buffer);
+    NV0080_CTRL_INTERNAL_MEMSYS_SET_ZBC_REFERENCED_PARAMS     *src  = pParams;
+
+    if (src && dest)
+    {
         dest->bZbcSurfacesExist = src->bZbcSurfacesExist;
     }
     else
@@ -7170,35 +6830,6 @@ return_t serialize_NVB0CC_CTRL_INTERNAL_SRIOV_PROMOTE_PMA_STREAM_PARAMS_v1C_0C(N
 #endif
     return SUCCESS_T;
 }
-
-#ifdef BUILD_COMMON_RPCS
-return_t serialize_NV2080_CTRL_BUS_SET_P2P_MAPPING_PARAMS_v21_03(NV2080_CTRL_BUS_SET_P2P_MAPPING_PARAMS *pParams,
-                                                                 NvU8 *buffer,
-                                                                 NvU32 bufferSize,
-                                                                 NvU32 *offset)
-{
-#ifdef COPY_INPUT_PARAMETERS
-    NV2080_CTRL_BUS_SET_P2P_MAPPING_PARAMS_v21_03 *dest = (void*)(buffer);
-    NV2080_CTRL_BUS_SET_P2P_MAPPING_PARAMS        *src  = pParams;
-
-    if (src && dest)
-    {
-        dest->connectionType    = src->connectionType;
-        dest->peerId            = src->peerId;
-        dest->bSpaAccessOnly    = src->bSpaAccessOnly;
-        dest->bUseUuid          = src->bUseUuid;
-
-        portMemCopy(dest->remoteGpuUuid,
-                    VM_UUID_SIZE_v21_02,
-                    src->remoteGpuUuid,
-                    VM_UUID_SIZE_v21_02);
-    }
-    else
-        return FAILURE_T;
-#endif
-    return SUCCESS_T;
-}
-#endif
 
 #ifdef BUILD_COMMON_RPCS
 return_t serialize_NV2080_CTRL_BUS_SET_P2P_MAPPING_PARAMS_v29_08(NV2080_CTRL_BUS_SET_P2P_MAPPING_PARAMS *pParams,
@@ -7444,6 +7075,38 @@ return_t serialize_NV2080_CTRL_GPU_GET_INFO_V2_PARAMS_v2B_13(NV2080_CTRL_GPU_GET
         return FAILURE_T;
     return SUCCESS_T;
 }
+
+return_t serialize_NV2080_CTRL_GPU_GET_INFO_V2_PARAMS_v2E_0C(NV2080_CTRL_GPU_GET_INFO_V2_PARAMS *pParams,
+                                                             NvU8 *buffer,
+                                                             NvU32 bufferSize,
+                                                             NvU32 *offset)
+{
+    NV2080_CTRL_GPU_GET_INFO_V2_PARAMS_v2E_0C *dest = (void*)(buffer);
+    NV2080_CTRL_GPU_GET_INFO_V2_PARAMS        *src  = pParams;
+
+    if (src && dest)
+    {
+        NvU32 i;
+        if (src->gpuInfoListSize > NV2080_CTRL_GPU_INFO_MAX_LIST_SIZE_v2E_0C) {
+            return FAILURE_T;
+        }
+
+#ifdef COPY_INPUT_PARAMETERS
+        dest->gpuInfoListSize = src->gpuInfoListSize;
+#endif
+
+        for (i = 0; i < NV2080_CTRL_GPU_INFO_MAX_LIST_SIZE_v2E_0C; i++) {
+#ifdef COPY_INPUT_PARAMETERS
+             dest->gpuInfoList[i].index = src->gpuInfoList[i].index;
+#endif
+             dest->gpuInfoList[i].data  = src->gpuInfoList[i].data;
+        }
+    }
+    else
+        return FAILURE_T;
+    return SUCCESS_T;
+}
+
 #endif // UMED_BUILD
 
 return_t serialize_NV2080_CTRL_CMD_FLA_SETUP_INSTANCE_MEM_BLOCK_v21_05(
@@ -7780,52 +7443,6 @@ return_t deserialize_NV2080_CTRL_FB_GET_INFO_V2_PARAMS_v2B_00(NV2080_CTRL_FB_GET
 #endif // defined(BUILD_COMMON_RPCS)
 
 #if defined(BUILD_COMMON_RPCS) && !defined(UMED_BUILD)
-static
-return_t serialize_NV2080_CTRL_CMD_GSP_GET_VGPU_HEAP_STATS_PARAMS_v28_03(NV2080_CTRL_CMD_GSP_GET_VGPU_HEAP_STATS_PARAMS *pParams,
-                                                            NvU8 *buffer,
-                                                            NvU32 bufferSize,
-                                                            NvU32 *offset)
-{
-    NV2080_CTRL_CMD_GSP_GET_VGPU_HEAP_STATS_PARAMS        *src = pParams;
-    NV2080_CTRL_CMD_GSP_GET_VGPU_HEAP_STATS_PARAMS_v28_03 *dest = (void*)(buffer);
-
-    if (src && dest)
-    {
-        dest->allocatedSize = src->allocatedSize;
-        dest->peakAllocatedSize = src->peakAllocatedSize;
-        dest->managedSize = src->managedSize;
-        dest->allocationCount = src->allocationCount;
-        dest->peakAllocationCount = src->peakAllocationCount;
-    }
-    else
-        return FAILURE_T;
-
-    return SUCCESS_T;
-}
-
-static
-return_t deserialize_NV2080_CTRL_CMD_GSP_GET_VGPU_HEAP_STATS_PARAMS_v28_03(NV2080_CTRL_CMD_GSP_GET_VGPU_HEAP_STATS_PARAMS *pParams,
-                                                              NvU8 *buffer,
-                                                              NvU32 bufferSize,
-                                                              NvU32 *offset)
-{
-    NV2080_CTRL_CMD_GSP_GET_VGPU_HEAP_STATS_PARAMS_v28_03 *src = (void*)(buffer);
-    NV2080_CTRL_CMD_GSP_GET_VGPU_HEAP_STATS_PARAMS        *dest = pParams;
-
-    if (src && dest)
-    {
-        dest->allocatedSize = src->allocatedSize;
-        dest->peakAllocatedSize = src->peakAllocatedSize;
-        dest->managedSize = src->managedSize;
-        dest->allocationCount = src->allocationCount;
-        dest->peakAllocationCount = src->peakAllocationCount;
-    }
-    else
-        return FAILURE_T;
-
-    return SUCCESS_T;
-}
-
 static
 return_t serialize_NV2080_CTRL_CMD_GSP_GET_VGPU_HEAP_STATS_PARAMS_v28_06(NV2080_CTRL_CMD_GSP_GET_VGPU_HEAP_STATS_PARAMS *pParams,
                                                             NvU8 *buffer,

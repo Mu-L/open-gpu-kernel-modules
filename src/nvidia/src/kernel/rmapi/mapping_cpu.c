@@ -308,7 +308,8 @@ memMap_IMPL
         NV_ASSERT(pGpu->getProperty(pGpu, PDB_PROP_GPU_ATS_SUPPORTED));
         if ((memdescGetPteKind(pMemDesc) ==
             memmgrGetHwPteKindFromSwPteKind_HAL(pGpu, pMemoryManager, RM_DEFAULT_PTE_KIND)) && // pitch
-            (!memdescGetFlag(memdescGetMemDescFromGpu(pMemDesc, pGpu), MEMDESC_FLAGS_ENCRYPTED)))
+            (!memdescGetFlag(memdescGetMemDescFromGpu(pMemDesc, pGpu), MEMDESC_FLAGS_ENCRYPTED)) &&
+            (!memdescGetFlag(pMemDesc, MEMDESC_FLAGS_ALLOC_AS_LOCALIZED)))
         {
             if (pMapParams->bKernel)
             {
@@ -435,7 +436,7 @@ memMap_IMPL
             //
             // RM should fail gracefully when clients map FB in the Coherent link path with special KIND.
             // There is no GMMU in the Coherent link path, only regular KIND(GMK) is supported and other special
-            // KIND(s) (like encrypted, compressed etc.) are not supported.
+            // KINDs/attributes (like encrypted, compressed, localized etc.) are not supported.
             //
             NV_PRINTF(LEVEL_ERROR, "Need BAR mapping on coherent link! FAIL!!\n");
             return NV_ERR_NOT_SUPPORTED;

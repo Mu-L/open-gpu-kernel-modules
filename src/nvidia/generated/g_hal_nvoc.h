@@ -144,7 +144,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJHAL;
     ((OBJHAL*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(OBJHAL)))
 #endif //__nvoc_hal_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_OBJHAL(OBJHAL**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJHAL(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJHAL(OBJHAL**, Dynamic*, NvU32);
 #define __objCreate_OBJHAL(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

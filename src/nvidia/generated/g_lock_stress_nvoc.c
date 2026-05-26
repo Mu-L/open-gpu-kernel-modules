@@ -32,7 +32,7 @@ void __nvoc_init__LockStressObject(LockStressObject*);
 void __nvoc_init_funcTable_LockStressObject(LockStressObject*);
 NV_STATUS __nvoc_ctor_LockStressObject(LockStressObject*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_LockStressObject(LockStressObject*);
-void __nvoc_dtor_LockStressObject(LockStressObject*);
+void __nvoc_dtor_LockStressObject(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__LockStressObject;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_LockStressObject =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "LockStressObject",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_LockStressObject,
+    .objCreatefn =        &__nvoc_objCreateDynamic_LockStressObject,
     .pCastInfo =          &__nvoc_castinfo__LockStressObject,
     .pExportInfo =        &__nvoc_export_info__LockStressObject
 };
@@ -125,6 +125,85 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_LockStressObject =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS lockStressObjCtrlCmdResetLockStressState__EXPORT(void *pResource) {
+    return lockStressObjCtrlCmdResetLockStressState_IMPL(pResource);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS lockStressObjCtrlCmdPerformLockStressAllRmLocks__EXPORT(void *pResource, void *pParams) {
+    return lockStressObjCtrlCmdPerformLockStressAllRmLocks_IMPL(pResource, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000009u)
+static NV_STATUS lockStressObjCtrlCmdPerformLockStressNoGpusLock__EXPORT(void *pResource, void *pParams) {
+    return lockStressObjCtrlCmdPerformLockStressNoGpusLock_IMPL(pResource, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000009u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000108u)
+static NV_STATUS lockStressObjCtrlCmdPerformLockStressApiLockReadMode__EXPORT(void *pResource, void *pParams) {
+    return lockStressObjCtrlCmdPerformLockStressApiLockReadMode_IMPL(pResource, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000108u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+static NV_STATUS lockStressObjCtrlCmdPerformLockStressNoGpusLockApiLockReadMode__EXPORT(void *pResource, void *pParams) {
+    return lockStressObjCtrlCmdPerformLockStressNoGpusLockApiLockReadMode_IMPL(pResource, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS lockStressObjCtrlCmdPerformLockStressInternalAllRmLocks__EXPORT(void *pResource, void *pParams) {
+    return lockStressObjCtrlCmdPerformLockStressInternalAllRmLocks_IMPL(pResource, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000009u)
+static NV_STATUS lockStressObjCtrlCmdPerformLockStressInternalNoGpusLock__EXPORT(void *pResource, void *pParams) {
+    return lockStressObjCtrlCmdPerformLockStressInternalNoGpusLock_IMPL(pResource, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000009u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000108u)
+static NV_STATUS lockStressObjCtrlCmdPerformLockStressInternalApiLockReadMode__EXPORT(void *pResource, void *pParams) {
+    return lockStressObjCtrlCmdPerformLockStressInternalApiLockReadMode_IMPL(pResource, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000108u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+static NV_STATUS lockStressObjCtrlCmdPerformLockStressInternalNoGpusLockApiLockReadMode__EXPORT(void *pResource, void *pParams) {
+    return lockStressObjCtrlCmdPerformLockStressInternalNoGpusLockApiLockReadMode_IMPL(pResource, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS lockStressObjCtrlCmdGetLockStressCounters__EXPORT(void *pResource, void *pParams) {
+    return lockStressObjCtrlCmdGetLockStressCounters_IMPL(pResource, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00100009u)
+static NV_STATUS lockStressObjCtrlCmdRecursiveGpuLockTestNoLock__EXPORT(void *pResource, void *pParams) {
+    return lockStressObjCtrlCmdRecursiveGpuLockTestNoLock_IMPL(pResource, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00100009u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00100008u)
+static NV_STATUS lockStressObjCtrlCmdRecursiveGpuLockTestAllLock__EXPORT(void *pResource, void *pParams) {
+    return lockStressObjCtrlCmdRecursiveGpuLockTestAllLock_IMPL(pResource, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00100008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00100018u)
+static NV_STATUS lockStressObjCtrlCmdRecursiveGpuLockTestDeviceLock__EXPORT(void *pResource, void *pParams) {
+    return lockStressObjCtrlCmdRecursiveGpuLockTestDeviceLock_IMPL(pResource, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00100018u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_LockStressObject[] = 
 {
@@ -132,7 +211,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_LockStre
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdResetLockStressState_IMPL,
+        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdResetLockStressState__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -147,7 +226,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_LockStre
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdPerformLockStressAllRmLocks_IMPL,
+        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdPerformLockStressAllRmLocks__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -162,7 +241,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_LockStre
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x9u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdPerformLockStressNoGpusLock_IMPL,
+        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdPerformLockStressNoGpusLock__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x9u)
         /*flags=*/      0x9u,
         /*accessRight=*/0x0u,
@@ -177,7 +256,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_LockStre
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x108u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdPerformLockStressApiLockReadMode_IMPL,
+        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdPerformLockStressApiLockReadMode__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x108u)
         /*flags=*/      0x108u,
         /*accessRight=*/0x0u,
@@ -192,7 +271,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_LockStre
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdPerformLockStressNoGpusLockApiLockReadMode_IMPL,
+        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdPerformLockStressNoGpusLockApiLockReadMode__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*flags=*/      0x109u,
         /*accessRight=*/0x0u,
@@ -207,7 +286,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_LockStre
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdPerformLockStressInternalAllRmLocks_IMPL,
+        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdPerformLockStressInternalAllRmLocks__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -222,7 +301,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_LockStre
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x9u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdPerformLockStressInternalNoGpusLock_IMPL,
+        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdPerformLockStressInternalNoGpusLock__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x9u)
         /*flags=*/      0x9u,
         /*accessRight=*/0x0u,
@@ -237,7 +316,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_LockStre
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x108u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdPerformLockStressInternalApiLockReadMode_IMPL,
+        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdPerformLockStressInternalApiLockReadMode__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x108u)
         /*flags=*/      0x108u,
         /*accessRight=*/0x0u,
@@ -252,7 +331,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_LockStre
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdPerformLockStressInternalNoGpusLockApiLockReadMode_IMPL,
+        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdPerformLockStressInternalNoGpusLockApiLockReadMode__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*flags=*/      0x109u,
         /*accessRight=*/0x0u,
@@ -267,7 +346,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_LockStre
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdGetLockStressCounters_IMPL,
+        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdGetLockStressCounters__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -282,7 +361,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_LockStre
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x100009u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdRecursiveGpuLockTestNoLock_IMPL,
+        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdRecursiveGpuLockTestNoLock__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x100009u)
         /*flags=*/      0x100009u,
         /*accessRight=*/0x0u,
@@ -297,7 +376,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_LockStre
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x100008u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdRecursiveGpuLockTestAllLock_IMPL,
+        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdRecursiveGpuLockTestAllLock__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x100008u)
         /*flags=*/      0x100008u,
         /*accessRight=*/0x0u,
@@ -312,7 +391,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_LockStre
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x100018u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdRecursiveGpuLockTestDeviceLock_IMPL,
+        /*pFunc=*/      (void (*)(void)) &lockStressObjCtrlCmdRecursiveGpuLockTestDeviceLock__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x100018u)
         /*flags=*/      0x100018u,
         /*accessRight=*/0x0u,
@@ -329,7 +408,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_LockStre
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__LockStressObject __nvoc_metadata__LockStressObject = {
     .rtti.pClassDef = &__nvoc_class_def_LockStressObject,    // (lockStressObj) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_LockStressObject,
+    .rtti.dtor      = &__nvoc_dtor_LockStressObject,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -589,16 +668,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__LockStressObject =
 
 // Destruct LockStressObject object.
 void __nvoc_lockStressObjDestruct(LockStressObject*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_LockStressObject(LockStressObject* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_LockStressObject(Dynamic* pThis) {
+
+    LockStressObject *__nvoc_this = (LockStressObject *) pThis;
 
 // Call destructor.
-    __nvoc_lockStressObjDestruct(pThis);
+    __nvoc_lockStressObjDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_LockStressObject(LockStressObject *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -624,7 +705,7 @@ NV_STATUS __nvoc_ctor_LockStressObject(LockStressObject *pResource, struct CALL_
 
     // Unwind on error.
 __nvoc_ctor_LockStressObject_fail__init:
-    __nvoc_dtor_GpuResource(&pResource->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pResource->__nvoc_base_GpuResource);
 __nvoc_ctor_LockStressObject_fail_GpuResource:
 __nvoc_ctor_LockStressObject_exit:
     return status;
@@ -736,13 +817,10 @@ __nvoc_objCreate_LockStressObject_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_LockStressObject(LockStressObject **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_LockStressObject(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_LockStressObject(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_LockStressObject((LockStressObject **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

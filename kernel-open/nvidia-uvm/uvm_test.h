@@ -1,5 +1,5 @@
 /*******************************************************************************
-    Copyright (c) 2015-2025 NVIDIA Corporation
+    Copyright (c) 2015-2026 NVIDIA Corporation
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
@@ -97,7 +97,6 @@
         }                                                                           \
     } while (0)
 
-
 long uvm_test_ioctl(struct file *filp, unsigned int cmd, unsigned long arg);
 
 NV_STATUS uvm_test_range_tree_directed(UVM_TEST_RANGE_TREE_DIRECTED_PARAMS *params, struct file *filp);
@@ -154,10 +153,6 @@ NV_STATUS uvm_test_flush_deferred_work(UVM_TEST_FLUSH_DEFERRED_WORK_PARAMS *para
 NV_STATUS uvm_test_set_page_prefetch_policy(UVM_TEST_SET_PAGE_PREFETCH_POLICY_PARAMS *params, struct file *filp);
 NV_STATUS uvm_test_get_page_thrashing_policy(UVM_TEST_GET_PAGE_THRASHING_POLICY_PARAMS *params, struct file *filp);
 NV_STATUS uvm_test_set_page_thrashing_policy(UVM_TEST_SET_PAGE_THRASHING_POLICY_PARAMS *params, struct file *filp);
-
-NV_STATUS uvm_test_range_group_tree(UVM_TEST_RANGE_GROUP_TREE_PARAMS *params, struct file *filp);
-NV_STATUS uvm_test_range_group_range_info(UVM_TEST_RANGE_GROUP_RANGE_INFO_PARAMS *params, struct file *filp);
-NV_STATUS uvm_test_range_group_range_count(UVM_TEST_RANGE_GROUP_RANGE_COUNT_PARAMS *params, struct file *filp);
 
 NV_STATUS uvm_test_get_prefetch_faults_reenable_lapse(UVM_TEST_GET_PREFETCH_FAULTS_REENABLE_LAPSE_PARAMS *params,
                                                       struct file *filp);

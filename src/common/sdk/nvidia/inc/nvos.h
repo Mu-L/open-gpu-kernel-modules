@@ -48,9 +48,6 @@ extern "C" {
 #endif
 #endif
 
-// Temporary include. Please include this directly instead of nvos.h
-#include "alloc/alloc_channel.h"
-
 /* local defines here */
 #define FILE_DEVICE_NV      0x00008000
 #define NV_IOCTL_FCT_BASE   0x00000800
@@ -2944,7 +2941,8 @@ typedef struct
     NvU32 size;
     NvU32 prohibitMultipleInstances;
     NvU32 engineInstance;               // Select NVDEC0 or NVDEC1 or NVDEC2
-} NV_BSP_ALLOCATION_PARAMETERS;
+} NV_NVDEC_ALLOCATION_PARAMETERS;
+#define NV_BSP_ALLOCATION_PARAMETERS NV_NVDEC_ALLOCATION_PARAMETERS
 
 //
 // These are referenced by mdiag mods tests, but do not appear to be used during
@@ -2990,9 +2988,10 @@ typedef struct
 typedef struct
 {
     NvU32 size;
-    NvU32 prohibitMultipleInstances;  // Prohibit multiple allocations of MSENC?
-    NvU32 engineInstance;             // Select MSENC/NVENC0 or NVENC1 or NVENC2
-} NV_MSENC_ALLOCATION_PARAMETERS;
+    NvU32 prohibitMultipleInstances;  // Prohibit multiple allocations of NVENC?
+    NvU32 engineInstance;             // Select NVENC0 or NVENC1 or NVENC2
+} NV_NVENC_ALLOCATION_PARAMETERS;
+#define NV_MSENC_ALLOCATION_PARAMETERS NV_NVENC_ALLOCATION_PARAMETERS
 
 typedef struct
 {

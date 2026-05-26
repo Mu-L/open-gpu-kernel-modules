@@ -120,7 +120,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_UserInfo;
     ((UserInfo*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(UserInfo)))
 #endif //__nvoc_client_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_UserInfo(UserInfo**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_UserInfo(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_UserInfo(UserInfo**, Dynamic*, NvU32);
 #define __objCreate_UserInfo(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -253,7 +253,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_RmClient;
     ((RmClient*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(RmClient)))
 #endif //__nvoc_client_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_RmClient(RmClient**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_RmClient(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_RmClient(RmClient**, Dynamic*, NvU32, struct PORT_MEM_ALLOCATOR *pAllocator, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_RmClient(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pAllocator, pParams) \

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2018-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2018-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -759,6 +759,7 @@ kceMapPceLceForNvlinkPeers_GA100
     NvU32         linkId, gpuMask, gpuInstance = 0, i;
     NvU8          hshubId, prevHshubId;
     NV2080_CTRL_INTERNAL_HSHUB_GET_HSHUB_ID_FOR_LINKS_PARAMS *pParams = NULL;
+    NVLINK_BIT_VECTOR *pPeerLinkMask = NULL;
 
     if (pKernelNvlink == NULL)
     {
@@ -819,8 +820,15 @@ kceMapPceLceForNvlinkPeers_GA100
         // Clear out the chosen LCE
         peerAvailableLceMask &= (~(NVBIT32(lceIndex)));
 
-        peerLinkMask = knvlinkGetLinkMaskToPeer(pGpu, pKernelNvlink, pRemoteGpu);
+        pPeerLinkMask = knvlinkGetLinkMaskToPeer(pGpu, pKernelNvlink, pRemoteGpu);
 
+        if (pPeerLinkMask == NULL)
+        {
+            NV_PRINTF(LEVEL_INFO, "GPU%d has nvlink disabled. Skip programming\n", pRemoteGpu->gpuInstance);
+            continue;
+        }
+
+        peerLinkMask = (NvU32)NvU64_LO32(kNvlinkGetLinkMaskAsPrimitve(pPeerLinkMask));
         if (peerLinkMask == 0)
         {
             NV_PRINTF(LEVEL_INFO, "GPU%d has nvlink disabled. Skip programming\n", pRemoteGpu->gpuInstance);
@@ -833,11 +841,10 @@ kceMapPceLceForNvlinkPeers_GA100
         portMemSet(pParams, 0, sizeof(*pParams));
         pParams->linkMask = peerLinkMask;
 
-        NV_ASSERT_OK_OR_GOTO(status,
-            knvlinkExecGspRmRpc(pGpu, pKernelNvlink,
-                                NV2080_CTRL_CMD_INTERNAL_HSHUB_GET_HSHUB_ID_FOR_LINKS,
-                                pParams, sizeof(*pParams)),
-            done);
+        status = knvlinkExecGspRmRpc(pGpu, pKernelNvlink,
+                                     NV2080_CTRL_CMD_INTERNAL_HSHUB_GET_HSHUB_ID_FOR_LINKS,
+                                     pParams, sizeof(*pParams));
+        NV_ASSERT_OK_OR_RETURN(status);
 
         FOR_EACH_INDEX_IN_MASK(32, linkId, peerLinkMask)
         {
@@ -894,7 +901,6 @@ kceMapPceLceForNvlinkPeers_GA100
         status = NV_WARN_NOTHING_TO_DO;
     }
 
-done:
     portMemFree(pParams);
     return status;
 }

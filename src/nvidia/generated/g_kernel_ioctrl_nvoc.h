@@ -210,7 +210,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelIoctrl;
 #define PDB_PROP_KIOCTRL_MINION_CACHE_SEEDS_BASE_NAME PDB_PROP_KIOCTRL_MINION_CACHE_SEEDS
 
 
-NV_STATUS __nvoc_objCreateDynamic_KernelIoctrl(KernelIoctrl**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelIoctrl(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelIoctrl(KernelIoctrl**, Dynamic*, NvU32);
 #define __objCreate_KernelIoctrl(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

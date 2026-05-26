@@ -164,7 +164,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_NotifShare;
     ((NotifShare*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(NotifShare)))
 #endif //__nvoc_event_api_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_NotifShare(NotifShare**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_NotifShare(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_NotifShare(NotifShare**, Dynamic*, NvU32);
 #define __objCreate_NotifShare(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -287,7 +287,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_EventApi;
     ((EventApi*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(EventApi)))
 #endif //__nvoc_event_api_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_EventApi(EventApi**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_EventApi(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_EventApi(EventApi**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_EventApi(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \
@@ -518,7 +518,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_INotifier;
     ((INotifier*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(INotifier)))
 #endif //__nvoc_event_api_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_INotifier(INotifier**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_INotifier(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_INotifier(INotifier**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext);
 #define __objCreate_INotifier(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext) \
@@ -659,7 +659,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_Notifier;
     ((Notifier*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(Notifier)))
 #endif //__nvoc_event_api_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_Notifier(Notifier**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_Notifier(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_Notifier(Notifier**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext);
 #define __objCreate_Notifier(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext) \

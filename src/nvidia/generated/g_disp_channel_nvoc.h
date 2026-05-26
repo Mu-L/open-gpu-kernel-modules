@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -62,12 +62,12 @@ typedef struct ContextDma ContextDma;
 #endif /* __nvoc_class_id_ContextDma */
 
 
-struct DispObject;
+struct NvDispApi;
 
-#ifndef __nvoc_class_id_DispObject
-#define __nvoc_class_id_DispObject 0x999839u
-typedef struct DispObject DispObject;
-#endif /* __nvoc_class_id_DispObject */
+#ifndef __nvoc_class_id_NvDispApi
+#define __nvoc_class_id_NvDispApi 0x36aa0bu
+typedef struct NvDispApi NvDispApi;
+#endif /* __nvoc_class_id_NvDispApi */
 
 
 
@@ -115,7 +115,7 @@ struct DispChannel {
     struct DispChannel *__nvoc_pbase_DispChannel;    // dispchn
 
     // Data members
-    struct DispObject *pDispObject;
+    struct NvDispApi *pNvDispApi;
     NvU32 DispClass;
     NvU32 InstanceNumber;
     NvP64 pControl;
@@ -186,7 +186,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_DispChannel;
     ((DispChannel*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(DispChannel)))
 #endif //__nvoc_disp_channel_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_DispChannel(DispChannel**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_DispChannel(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_DispChannel(DispChannel**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams, NvU32 isDma);
 #define __objCreate_DispChannel(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams, isDma) \
@@ -538,7 +538,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_DispChannelPio;
     ((DispChannelPio*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(DispChannelPio)))
 #endif //__nvoc_disp_channel_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_DispChannelPio(DispChannelPio**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_DispChannelPio(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_DispChannelPio(DispChannelPio**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_DispChannelPio(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \
@@ -845,7 +845,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_DispChannelDma;
     ((DispChannelDma*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(DispChannelDma)))
 #endif //__nvoc_disp_channel_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_DispChannelDma(DispChannelDma**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_DispChannelDma(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_DispChannelDma(DispChannelDma**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_DispChannelDma(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

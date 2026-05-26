@@ -64,6 +64,12 @@ extern bool nv_drm_modeset_module_param;
 /* Set to true when the nvidia-drm driver should install a framebuffer device */
 extern bool nv_drm_fbdev_module_param;
 #endif
+/* Set to true when the vblank support feature is enabled. */
+extern bool nv_drm_vblank_module_param;
+#if defined(NV_DRM_HAS_COLOROP)
+/* Set to true when DRM color pipeline support is enabled. */
+extern bool nv_drm_color_pipeline_module_param;
+#endif
 
 void *nv_drm_calloc(size_t nmemb, size_t size);
 
@@ -98,6 +104,7 @@ void nv_drm_timer_setup(nv_drm_timer *timer,
 void nv_drm_mod_timer(nv_drm_timer *timer, unsigned long relative_timeout_ms);
 
 unsigned long nv_drm_timer_now(void);
+NvU64 nv_drm_get_time_since_boot_ms(void);
 
 unsigned long nv_drm_timeout_from_ms(NvU64 relative_timeout_ms);
 
@@ -106,6 +113,10 @@ int nv_drm_create_sync_file(struct dma_fence *fence);
 struct dma_fence *nv_drm_sync_file_get_fence(int fd);
 
 void nv_drm_yield(void);
+
+#if defined(NVCPU_AARCH64)
+NvBool nv_aarch64_pfn_is_map_memory(unsigned long pfn);
+#endif
 
 #endif /* defined(NV_DRM_AVAILABLE) */
 

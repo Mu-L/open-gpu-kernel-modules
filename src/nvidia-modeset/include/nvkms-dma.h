@@ -31,8 +31,6 @@
 #include "nvkms-types.h"
 #include "nvkms-utils.h"
 
-#include "class/cl917d.h"
-
 /* declare prototypes: */
 void nvDmaKickoffEvo(NVEvoChannelPtr);
 
@@ -67,8 +65,6 @@ NvBool nvEvoWaitForCRC32Notifier(const NVDevEvoPtr pDevEvo,
                                  NvU32 done_extent_bit,
                                  NvU32 done_value);
 
-#define SUBDEVICE_MASK_ALL DRF_MASK(NV917D_DMA_SET_SUBDEVICE_MASK_VALUE)
-
 static inline void nvDmaStorePioMethod(
     void *pBase, NvU32 offset, NvU32 value)
 {
@@ -99,16 +95,6 @@ static inline NvU32 nvDmaLoadPioMethod(
     return __atomic_load_n(ptr, __ATOMIC_ACQUIRE);
 }
 
-static inline NvBool nvDmaSubDevMaskMatchesCurrent(
-    const NVEvoChannel *pChannel,
-    const NvU32 subDevMask)
-{
-    const NvU32 allSubDevices = (1 << pChannel->pb.num_channels) - 1;
-
-    return (subDevMask & allSubDevices) ==
-           (pChannel->pb.currentSubDevMask & allSubDevices);
-}
-
 static inline void nvDmaSetEvoMethodData(
     NVEvoChannelPtr pChannel,
     const NvU32 data)
@@ -126,44 +112,6 @@ static inline void nvDmaSetEvoMethodDataU64(
 }
 
 
-/* Get the SDM for a given pDisp */
-static inline NvU32 nvDispSubDevMaskEvo(const NVDispEvoRec *pDispEvo)
-{
-    return NVBIT(pDispEvo->displayOwner);
-}
-
-/* Initialize the EVO SDM stack */
-static inline void nvInitEvoSubDevMask(NVDevEvoPtr pDevEvo) {
-    pDevEvo->subDevMaskStackDepth = 0;
-    pDevEvo->subDevMaskStack[0] = SUBDEVICE_MASK_ALL;
-}
-
-/* Return the SDM at the top of the stack (i.e. the currently active one) */
-static inline NvU32 nvPeekEvoSubDevMask(NVDevEvoPtr pDevEvo) {
-    return pDevEvo->subDevMaskStack[pDevEvo->subDevMaskStackDepth];
-}
-
-/* Push the given mask onto the stack and set it. */
-static inline void nvPushEvoSubDevMask(NVDevEvoPtr pDevEvo, NvU32 mask) {
-    pDevEvo->subDevMaskStackDepth++;
-
-    nvAssert(pDevEvo->subDevMaskStackDepth < NV_EVO_SUBDEV_STACK_SIZE);
-
-    pDevEvo->subDevMaskStack[pDevEvo->subDevMaskStackDepth] = mask;
-}
-
-/* Automagically push the SDM for broadcast to disp. */
-static inline void nvPushEvoSubDevMaskDisp(const NVDispEvoRec *pDispEvo) {
-    NvU32 mask = nvDispSubDevMaskEvo(pDispEvo);
-
-    nvPushEvoSubDevMask(pDispEvo->pDevEvo, mask);
-}
-
-/* Pop the last entry on the stack */
-static inline void nvPopEvoSubDevMask(NVDevEvoPtr pDevEvo) {
-    pDevEvo->subDevMaskStackDepth--;
-}
-
 /*
  * Update the state tracked in updateState to indicate that pChannel has
  * pending methods and requires an update/kickoff.
@@ -172,14 +120,7 @@ static inline void nvUpdateUpdateState(NVDevEvoPtr pDevEvo,
                                        NVEvoUpdateState *updateState,
                                        const NVEvoChannel *pChannel)
 {
-    const NvU32 subDevMask = nvPeekEvoSubDevMask(pDevEvo);
-    NvU32 sd;
-
-    for (sd = 0; sd < pDevEvo->numSubDevices; sd++) {
-        if (subDevMask & (1 << sd)) {
-            updateState->subdev[sd].channelMask |= pChannel->channelMask;
-        }
-    }
+    updateState->subdev[0].channelMask |= pChannel->channelMask;
 }
 
 /*
@@ -190,14 +131,7 @@ static inline void nvWinImmChannelUpdateState(NVDevEvoPtr pDevEvo,
                                               NVEvoUpdateState *updateState,
                                               const NVEvoChannel *pChannel)
 {
-    const NvU32 subDevMask = nvPeekEvoSubDevMask(pDevEvo);
-    NvU32 sd;
-
-    for (sd = 0; sd < pDevEvo->numSubDevices; sd++) {
-        if (subDevMask & (1 << sd)) {
-            updateState->subdev[sd].winImmChannelMask |= pChannel->channelMask;
-        }
-    }
+    updateState->subdev[0].winImmChannelMask |= pChannel->channelMask;
 }
 
 /*
@@ -209,15 +143,7 @@ void nvDisableCoreInterlockUpdateState(NVDevEvoPtr pDevEvo,
                                        NVEvoUpdateState *updateState,
                                        const NVEvoChannel *pChannel)
 {
-    const NvU32 subDevMask = nvPeekEvoSubDevMask(pDevEvo);
-    NvU32 sd;
-
-    for (sd = 0; sd < pDevEvo->numSubDevices; sd++) {
-        if (subDevMask & (1 << sd)) {
-            updateState->subdev[sd].noCoreInterlockMask |=
-                pChannel->channelMask;
-        }
-    }
+    updateState->subdev[0].noCoreInterlockMask |= pChannel->channelMask;
 }
 
 // These macros verify that the values used in the methods fit
@@ -238,7 +164,6 @@ static inline void nvDmaSetStartEvoMethod(
     NvU32 count)
 {
     NVDmaBufferEvoPtr p = &pChannel->pb;
-    const NvU32 sdMask = nvPeekEvoSubDevMask(p->pDevEvo);
 
     // We add 1 to the count for the method header.
     const NvU32 countPlusHeader = count + 1;
@@ -249,12 +174,6 @@ static inline void nvDmaSetStartEvoMethod(
 
     ASSERT_DRF_NUM(_UDISP, _DMA, _METHOD_COUNT,  count);
     ASSERT_DRF_NUM(_UDISP, _DMA, _METHOD_OFFSET, methodDwords);
-
-    if (!nvDmaSubDevMaskMatchesCurrent(pChannel, sdMask)) {
-        if (p->num_channels > 1) {
-            nvEvoSetSubdeviceMask(pChannel, sdMask);
-        }
-    }
 
     if (p->fifo_free_count <= countPlusHeader) {
         nvEvoMakeRoom(pChannel, countPlusHeader);

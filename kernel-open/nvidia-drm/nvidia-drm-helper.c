@@ -178,4 +178,55 @@ free:
     return ret;
 }
 
+void
+nv_drm_atomic_replace_property_blob(struct drm_property_blob **blob,
+                                    struct drm_property_blob *new_blob,
+                                    NvBool *replaced)
+{
+    struct drm_property_blob *old_blob = *blob;
+
+    if (old_blob != new_blob) {
+        drm_property_blob_put(old_blob);
+        if (new_blob) {
+            drm_property_blob_get(new_blob);
+        }
+        *blob = new_blob;
+        if (replaced) {
+            *replaced = NV_TRUE;
+        }
+    } else {
+        if (replaced) {
+            *replaced = NV_FALSE;
+        }
+    }
+}
+
+int
+nv_drm_atomic_replace_property_blob_from_id(struct drm_device *dev,
+                                            struct drm_property_blob **blob,
+                                            uint64_t blob_id,
+                                            ssize_t expected_size,
+                                            NvBool *replaced)
+{
+    struct drm_property_blob *new_blob = NULL;
+
+    if (blob_id != 0) {
+        new_blob = drm_property_lookup_blob(dev, blob_id);
+        if (new_blob == NULL) {
+            return -EINVAL;
+        }
+
+        if ((expected_size > 0) &&
+            (new_blob->length != expected_size)) {
+            drm_property_blob_put(new_blob);
+            return -EINVAL;
+        }
+    }
+
+    nv_drm_atomic_replace_property_blob(blob, new_blob, replaced);
+    drm_property_blob_put(new_blob);
+
+    return 0;
+}
+
 #endif /* NV_DRM_AVAILABLE */

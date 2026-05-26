@@ -43,6 +43,9 @@ struct nv_drm_gem_nvkms_memory {
     bool physically_mapped;
     void *pPhysicalAddress;
     void *pWriteCombinedIORemapAddress;
+#if defined(NVCPU_AARCH64)
+    void *pNumaVMapAddress;
+#endif
     bool was_mmapped;
 
     struct page **pages;

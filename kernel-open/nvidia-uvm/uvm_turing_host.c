@@ -260,8 +260,8 @@ void uvm_hal_turing_host_tlb_invalidate_all(uvm_push_t *push,
     pdb_lo = pdb.address & HWMASK(C46F, MEM_OP_C, TLB_INVALIDATE_PDB_ADDR_LO);
     pdb_hi = pdb.address >> HWSIZE(C46F, MEM_OP_C, TLB_INVALIDATE_PDB_ADDR_LO);
 
-    // PDE3 is the highest level on Pascal-Turing, see the comment in
-    // uvm_pascal_mmu.c for details.
+    // PDE3 is the highest level on Turing, see the comment in
+    // uvm_turing_mmu.c for details.
     UVM_ASSERT_MSG(depth < NVC46F_MEM_OP_C_TLB_INVALIDATE_PAGE_TABLE_LEVEL_UP_TO_PDE3, "depth %u", depth);
     page_table_level = NVC46F_MEM_OP_C_TLB_INVALIDATE_PAGE_TABLE_LEVEL_UP_TO_PDE3 - depth;
 
@@ -361,8 +361,8 @@ void uvm_hal_turing_host_tlb_invalidate_va(uvm_push_t *push,
     pdb_lo = pdb.address & HWMASK(C46F, MEM_OP_C, TLB_INVALIDATE_PDB_ADDR_LO);
     pdb_hi = pdb.address >> HWSIZE(C46F, MEM_OP_C, TLB_INVALIDATE_PDB_ADDR_LO);
 
-    // PDE3 is the highest level on Pascal-Turing, see the comment in
-    // uvm_pascal_mmu.c for details.
+    // PDE3 is the highest level on Turing, see the comment in
+    // uvm_turing_mmu.c for details.
     UVM_ASSERT_MSG(depth < NVC46F_MEM_OP_C_TLB_INVALIDATE_PAGE_TABLE_LEVEL_UP_TO_PDE3, "depth %u", depth);
     page_table_level = NVC46F_MEM_OP_C_TLB_INVALIDATE_PAGE_TABLE_LEVEL_UP_TO_PDE3 - depth;
 
@@ -427,8 +427,8 @@ void uvm_hal_turing_host_tlb_invalidate_test(uvm_push_t *push,
     pdb_hi = pdb.address >> HWSIZE(C46F, MEM_OP_C, TLB_INVALIDATE_PDB_ADDR_LO);
 
     if (params->page_table_level != UvmInvalidatePageTableLevelAll) {
-        // PDE3 is the highest level on Pascal-Turing, see the comment in
-        // uvm_pascal_mmu.c for details.
+        // PDE3 is the highest level on Turing, see the comment in
+        // uvm_turing_mmu.c for details.
         page_table_level = min((NvU32)UvmInvalidatePageTableLevelPde3, params->page_table_level) - 1;
     }
 

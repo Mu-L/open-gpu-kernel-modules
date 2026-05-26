@@ -834,6 +834,18 @@ nvGetNthSetBitIndex32(NvU32 mask, NvU32 n)
 #define NV_RIGHT_SHIFT_ROUNDED(a, shift)                                       \
     (((a) >> (shift)) + !!((NVBIT((shift) - 1) & (a)) == NVBIT((shift) - 1)))
 
+/*!
+ * Performs a rounded right-shift of 64-bit unsigned value "a" by "shift" bits.
+ * Will round result away from zero.
+ *
+ * @param[in] a      64-bit unsigned value to shift.
+ * @param[in] shift  Number of bits by which to shift.
+ *
+ * @return  Resulting shifted value rounded away from zero.
+ */
+#define NV_RIGHT_SHIFT_ROUNDED64(a, shift)                                     \
+    ((((NvU64)a) >> (shift)) + !!((NVBIT64((shift) - 1) & ((NvU64)a)) == NVBIT64((shift) - 1)))
+
 //
 // Power of 2 alignment.
 //    (Will give unexpected results if 'gran' is not a power of 2.)
@@ -1134,4 +1146,3 @@ static NV_FORCEINLINE NvU64 nvFindGcdU64(NvU64 a, NvU64 b)
 #include <misc/bitops.h>
 #endif // !defined(NVRISCV_LIBFSP_BUILD) || !NVRISCV_LIBFSP_BUILD
 #endif // __NV_MISC_H
-

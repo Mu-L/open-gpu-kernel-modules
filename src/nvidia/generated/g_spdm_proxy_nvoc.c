@@ -26,7 +26,7 @@ void __nvoc_init__SpdmProxy(SpdmProxy*);
 void __nvoc_init_funcTable_SpdmProxy(SpdmProxy*);
 NV_STATUS __nvoc_ctor_SpdmProxy(SpdmProxy*);
 void __nvoc_init_dataField_SpdmProxy(SpdmProxy*);
-void __nvoc_dtor_SpdmProxy(SpdmProxy*);
+void __nvoc_dtor_SpdmProxy(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__SpdmProxy;
@@ -46,7 +46,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_SpdmProxy =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "SpdmProxy",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) NULL,
+    .objCreatefn =        NULL,
     .pCastInfo =          &__nvoc_castinfo__SpdmProxy,
     .pExportInfo =        &__nvoc_export_info__SpdmProxy
 };
@@ -55,7 +55,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_SpdmProxy =
 // Metadata with per-class RTTI
 static const struct NVOC_METADATA__SpdmProxy __nvoc_metadata__SpdmProxy = {
     .rtti.pClassDef = &__nvoc_class_def_SpdmProxy,    // (spdmProxy) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_SpdmProxy,
+    .rtti.dtor      = &__nvoc_dtor_SpdmProxy,
     .rtti.offset    = 0,
 };
 
@@ -76,8 +76,10 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__SpdmProxy =
 
 
 // Destruct SpdmProxy object.
-void __nvoc_dtor_SpdmProxy(SpdmProxy* pThis) {
-    PORT_UNREFERENCED_VARIABLE(pThis);
+void __nvoc_dtor_SpdmProxy(Dynamic* pThis) {
+
+    SpdmProxy *__nvoc_this = (SpdmProxy *) pThis;
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_SpdmProxy(SpdmProxy *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);

@@ -251,6 +251,7 @@ NvBool nvIsLayerDirty(const struct NvKmsFlipCommonParams *pParams,
            pParams->layer[layer].hdr.specified ||
            pParams->layer[layer].colorSpace.specified ||
            pParams->layer[layer].tf.specified ||
+           pParams->layer[layer].fmtOverride.specified ||
            pParams->layer[layer].csc00Override.specified ||
            pParams->layer[layer].csc01Override.specified ||
            pParams->layer[layer].csc10Override.specified ||
@@ -580,6 +581,7 @@ static NvBool UpdateFlipLutHwState(
     NVFlipLutHwState *pFlipLutHwState,
     const struct NvKmsLUTSurfaceParams *pLUTSurfaceParams,
     const struct NvKmsLUTCaps *pLUTCaps,
+    const NvBool vssRequired,
     const NvBool isUsedByLayerChannel)
 {
     NvU32 requiredSize = 0;
@@ -619,15 +621,9 @@ static NvBool UpdateFlipLutHwState(
             return FALSE;
         }
 
-        if ((pLUTCaps->vssSupport == NVKMS_LUT_VSS_NOT_SUPPORTED) &&
-            (pLUTSurfaceParams->vssSegments != 0)) {
-            /* Can't specify VSS entries if VSS is not supported. */
-            return FALSE;
-        }
-
-        if ((pLUTCaps->vssSupport == NVKMS_LUT_VSS_REQUIRED) &&
-            (pLUTSurfaceParams->vssSegments == 0)) {
-            /* Must specify VSS entries if VSS is required. */
+        if (vssRequired &&
+            (!pLUTCaps->vssSupport || (pLUTSurfaceParams->vssSegments == 0))) {
+            /* VSS is required and entries must be specified */
             return FALSE;
         }
 
@@ -752,7 +748,6 @@ static NvBool UpdateLayerFlipEvoHwStateCommon(
 
             ret = nvAssignSemaphoreEvoHwState(pDevEvo,
                                               pOpenDevSurfaceHandles,
-                                              layer,
                                               sd,
                                               &pParams->layer[layer].syncObjects.val,
                                               &pHwState->syncObject);
@@ -818,14 +813,9 @@ static NvBool UpdateLayerFlipEvoHwStateCommon(
      */
     if (pDevEvo->caps.layerCaps[layer].supportsWindowMode) {
         if (pParams->layer[layer].outputPosition.specified) {
-            const NvS16 x = pParams->layer[layer].outputPosition.val.x;
-            const NvS16 y = pParams->layer[layer].outputPosition.val.y;
-            if ((pHwState->outputPosition.x != x) ||
-                (pHwState->outputPosition.y != y)) {
-                pHwState->outputPosition.x = x;
-                pHwState->outputPosition.y = y;
-                pFlipState->dirty.layerPosition[layer] = TRUE;
-            }
+            pHwState->outputPosition.x = pParams->layer[layer].outputPosition.val.x;
+            pHwState->outputPosition.y = pParams->layer[layer].outputPosition.val.y;
+            pFlipState->dirty.layerPosition[layer] = TRUE;
         }
     } else if (pParams->layer[layer].outputPosition.specified &&
                ((pParams->layer[layer].outputPosition.val.x != 0) ||
@@ -858,10 +848,18 @@ static NvBool UpdateLayerFlipEvoHwStateCommon(
             pParams->layer[layer].tf.val;
     }
 
+    if (pParams->layer[layer].fmtOverride.specified) {
+        pHwState->fmtOverride.enabled =
+            pParams->layer[layer].fmtOverride.enabled;
+        pHwState->fmtOverride.matrix =
+            pParams->layer[layer].fmtOverride.matrix;
+    }
+
     if (pParams->layer[layer].csc00Override.specified) {
         // CSC00 is only available on layers that support ICtCp.
         if (!pDevEvo->caps.layerCaps[layer].supportsICtCp &&
-            pHwState->csc00Override.enabled) {
+            pHwState->csc00Override.enabled &&
+            !nvIsCscMatrixIdentity(&pParams->layer[layer].csc00Override.matrix)) {
             return FALSE;
         }
         pHwState->csc00Override.enabled =
@@ -873,7 +871,8 @@ static NvBool UpdateLayerFlipEvoHwStateCommon(
     if (pParams->layer[layer].csc01Override.specified) {
         // CSC01 is only available on layers that support ICtCp.
         if (!pDevEvo->caps.layerCaps[layer].supportsICtCp &&
-            pHwState->csc01Override.enabled) {
+            pHwState->csc01Override.enabled &&
+            !nvIsCscMatrixIdentity(&pParams->layer[layer].csc01Override.matrix)) {
             return FALSE;
         }
         pHwState->csc01Override.enabled =
@@ -885,7 +884,8 @@ static NvBool UpdateLayerFlipEvoHwStateCommon(
     if (pParams->layer[layer].csc10Override.specified) {
         // CSC10 is only available on layers that support ICtCp.
         if (!pDevEvo->caps.layerCaps[layer].supportsICtCp &&
-            pHwState->csc10Override.enabled) {
+            pHwState->csc10Override.enabled &&
+            !nvIsCscMatrixIdentity(&pParams->layer[layer].csc10Override.matrix)) {
             return FALSE;
         }
         pHwState->csc10Override.enabled =
@@ -925,7 +925,6 @@ static NvBool UpdateLayerFlipEvoHwStateCommon(
                     pDevEvo,
                     pOpenDevSurfaceHandles,
                     &pParams->layer[layer].completionNotifier.val,
-                    layer,
                     &pFlipState->layer[layer].completionNotifier);
         if (!ret) {
             return FALSE;
@@ -940,7 +939,8 @@ static NvBool UpdateLayerFlipEvoHwStateCommon(
                         &pFlipState->layer[layer].inputLut,
                         &pParams->layer[layer].ilut.lut,
                         &pDevEvo->caps.layerCaps[layer].ilut,
-                        TRUE /*isUsedByLayerChannel*/);
+                        FALSE /*vssRequired*/,
+                        TRUE  /*isUsedByLayerChannel*/);
             if (!ret) {
                 return FALSE;
             }
@@ -1001,6 +1001,7 @@ static NvBool UpdateLayerFlipEvoHwStateCommon(
                         &pFlipState->layer[layer].tmoLut,
                         &pParams->layer[layer].tmo.lut,
                         &pDevEvo->caps.layerCaps[layer].tmo,
+                        TRUE /*vssRequired*/,
                         TRUE /*isUsedByLayerChannel*/);
             if (!ret) {
                 return FALSE;
@@ -1300,6 +1301,7 @@ NvBool nvUpdateFlipEvoHwState(
             if (!UpdateFlipLutHwState(pDevEvo, pOpenDevSurfaceHandles,
                                       &pFlipState->outputLut, &pParams->olut.lut,
                                       &pDevEvo->caps.olut,
+                                      FALSE /*vssRequired*/,
                                       FALSE /*isUsedByLayerChannel*/)) {
                 return FALSE;
             }
@@ -1863,15 +1865,8 @@ static void UpdateWinImmInterlockState(NVDevEvoPtr pDevEvo,
                                        NVEvoUpdateState *updateState,
                                        const NVEvoChannel *pChannel)
 {
-    const NvU32 subDevMask = nvPeekEvoSubDevMask(pDevEvo);
-    NvU32 sd;
-
-    for (sd = 0; sd < pDevEvo->numSubDevices; sd++) {
-        if (subDevMask & (1 << sd)) {
-            updateState->subdev[sd].winImmInterlockMask |=
-                pChannel->channelMask;
-        }
-    }
+    updateState->subdev[0].winImmInterlockMask |=
+        pChannel->channelMask;
 }
 
 /*!
@@ -1882,15 +1877,8 @@ static void UpdateUpdateFlipLockState(NVDevEvoPtr pDevEvo,
                                       NVEvoUpdateState *updateState,
                                       const NVEvoChannel *pChannel)
 {
-    const NvU32 subDevMask = nvPeekEvoSubDevMask(pDevEvo);
-    NvU32 sd;
-
-    for (sd = 0; sd < pDevEvo->numSubDevices; sd++) {
-        if (subDevMask & (1 << sd)) {
-            updateState->subdev[sd].flipLockQualifyingMask |=
-                pChannel->channelMask;
-        }
-    }
+    updateState->subdev[0].flipLockQualifyingMask |=
+        pChannel->channelMask;
 }
 
 // Adjust from EDID-encoded maxCLL/maxFALL to actual values in units of 1 cd/m2
@@ -2076,7 +2064,6 @@ void nvFlipEvoOneHead(
     NvBool allowFlipLock,
     NVEvoUpdateState *updateState)
 {
-    const NvU32 subDeviceMask = NVBIT(sd);
     const NVDispHeadStateEvoRec *pHeadState =
         &pDevEvo->gpus[sd].pDispEvo->headState[head];
     NvBool bypassComposition = pHeadState->bypassComposition;
@@ -2128,13 +2115,11 @@ void nvFlipEvoOneHead(
     }
 
     if (pFlipState->dirty.cursorSurface) {
-        nvPushEvoSubDevMask(pDevEvo, NVBIT(sd));
         pDevEvo->hal->SetCursorImage(pDevEvo,
                                      head,
                                      pSdHeadState->cursor.pSurfaceEvo,
                                      updateState,
                                      &pSdHeadState->cursor.cursorCompParams);
-        nvPopEvoSubDevMask(pDevEvo);
     }
 
     if (pFlipState->dirty.cursorPosition) {
@@ -2147,21 +2132,17 @@ void nvFlipEvoOneHead(
     hdrDirty = UpdateHDR(pDevEvo, pFlipState, sd, head, pHdrInfo, updateState);
 
     if (pFlipState->dirty.olut || hdrDirty) {
-        nvPushEvoSubDevMask(pDevEvo, NVBIT(sd));
         pDevEvo->hal->SetOutputLut(pDevEvo, sd, head,
                                    &pFlipState->outputLut,
                                    pFlipState->olutFpNormScale,
                                    updateState,
                                    bypassComposition);
-        nvPopEvoSubDevMask(pDevEvo);
     }
 
     for (layer = 0; layer < pDevEvo->head[head].numLayers; layer++) {
         if (!pFlipState->dirty.layer[layer]) {
             continue;
         }
-
-        nvPushEvoSubDevMask(pDevEvo, subDeviceMask);
 
         if (pFlipState->dirty.layerPosition[layer]) {
             /* Ensure position updates are supported on this layer. */
@@ -2192,7 +2173,6 @@ void nvFlipEvoOneHead(
             UpdateUpdateFlipLockState(pDevEvo, updateState,
                                       pDevEvo->head[head].layer[layer]);
         }
-        nvPopEvoSubDevMask(pDevEvo);
     }
 
     pSdHeadState->targetUsage = pFlipState->usage;
@@ -2539,7 +2519,6 @@ static void PreFlipIMP(NVDevEvoPtr pDevEvo,
                 pNewState->disableMidFrameAndDWCFWatermark) {
 
                 nvEnableMidFrameAndDWCFWatermark(pDevEvo,
-                                                 sd,
                                                  head,
                                                  FALSE /* enable */,
                                                  &updateState);
@@ -2726,7 +2705,6 @@ TryEnablingMidFrameAndDWCFWatermarkOneHead(NVDevEvoPtr pDevEvo,
                                         sd,
                                         &isIdle) && isIdle) {
             nvEnableMidFrameAndDWCFWatermark(pDevEvo,
-                                             sd,
                                              head,
                                              TRUE /* enable */,
                                              updateState);
@@ -3129,22 +3107,21 @@ NvBool nvAssignNVFlipEvoHwState(NVDevEvoRec *pDevEvo,
 /*!
  * Wait for idle on a set of the main layer channels.
  *
- * \param[in,out]  pDevEvo               The device.
- * \param[in]      idleChannelMaskPerSd  The channel masks per subdevice that
- *                                       we should wait to be idle.
- * \param[in]      allowForceIdle        Whether we should force idle a channel
- *                                       or just assert if the idle times out.
+ * \param[in,out]  pDevEvo          The device.
+ * \param[in]      idleChannelMask  The set of channels that we should wait to
+ *                                  be idle.
+ * \param[in]      allowForceIdle   Whether we should force idle a channel
+ *                                  or just assert if the idle times out.
  */
 void nvIdleMainLayerChannels(
     NVDevEvoPtr pDevEvo,
-    const NVEvoChannelMask *idleChannelMaskPerSd,
+    const NVEvoChannelMask idleChannelMask,
     NvBool allowStopBase)
 {
     NvU64 startTime = 0;
     NvBool allChannelsIdle = FALSE;
-    NVDispEvoPtr pDispEvo;
-    NvU32 dispIndex, head;
-    NVEvoChannelMask busyChannelMaskPerSd[NVKMS_MAX_SUBDEVICES] = { };
+    NvU32 head;
+    NVEvoChannelMask busyChannelMask = 0;
 
     /*
      * Wait up to 2 seconds for all channels to be idle, and gather a list of
@@ -3155,34 +3132,29 @@ void nvIdleMainLayerChannels(
         const NvU32 timeout = 2000000; /* 2 seconds */
         NvBool anyChannelBusy = FALSE;
 
-        FOR_ALL_EVO_DISPLAYS(pDispEvo, dispIndex, pDevEvo) {
-            for (head = 0; head < pDevEvo->numHeads; head++) {
-                NVEvoChannelPtr pMainLayerChannel =
-                    pDevEvo->head[head].layer[NVKMS_MAIN_LAYER];
-                if (idleChannelMaskPerSd[pDispEvo->displayOwner] &
-                    pMainLayerChannel->channelMask) {
+        for (head = 0; head < pDevEvo->numHeads; head++) {
+            NVEvoChannelPtr pMainLayerChannel =
+                pDevEvo->head[head].layer[NVKMS_MAIN_LAYER];
+            if (idleChannelMask & pMainLayerChannel->channelMask) {
 
-                    NvBool isMethodPending = FALSE;
-                    if (!pDevEvo->hal->IsChannelMethodPending(
-                            pDevEvo,
-                            pMainLayerChannel,
-                            pDispEvo->displayOwner,
-                            &isMethodPending)
-                        || isMethodPending) {
+                NvBool isMethodPending = FALSE;
+                if (!pDevEvo->hal->IsChannelMethodPending(
+                        pDevEvo,
+                        pMainLayerChannel,
+                        0,
+                        &isMethodPending)
+                    || isMethodPending) {
 
-                        /* Mark this channel as busy. */
-                        busyChannelMaskPerSd[pDispEvo->displayOwner] |=
-                            pMainLayerChannel->channelMask;
-                        anyChannelBusy = TRUE;
-                    } else {
-                        /*
-                         * Mark this channel as no longer busy, in case its
-                         * flip completed while we were waiting on another
-                         * channel.
-                         */
-                        busyChannelMaskPerSd[pDispEvo->displayOwner] &=
-                            ~pMainLayerChannel->channelMask;
-                    }
+                    /* Mark this channel as busy. */
+                    busyChannelMask |= pMainLayerChannel->channelMask;
+                    anyChannelBusy = TRUE;
+                } else {
+                    /*
+                     * Mark this channel as no longer busy, in case its
+                     * flip completed while we were waiting on another
+                     * channel.
+                     */
+                    busyChannelMask &= ~pMainLayerChannel->channelMask;
                 }
             }
         }
@@ -3217,12 +3189,9 @@ void nvIdleMainLayerChannels(
              * Idle all base channels that were still busy when the wait above
              * timed out.
              */
-            NVEvoIdleChannelState idleChannelState = { };
-
-            FOR_ALL_EVO_DISPLAYS(pDispEvo, dispIndex, pDevEvo) {
-                idleChannelState.subdev[pDispEvo->displayOwner].channelMask =
-                    busyChannelMaskPerSd[pDispEvo->displayOwner];
-            }
+            NVEvoIdleChannelState idleChannelState = {
+                .channelMask = busyChannelMask,
+            };
 
             pDevEvo->hal->ForceIdleSatelliteChannelIgnoreLock(
                 pDevEvo, &idleChannelState);

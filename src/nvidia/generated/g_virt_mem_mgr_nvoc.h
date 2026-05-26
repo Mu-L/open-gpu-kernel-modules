@@ -116,7 +116,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJVMM;
     ((OBJVMM*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(OBJVMM)))
 #endif //__nvoc_virt_mem_mgr_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_OBJVMM(OBJVMM**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJVMM(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJVMM(OBJVMM**, Dynamic*, NvU32);
 #define __objCreate_OBJVMM(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

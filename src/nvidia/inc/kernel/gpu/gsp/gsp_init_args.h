@@ -74,6 +74,12 @@ typedef struct
         NvU64                         pa;
         NvU64                         size;
     } rmStateMonitorBufferArgs;
+
+    struct
+    {
+        NvU64                         radix3;
+        NvU64                         size;
+    } bindataArgs;
 } GSP_ARGUMENTS_CACHED;
 
 #endif // GSP_INIT_ARGS_H

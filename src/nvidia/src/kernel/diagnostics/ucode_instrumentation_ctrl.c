@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2012-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2012-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -23,123 +23,21 @@
 /*!
  *
  * @file    ucode_instrumentation_ctrl.c
- * @brief   This module contains the ucode instrumentation control interface on the CPU layer
-*/
+ * @brief   This module contains the ucode instrumentation control interface
+ *
+ */
 #include "core/prelude.h"
 #include "gpu/gpu.h"
 #include "gpu/subdevice/subdevice.h"
 #include "gpu/subdevice/subdevice_diag.h"
 #include "kernel/gpu/intr/intr.h"
 #include "ctrl/ctrl208f/ctrl208fucodeinstrumentation.h"
+#include "ctrl/ctrl2080/ctrl2080internal.h"
 #include "nvstatus.h"
 #include "gpu/gsp/kernel_gsp.h"
 #include "core/system.h"
 #include "kernel/vgpu/rpc.h"
 #include "diagnostics/instrumentation_manager.h"
-
-typedef struct {
-    NvU8 taskRmCoverage[BULLSEYE_TASK_RM_COVERAGE_SIZE];
-    NvU8 taskVgpuCoverage[MAX_PARTITIONS_WITH_GFID][BULLSEYE_TASK_VGPU_COVERAGE_SIZE];
-} SYSMEM_INSTRUMENTATION_BUFFER_LAYOUT;
-SYSMEM_INSTRUMENTATION_BUFFER_LAYOUT *sysmemLayout;
-
-NV_STATUS
-diagapiCoverageGetState_KERNEL
-(
-    DiagApi *pDiagApi,
-    NV208F_CTRL_UCODE_INSTRUMENTATION_GET_STATE_PARAMS *pParams
-)
-{
-    switch (pParams->instrumentationType)
-    {
-        case NV208F_BULLSEYE_COVERAGE_TYPE:
-            pParams->bEnabled = NV_TRUE;
-            return NV_OK;
-        case NV208F_SANITIZER_COVERAGE_TYPE:
-            return NV_OK;
-        default:
-            return NV_ERR_NOT_SUPPORTED;
-    }
-}
-
-NV_STATUS
-diagapiCoverageSetState_KERNEL
-(
-    DiagApi *pDiagApi,
-    NV208F_CTRL_UCODE_INSTRUMENTATION_GET_STATE_PARAMS *pParams
-)
-{
-    NV_STATUS status = NV_OK;
-#if RMCFG_FEATURE_GSPRM_BULLSEYE || defined(GSPRM_BULLSEYE_ENABLE)
-    if (pParams->instrumentationType == NV208F_BULLSEYE_COVERAGE_TYPE)
-    {
-        if (pParams->bEnabled && pParams->bClear)
-        {
-            OBJGPU *pGpu = GPU_RES_GET_GPU(pDiagApi);
-            if (IS_GSP_CLIENT(pGpu))
-            {
-                OBJSYS *pSys = SYS_GET_INSTANCE();
-                instrumentationmanagerReset(pSys->pInstrumentationManager, pParams->gfid, pGpu->gpuInstance);
-            }
-        }
-        else
-        {
-            status = NV_ERR_NOT_SUPPORTED;
-        }
-    }
-#endif
-    return status;
-}
-
-NvU8* getSysmemBuffer(NvU8 *buffer, NvU32 gfid)
-{
-    sysmemLayout = (SYSMEM_INSTRUMENTATION_BUFFER_LAYOUT *)buffer;
-    return (IS_GFID_PF(gfid)) ? sysmemLayout->taskRmCoverage : 
-                                sysmemLayout->taskVgpuCoverage[gfid-1];
-}
-
-NV_STATUS
-diagapiCoverageGetData_KERNEL
-(
-    DiagApi *pDiagApi,
-    NV208F_CTRL_UCODE_INSTRUMENTATION_GET_DATA_PARAMS *pParams
-)
-{
-    NV_STATUS status = NV_OK;
-#if RMCFG_FEATURE_GSPRM_BULLSEYE || defined(GSPRM_BULLSEYE_ENABLE)
-    if (pParams->instrumentationType == NV208F_BULLSEYE_COVERAGE_TYPE)
-    { 
-        OBJGPU *pGpu = GPU_RES_GET_GPU(pDiagApi);
-        if (IS_GSP_CLIENT(pGpu))
-        {                  
-            KernelGsp *pKernelGsp = GPU_GET_KERNEL_GSP(pGpu);
-            OBJSYS *pSys = SYS_GET_INSTANCE();
-            if (pParams->offset > (BULLSEYE_GSP_RM_COVERAGE_SIZE - NV208F_UCODE_INSTRUMENTATION_RPC_MAX_BYTES_GSPRM))
-            {
-                return NV_ERR_INVALID_ARGUMENT;
-            }
-            /* only get new data and merge if first ctrl call */
-            if (pParams->offset == 0)
-            {
-                NvU8 *pSysmemBuffer = getSysmemBuffer(pKernelGsp->taskRmInstrumentation.pTaskInstrumentationBuffer, pParams->gfid);
-                instrumentationmanagerMerge(pSys->pInstrumentationManager, pParams->gfid, pGpu->gpuInstance, pSysmemBuffer);
-            }
-            NvU8 *pCovData = instrumentationmanagerGetBuffer(pSys->pInstrumentationManager, pParams->gfid, pGpu->gpuInstance);
-            if (pCovData != NULL)
-            {
-                NvU64 bufferSize = instrumentationmanagerGetNode(pSys->pInstrumentationManager, pParams->gfid,
-                                                             pGpu->gpuInstance)->bufferLength;
-                if (pParams->offset <= bufferSize)
-                {
-                    NvLength copySize = NV_MIN(NV208F_UCODE_INSTRUMENTATION_RPC_MAX_BYTES_GSPRM, bufferSize);
-                    portMemCopy(pParams->data, copySize, pCovData + pParams->offset, copySize);
-                }
-            }
-        }
-    }
-#endif
-    return status;
-}
 
 NV_STATUS
 diagapiCtrlCmdUcodeInstrumentationGetState_IMPL
@@ -148,25 +46,32 @@ diagapiCtrlCmdUcodeInstrumentationGetState_IMPL
     NV208F_CTRL_UCODE_INSTRUMENTATION_GET_STATE_PARAMS *pParams
 )
 {
-    NV_STATUS status = NV_OK;
     OBJGPU *pGpu = GPU_RES_GET_GPU(pDiagApi);
-    if (IS_GSP_CLIENT(pGpu))
+    NV2080_CTRL_INTERNAL_UCODE_INSTRUMENTATION_GET_STATE_PARAMS internalParams;
+
+    if (!IS_GSP_CLIENT(pGpu))
     {
-        CALL_CONTEXT *pCallContext  = resservGetTlsCallContext();
-        RmCtrlParams *pRmCtrlParams = pCallContext->pControlParams;
-        NV_RM_RPC_CONTROL(pGpu,
-                          pRmCtrlParams->hClient,
-                          pRmCtrlParams->hObject,
-                          pRmCtrlParams->cmd,
-                          pRmCtrlParams->pParams,
-                          pRmCtrlParams->paramsSize,
-                          status);
+        return NV_ERR_NOT_SUPPORTED;
     }
-    if (status != NV_OK)
-    {
-        return status;
-    }
-    return diagapiCoverageGetState(pDiagApi, pParams);
+
+    internalParams.ucode = pParams->ucode;
+    internalParams.gfid = pParams->gfid;
+    internalParams.bEnabled = pParams->bEnabled;
+    internalParams.bClear = pParams->bClear;
+    internalParams.instrumentationType = pParams->instrumentationType;
+
+    RM_API *pRmApi = GPU_GET_PHYSICAL_RMAPI(pGpu);
+    NV_STATUS status = pRmApi->Control(pRmApi,
+                                       pGpu->hInternalClient,
+                                       pGpu->hInternalSubdevice,
+                                       NV2080_CTRL_CMD_INTERNAL_UCODE_INSTRUMENTATION_GET_STATE,
+                                       &internalParams,
+                                       sizeof(internalParams));
+
+    pParams->bEnabled = internalParams.bEnabled;
+    pParams->bClear = internalParams.bClear;
+
+    return status;
 }
 
 NV_STATUS
@@ -178,23 +83,37 @@ diagapiCtrlCmdUcodeInstrumentationSetState_IMPL
 {
     NV_STATUS status = NV_OK;
     OBJGPU *pGpu = GPU_RES_GET_GPU(pDiagApi);
-    if (IS_GSP_CLIENT(pGpu))
+    OBJSYS *pSys = SYS_GET_INSTANCE();
+    NV2080_CTRL_INTERNAL_UCODE_INSTRUMENTATION_SET_STATE_PARAMS internalParams;
+
+    if (!IS_GSP_CLIENT(pGpu))
     {
-        CALL_CONTEXT *pCallContext  = resservGetTlsCallContext();
-        RmCtrlParams *pRmCtrlParams = pCallContext->pControlParams;
-        NV_RM_RPC_CONTROL(pGpu,
-                          pRmCtrlParams->hClient,
-                          pRmCtrlParams->hObject,
-                          pRmCtrlParams->cmd,
-                          pRmCtrlParams->pParams,
-                          pRmCtrlParams->paramsSize,
-                          status);
+        return NV_ERR_NOT_SUPPORTED;
     }
-    if (status != NV_OK)
+
+    internalParams.ucode = pParams->ucode;
+    internalParams.gfid = pParams->gfid;
+    internalParams.bEnabled = pParams->bEnabled;
+    internalParams.bClear = pParams->bClear;
+    internalParams.instrumentationType = pParams->instrumentationType;
+
+    RM_API *pRmApi = GPU_GET_PHYSICAL_RMAPI(pGpu);
+    status = pRmApi->Control(pRmApi,
+                             pGpu->hInternalClient,
+                             pGpu->hInternalSubdevice,
+                             NV2080_CTRL_CMD_INTERNAL_UCODE_INSTRUMENTATION_SET_STATE,
+                             &internalParams,
+                             sizeof(internalParams));
+
+    if (status == NV_OK &&
+        pParams->instrumentationType == NV208F_BULLSEYE_COVERAGE_TYPE &&
+        pParams->bEnabled &&
+        pParams->bClear)
     {
-        return status;
+        instrumentationmanagerReset(pSys->pInstrumentationManager, pParams->gfid, pGpu->gpuInstance);
     }
-    return diagapiCoverageSetState(pDiagApi, pParams);
+
+    return status;
 }
 
 NV_STATUS
@@ -206,29 +125,70 @@ diagapiCtrlCmdUcodeInstrumentationGetData_IMPL
 {
     NV_STATUS status = NV_OK;
     OBJGPU *pGpu = GPU_RES_GET_GPU(pDiagApi);
-    if (IS_GSP_CLIENT(pGpu))
-    {
-        CALL_CONTEXT *pCallContext  = resservGetTlsCallContext();
-        RmCtrlParams *pRmCtrlParams = pCallContext->pControlParams;
+    NV2080_CTRL_INTERNAL_UCODE_INSTRUMENTATION_GET_DATA_PARAMS *pInternalParams;
 
-        //
-        // 1. RPC to GSP-RM to dump latest Bullseye coverage data if this is the first request.
-        // 2. Sanitizer coverage handled solely by GSP-RM, RPC to GSP-RM on every sanitizer coverage data request.
-        //
-        if (pParams->offset == 0 || pParams->instrumentationType == NV208F_SANITIZER_COVERAGE_TYPE)
+    if (!IS_GSP_CLIENT(pGpu))
+    {
+        return NV_ERR_NOT_SUPPORTED;
+    }
+
+    pInternalParams = portMemAllocNonPaged(sizeof(*pInternalParams));
+    if (pInternalParams == NULL)
+    {
+        NV_PRINTF(LEVEL_ERROR, "Failed to allocate memory for internal instrumentation params\n");
+        return NV_ERR_NO_MEMORY;
+    }
+
+    portMemSet(pInternalParams, 0, sizeof(*pInternalParams));
+    pInternalParams->ucode = pParams->ucode;
+    pInternalParams->gfid = pParams->gfid;
+    pInternalParams->offset = pParams->offset;
+    pInternalParams->instrumentationType = pParams->instrumentationType;
+
+    RM_API *pRmApi = GPU_GET_PHYSICAL_RMAPI(pGpu);
+    status = pRmApi->Control(pRmApi,
+                             pGpu->hInternalClient,
+                             pGpu->hInternalSubdevice,
+                             NV2080_CTRL_CMD_INTERNAL_UCODE_INSTRUMENTATION_GET_DATA,
+                             pInternalParams,
+                             sizeof(*pInternalParams));
+
+    if (status == NV_OK)
+    {
+        NvU32 copySize = pInternalParams->dataSize;
+        if (copySize > sizeof(pParams->data))
         {
-            NV_RM_RPC_CONTROL(pGpu,
-                              pRmCtrlParams->hClient,
-                              pRmCtrlParams->hObject,
-                              pRmCtrlParams->cmd,
-                              pRmCtrlParams->pParams,
-                              pRmCtrlParams->paramsSize,
-                              status);
+            copySize = sizeof(pParams->data);
+        }
+        portMemCopy(pParams->data, copySize, pInternalParams->data, copySize);
+        pParams->dataSize = pInternalParams->dataSize;
+        pParams->bComplete = pInternalParams->bComplete;
+
+        if (pParams->instrumentationType == NV208F_BULLSEYE_COVERAGE_TYPE &&
+            pParams->dataSize > 0)
+        {
+            OBJSYS *pSys = SYS_GET_INSTANCE();
+            NvU8 *pBuffer;
+
+            // Merge this chunk of data into the instrumentation buffer
+            instrumentationmanagerMerge(pSys->pInstrumentationManager,
+                                        pParams->gfid,
+                                        pGpu->gpuInstance,
+                                        pParams->data,
+                                        pParams->offset,
+                                        pParams->dataSize);
+
+            pBuffer = instrumentationmanagerGetBuffer(pSys->pInstrumentationManager,
+                                                      pParams->gfid,
+                                                      pGpu->gpuInstance);
+            if (pBuffer != NULL)
+            {
+                portMemCopy(pParams->data, pParams->dataSize,
+                            pBuffer + pParams->offset, pParams->dataSize);
+            }
         }
     }
-    if (status != NV_OK)
-    {
-        return status;
-    }
-    return diagapiCoverageGetData(pDiagApi, pParams);
+
+    portMemFree(pInternalParams);
+    return status;
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2017-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2017-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -228,14 +228,14 @@ typedef enum
     NV_RPC_UPDATE_PDE_BAR_INVALID,
 } NV_RPC_UPDATE_PDE_BAR_TYPE;
 
-typedef struct VIRTUAL_DISPLAY_GET_MAX_RESOLUTION_PARAMS 
+typedef struct VIRTUAL_DISPLAY_GET_MAX_RESOLUTION_PARAMS
 {
     NvU32 headIndex;
     NvU32 maxHResolution;
     NvU32 maxVResolution;
 } VIRTUAL_DISPLAY_GET_MAX_RESOLUTION_PARAMS;
 
-typedef struct VIRTUAL_DISPLAY_GET_NUM_HEADS_PARAMS 
+typedef struct VIRTUAL_DISPLAY_GET_NUM_HEADS_PARAMS
 {
     NvU32 numHeads;
     NvU32 maxNumHeads;
@@ -252,8 +252,9 @@ typedef enum
 {
     GPU_RECOVERY_EVENT_TYPE_REFRESH,
     GPU_RECOVERY_EVENT_TYPE_GPU_DRAIN_P2P,
-    GPU_RECOVERY_EVENT_TYPE_SYS_REBOOT,
-    GPU_RECOVERY_EVENT_TYPE_GPU_REBOOT,
+    GPU_RECOVERY_EVENT_TYPE_SYS_OS_REBOOT,
+    GPU_RECOVERY_EVENT_TYPE_SYS_SYSTEM_REBOOT,
+    GPU_RECOVERY_EVENT_TYPE_GPU_BUS_RESET,
 } GPU_RECOVERY_EVENT_TYPE;
 
 

@@ -74,8 +74,6 @@ typedef struct NV208F_CTRL_FIFO_CHECK_ENGINE_CONTEXT_PARAMS {
  *    The handle to the channel
  *   hClient 
  *    The handle to the client
- *   bound
- *      The channel has been bound to channel RAM
  *   enabled
  *      The channel is able to run.
  *   scheduled
@@ -101,7 +99,6 @@ typedef struct NV208F_CTRL_FIFO_CHECK_ENGINE_CONTEXT_PARAMS {
 typedef struct NV208F_CTRL_FIFO_GET_CHANNEL_STATE_PARAMS {
     NvHandle hChannel;
     NvHandle hClient;
-    NvBool   bBound;
     NvBool   bEnabled;
     NvBool   bScheduled;
     NvBool   bCpuMap;

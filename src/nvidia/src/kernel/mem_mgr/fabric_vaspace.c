@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -231,16 +231,17 @@ fabricvaspaceConstruct__IMPL
     NvU32           flags
 )
 {
-    RM_API     *pRmApi = rmapiGetInterface(RMAPI_GPU_LOCK_INTERNAL);
-    OBJSYS     *pSys   = SYS_GET_INSTANCE();
-    OBJVMM     *pVmm   = SYS_GET_VMM(pSys);
-    OBJVASPACE *pVAS   = staticCast(pFabricVAS, OBJVASPACE);
-    OBJGPU     *pGpu   = gpumgrGetGpu(gpumgrGetDefaultPrimaryGpu(pVAS->gpuMask));
-    NV_STATUS   status = NV_OK;
-    NvHandle    hClient = 0;
-    NvHandle    hDevice = 0;
+    RM_API        *pRmApi = rmapiGetInterface(RMAPI_GPU_LOCK_INTERNAL);
+    OBJSYS        *pSys   = SYS_GET_INSTANCE();
+    OBJVMM        *pVmm   = SYS_GET_VMM(pSys);
+    OBJVASPACE    *pVAS   = staticCast(pFabricVAS, OBJVASPACE);
+    OBJGPU        *pGpu   = gpumgrGetGpu(gpumgrGetDefaultPrimaryGpu(pVAS->gpuMask));
+    MemoryManager *pMemoryManager = GPU_GET_MEMORY_MANAGER(pGpu);
+    NV_STATUS      status = NV_OK;
+    NvHandle       hClient = 0;
+    NvHandle       hDevice = 0;
     NV0080_ALLOC_PARAMETERS devAllocParams = { 0 };
-    NvU32       gfid    = 0;
+    NvU32          gfid    = 0;
 
     // Sanity check input parameters.
     NV_ASSERT_OR_RETURN(FABRIC_VASPACE_A == classId, NV_ERR_INVALID_ARGUMENT);
@@ -282,6 +283,12 @@ fabricvaspaceConstruct__IMPL
                          VASPACE_FLAGS_ALLOW_ZERO_ADDRESS |
                          VASPACE_FLAGS_INVALIDATE_SCOPE_NVLINK_TLB |
                          VASPACE_FLAGS_DISABLE_SPLIT_VAS);
+
+    if (pMemoryManager->bSparseFabricSupported &&
+        pMemoryManager->bAllocFabricAsSparse)
+    {
+        pFabricVAS->flags |= VASPACE_FLAGS_SPARSIFIED;
+    }
 
     if (IS_GFID_VF(gfid))
     {
@@ -683,7 +690,7 @@ fabricvaspaceBatchFree_IMPL
     pFabricVAS->ucFabricInUseSize -= totalFreeSize;
 }
 
-void
+NV_STATUS
 fabricvaspaceInvalidateTlb_IMPL
 (
     FABRIC_VASPACE      *pFabricVAS,
@@ -691,7 +698,7 @@ fabricvaspaceInvalidateTlb_IMPL
     VAS_PTE_UPDATE_TYPE  type
 )
 {
-    vaspaceInvalidateTlb(pFabricVAS->pGVAS, pFabricVAS->pGpu, type);
+    return vaspaceInvalidateTlb(pFabricVAS->pGVAS, pFabricVAS->pGpu, type);
 }
 
 NV_STATUS
@@ -700,6 +707,7 @@ fabricvaspaceGetGpaMemdesc_IMPL
     FABRIC_VASPACE     *pFabricVAS,
     MEMORY_DESCRIPTOR  *pFabricMemdesc,
     OBJGPU             *pMappingGpu,
+    NvBool              bForcePhysMemdescLookup,
     MEMORY_DESCRIPTOR **ppAdjustedMemdesc
 )
 {
@@ -710,8 +718,8 @@ fabricvaspaceGetGpaMemdesc_IMPL
 
     NV_ASSERT_OR_RETURN(ppAdjustedMemdesc != NULL, NV_ERR_INVALID_ARGUMENT);
 
-    if ((memdescGetAddressSpace(pFabricMemdesc) != ADDR_FABRIC_V2) ||
-        memdescGetFlag(pFabricMemdesc, MEMDESC_FLAGS_ALLOW_FABRIC_LOOPBACK_MAPPING))
+    if (!bForcePhysMemdescLookup && ((memdescGetAddressSpace(pFabricMemdesc) != ADDR_FABRIC_V2) ||
+        memdescGetFlag(pFabricMemdesc, MEMDESC_FLAGS_ALLOW_FABRIC_LOOPBACK_MAPPING)))
     {
         *ppAdjustedMemdesc = pFabricMemdesc;
         return NV_OK;
@@ -725,6 +733,13 @@ fabricvaspaceGetGpaMemdesc_IMPL
     if ((physAddr < fabricvaspaceGetUCFlaStart(pFabricVAS)) ||
         (physAddr > fabricvaspaceGetUCFlaLimit(pFabricVAS)))
     {
+        if (bForcePhysMemdescLookup)
+        {
+            NV_PRINTF(LEVEL_ERROR,
+                      "bForcePhysMemdescLookup only allowed when the mapping GPU is same as fabric owner GPU\n");
+            return NV_ERR_INVALID_ARGUMENT;
+        }
+
         *ppAdjustedMemdesc = pFabricMemdesc;
         return NV_OK;
     }
@@ -737,8 +752,16 @@ fabricvaspaceGetGpaMemdesc_IMPL
     // in the pteArray should be fine to determine if FLA import is on the
     // mapping GPU.
     //
-    NV_ASSERT_OK_OR_RETURN(btreeSearch(physAddr, &pNode,
-                                       pFabricVAS->pFabricVaToGpaMap));
+    status = btreeSearch(physAddr, &pNode, pFabricVAS->pFabricVaToGpaMap);
+    if (!RMCFG_FEATURE_MODS_FEATURES)
+    {
+        // Fatal for production path.
+        NV_ASSERT_OK_OR_RETURN(status);
+    }
+    else
+    {
+        return status;
+    }
 
     FABRIC_VA_TO_GPA_MAP_NODE *pFabricNode =
                                  (FABRIC_VA_TO_GPA_MAP_NODE *)pNode->Data;

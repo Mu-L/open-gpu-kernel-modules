@@ -345,11 +345,21 @@ subdeviceCtrlCmdNvlinkSetBWMode_IMPL
     NvBool bMIGNvLinkP2PSupported = ((pKernelMIGManager != NULL) &&
                                      kmigmgrIsMIGNvlinkP2PSupported(pGpu, pKernelMIGManager));
 
+    // Blackwell is always synchronous
+    NvBool bForceSync = NV_FALSE;
     if ((pKernelNvlink == NULL) || !bMIGNvLinkP2PSupported)
     {
         NV_PRINTF(LEVEL_INFO, "NVLink unavailable. Return\n");
         return NV_ERR_NOT_SUPPORTED;
     }
+
+    if ((pKernelNvlink->ipVerNvlink == NVLINK_VERSION_50) ||
+         pParams->bForceSync ||
+         !pKernelNvlink->bAsyncRbmEnabled)
+    {
+        bForceSync = NV_TRUE;
+    }
+
 
     // Direct-connect system
     if (pGpu->fabricProbeRetryDelay == 0)
@@ -366,8 +376,12 @@ subdeviceCtrlCmdNvlinkSetBWMode_IMPL
         return NV_ERR_NOT_SUPPORTED;
     }
 
-    // Set requested bw mode for GPU
-    return gpumgrSetGpuNvlinkBwModePerGpu(pGpu, pParams->rbmMode);
+    // Client should wait for at least the probe request time + link state change time + 2 seconds
+    pParams->rbmSetPollTimeoutMs = (bForceSync) ?
+        NV2080_CTRL_CMD_NVLINK_SET_BW_MODE_POLL_TIMEOUT_MS_INVALID :
+        (pKernelNvlink->probeRequestTimeMs + pKernelNvlink->linkStateChangeTimeMs + 2000U);
+
+    return gpumgrSetGpuNvlinkBwModePerGpu(pGpu, pParams->rbmMode, bForceSync);
 }
 
 //
@@ -449,3 +463,22 @@ subdeviceCtrlCmdNvlinkGetLocalDeviceInfo_IMPL
     return NV_OK;
 }
 
+NV_STATUS
+subdeviceCtrlCmdNvlinkSetupNvleEncryptionKey_IMPL
+(
+    Subdevice *pSubdevice,
+    NV2080_CTRL_NVLINK_SETUP_NVLE_ENCRYPTION_KEY_PARAMS *pParams
+)
+{
+    OBJGPU *pGpu = GPU_RES_GET_GPU(pSubdevice);
+    KernelNvlink *pKernelNvlink = GPU_GET_KERNEL_NVLINK(pGpu);
+
+    if (!pKernelNvlink->getProperty(pKernelNvlink, PDB_PROP_KNVLINK_ENCRYPTION_ENABLED) ||
+        pKernelNvlink->bNvleQualModeRegkey)
+    {
+        return NV_ERR_NOT_SUPPORTED;
+    }
+
+    return knvlinkSetupEncryptionKeys(pGpu, pKernelNvlink, pParams->localGpuAlid, pParams->remoteGpuAlid,
+                                      &pParams->localGpuPlatformInfo, &pParams->remoteGpuPlatformInfo, pParams->nvleKey);
+}

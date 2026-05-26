@@ -168,7 +168,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJREFCNT;
 #define PDB_PROP_REFCNT_ALLOW_RECURSIVE_REQUESTS_BASE_NAME PDB_PROP_REFCNT_ALLOW_RECURSIVE_REQUESTS
 
 
-NV_STATUS __nvoc_objCreateDynamic_OBJREFCNT(OBJREFCNT**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJREFCNT(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJREFCNT(OBJREFCNT**, Dynamic*, NvU32, Dynamic *pParent, NvU32 tag, RefcntStateChangeCallback *pStateChangeCallback, RefcntResetCallback *pResetCallback);
 #define __objCreate_OBJREFCNT(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pParent, tag, pStateChangeCallback, pResetCallback) \

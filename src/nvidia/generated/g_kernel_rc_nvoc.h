@@ -188,7 +188,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelRc;
 #define PDB_PROP_KRC_IS_MISSING_BASE_NAME PDB_PROP_ENGSTATE_IS_MISSING
 
 
-NV_STATUS __nvoc_objCreateDynamic_KernelRc(KernelRc**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelRc(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelRc(KernelRc**, Dynamic*, NvU32);
 #define __objCreate_KernelRc(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

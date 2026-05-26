@@ -433,6 +433,9 @@ memmgrRegionSetupCommon_IMPL
             rsvdFbRegion.bSupportISO        = pMemoryManager->Ram.fbRegion[i].bSupportISO;
             rsvdFbRegion.bProtected         = pMemoryManager->Ram.fbRegion[i].bProtected;
             rsvdFbRegion.bInternalHeap      = NV_TRUE;
+            rsvdFbRegion.regionTag          = (RMCFG_FEATURE_PLATFORM_GSP)?
+                                               NV2080_FB_REGION_TAG_GSP_RM_RESERVED_HEAP :
+                                               NV2080_FB_REGION_TAG_CPU_RM_RESERVED_HEAP;
 
             i = memmgrInsertFbRegion(pGpu, pMemoryManager, &rsvdFbRegion);
         }
@@ -528,7 +531,7 @@ memmgrDumpFbRegions_IMPL
                   pMemoryManager->Ram.fbRegion[i].limit,
                   pMemoryManager->Ram.fbRegion[i].rsvdSize);
         NV_PRINTF(LEVEL_INFO, "FB region %u - Reserved=%d, InternalHeap=%d, Compressed=%d, ISO=%d, Protected=%d, "
-                                              "Performance=%u, LostOnSuspend=%d, PreserveOnSuspend=%d\n",
+                                              "Performance=%u, LostOnSuspend=%d, PreserveOnSuspend=%d Tag=%d\n",
                   i,
                   pMemoryManager->Ram.fbRegion[i].bRsvdRegion,
                   pMemoryManager->Ram.fbRegion[i].bInternalHeap,
@@ -537,7 +540,8 @@ memmgrDumpFbRegions_IMPL
                   pMemoryManager->Ram.fbRegion[i].bProtected,
                   pMemoryManager->Ram.fbRegion[i].performance,
                   pMemoryManager->Ram.fbRegion[i].bLostOnSuspend,
-                  pMemoryManager->Ram.fbRegion[i].bPreserveOnSuspend);
+                  pMemoryManager->Ram.fbRegion[i].bPreserveOnSuspend,
+                  pMemoryManager->Ram.fbRegion[i].regionTag);
     }
 }
 

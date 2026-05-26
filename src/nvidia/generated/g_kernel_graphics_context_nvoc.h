@@ -283,7 +283,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelGraphicsContext;
     ((KernelGraphicsContext*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(KernelGraphicsContext)))
 #endif //__nvoc_kernel_graphics_context_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_KernelGraphicsContext(KernelGraphicsContext**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelGraphicsContext(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelGraphicsContext(KernelGraphicsContext**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_KernelGraphicsContext(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \
@@ -1151,7 +1151,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelGraphicsContextShared;
     ((KernelGraphicsContextShared*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(KernelGraphicsContextShared)))
 #endif //__nvoc_kernel_graphics_context_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_KernelGraphicsContextShared(KernelGraphicsContextShared**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelGraphicsContextShared(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelGraphicsContextShared(KernelGraphicsContextShared**, Dynamic*, NvU32);
 #define __objCreate_KernelGraphicsContextShared(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

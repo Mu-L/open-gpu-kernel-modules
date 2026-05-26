@@ -1876,6 +1876,7 @@ kvgpumgrGetEccAndPrReservedFb(OBJGPU *pGpu)
     {
         if ((pMemorySystemConfig->ramType != NV2080_CTRL_FB_INFO_RAM_TYPE_HBM1) &&
             (pMemorySystemConfig->ramType != NV2080_CTRL_FB_INFO_RAM_TYPE_HBM2) &&
+            (pMemorySystemConfig->ramType != NV2080_CTRL_FB_INFO_RAM_TYPE_HBM4) &&
             (pMemorySystemConfig->ramType != NV2080_CTRL_FB_INFO_RAM_TYPE_HBM3))
         {
             heapGetUsableSize(pHeap, &usableSizeFb);

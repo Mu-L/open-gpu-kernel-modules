@@ -32,7 +32,7 @@ void __nvoc_init__PerfBuffer(PerfBuffer*, RmHalspecOwner *pRmhalspecowner);
 void __nvoc_init_funcTable_PerfBuffer(PerfBuffer*, RmHalspecOwner *pRmhalspecowner);
 NV_STATUS __nvoc_ctor_PerfBuffer(PerfBuffer*, RmHalspecOwner *pRmhalspecowner, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_PerfBuffer(PerfBuffer*, RmHalspecOwner *pRmhalspecowner);
-void __nvoc_dtor_PerfBuffer(PerfBuffer*);
+void __nvoc_dtor_PerfBuffer(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__PerfBuffer;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_PerfBuffer =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "PerfBuffer",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_PerfBuffer,
+    .objCreatefn =        &__nvoc_objCreateDynamic_PerfBuffer,
     .pCastInfo =          &__nvoc_castinfo__PerfBuffer,
     .pExportInfo =        &__nvoc_export_info__PerfBuffer
 };
@@ -124,7 +124,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_PerfBuffer =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__PerfBuffer __nvoc_metadata__PerfBuffer = {
     .rtti.pClassDef = &__nvoc_class_def_PerfBuffer,    // (perfbuffer) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_PerfBuffer,
+    .rtti.dtor      = &__nvoc_dtor_PerfBuffer,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -384,16 +384,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__PerfBuffer =
 
 // Destruct PerfBuffer object.
 void __nvoc_perfbufferDestruct(PerfBuffer*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_PerfBuffer(PerfBuffer* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_PerfBuffer(Dynamic* pThis) {
+
+    PerfBuffer *__nvoc_this = (PerfBuffer *) pThis;
 
 // Call destructor.
-    __nvoc_perfbufferDestruct(pThis);
+    __nvoc_perfbufferDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_PerfBuffer(PerfBuffer *pThis, RmHalspecOwner *pRmhalspecowner) {
     RmVariantHal *rmVariantHal = &pRmhalspecowner->rmVariantHal;
@@ -424,7 +426,7 @@ NV_STATUS __nvoc_ctor_PerfBuffer(PerfBuffer *pResource, RmHalspecOwner *pRmhalsp
 
     // Unwind on error.
 __nvoc_ctor_PerfBuffer_fail__init:
-    __nvoc_dtor_GpuResource(&pResource->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pResource->__nvoc_base_GpuResource);
 __nvoc_ctor_PerfBuffer_fail_GpuResource:
 __nvoc_ctor_PerfBuffer_exit:
     return status;
@@ -562,13 +564,10 @@ __nvoc_objCreate_PerfBuffer_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_PerfBuffer(PerfBuffer **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_PerfBuffer(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_PerfBuffer(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_PerfBuffer((PerfBuffer **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

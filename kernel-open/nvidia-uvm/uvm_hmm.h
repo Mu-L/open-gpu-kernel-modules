@@ -276,7 +276,7 @@ typedef struct
                                             NvU64 addr);
 
     // This is called to service a GPU fault.
-    // processor_id is the faulting processor.
+    // gpu is the faulting gpu or NULL if CPU if faulting.
     // new_residency is the processor where the data should be migrated to.
     // Special return values (besides things like NV_ERR_NO_MEMORY):
     // NV_WARN_MORE_PROCESSING_REQUIRED indicates that one or more pages could
@@ -290,7 +290,7 @@ typedef struct
     // be retried to service the GPU fault by migrating to system memory.
     // Locking: the va_space->va_space_mm.mm mmap_lock must be locked,
     // the va_space read lock must be held, and the va_block lock held.
-    NV_STATUS uvm_hmm_va_block_service_locked(uvm_processor_id_t processor_id,
+    NV_STATUS uvm_hmm_va_block_service_locked(uvm_gpu_t *gpu,
                                               uvm_processor_id_t new_residency,
                                               uvm_va_block_t *va_block,
                                               uvm_va_block_retry_t *va_block_retry,
@@ -390,6 +390,11 @@ typedef struct
                                                      struct mm_struct *mm,
                                                      NvU64 lookup_address,
                                                      bool populate);
+
+    NV_STATUS uvm_hmm_va_block_update_residency_info_unlocked(uvm_va_block_t *va_block,
+                                                              struct mm_struct *mm,
+                                                              NvU64 lookup_address,
+                                                              bool populate);
 
     NV_STATUS uvm_test_split_invalidate_delay(UVM_TEST_SPLIT_INVALIDATE_DELAY_PARAMS *params,
                                               struct file *filp);
@@ -583,7 +588,7 @@ typedef struct
         return UVM_PROT_NONE;
     }
 
-    static NV_STATUS uvm_hmm_va_block_service_locked(uvm_processor_id_t processor_id,
+    static NV_STATUS uvm_hmm_va_block_service_locked(uvm_gpu_t *gpu,
                                                      uvm_processor_id_t new_residency,
                                                      uvm_va_block_t *va_block,
                                                      uvm_va_block_retry_t *va_block_retry,
@@ -655,10 +660,10 @@ typedef struct
         return NV_ERR_INVALID_ADDRESS;
     }
 
-    static NV_STATUS uvm_hmm_va_block_update_residency_info(uvm_va_block_t *va_block,
-                                                            struct mm_struct *mm,
-                                                            NvU64 lookup_address,
-                                                            bool populate)
+    static NV_STATUS uvm_hmm_va_block_update_residency_info_unlocked(uvm_va_block_t *va_block,
+                                                                     struct mm_struct *mm,
+                                                                     NvU64 lookup_address,
+                                                                     bool populate)
     {
         return NV_ERR_INVALID_ADDRESS;
     }

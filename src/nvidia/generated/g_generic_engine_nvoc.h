@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2016-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2016-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -145,7 +145,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_GenericEngineApi;
     ((GenericEngineApi*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(GenericEngineApi)))
 #endif //__nvoc_generic_engine_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_GenericEngineApi(GenericEngineApi**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_GenericEngineApi(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_GenericEngineApi(GenericEngineApi**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_GenericEngineApi(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

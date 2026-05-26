@@ -251,6 +251,13 @@ typedef NvU8 NvCrashCatNvriscvUcodeId;
 #define NV_CRASHCAT_NVRISCV_UCODE_ID_UNSPECIFIED    NV_U8_MAX
 
 //
+// CrashCat GFID
+//  Represents a GFID for a partittion
+//
+typedef NvU8 NvCrashCatGfid;
+#define NV_CRASHCAT_GFID_UNSPECIFIED    NV_U8_MAX
+
+//
 // CrashCat Crash Cause Type
 //  Indicates the general nature of the crash cause.
 //

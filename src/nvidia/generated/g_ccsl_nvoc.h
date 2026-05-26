@@ -108,7 +108,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_Ccsl;
     ((Ccsl*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(Ccsl)))
 #endif //__nvoc_ccsl_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_Ccsl(Ccsl**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_Ccsl(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_Ccsl(Ccsl**, Dynamic*, NvU32);
 #define __objCreate_Ccsl(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

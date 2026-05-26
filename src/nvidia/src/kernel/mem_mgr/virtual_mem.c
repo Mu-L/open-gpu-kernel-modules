@@ -307,6 +307,7 @@ virtmemConstruct_IMPL
     RmClient                    *pRmClient             = dynamicCast(pRsClient, RmClient);
     RsResourceRef               *pResourceRef          = pCallContext->pResourceRef;
     RsResourceRef               *pVASpaceRef           = NULL;
+    RsResourceRef               *pDeviceRef;
     NvU32                        gpuCacheAttrib;
     NV_STATUS                    status                = NV_OK;
     NvHandle                     hClient               = pCallContext->pClient->hClient;
@@ -339,6 +340,9 @@ virtmemConstruct_IMPL
 
         goto done;
     }
+
+    NV_ASSERT_OK_OR_RETURN(
+        refFindAncestorOfType(pResourceRef, classId(Device), &pDeviceRef));
 
     pVirtualMemory->hVASpace = RM_INVALID_VASPACE_HANDLE;
     pVirtualMemory->bAllowUnicastMapping = NV_FALSE;
@@ -490,7 +494,7 @@ virtmemConstruct_IMPL
         portMemSet(pFbAllocPageFormat, 0, sizeof(FB_ALLOC_PAGE_FORMAT));
         pFbAllocInfo->pageFormat = pFbAllocPageFormat;
 
-        memUtilsInitFBAllocInfo(pAllocRequest->pUserParams, pFbAllocInfo, hClient, hParent);
+        memUtilsInitFBAllocInfo(pAllocRequest->pUserParams, pFbAllocInfo, hClient, pDeviceRef->hResource);
 
         // Call memmgr to get memory.
         NV_CHECK_OK_OR_GOTO(status, LEVEL_SILENT,

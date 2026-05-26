@@ -154,7 +154,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_MpsApi;
     ((MpsApi*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(MpsApi)))
 #endif //__nvoc_mps_api_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_MpsApi(MpsApi**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_MpsApi(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_MpsApi(MpsApi**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_MpsApi(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

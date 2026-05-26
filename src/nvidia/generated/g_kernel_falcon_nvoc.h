@@ -215,7 +215,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelFalcon;
     ((KernelFalcon*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(KernelFalcon)))
 #endif //__nvoc_kernel_falcon_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_KernelFalcon(KernelFalcon**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelFalcon(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelFalcon(KernelFalcon**, Dynamic*, NvU32);
 #define __objCreate_KernelFalcon(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -1065,7 +1065,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_GenericKernelFalcon;
     ((GenericKernelFalcon*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(GenericKernelFalcon)))
 #endif //__nvoc_kernel_falcon_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_GenericKernelFalcon(GenericKernelFalcon**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_GenericKernelFalcon(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_GenericKernelFalcon(GenericKernelFalcon**, Dynamic*, NvU32, struct OBJGPU *pGpu, KernelFalconEngineConfig *pFalconConfig);
 #define __objCreate_GenericKernelFalcon(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pGpu, pFalconConfig) \
@@ -1133,7 +1133,7 @@ static inline NV_STATUS gkflcnResetHw_DISPATCH(struct OBJGPU *pGpu, struct Gener
     return pGenKernFlcn->__nvoc_metadata_ptr->vtable.__gkflcnResetHw__(pGpu, pGenKernFlcn);
 }
 
-static inline void gkflcnRegisterIntrService_DISPATCH(struct OBJGPU *arg1, struct GenericKernelFalcon *arg_this, IntrServiceRecord arg3[180]) {
+static inline void gkflcnRegisterIntrService_DISPATCH(struct OBJGPU *arg1, struct GenericKernelFalcon *arg_this, IntrServiceRecord arg3[181]) {
     arg_this->__nvoc_metadata_ptr->vtable.__gkflcnRegisterIntrService__(arg1, arg_this, arg3);
 }
 
@@ -1216,7 +1216,7 @@ static inline NvU32 gkflcnServiceInterrupt_DISPATCH(struct OBJGPU *pGpu, struct 
 // Virtual method declarations and/or inline definitions
 NV_STATUS gkflcnResetHw_IMPL(struct OBJGPU *pGpu, struct GenericKernelFalcon *pGenKernFlcn);
 
-void gkflcnRegisterIntrService_IMPL(struct OBJGPU *arg1, struct GenericKernelFalcon *arg_this, IntrServiceRecord arg3[180]);
+void gkflcnRegisterIntrService_IMPL(struct OBJGPU *arg1, struct GenericKernelFalcon *arg_this, IntrServiceRecord arg3[181]);
 
 NV_STATUS gkflcnServiceNotificationInterrupt_IMPL(struct OBJGPU *arg1, struct GenericKernelFalcon *arg_this, IntrServiceServiceNotificationInterruptArguments *arg3);
 

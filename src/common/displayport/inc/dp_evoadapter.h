@@ -161,6 +161,8 @@ namespace DisplayPort
         bool _isMSTPCONCapsReadDisabled;
         bool _isDownspreadSupported;
         bool _bAvoidHBR3;
+        bool _bPollingEnabledForDpMstDetection;
+        bool _bPollingDpMstDisabledByRegkey;
         bool _bAvoidHBR3DisabledByRegkey;
         bool _bIsDpTunnelingHwBugWarEnabled;
         //
@@ -277,6 +279,12 @@ namespace DisplayPort
         {
             return _bAvoidHBR3 && !_bAvoidHBR3DisabledByRegkey;
         }
+
+        virtual bool isPollingEnabledForDpMstDetection()
+        {
+            return _bPollingEnabledForDpMstDetection && !_bPollingDpMstDisabledByRegkey;
+        }
+        
         virtual bool isDpTunnelingHwBugWarEnabled()
         {
             return _bIsDpTunnelingHwBugWarEnabled;
@@ -366,6 +374,8 @@ namespace DisplayPort
         virtual bool getMaxLinkConfigFromUefi(NvU8 &linkRate, NvU8 &laneCount);
         virtual bool setDpMSAParameters(bool bStereoEnable, const NV0073_CTRL_CMD_DP_SET_MSA_PROPERTIES_PARAMS &msaparams);
         virtual bool setDpStereoMSAParameters(bool bStereoEnable, const NV0073_CTRL_CMD_DP_SET_MSA_PROPERTIES_PARAMS &msaparams);
+        using MainLink::setFlushMode;
+        using MainLink::clearFlushMode;
         bool setFlushMode();
         void clearFlushMode(unsigned headMask, bool testMode=false);
 

@@ -64,7 +64,7 @@ void nvTeardownHdmiLibrary(NVDevEvoRec *pDevEvo);
 
 NvBool nvHdmiFrlAssessLink(NVDpyEvoPtr pDpyEvo);
 NvBool nvHdmiDpySupportsFrl(const NVDpyEvoRec *pDpyEvo);
-NvBool nvHdmiFrlQueryConfigOneColorSpaceAndBpc(const NVDpyEvoRec *pDpyEvo,
+NvBool nvHdmiFrlQueryConfigOneColorFormatAndBpc(const NVDpyEvoRec *pDpyEvo,
                                                const NvModeTimings *pModeTimings,
                                                const NVHwModeTimingsEvo *pHwTimings,
                                                const NVDpyAttributeColor *pDpyColor,
@@ -78,6 +78,13 @@ void nvHdmiFrlSetConfig(NVDispEvoRec *pDispEvo, NvU32 head);
 void nvHdmiDpConstructHeadAudioState(const NvU32 displayId,
                                      const NVDpyEvoRec *pDpyEvo,
                                      NVDispHeadAudioStateEvoRec *pAudioState);
+
+NvBool nvEvoHdmiTmdsMaxPixelClockCheck(
+    const NVDpyEvoRec *pDpyEvo,
+    const struct NvKmsModeValidationParams *pValidationParams,
+    NVDpyAttributeColor *pDpyColor,
+    NVHwModeTimingsEvoPtr pTimings,
+    NVEvoInfoStringPtr pInfoString);
 
 NvBool nvHdmiIsTmdsPossible(const NVDpyEvoRec *pDpyEvo,
                             const NVHwModeTimingsEvo *pHwTimings,

@@ -255,7 +255,6 @@ struct KernelGraphics {
     NvU32 PRIVATE_FIELD(bOverrideContextBuffersPteKind);
     NvBool PRIVATE_FIELD(bDeferContextInit);
     NvBool PRIVATE_FIELD(bPerSubcontextContextHeaderSupported);
-    NvBool PRIVATE_FIELD(bSetContextBuffersGPUPrivileged);
     NvBool PRIVATE_FIELD(bUcodeSupportsPrivAccessMap);
     NvBool PRIVATE_FIELD(bRtvCbSupported);
     NvBool PRIVATE_FIELD(bFecsRecordUcodeSeqnoSupported);
@@ -320,7 +319,6 @@ struct KernelGraphics_PRIVATE {
     NvU32 bOverrideContextBuffersPteKind;
     NvBool bDeferContextInit;
     NvBool bPerSubcontextContextHeaderSupported;
-    NvBool bSetContextBuffersGPUPrivileged;
     NvBool bUcodeSupportsPrivAccessMap;
     NvBool bRtvCbSupported;
     NvBool bFecsRecordUcodeSeqnoSupported;
@@ -388,7 +386,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelGraphics;
 #define PDB_PROP_KGRAPHICS_IS_MISSING_BASE_NAME PDB_PROP_ENGSTATE_IS_MISSING
 
 
-NV_STATUS __nvoc_objCreateDynamic_KernelGraphics(KernelGraphics**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelGraphics(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelGraphics(KernelGraphics**, Dynamic*, NvU32);
 #define __objCreate_KernelGraphics(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -802,7 +800,7 @@ static inline NV_STATUS kgraphicsStatePostLoad_DISPATCH(OBJGPU *arg1, struct Ker
     return arg_this->__nvoc_metadata_ptr->vtable.__kgraphicsStatePostLoad__(arg1, arg_this, flags);
 }
 
-static inline void kgraphicsRegisterIntrService_DISPATCH(OBJGPU *arg1, struct KernelGraphics *arg_this, IntrServiceRecord arg3[180]) {
+static inline void kgraphicsRegisterIntrService_DISPATCH(OBJGPU *arg1, struct KernelGraphics *arg_this, IntrServiceRecord arg3[181]) {
     arg_this->__nvoc_metadata_ptr->vtable.__kgraphicsRegisterIntrService__(arg1, arg_this, arg3);
 }
 
@@ -911,7 +909,7 @@ NvBool kgraphicsIsPresent_IMPL(OBJGPU *arg1, struct KernelGraphics *arg_this);
 
 NV_STATUS kgraphicsStatePostLoad_IMPL(OBJGPU *arg1, struct KernelGraphics *arg_this, NvU32 flags);
 
-void kgraphicsRegisterIntrService_IMPL(OBJGPU *arg1, struct KernelGraphics *arg_this, IntrServiceRecord arg3[180]);
+void kgraphicsRegisterIntrService_IMPL(OBJGPU *arg1, struct KernelGraphics *arg_this, IntrServiceRecord arg3[181]);
 
 NV_STATUS kgraphicsServiceNotificationInterrupt_IMPL(OBJGPU *arg1, struct KernelGraphics *arg_this, IntrServiceServiceNotificationInterruptArguments *arg3);
 
@@ -1125,11 +1123,6 @@ static inline NvBool kgraphicsIsPerSubcontextContextHeaderSupported(OBJGPU *pGpu
 static inline void kgraphicsSetPerSubcontextContextHeaderSupported(OBJGPU *pGpu, struct KernelGraphics *pKernelGraphics, NvBool bProp){
     struct KernelGraphics_PRIVATE *pKernelGraphics_PRIVATE = (struct KernelGraphics_PRIVATE *)pKernelGraphics;
     pKernelGraphics_PRIVATE->bPerSubcontextContextHeaderSupported = bProp;
-}
-
-static inline NvBool kgraphicsShouldSetContextBuffersGPUPrivileged(OBJGPU *pGpu, struct KernelGraphics *pKernelGraphics){
-    struct KernelGraphics_PRIVATE *pKernelGraphics_PRIVATE = (struct KernelGraphics_PRIVATE *)pKernelGraphics;
-    return pKernelGraphics_PRIVATE->bSetContextBuffersGPUPrivileged;
 }
 
 static inline NvBool kgraphicsDoesUcodeSupportPrivAccessMap(OBJGPU *pGpu, struct KernelGraphics *pKernelGraphics){

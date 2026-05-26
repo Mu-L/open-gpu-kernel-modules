@@ -115,6 +115,14 @@ typedef struct NV00FD_CTRL_GET_INFO_PARAMS {
  *    For future use only. Must be zero for now.
  */
 
+/*
+ *  subPageOffset
+ *    Offset within the physical memory pagesize.
+ *    Pre-GR100 must be zero.
+ *    GR100+ must be 256B aligned and any mapping using a non-zero
+ *    value cannot extend into the last 2MB of the FLA allocation.
+ */
+
 
 
 /*

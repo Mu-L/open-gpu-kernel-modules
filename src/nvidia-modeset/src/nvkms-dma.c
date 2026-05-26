@@ -26,7 +26,7 @@
 #include "nvkms-dma.h"
 #include "nvkms-utils.h"
 #include "nvkms-rmapi.h"
-#include "class/cl917d.h" // NV917DDispControlDma, NV917D_DMA_*
+#include "class/clc57d.h" // NVC57D_{PUT,GET}
 #include "nvos.h"
 
 #define NV_DMA_PUSHER_CHASE_PAD 5
@@ -48,8 +48,6 @@ void nvDmaKickoffEvo(NVEvoChannelPtr pChannel)
 
 static void EvoCoreKickoff(NVDmaBufferEvoPtr push_buffer, NvU32 putOffset)
 {
-    int i;
-
     nvAssert(putOffset % 4 == 0);
     nvAssert(putOffset <= push_buffer->offset_max);
 
@@ -59,50 +57,15 @@ static void EvoCoreKickoff(NVDmaBufferEvoPtr push_buffer, NvU32 putOffset)
     __asm__ __volatile__ ("dsb sy\n\t" : : : "memory");
 #endif
 
-    /* Kick off all push buffers */
     push_buffer->put_offset = putOffset;
-    for (i = 0; i <  push_buffer->num_channels; i++) {
-        void *pControl = push_buffer->control[i];
-        nvDmaStorePioMethod(pControl, NV917D_PUT, putOffset);
-    }
+    nvDmaStorePioMethod(push_buffer->control, NVC57D_PUT, putOffset);
 }
 
 /* Read GET from an EVO core channel */
-static NvU32 EvoCoreReadGet(NVDmaBufferEvoPtr push_buffer, int sd)
+static NvU32 EvoCoreReadGet(NVDmaBufferEvoPtr push_buffer)
 {
-    void *pControl = push_buffer->control[sd];
-    return nvDmaLoadPioMethod(pControl, NV917D_GET);
-}
-
-/* Read GET for all devices and return the minimum or maximum*/
-static NvU32 EvoReadGetOffset(NVDmaBufferEvoPtr push_buffer, NvBool minimum)
-{
-    int i;
-    NvU32 get, bestGet = 0;
-    NvS32 distanceToPut, minmaxDistanceToPut = (minimum ?
-                                                0 :
-                                                (push_buffer->dma.limit + 1));
-
-    if (push_buffer->num_channels <= 1) {
-        return EvoCoreReadGet(push_buffer, 0);
-    }
-
-    for (i =0; i < push_buffer->num_channels; i++) {
-        get = EvoCoreReadGet(push_buffer, i);
-
-        /* Compute distance to put, accounting for wraps */
-        distanceToPut = push_buffer->put_offset - get;
-        if (distanceToPut < 0)
-            distanceToPut += push_buffer->dma.limit + 1;
-
-        /* Accumulate the maximum distance to put and the corresponding get. */
-        if ((minimum  && (distanceToPut >= minmaxDistanceToPut)) ||
-            (!minimum && (distanceToPut <= minmaxDistanceToPut))) {
-            minmaxDistanceToPut = distanceToPut;
-            bestGet = get;
-        }
-    }
-    return bestGet;
+    void *pControl = push_buffer->control;
+    return nvDmaLoadPioMethod(pControl, NVC57D_GET);
 }
 
 NvBool nvEvoPollForEmptyChannel(NVEvoChannelPtr pChannel, NvU32 sd,
@@ -111,7 +74,7 @@ NvBool nvEvoPollForEmptyChannel(NVEvoChannelPtr pChannel, NvU32 sd,
     NVDmaBufferEvoPtr push_buffer = &pChannel->pb;
 
     do {
-        if (EvoCoreReadGet(push_buffer, sd) == push_buffer->put_offset) {
+        if (EvoCoreReadGet(push_buffer) == push_buffer->put_offset) {
             break;
         }
 
@@ -144,7 +107,7 @@ void nvEvoMakeRoom(NVEvoChannelPtr pChannel, NvU32 count)
     }
 
     while (1) {
-        getOffset = EvoReadGetOffset(push_buffer, TRUE);
+        getOffset = EvoCoreReadGet(push_buffer);
 
         if (putOffset >= getOffset) {
             push_buffer->fifo_free_count =
@@ -216,11 +179,9 @@ void nvWriteEvoCoreNotifier(
     NvU32 value)
 {
     NVDevEvoPtr pDevEvo = pDispEvo->pDevEvo;
-    const NvU32 sd = pDispEvo->displayOwner;
-    NVEvoDmaPtr pSubChannel = &pDevEvo->core->notifiersDma[sd];
-    volatile NvU32 *pNotifiers = pSubChannel->cpuAddress;
+    volatile NvU32 *pNotifier = pDevEvo->core->notifierDma.cpuAddress;
 
-    EvoWriteNotifier(pNotifiers + offset, value);
+    EvoWriteNotifier(pNotifier + offset, value);
 }
 
 static NvBool EvoCheckNotifier(const NVDispEvoRec *pDispEvo,
@@ -230,12 +191,9 @@ static NvBool EvoCheckNotifier(const NVDispEvoRec *pDispEvo,
 {
     const NvU32 sd = pDispEvo->displayOwner;
     NVDevEvoPtr pDevEvo = pDispEvo->pDevEvo;
-    NVEvoDmaPtr pSubChannel = &pDevEvo->core->notifiersDma[sd];
     NVDmaBufferEvoPtr p = &pDevEvo->core->pb;
-    volatile NvU32 *pNotifier;
+    volatile NvU32 *pNotifier = pDevEvo->core->notifierDma.cpuAddress;
     NvU64 startTime = 0;
-
-    pNotifier = pSubChannel->cpuAddress;
 
     nvAssert(pNotifier != NULL);
     pNotifier += offset;
@@ -258,7 +216,7 @@ static NvBool EvoCheckNotifier(const NVDispEvoRec *pDispEvo,
                 pDevEvo,
                 &startTime,
                 NV_EVO_NOTIFIER_SHORT_TIMEOUT_USEC) &&
-            (p->put_offset == EvoCoreReadGet(p, sd)))
+            (p->put_offset == EvoCoreReadGet(p)))
         {
             nvEvoLogDisp(pDispEvo, EVO_LOG_WARN,
                          "Lost display notification (%d:0x%08x); "
@@ -293,26 +251,6 @@ NvBool nvEvoIsCoreNotifierComplete(NVDispEvoPtr pDispEvo, NvU32 offset,
     return EvoCheckNotifier(pDispEvo,
                             offset, done_base_bit, done_extent_bit,
                             done_value, FALSE);
-}
-
-void nvEvoSetSubdeviceMask(NVEvoChannelPtr pChannel, NvU32 mask)
-{
-    NVDmaBufferEvoPtr p = &pChannel->pb;
-
-    nvAssert(!nvDmaSubDevMaskMatchesCurrent(pChannel, mask));
-
-    p->currentSubDevMask = mask;
-
-    ASSERT_DRF_NUM(917D, _DMA, _SET_SUBDEVICE_MASK_VALUE, mask);
-
-    if (p->fifo_free_count <= 1) {
-        nvEvoMakeRoom(pChannel, 1);
-    }
-
-    nvDmaSetEvoMethodData(pChannel,
-        DRF_DEF(917D, _DMA, _OPCODE, _SET_SUBDEVICE_MASK) |
-        DRF_NUM(917D, _DMA, _SET_SUBDEVICE_MASK_VALUE, mask));
-    p->fifo_free_count -= 1;
 }
 
 /*!

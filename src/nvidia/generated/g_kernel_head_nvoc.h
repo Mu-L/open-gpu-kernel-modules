@@ -198,7 +198,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelHead;
     ((KernelHead*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(KernelHead)))
 #endif //__nvoc_kernel_head_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_KernelHead(KernelHead**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelHead(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelHead(KernelHead**, Dynamic*, NvU32);
 #define __objCreate_KernelHead(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -469,9 +469,9 @@ void kheadResetPendingVblank_v04_01(struct OBJGPU *pGpu, struct KernelHead *pKer
 
 NvBool kheadReadPendingVblank_v03_00(struct OBJGPU *pGpu, struct KernelHead *pKernelHead, NvU32 *pCachedIntr, THREAD_STATE_NODE *pThreadState);
 
-NvU32 kheadGetLoadVCounter_v03_00(struct OBJGPU *pGpu, struct KernelHead *pKernelHead);
-
 NvU32 kheadGetLoadVCounter_v05_01(struct OBJGPU *pGpu, struct KernelHead *pKernelHead);
+
+NvU32 kheadGetLoadVCounter_v03_00(struct OBJGPU *pGpu, struct KernelHead *pKernelHead);
 
 NvU32 kheadGetCrashLockCounterV_v05_01(struct OBJGPU *pGpu, struct KernelHead *pKernelHead);
 

@@ -142,7 +142,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_SyncpointMemory;
     ((SyncpointMemory*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(SyncpointMemory)))
 #endif //__nvoc_syncpoint_mem_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_SyncpointMemory(SyncpointMemory**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_SyncpointMemory(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_SyncpointMemory(SyncpointMemory**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_SyncpointMemory(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

@@ -1220,70 +1220,6 @@ static NvBool ValidateModeTimings(
         }
     }
 
-    /*
-     * Reject modes with too high pclk, except when using HDMI FRL or
-     * DisplayPort. FRL and DP have features like DSC that cannot be trivially
-     * checked against a pixel clock rate limit. Instead:
-     *
-     * - DPlib will perform link assessment to determine whether both the
-     *   monitor and GPU can drive a particular bandwidth.
-     *
-     * - hdmipacket will perform the equivalent for FRL.
-     *
-     * TMDS will only be considered on a connection capable of HDMI FRL for the
-     * mode being validated if nvHdmiIsTmdsPossible returns TRUE in the
-     * following callpath:
-     *
-     *     ValidateMode
-     *     |_ ValidateModeTimings
-     *     |_ nvConstructHwModeTimingsEvo
-     *        |_ GetDfpProtocol
-     *           |_ GetDfpHdmiProtocol
-     *              |_ nvHdmiIsTmdsPossible
-     */
-
-    if (!(nvHdmiDpySupportsFrl(pDpyEvo) ||
-          nvConnectorUsesDPLib(pDpyEvo->pConnectorEvo))) {
-        if ((overrides & NVKMS_MODE_VALIDATION_NO_MAX_PCLK_CHECK) == 0) {
-
-            NvU32 maxPixelClockKHz = pDpyEvo->maxPixelClockKHz;
-            NvU32 realPixelClock = HzToKHz(pModeTimings->pixelClockHz);
-            if (pModeTimings->yuv420Mode != NV_YUV420_MODE_NONE) {
-                realPixelClock /= 2;
-            }
-
-            if (realPixelClock > maxPixelClockKHz) {
-                NvU32 hdmi3DPixelClock = realPixelClock;
-
-                if (pModeTimings->hdmi3D) {
-                    hdmi3DPixelClock /= 2;
-                }
-
-                if (is3DVisionStereo &&
-                    pDpyEvo->stereo3DVision.requiresModetimingPatching &&
-                    (realPixelClock - maxPixelClockKHz < 5000)) {
-
-                    nvAssert(!pModeTimings->hdmi3D);
-
-                    nvEvoLogInfoString(pInfoString,
-                        "PixelClock (" NV_FMT_DIV_1000_POINT_1 " MHz) is slightly higher than Display Device maximum (" NV_FMT_DIV_1000_POINT_1 " MHz), but is within tolerance for 3D Vision Stereo.",
-                        NV_VA_DIV_1000_POINT_1(realPixelClock),
-                        NV_VA_DIV_1000_POINT_1(maxPixelClockKHz));
-
-                } else {
-
-                    LogModeValidationEnd(pDispEvo, pInfoString,
-                        "PixelClock (" NV_FMT_DIV_1000_POINT_1 " MHz%s) too high for Display Device (Max: " NV_FMT_DIV_1000_POINT_1 " MHz)",
-                        NV_VA_DIV_1000_POINT_1(hdmi3DPixelClock),
-                        pModeTimings->hdmi3D ?
-                        ", doubled for HDMI 3D" : "",
-                        NV_VA_DIV_1000_POINT_1(maxPixelClockKHz));
-                    return FALSE;
-                }
-            }
-        }
-    }
-
     /* check against the EDID's max pclk */
 
     if ((overrides & NVKMS_MODE_VALIDATION_NO_EDID_MAX_PCLK_CHECK) == 0) {
@@ -1610,19 +1546,19 @@ static NvBool GetDpyOutputColor(
         pDpyOutputColorParam->bpcSpecified ?
             pDpyOutputColorParam->bpc :
             NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_BPC_UNKNOWN;
-    enum NvKmsDpyAttributeRequestedColorSpaceValue requestedColorSpace =
+    enum NvKmsDpyAttributeRequestedColorFormatValue requestedColorFormat =
         pDpyOutputColorParam->formatSpecified ?
             pDpyOutputColorParam->format :
-            NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_SPACE_RGB;
+            NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT_RGB;
 
     /*
-     * Choose current colorSpace and colorRange based on the current mode
-     * timings and the requested color space and range.
+     * Choose current color format and colorRange based on the current mode
+     * timings and the requested color format and range.
      */
-    if (!nvChooseCurrentColorSpaceAndRangeEvo(pDpyEvo,
+    if (!nvChooseCurrentColorFormatAndRangeEvo(pDpyEvo,
                                               yuv420Mode,
                                               colorimetry,
-                                              requestedColorSpace,
+                                              requestedColorFormat,
                                               requestedColorBpc,
                                               requestedColorRange,
                                               &pDpyColor->format,
@@ -1643,19 +1579,19 @@ static NvBool ValidateDpyOutputColor(
         NvBool ret = FALSE;
 
         switch (pDpyColor->format) {
-            case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_RGB:
+            case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_RGB:
                 ret = (pDpyOutputColorParams->format ==
-                       NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_SPACE_RGB);
+                       NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT_RGB);
                 break;
-            case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr422:
+            case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr422:
                 ret = (pDpyOutputColorParams->format ==
-                       NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_SPACE_YCbCr422);
+                       NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT_YCbCr422);
                 break;
-            case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr444:
+            case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr444:
                 ret = (pDpyOutputColorParams->format ==
-                       NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_SPACE_YCbCr444);
-                 break;
-             default:
+                       NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT_YCbCr444);
+                break;
+            default:
                 break;
         }
         if (!ret) {
@@ -1789,7 +1725,7 @@ static NvBool ValidateMode(NVDpyEvoPtr pDpyEvo,
     if (nvDpyIsHdmiEvo(pDpyEvo)) {
         NvBool foundFrlConfig = FALSE;
         do {
-            if (nvHdmiFrlQueryConfigOneColorSpaceAndBpc(pDpyEvo,
+            if (nvHdmiFrlQueryConfigOneColorFormatAndBpc(pDpyEvo,
                                                         &pKmsMode->timings,
                                                         pTimingsEvo,
                                                         &dpyColor,
@@ -1800,7 +1736,7 @@ static NvBool ValidateMode(NVDpyEvoPtr pDpyEvo,
                 foundFrlConfig = TRUE;
                 break; 
             }
-        } while (nvDowngradeColorSpaceAndBpc(pDpyEvo, &supportedColorFormats, &dpyColor));
+        } while (nvDowngradeColorFormatAndBpc(pDpyEvo, &supportedColorFormats, &dpyColor));
 
         if (!foundFrlConfig) {
             LogModeValidationEnd(pDispEvo, pInfoString,

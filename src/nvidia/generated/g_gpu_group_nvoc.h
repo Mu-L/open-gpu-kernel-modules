@@ -197,7 +197,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJGPUGRP;
     ((OBJGPUGRP*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(OBJGPUGRP)))
 #endif //__nvoc_gpu_group_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_OBJGPUGRP(OBJGPUGRP**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJGPUGRP(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJGPUGRP(OBJGPUGRP**, Dynamic*, NvU32);
 #define __objCreate_OBJGPUGRP(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

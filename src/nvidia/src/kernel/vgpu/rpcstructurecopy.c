@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2008-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2008-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -593,6 +593,42 @@ NV_STATUS deserialize_NV2080_CTRL_INTERNAL_STATIC_GR_GET_INFO_PARAMS_v2C_03(NV20
     return NVOS_STATUS_SUCCESS;
 }
 
+NV_STATUS deserialize_NV2080_CTRL_INTERNAL_STATIC_GR_GET_INFO_PARAMS_v2E_06(NV2080_CTRL_INTERNAL_STATIC_GR_GET_INFO_PARAMS *grInfoParams, NvU8 *buffer, NvU32 bufferSize, NvU32 *offset)
+{
+    if (!offset)
+    {
+        return NVOS_STATUS_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (grInfoParams && buffer)
+    {
+        NV2080_CTRL_INTERNAL_STATIC_GR_GET_INFO_PARAMS_v2E_06 *gr_info_v2E_06 = NULL;
+        NvU32 i = 0, j = 0;
+
+        if ((bufferSize < *offset) ||
+            (bufferSize < (*offset + sizeof(NV2080_CTRL_INTERNAL_STATIC_GR_GET_INFO_PARAMS_v2E_06))))
+        {
+            return NV_ERR_BUFFER_TOO_SMALL;
+        }
+
+        gr_info_v2E_06 = (void*)(buffer + *offset);
+
+        for (i = 0; i < NV2080_CTRL_INTERNAL_GR_MAX_ENGINES_1B_04; i++)
+        {
+            for (j = 0; j < NV0080_CTRL_GR_INFO_MAX_SIZE_2E_06; j++)
+            {
+                grInfoParams->engineInfo[i].infoList[j].index = gr_info_v2E_06->engineInfo[i].infoList[j].index;
+                grInfoParams->engineInfo[i].infoList[j].data = gr_info_v2E_06->engineInfo[i].infoList[j].data;
+            }
+        }
+
+    }
+
+    *offset += sizeof(NV2080_CTRL_INTERNAL_STATIC_GR_GET_INFO_PARAMS_v2E_06);
+
+    return NVOS_STATUS_SUCCESS;
+}
+
 NV_STATUS deserialize_NV2080_CTRL_INTERNAL_STATIC_GR_GET_GLOBAL_SM_ORDER_PARAMS_v1F_01(NV2080_CTRL_INTERNAL_STATIC_GR_GET_GLOBAL_SM_ORDER_PARAMS *smOrderParams, NvU8 *buffer,
                                                                                        NvU32 bufferSize, NvU32 *offset)
 {
@@ -726,6 +762,52 @@ NV_STATUS deserialize_NV2080_CTRL_INTERNAL_STATIC_GR_GET_GLOBAL_SM_ORDER_PARAMS_
     return NVOS_STATUS_SUCCESS;
 }
 
+NV_STATUS deserialize_NV2080_CTRL_INTERNAL_STATIC_GR_GET_GLOBAL_SM_ORDER_PARAMS_v2E_02(NV2080_CTRL_INTERNAL_STATIC_GR_GET_GLOBAL_SM_ORDER_PARAMS *smOrderParams, NvU8 *buffer,
+                                                                                       NvU32 bufferSize, NvU32 *offset)
+{
+    if (!offset)
+    {
+        return NVOS_STATUS_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (smOrderParams && buffer)
+    {
+        NV2080_CTRL_INTERNAL_STATIC_GR_GET_GLOBAL_SM_ORDER_PARAMS_v2E_02 *sm_order_v2E_02 = NULL;
+        NvU32 i = 0, j = 0;
+
+        if ((bufferSize < *offset) ||
+            (bufferSize < (*offset + sizeof(NV2080_CTRL_INTERNAL_STATIC_GR_GET_GLOBAL_SM_ORDER_PARAMS_v2E_02))))
+        {
+            return NV_ERR_BUFFER_TOO_SMALL;
+        }
+
+        sm_order_v2E_02 = (void*)(buffer + *offset);
+
+        for (i = 0; i < NV2080_CTRL_INTERNAL_GR_MAX_ENGINES_1B_04; i++)
+        {
+            for (j = 0; j < NV2080_CTRL_INTERNAL_GR_MAX_SM_v2E_02; j++)
+            {
+                smOrderParams->globalSmOrder[i].globalSmId[j].gpcId = sm_order_v2E_02->globalSmOrder[i].globalSmId[j].gpcId;
+                smOrderParams->globalSmOrder[i].globalSmId[j].localTpcId = sm_order_v2E_02->globalSmOrder[i].globalSmId[j].localTpcId;
+                smOrderParams->globalSmOrder[i].globalSmId[j].localSmId = sm_order_v2E_02->globalSmOrder[i].globalSmId[j].localSmId;
+                smOrderParams->globalSmOrder[i].globalSmId[j].globalTpcId = sm_order_v2E_02->globalSmOrder[i].globalSmId[j].globalTpcId;
+                smOrderParams->globalSmOrder[i].globalSmId[j].virtualGpcId = sm_order_v2E_02->globalSmOrder[i].globalSmId[j].virtualGpcId;
+                smOrderParams->globalSmOrder[i].globalSmId[j].migratableTpcId = sm_order_v2E_02->globalSmOrder[i].globalSmId[j].migratableTpcId;
+                smOrderParams->globalSmOrder[i].globalSmId[j].physicalCpcId = sm_order_v2E_02->globalSmOrder[i].globalSmId[j].physicalCpcId;
+                smOrderParams->globalSmOrder[i].globalSmId[j].virtualTpcId = sm_order_v2E_02->globalSmOrder[i].globalSmId[j].virtualTpcId;
+                smOrderParams->globalSmOrder[i].globalSmId[j].ugpuId = sm_order_v2E_02->globalSmOrder[i].globalSmId[j].ugpuId;
+            }
+
+            smOrderParams->globalSmOrder[i].numSm = sm_order_v2E_02->globalSmOrder[i].numSm;
+            smOrderParams->globalSmOrder[i].numTpc = sm_order_v2E_02->globalSmOrder[i].numTpc;
+        }
+    }
+
+    *offset += sizeof(NV2080_CTRL_INTERNAL_STATIC_GR_GET_GLOBAL_SM_ORDER_PARAMS_v2E_02);
+
+    return NVOS_STATUS_SUCCESS;
+}
+
 NV_STATUS deserialize_NV2080_CTRL_INTERNAL_STATIC_GR_GET_ROP_INFO_PARAMS_v1B_05(NV2080_CTRL_INTERNAL_STATIC_GR_GET_ROP_INFO_PARAMS *ropInfoParams, NvU8 *buffer,
                                                                                 NvU32 bufferSize, NvU32 *offset)
 {
@@ -791,6 +873,45 @@ NV_STATUS deserialize_NV2080_CTRL_INTERNAL_STATIC_GR_GET_PPC_MASKS_PARAMS_v1C_06
     }
 
     *offset += sizeof(NV2080_CTRL_INTERNAL_STATIC_GR_GET_PPC_MASKS_PARAMS_v1C_06);
+
+    return NVOS_STATUS_SUCCESS;
+}
+
+NV_STATUS deserialize_NV2080_CTRL_INTERNAL_STATIC_GR_GET_PPC_MASKS_PARAMS_v2E_09(
+    NV2080_CTRL_INTERNAL_STATIC_GR_GET_PPC_MASKS_PARAMS *ppcMaskParams,
+    NvU8 *buffer,
+    NvU32 bufferSize,
+    NvU32 *offset
+)
+{
+    if (offset == NULL)
+    {
+        return NVOS_STATUS_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (ppcMaskParams && buffer)
+    {
+        NV2080_CTRL_INTERNAL_STATIC_GR_GET_PPC_MASKS_PARAMS_v2E_09 *ppc_mask_v2E_09 = NULL;
+        NvU32 i = 0, j = 0;
+
+        if ((bufferSize < *offset) ||
+            (bufferSize < (*offset + sizeof(NV2080_CTRL_INTERNAL_STATIC_GR_GET_PPC_MASKS_PARAMS_v2E_09))))
+        {
+            return NV_ERR_BUFFER_TOO_SMALL;
+        }
+
+        ppc_mask_v2E_09 = (void*)(buffer + *offset);
+
+        for (i = 0; i < NV2080_CTRL_INTERNAL_GR_MAX_ENGINES_1B_04; i++)
+        {
+            for (j = 0; j < NV2080_CTRL_INTERNAL_GR_MAX_GPC_v2E_09; j++)
+            {
+                ppcMaskParams->enginePpcMasks[i].mask[j] = ppc_mask_v2E_09->enginePpcMasks[i].mask[j];
+            }
+        }
+    }
+
+    *offset += sizeof(NV2080_CTRL_INTERNAL_STATIC_GR_GET_PPC_MASKS_PARAMS_v2E_09);
 
     return NVOS_STATUS_SUCCESS;
 }
@@ -1153,6 +1274,65 @@ NV_STATUS deserialize_NV2080_CTRL_INTERNAL_STATIC_GR_GET_FLOORSWEEPING_MASKS_PAR
     }
 
     *offset += sizeof(NV2080_CTRL_INTERNAL_STATIC_GR_GET_FLOORSWEEPING_MASKS_PARAMS_v2D_02);
+
+    return NVOS_STATUS_SUCCESS;
+
+}
+
+NV_STATUS deserialize_NV2080_CTRL_INTERNAL_STATIC_GR_GET_FLOORSWEEPING_MASKS_PARAMS_v2E_09(
+    NV2080_CTRL_INTERNAL_STATIC_GR_GET_FLOORSWEEPING_MASKS_PARAMS *floorsweepMaskParams,
+    NvU8 *buffer,
+    NvU32 bufferSize,
+    NvU32 *offset
+)
+{
+    if (offset == NULL)
+    {
+        return NVOS_STATUS_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (floorsweepMaskParams && buffer)
+    {
+        NV2080_CTRL_INTERNAL_STATIC_GR_GET_FLOORSWEEPING_MASKS_PARAMS_v2E_09 *floorsweep_mask_params_v2E_09 = NULL;
+        NvU32 i = 0, j = 0;
+
+        if ((bufferSize < *offset) ||
+            (bufferSize < (*offset + sizeof(NV2080_CTRL_INTERNAL_STATIC_GR_GET_FLOORSWEEPING_MASKS_PARAMS_v2E_09))))
+        {
+            return NV_ERR_BUFFER_TOO_SMALL;
+        }
+
+        floorsweep_mask_params_v2E_09 = (void*)(buffer + *offset);
+
+        for (i = 0; i < NV2080_CTRL_INTERNAL_GR_MAX_ENGINES_1B_04; i++)
+        {
+            for (j = 0; j < NV2080_CTRL_INTERNAL_GR_MAX_GPC_v2E_09; j++)
+            {
+                floorsweepMaskParams->floorsweepingMasks[i].tpcMask[j] =
+                    floorsweep_mask_params_v2E_09->floorsweepingMasks[i].tpcMask[j];
+                floorsweepMaskParams->floorsweepingMasks[i].tpcCount[j] =
+                    floorsweep_mask_params_v2E_09->floorsweepingMasks[i].tpcCount[j];
+                floorsweepMaskParams->floorsweepingMasks[i].numPesPerGpc[j] =
+                    floorsweep_mask_params_v2E_09->floorsweepingMasks[i].numPesPerGpc[j];
+                floorsweepMaskParams->floorsweepingMasks[i].mmuPerGpc[j] =
+                    floorsweep_mask_params_v2E_09->floorsweepingMasks[i].mmuPerGpc[j];
+                floorsweepMaskParams->floorsweepingMasks[i].zcullMask[j] =
+                    floorsweep_mask_params_v2E_09->floorsweepingMasks[i].zcullMask[j];
+            }
+
+            floorsweepMaskParams->floorsweepingMasks[i].gpcMask =
+                floorsweep_mask_params_v2E_09->floorsweepingMasks[i].gpcMask;
+            floorsweepMaskParams->floorsweepingMasks[i].physGpcMask =
+                floorsweep_mask_params_v2E_09->floorsweepingMasks[i].physGpcMask;
+
+            for (j = 0; j < NV2080_CTRL_INTERNAL_MAX_TPC_PER_GPC_COUNT_v1C_03; j++)
+            {
+                floorsweepMaskParams->floorsweepingMasks[i].tpcToPesMap[j] = floorsweep_mask_params_v2E_09->floorsweepingMasks[i].tpcToPesMap[j];
+            }
+        }
+    }
+
+    *offset += sizeof(NV2080_CTRL_INTERNAL_STATIC_GR_GET_FLOORSWEEPING_MASKS_PARAMS_v2E_09);
 
     return NVOS_STATUS_SUCCESS;
 
@@ -1765,6 +1945,144 @@ NV_STATUS deserialize_VGPU_STATIC_DATA_v2D_00(VGPU_STATIC_INFO *pVSI, NvU8 *buff
     return NVOS_STATUS_SUCCESS;
 }
 
+NV_STATUS deserialize_VGPU_STATIC_DATA_v2E_03(VGPU_STATIC_INFO *pVSI, NvU8 *buffer, NvU32 bufferSize, NvU32 *offset)
+{
+    if (offset == NULL)
+    {
+        return NVOS_STATUS_ERROR_INVALID_ARGUMENT;
+    }
+    // If pVSI and buffer are valid, then copy data and return the offset
+    if (pVSI && buffer)
+    {
+        VGPU_STATIC_DATA_v2E_03 *vgpu_static_data_v2E_03 = NULL;
+        NvU32 i;
+        if ((bufferSize < *offset) ||
+            (bufferSize < (*offset + sizeof(VGPU_STATIC_DATA_v2E_03))))
+        {
+            return NV_ERR_BUFFER_TOO_SMALL;
+        }
+        vgpu_static_data_v2E_03 = (void*)(buffer + *offset);
+        pVSI->fbTaxLength            = vgpu_static_data_v2E_03->fbTaxLength;
+        pVSI->fbLength               = vgpu_static_data_v2E_03->fbLength;
+        pVSI->fbBusWidth             = vgpu_static_data_v2E_03->fbBusWidth;
+        pVSI->fbioMask               = vgpu_static_data_v2E_03->fbioMask;
+        pVSI->fbpMask                = vgpu_static_data_v2E_03->fbpMask;
+        pVSI->ltcMask                = vgpu_static_data_v2E_03->ltcMask;
+        pVSI->ltsCount               = vgpu_static_data_v2E_03->ltsCount;
+        pVSI->subProcessIsolation    = vgpu_static_data_v2E_03->subProcessIsolation;
+        pVSI->sizeL2Cache            = vgpu_static_data_v2E_03->sizeL2Cache;
+        pVSI->poisonFuseEnabled      = vgpu_static_data_v2E_03->poisonFuseEnabled;
+        pVSI->guestManagedHwAlloc    = vgpu_static_data_v2E_03->guestManagedHwAlloc;
+
+        // gpuname
+        portMemCopy(pVSI->adapterName, sizeof(pVSI->adapterName),
+                    vgpu_static_data_v2E_03->gpuName.adapterName, sizeof(pVSI->adapterName));
+        portMemCopy(pVSI->adapterName_Unicode, sizeof(pVSI->adapterName_Unicode),
+                    vgpu_static_data_v2E_03->gpuName.adapterName_Unicode, sizeof(pVSI->adapterName_Unicode));
+        portMemCopy(pVSI->shortGpuNameString, sizeof(pVSI->shortGpuNameString),
+                    vgpu_static_data_v2E_03->gpuName.shortGpuNameString, sizeof(pVSI->adapterName));
+        pVSI->bSplitVasBetweenServerClientRm = vgpu_static_data_v2E_03->bSplitVasBetweenServerClientRm;
+        pVSI->maxSupportedPageSize           = vgpu_static_data_v2E_03->maxSupportedPageSize;
+        pVSI->bFlaSupported                  = vgpu_static_data_v2E_03->bFlaSupported;
+        pVSI->bPerRunlistChannelRamEnabled   = vgpu_static_data_v2E_03->bPerRunlistChannelRamEnabled;
+        pVSI->bAtsSupported                  = vgpu_static_data_v2E_03->bAtsSupported;
+        pVSI->bPerSubCtxheaderSupported      = vgpu_static_data_v2E_03->bPerSubCtxheaderSupported;
+        pVSI->bC2CLinkUp                     = vgpu_static_data_v2E_03->bC2CLinkUp;
+        pVSI->bLocalEgmEnabled               = vgpu_static_data_v2E_03->bLocalEgmEnabled;
+        pVSI->localEgmPeerId                 = vgpu_static_data_v2E_03->localEgmPeerId;
+        pVSI->bSelfHostedMode                = vgpu_static_data_v2E_03->bSelfHostedMode;
+        pVSI->ceFaultMethodBufferDepth       = vgpu_static_data_v2E_03->ceFaultMethodBufferDepth;
+        pVSI->pcieGpuLinkCaps                = vgpu_static_data_v2E_03->pcieGpuLinkCaps;
+        portMemCopy(pVSI->grCapsBits, sizeof(pVSI->grCapsBits),
+                    vgpu_static_data_v2E_03->grCapsBits, sizeof(vgpu_static_data_v2E_03->grCapsBits));
+
+        for (i = 0; i < NVGPU_VGPU_ENGINE_LIST_MASK_ARRAY_MAX_v27_01; i++)
+        {
+            pVSI->engineList[i] = vgpu_static_data_v2E_03->engineList[i];
+        }
+        for (i = 0; i < NV2080_ENGINE_TYPE_NVJPEG_SIZE; i++)
+        {
+            portMemCopy((void*)&pVSI->jpegCaps[i], sizeof(pVSI->jpegCaps[i]),
+                        (void*)&vgpu_static_data_v2E_03->jpegCaps[i], sizeof(vgpu_static_data_v2E_03->jpegCaps[i]));
+        }
+
+        pVSI->maxGpcClkFreqKHz               = vgpu_static_data_v2E_03->maxGpcClkFreqKHz;
+        pVSI->maxDramClkFreqKHz              = vgpu_static_data_v2E_03->maxDramClkFreqKHz;
+        pVSI->maxNvdClkFreqKHz               = vgpu_static_data_v2E_03->maxNvdClkFreqKHz;
+    }
+    *offset += sizeof(VGPU_STATIC_DATA_v2E_03);
+    return NVOS_STATUS_SUCCESS;
+}
+
+NV_STATUS deserialize_VGPU_STATIC_DATA_v2E_0C(VGPU_STATIC_INFO *pVSI, NvU8 *buffer, NvU32 bufferSize, NvU32 *offset)
+{
+    if (offset == NULL)
+    {
+        return NVOS_STATUS_ERROR_INVALID_ARGUMENT;
+    }
+    // If pVSI and buffer are valid, then copy data and return the offset
+    if (pVSI && buffer)
+    {
+        VGPU_STATIC_DATA_v2E_0C *vgpu_static_data_v2E_0C = NULL;
+        NvU32 i;
+        if ((bufferSize < *offset) ||
+            (bufferSize < (*offset + sizeof(VGPU_STATIC_DATA_v2E_0C))))
+        {
+            return NV_ERR_BUFFER_TOO_SMALL;
+        }
+        vgpu_static_data_v2E_0C = (void*)(buffer + *offset);
+        pVSI->fbTaxLength            = vgpu_static_data_v2E_0C->fbTaxLength;
+        pVSI->fbLength               = vgpu_static_data_v2E_0C->fbLength;
+        pVSI->fbBusWidth             = vgpu_static_data_v2E_0C->fbBusWidth;
+        pVSI->fbioMask               = vgpu_static_data_v2E_0C->fbioMask;
+        pVSI->fbpMask                = vgpu_static_data_v2E_0C->fbpMask;
+        pVSI->ltcMask                = vgpu_static_data_v2E_0C->ltcMask;
+        pVSI->ltsCount               = vgpu_static_data_v2E_0C->ltsCount;
+        pVSI->subProcessIsolation    = vgpu_static_data_v2E_0C->subProcessIsolation;
+        pVSI->sizeL2Cache            = vgpu_static_data_v2E_0C->sizeL2Cache;
+        pVSI->poisonFuseEnabled      = vgpu_static_data_v2E_0C->poisonFuseEnabled;
+        pVSI->guestManagedHwAlloc    = vgpu_static_data_v2E_0C->guestManagedHwAlloc;
+
+        // gpuname
+        portMemCopy(pVSI->adapterName, sizeof(pVSI->adapterName),
+                    vgpu_static_data_v2E_0C->gpuName.adapterName, sizeof(pVSI->adapterName));
+        portMemCopy(pVSI->adapterName_Unicode, sizeof(pVSI->adapterName_Unicode),
+                    vgpu_static_data_v2E_0C->gpuName.adapterName_Unicode, sizeof(pVSI->adapterName_Unicode));
+        portMemCopy(pVSI->shortGpuNameString, sizeof(pVSI->shortGpuNameString),
+                    vgpu_static_data_v2E_0C->gpuName.shortGpuNameString, sizeof(pVSI->adapterName));
+        pVSI->bSplitVasBetweenServerClientRm = vgpu_static_data_v2E_0C->bSplitVasBetweenServerClientRm;
+        pVSI->maxSupportedPageSize           = vgpu_static_data_v2E_0C->maxSupportedPageSize;
+        pVSI->bFlaSupported                  = vgpu_static_data_v2E_0C->bFlaSupported;
+        pVSI->bPerRunlistChannelRamEnabled   = vgpu_static_data_v2E_0C->bPerRunlistChannelRamEnabled;
+        pVSI->bAtsSupported                  = vgpu_static_data_v2E_0C->bAtsSupported;
+        pVSI->bPerSubCtxheaderSupported      = vgpu_static_data_v2E_0C->bPerSubCtxheaderSupported;
+        pVSI->bC2CLinkUp                     = vgpu_static_data_v2E_0C->bC2CLinkUp;
+        pVSI->bLocalEgmEnabled               = vgpu_static_data_v2E_0C->bLocalEgmEnabled;
+        pVSI->localEgmPeerId                 = vgpu_static_data_v2E_0C->localEgmPeerId;
+        pVSI->bSelfHostedMode                = vgpu_static_data_v2E_0C->bSelfHostedMode;
+        pVSI->bSysL2CacheCoherentMode        = vgpu_static_data_v2E_0C->bSysL2CacheCoherentMode;
+        pVSI->ceFaultMethodBufferDepth       = vgpu_static_data_v2E_0C->ceFaultMethodBufferDepth;
+        pVSI->pcieGpuLinkCaps                = vgpu_static_data_v2E_0C->pcieGpuLinkCaps;
+        portMemCopy(pVSI->grCapsBits, sizeof(pVSI->grCapsBits),
+                    vgpu_static_data_v2E_0C->grCapsBits, sizeof(vgpu_static_data_v2E_0C->grCapsBits));
+
+        for (i = 0; i < NVGPU_VGPU_ENGINE_LIST_MASK_ARRAY_MAX_v27_01; i++)
+        {
+            pVSI->engineList[i] = vgpu_static_data_v2E_0C->engineList[i];
+        }
+        for (i = 0; i < NV2080_ENGINE_TYPE_NVJPEG_SIZE; i++)
+        {
+            portMemCopy((void*)&pVSI->jpegCaps[i], sizeof(pVSI->jpegCaps[i]),
+                        (void*)&vgpu_static_data_v2E_0C->jpegCaps[i], sizeof(vgpu_static_data_v2E_0C->jpegCaps[i]));
+        }
+        pVSI->maxGpcClkFreqKHz               = vgpu_static_data_v2E_0C->maxGpcClkFreqKHz;
+        pVSI->maxDramClkFreqKHz              = vgpu_static_data_v2E_0C->maxDramClkFreqKHz;
+        pVSI->maxNvdClkFreqKHz               = vgpu_static_data_v2E_0C->maxNvdClkFreqKHz;
+    }
+    *offset += sizeof(VGPU_STATIC_DATA_v2E_0C);
+    return NVOS_STATUS_SUCCESS;
+}
+
 NV_STATUS deserialize_NV0000_CTRL_SYSTEM_GET_VGX_SYSTEM_INFO_PARAMS_v03_00(NV0000_CTRL_SYSTEM_GET_VGX_SYSTEM_INFO_PARAMS *vgxSystemInfo,
                                                                             NvU8 *buffer, NvU32 bufferSize, NvU32 *offset)
 {
@@ -2029,6 +2347,47 @@ NV_STATUS deserialize_NV2080_CTRL_GPU_GET_COMPUTE_PROFILES_PARAMS_v20_04(NV2080_
     return NVOS_STATUS_SUCCESS;
 }
 
+NV_STATUS deserialize_NV2080_CTRL_GPU_GET_COMPUTE_PROFILES_PARAMS_v2E_01(NV2080_CTRL_GPU_GET_COMPUTE_PROFILES_PARAMS *ciProfiles,
+                                                                         NvU8 *buffer, NvU32 bufferSize, NvU32 *offset)
+{
+    if (!offset)
+    {
+        return NVOS_STATUS_ERROR_INVALID_ARGUMENT;
+    }
+
+    // If ciProfiles and buffer are valid, then copy data and return the offset
+    if (ciProfiles && buffer)
+    {
+        NvU32 i;
+        NV2080_CTRL_GPU_GET_COMPUTE_PROFILES_PARAMS_v2E_01 *ciProfiles_v2E_01 = NULL;
+
+        if ((bufferSize < *offset) ||
+            (bufferSize < (*offset + sizeof(NV2080_CTRL_GPU_GET_COMPUTE_PROFILES_PARAMS_v2E_01))))
+        {
+            return NV_ERR_BUFFER_TOO_SMALL;
+        }
+
+        ciProfiles_v2E_01 = (void*)(buffer + *offset);
+
+        NV_ASSERT(ciProfiles_v2E_01->profileCount <= NV_ARRAY_ELEMENTS(ciProfiles->profiles));
+
+        ciProfiles->profileCount = ciProfiles_v2E_01->profileCount;
+        for (i = 0; i < ciProfiles->profileCount; i++)
+        {
+            ciProfiles->profiles[i].gfxGpcCount = ciProfiles_v2E_01->profiles[i].gfxGpcCount;
+            ciProfiles->profiles[i].computeSize = ciProfiles_v2E_01->profiles[i].computeSize;
+            ciProfiles->profiles[i].gpcCount    = ciProfiles_v2E_01->profiles[i].gpcCount;
+            ciProfiles->profiles[i].veidCount   = ciProfiles_v2E_01->profiles[i].veidCount;
+            ciProfiles->profiles[i].smCount     = ciProfiles_v2E_01->profiles[i].smCount;
+            ciProfiles->profiles[i].flags       = ciProfiles_v2E_01->profiles[i].flags;
+        }
+    }
+
+    *offset += sizeof(NV2080_CTRL_GPU_GET_COMPUTE_PROFILES_PARAMS_v2E_01);
+
+    return NVOS_STATUS_SUCCESS;
+}
+
 NV_STATUS deserialize_NVC637_CTRL_EXEC_PARTITIONS_GET_PARAMS_v18_07(NVC637_CTRL_EXEC_PARTITIONS_GET_PARAMS *execPartitionInfo,
                                                                     NvU8 *buffer, NvU32 bufferSize, NvU32 *offset)
 {
@@ -2093,6 +2452,57 @@ NV_STATUS deserialize_NVC637_CTRL_EXEC_PARTITIONS_GET_PARAMS_v24_05(NVC637_CTRL_
     }
 
     *offset += sizeof(NVC637_CTRL_EXEC_PARTITIONS_GET_PARAMS_v24_05);
+
+    return NVOS_STATUS_SUCCESS;
+}
+
+NV_STATUS deserialize_NVC637_CTRL_EXEC_PARTITIONS_GET_PARAMS_v2E_01(NVC637_CTRL_EXEC_PARTITIONS_GET_PARAMS *execPartitionInfo,
+                                                                    NvU8 *buffer, NvU32 bufferSize, NvU32 *offset)
+{
+    if (!offset)
+    {
+        return NVOS_STATUS_ERROR_INVALID_ARGUMENT;
+    }
+
+    // If execPartitionInfo and buffer are valid, then copy data and return the offset
+    if (execPartitionInfo && buffer)
+    {
+        NvU32 i;
+        NVC637_CTRL_EXEC_PARTITIONS_GET_PARAMS_v2E_01 *execPartitionInfo_v2E_01 = NULL;
+
+        if ((bufferSize < *offset) ||
+            (bufferSize < (*offset + sizeof(NVC637_CTRL_EXEC_PARTITIONS_GET_PARAMS_v2E_01))))
+        {
+            return NV_ERR_BUFFER_TOO_SMALL;
+        }
+
+        execPartitionInfo_v2E_01 = (void*)(buffer + *offset);
+
+        execPartitionInfo->execPartCount    = execPartitionInfo_v2E_01->execPartCount;
+
+        for (i = 0; i < execPartitionInfo->execPartCount; i++)
+        {
+            NVC637_CTRL_EXEC_PARTITIONS_INFO *dst = &(execPartitionInfo->execPartInfo[i]);
+
+            execPartitionInfo->execPartId[i] = execPartitionInfo_v2E_01->execPartId[i];
+
+            dst->gpcCount       = execPartitionInfo_v2E_01->execPartInfo[i].gpcCount;
+            dst->gfxGpcCount    = execPartitionInfo_v2E_01->execPartInfo[i].gfxGpcCount;
+            dst->veidCount      = execPartitionInfo_v2E_01->execPartInfo[i].veidCount;
+            dst->ceCount        = execPartitionInfo_v2E_01->execPartInfo[i].ceCount;
+            dst->nvEncCount     = execPartitionInfo_v2E_01->execPartInfo[i].nvEncCount;
+            dst->nvDecCount     = execPartitionInfo_v2E_01->execPartInfo[i].nvDecCount;
+            dst->nvJpgCount     = execPartitionInfo_v2E_01->execPartInfo[i].nvJpgCount;
+            dst->ofaCount       = execPartitionInfo_v2E_01->execPartInfo[i].ofaCount;
+            dst->sharedEngFlag  = execPartitionInfo_v2E_01->execPartInfo[i].sharedEngFlag;
+            dst->smCount        = execPartitionInfo_v2E_01->execPartInfo[i].smCount;
+            dst->spanStart      = execPartitionInfo_v2E_01->execPartInfo[i].spanStart;
+            dst->computeSize    = execPartitionInfo_v2E_01->execPartInfo[i].computeSize;
+            dst->execPartFlags  = execPartitionInfo_v2E_01->execPartInfo[i].execPartFlags;
+        }
+    }
+
+    *offset += sizeof(NVC637_CTRL_EXEC_PARTITIONS_GET_PARAMS_v2E_01);
 
     return NVOS_STATUS_SUCCESS;
 }
@@ -3058,10 +3468,10 @@ NV_STATUS deserialize_NV2080_CTRL_CE_GET_ALL_CAPS_PARAMS_v21_0A(NV2080_CTRL_CE_G
 
         ce_get_all_caps_v21_0A = (void*)(buffer + *offset);
 
-        NV_ASSERT_OR_RETURN(NV2080_CTRL_MAX_PCES <= NV2080_CTRL_MAX_PCES_v21_0A,
+        NV_ASSERT_OR_RETURN(NV2080_CTRL_MAX_PCES_v21_0A <= NV2080_CTRL_MAX_PCES,
                             NV_ERR_INSUFFICIENT_RESOURCES);
 
-        NV_ASSERT_OR_RETURN(NV2080_CTRL_CE_CAPS_TBL_SIZE <=  NV2080_CTRL_CE_CAPS_TBL_SIZE_v21_0A,
+        NV_ASSERT_OR_RETURN(NV2080_CTRL_CE_CAPS_TBL_SIZE_v21_0A <= NV2080_CTRL_CE_CAPS_TBL_SIZE,
                             NV_ERR_INSUFFICIENT_RESOURCES);
 
         cegetAllCaps->present = ce_get_all_caps_v21_0A->present;
@@ -3073,6 +3483,46 @@ NV_STATUS deserialize_NV2080_CTRL_CE_GET_ALL_CAPS_PARAMS_v21_0A(NV2080_CTRL_CE_G
     }
 
     *offset += sizeof(NV2080_CTRL_CE_GET_ALL_CAPS_PARAMS_v21_0A);
+
+    return NVOS_STATUS_SUCCESS;
+}
+
+NV_STATUS deserialize_NV2080_CTRL_CE_GET_ALL_CAPS_PARAMS_v2E_0A(NV2080_CTRL_CE_GET_ALL_CAPS_PARAMS *cegetAllCaps, NvU8 *buffer, NvU32 bufferSize, NvU32 *offset)
+{
+    if (!offset)
+    {
+        return NVOS_STATUS_ERROR_INVALID_ARGUMENT;
+    }
+
+    // If cegetAllCaps and buffer are valid, then copy data and return the offset
+    if (cegetAllCaps && buffer)
+    {
+        NV2080_CTRL_CE_GET_ALL_CAPS_PARAMS_v2E_0A *ce_get_all_caps_v2E_0A = NULL;
+        NvU32 i;
+
+        if ((bufferSize < *offset) ||
+            (bufferSize < (*offset + sizeof(NV2080_CTRL_CE_GET_ALL_CAPS_PARAMS_v2E_0A))))
+        {
+            return NV_ERR_BUFFER_TOO_SMALL;
+        }
+
+        ce_get_all_caps_v2E_0A = (void*)(buffer + *offset);
+
+        NV_ASSERT_OR_RETURN(NV2080_CTRL_MAX_PCES_v2E_0A <= NV2080_CTRL_MAX_PCES,
+                            NV_ERR_INSUFFICIENT_RESOURCES);
+
+        NV_ASSERT_OR_RETURN(NV2080_CTRL_CE_CAPS_TBL_SIZE_v21_0A <= NV2080_CTRL_CE_CAPS_TBL_SIZE,
+                            NV_ERR_INSUFFICIENT_RESOURCES);
+
+        cegetAllCaps->present = ce_get_all_caps_v2E_0A->present;
+
+        for (i = 0; i < NV2080_CTRL_MAX_PCES_v2E_0A; i++) {
+            portMemCopy(cegetAllCaps->capsTbl[i], (sizeof(NvU8) * NV2080_CTRL_CE_CAPS_TBL_SIZE_v21_0A),
+                        ce_get_all_caps_v2E_0A->ceCaps[i].capsTbl, (sizeof(NvU8) * NV2080_CTRL_CE_CAPS_TBL_SIZE_v21_0A));
+        }
+    }
+
+    *offset += sizeof(NV2080_CTRL_CE_GET_ALL_CAPS_PARAMS_v2E_0A);
 
     return NVOS_STATUS_SUCCESS;
 }

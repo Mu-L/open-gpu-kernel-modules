@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2016-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2016-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -164,7 +164,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_RmClientResource;
     ((RmClientResource*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(RmClientResource)))
 #endif //__nvoc_client_resource_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_RmClientResource(RmClientResource**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_RmClientResource(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_RmClientResource(RmClientResource**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_RmClientResource(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \
@@ -968,6 +968,26 @@ static inline NV_STATUS cliresCtrlCmdOsUnixImportObjectsFromFd(struct RmClientRe
 #define cliresCtrlCmdOsUnixImportObjectsFromFd(pRmCliRes, pParams) cliresCtrlCmdOsUnixImportObjectsFromFd_IMPL(pRmCliRes, pParams)
 #endif // __nvoc_client_resource_h_disabled
 
+NV_STATUS cliresCtrlCmdOsUnixMemacctSetLimits_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_OS_UNIX_MEMACCT_SET_LIMITS_PARAMS *pParams);
+#ifdef __nvoc_client_resource_h_disabled
+static inline NV_STATUS cliresCtrlCmdOsUnixMemacctSetLimits(struct RmClientResource *pRmCliRes, NV0000_CTRL_OS_UNIX_MEMACCT_SET_LIMITS_PARAMS *pParams) {
+    NV_ASSERT_FAILED_PRECOMP("RmClientResource was disabled!");
+    return NV_ERR_NOT_SUPPORTED;
+}
+#else // __nvoc_client_resource_h_disabled
+#define cliresCtrlCmdOsUnixMemacctSetLimits(pRmCliRes, pParams) cliresCtrlCmdOsUnixMemacctSetLimits_IMPL(pRmCliRes, pParams)
+#endif // __nvoc_client_resource_h_disabled
+
+NV_STATUS cliresCtrlCmdOsUnixMemacctGetLimits_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_OS_UNIX_MEMACCT_GET_LIMITS_PARAMS *pParams);
+#ifdef __nvoc_client_resource_h_disabled
+static inline NV_STATUS cliresCtrlCmdOsUnixMemacctGetLimits(struct RmClientResource *pRmCliRes, NV0000_CTRL_OS_UNIX_MEMACCT_GET_LIMITS_PARAMS *pParams) {
+    NV_ASSERT_FAILED_PRECOMP("RmClientResource was disabled!");
+    return NV_ERR_NOT_SUPPORTED;
+}
+#else // __nvoc_client_resource_h_disabled
+#define cliresCtrlCmdOsUnixMemacctGetLimits(pRmCliRes, pParams) cliresCtrlCmdOsUnixMemacctGetLimits_IMPL(pRmCliRes, pParams)
+#endif // __nvoc_client_resource_h_disabled
+
 NV_STATUS cliresCtrlCmdOsUnixFlushUserCache_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_OS_UNIX_FLUSH_USER_CACHE_PARAMS *pAddressSpaceParams);
 #ifdef __nvoc_client_resource_h_disabled
 static inline NV_STATUS cliresCtrlCmdOsUnixFlushUserCache(struct RmClientResource *pRmCliRes, NV0000_CTRL_OS_UNIX_FLUSH_USER_CACHE_PARAMS *pAddressSpaceParams) {
@@ -1006,6 +1026,16 @@ static inline NV_STATUS cliresCtrlCmdGpuAcctGetProcAccountingInfo(struct RmClien
 }
 #else // __nvoc_client_resource_h_disabled
 #define cliresCtrlCmdGpuAcctGetProcAccountingInfo(pRmCliRes, pAcctInfoParams) cliresCtrlCmdGpuAcctGetProcAccountingInfo_IMPL(pRmCliRes, pAcctInfoParams)
+#endif // __nvoc_client_resource_h_disabled
+
+NV_STATUS cliresCtrlCmdGpuAcctGetProcAccountingInfo_v2_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_V2_PARAMS *pAcctInfoParams);
+#ifdef __nvoc_client_resource_h_disabled
+static inline NV_STATUS cliresCtrlCmdGpuAcctGetProcAccountingInfo_v2(struct RmClientResource *pRmCliRes, NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_V2_PARAMS *pAcctInfoParams) {
+    NV_ASSERT_FAILED_PRECOMP("RmClientResource was disabled!");
+    return NV_ERR_NOT_SUPPORTED;
+}
+#else // __nvoc_client_resource_h_disabled
+#define cliresCtrlCmdGpuAcctGetProcAccountingInfo_v2(pRmCliRes, pAcctInfoParams) cliresCtrlCmdGpuAcctGetProcAccountingInfo_v2_IMPL(pRmCliRes, pAcctInfoParams)
 #endif // __nvoc_client_resource_h_disabled
 
 NV_STATUS cliresCtrlCmdGpuAcctGetAccountingPids_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_GPUACCT_GET_ACCOUNTING_PIDS_PARAMS *pAcctPidsParams);
@@ -1216,6 +1246,16 @@ static inline NV_STATUS cliresCtrlCmdSystemPfmreqhndlrGetExtendedPerfSensorCount
 }
 #else // __nvoc_client_resource_h_disabled
 #define cliresCtrlCmdSystemPfmreqhndlrGetExtendedPerfSensorCounters(pRmCliRes, pParams) cliresCtrlCmdSystemPfmreqhndlrGetExtendedPerfSensorCounters_IMPL(pRmCliRes, pParams)
+#endif // __nvoc_client_resource_h_disabled
+
+NV_STATUS cliresCtrlCmdSystemReadCper_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_SYSTEM_READ_CPER_PARAMS *pParams);
+#ifdef __nvoc_client_resource_h_disabled
+static inline NV_STATUS cliresCtrlCmdSystemReadCper(struct RmClientResource *pRmCliRes, NV0000_CTRL_SYSTEM_READ_CPER_PARAMS *pParams) {
+    NV_ASSERT_FAILED_PRECOMP("RmClientResource was disabled!");
+    return NV_ERR_NOT_SUPPORTED;
+}
+#else // __nvoc_client_resource_h_disabled
+#define cliresCtrlCmdSystemReadCper(pRmCliRes, pParams) cliresCtrlCmdSystemReadCper_IMPL(pRmCliRes, pParams)
 #endif // __nvoc_client_resource_h_disabled
 
 
@@ -1528,6 +1568,10 @@ NV_STATUS cliresCtrlCmdOsUnixExportObjectsToFd_IMPL(struct RmClientResource *pRm
 
 NV_STATUS cliresCtrlCmdOsUnixImportObjectsFromFd_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_OS_UNIX_IMPORT_OBJECTS_FROM_FD_PARAMS *pParams);
 
+NV_STATUS cliresCtrlCmdOsUnixMemacctSetLimits_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_OS_UNIX_MEMACCT_SET_LIMITS_PARAMS *pParams);
+
+NV_STATUS cliresCtrlCmdOsUnixMemacctGetLimits_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_OS_UNIX_MEMACCT_GET_LIMITS_PARAMS *pParams);
+
 NV_STATUS cliresCtrlCmdOsUnixFlushUserCache_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_OS_UNIX_FLUSH_USER_CACHE_PARAMS *pAddressSpaceParams);
 
 NV_STATUS cliresCtrlCmdGpuAcctSetAccountingState_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_GPUACCT_SET_ACCOUNTING_STATE_PARAMS *pParams);
@@ -1535,6 +1579,8 @@ NV_STATUS cliresCtrlCmdGpuAcctSetAccountingState_IMPL(struct RmClientResource *p
 NV_STATUS cliresCtrlCmdGpuAcctGetAccountingState_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_GPUACCT_GET_ACCOUNTING_STATE_PARAMS *pParams);
 
 NV_STATUS cliresCtrlCmdGpuAcctGetProcAccountingInfo_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_PARAMS *pAcctInfoParams);
+
+NV_STATUS cliresCtrlCmdGpuAcctGetProcAccountingInfo_v2_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_V2_PARAMS *pAcctInfoParams);
 
 NV_STATUS cliresCtrlCmdGpuAcctGetAccountingPids_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_GPUACCT_GET_ACCOUNTING_PIDS_PARAMS *pAcctPidsParams);
 
@@ -1577,6 +1623,8 @@ NV_STATUS cliresCtrlCmdSystemPfmreqhndlrBatchControl_IMPL(struct RmClientResourc
 NV_STATUS cliresCtrlCmdSystemPfmreqhndlrGetPerfSensorCounters_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_SYSTEM_PFM_REQ_HNDLR_GET_PERF_SENSOR_COUNTERS_PARAMS *pParams);
 
 NV_STATUS cliresCtrlCmdSystemPfmreqhndlrGetExtendedPerfSensorCounters_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_SYSTEM_PFM_REQ_HNDLR_GET_PERF_SENSOR_COUNTERS_PARAMS *pParams);
+
+NV_STATUS cliresCtrlCmdSystemReadCper_IMPL(struct RmClientResource *pRmCliRes, NV0000_CTRL_SYSTEM_READ_CPER_PARAMS *pParams);
 
 // HAL method declarations without bodies
 // Inline HAL method definitions

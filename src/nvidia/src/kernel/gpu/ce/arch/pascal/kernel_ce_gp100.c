@@ -59,6 +59,8 @@ NV_STATUS kceStateLoad_GP100(OBJGPU *pGpu, KernelCE *pKCe, NvU32 flags)
         NvU32   supportedLceMask;
         NvU32   pcesPerHshub;
 
+        NV2080_CTRL_CE_SHIM_PREFERENCE shimPreference;
+
         NV_ASSERT_OK_OR_RETURN(kceGetPceConfigForLceType(pGpu,
                                                          pKCe,
                                                          NV2080_CTRL_CE_LCE_TYPE_DECOMP,
@@ -66,7 +68,8 @@ NV_STATUS kceStateLoad_GP100(OBJGPU *pGpu, KernelCE *pKCe, NvU32 flags)
                                                          &numLces,
                                                          &supportedPceMask,
                                                          &supportedLceMask,
-                                                         &pcesPerHshub));
+                                                         &pcesPerHshub,
+                                                         &shimPreference));
 
         pKCe->decompPceMask         = supportedPceMask;
         pKCe->shimConnectingHubMask = 0;

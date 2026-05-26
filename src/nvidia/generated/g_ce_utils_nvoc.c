@@ -28,7 +28,7 @@ void __nvoc_init__CeUtils(CeUtils*);
 void __nvoc_init_funcTable_CeUtils(CeUtils*);
 NV_STATUS __nvoc_ctor_CeUtils(CeUtils*, struct OBJGPU *pGpu, KERNEL_MIG_GPU_INSTANCE *pKernelMIGGPUInstance, NV0050_ALLOCATION_PARAMETERS *pAllocParams);
 void __nvoc_init_dataField_CeUtils(CeUtils*);
-void __nvoc_dtor_CeUtils(CeUtils*);
+void __nvoc_dtor_CeUtils(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__CeUtils;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_CeUtils =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "CeUtils",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_CeUtils,
+    .objCreatefn =        &__nvoc_objCreateDynamic_CeUtils,
     .pCastInfo =          &__nvoc_castinfo__CeUtils,
     .pExportInfo =        &__nvoc_export_info__CeUtils
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_CeUtils =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__CeUtils __nvoc_metadata__CeUtils = {
     .rtti.pClassDef = &__nvoc_class_def_CeUtils,    // (ceutils) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_CeUtils,
+    .rtti.dtor      = &__nvoc_dtor_CeUtils,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -82,16 +82,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__CeUtils =
 
 // Destruct CeUtils object.
 void __nvoc_ceutilsDestruct(CeUtils*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_CeUtils(CeUtils* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_CeUtils(Dynamic* pThis) {
+
+    CeUtils *__nvoc_this = (CeUtils *) pThis;
 
 // Call destructor.
-    __nvoc_ceutilsDestruct(pThis);
+    __nvoc_ceutilsDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_CeUtils(CeUtils *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -117,7 +119,7 @@ NV_STATUS __nvoc_ctor_CeUtils(CeUtils *pCeUtils, struct OBJGPU *pGpu, KERNEL_MIG
 
     // Unwind on error.
 __nvoc_ctor_CeUtils_fail__init:
-    __nvoc_dtor_Object(&pCeUtils->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&pCeUtils->__nvoc_base_Object);
 __nvoc_ctor_CeUtils_fail_Object:
 __nvoc_ctor_CeUtils_exit:
     return status;
@@ -221,15 +223,12 @@ __nvoc_objCreate_CeUtils_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_CeUtils(CeUtils **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_CeUtils(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct OBJGPU *pGpu = va_arg(__nvoc_args, struct OBJGPU *);
     KERNEL_MIG_GPU_INSTANCE *pKernelMIGGPUInstance = va_arg(__nvoc_args, KERNEL_MIG_GPU_INSTANCE *);
     NV0050_ALLOCATION_PARAMETERS *pAllocParams = va_arg(__nvoc_args, NV0050_ALLOCATION_PARAMETERS *);
 
-    __nvoc_status = __nvoc_objCreate_CeUtils(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pGpu, pKernelMIGGPUInstance, pAllocParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_CeUtils((CeUtils **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pGpu, pKernelMIGGPUInstance, pAllocParams);
 }
 
 
@@ -250,7 +249,7 @@ void __nvoc_init__CeUtilsApi(CeUtilsApi*);
 void __nvoc_init_funcTable_CeUtilsApi(CeUtilsApi*);
 NV_STATUS __nvoc_ctor_CeUtilsApi(CeUtilsApi*, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_CeUtilsApi(CeUtilsApi*);
-void __nvoc_dtor_CeUtilsApi(CeUtilsApi*);
+void __nvoc_dtor_CeUtilsApi(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__CeUtilsApi;
@@ -333,7 +332,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_CeUtilsApi =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "CeUtilsApi",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_CeUtilsApi,
+    .objCreatefn =        &__nvoc_objCreateDynamic_CeUtilsApi,
     .pCastInfo =          &__nvoc_castinfo__CeUtilsApi,
     .pExportInfo =        &__nvoc_export_info__CeUtilsApi
 };
@@ -343,6 +342,25 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_CeUtilsApi =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000104u)
+static NV_STATUS ceutilsapiCtrlCmdMemset__EXPORT(void *pCeUtilsApi, void *pParams) {
+    return ceutilsapiCtrlCmdMemset_IMPL(pCeUtilsApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000104u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000104u)
+static NV_STATUS ceutilsapiCtrlCmdMemcopy__EXPORT(void *pCeUtilsApi, void *pParams) {
+    return ceutilsapiCtrlCmdMemcopy_IMPL(pCeUtilsApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000104u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000104u)
+static NV_STATUS ceutilsapiCtrlCmdCheckProgress__EXPORT(void *pCeUtilsApi, void *pParams) {
+    return ceutilsapiCtrlCmdCheckProgress_IMPL(pCeUtilsApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000104u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_CeUtilsApi[] = 
 {
@@ -350,7 +368,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_CeUtilsA
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x104u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &ceutilsapiCtrlCmdMemset_IMPL,
+        /*pFunc=*/      (void (*)(void)) &ceutilsapiCtrlCmdMemset__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x104u)
         /*flags=*/      0x104u,
         /*accessRight=*/0x0u,
@@ -365,7 +383,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_CeUtilsA
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x104u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &ceutilsapiCtrlCmdMemcopy_IMPL,
+        /*pFunc=*/      (void (*)(void)) &ceutilsapiCtrlCmdMemcopy__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x104u)
         /*flags=*/      0x104u,
         /*accessRight=*/0x0u,
@@ -380,7 +398,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_CeUtilsA
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x104u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &ceutilsapiCtrlCmdCheckProgress_IMPL,
+        /*pFunc=*/      (void (*)(void)) &ceutilsapiCtrlCmdCheckProgress__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x104u)
         /*flags=*/      0x104u,
         /*accessRight=*/0x0u,
@@ -397,7 +415,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_CeUtilsA
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__CeUtilsApi __nvoc_metadata__CeUtilsApi = {
     .rtti.pClassDef = &__nvoc_class_def_CeUtilsApi,    // (ceutilsapi) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_CeUtilsApi,
+    .rtti.dtor      = &__nvoc_dtor_CeUtilsApi,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -657,16 +675,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__CeUtilsApi =
 
 // Destruct CeUtilsApi object.
 void __nvoc_ceutilsapiDestruct(CeUtilsApi*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_CeUtilsApi(CeUtilsApi* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_CeUtilsApi(Dynamic* pThis) {
+
+    CeUtilsApi *__nvoc_this = (CeUtilsApi *) pThis;
 
 // Call destructor.
-    __nvoc_ceutilsapiDestruct(pThis);
+    __nvoc_ceutilsapiDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_CeUtilsApi(CeUtilsApi *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -692,7 +712,7 @@ NV_STATUS __nvoc_ctor_CeUtilsApi(CeUtilsApi *pCeUtilsApi, CALL_CONTEXT *pCallCon
 
     // Unwind on error.
 __nvoc_ctor_CeUtilsApi_fail__init:
-    __nvoc_dtor_GpuResource(&pCeUtilsApi->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pCeUtilsApi->__nvoc_base_GpuResource);
 __nvoc_ctor_CeUtilsApi_fail_GpuResource:
 __nvoc_ctor_CeUtilsApi_exit:
     return status;
@@ -804,13 +824,10 @@ __nvoc_objCreate_CeUtilsApi_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_CeUtilsApi(CeUtilsApi **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_CeUtilsApi(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_CeUtilsApi(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_CeUtilsApi((CeUtilsApi **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

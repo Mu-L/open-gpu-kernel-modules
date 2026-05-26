@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -343,6 +343,13 @@ _memmgrInitRegistryOverrides(OBJGPU *pGpu, MemoryManager *pMemoryManager)
         }
     }
 
+    if (pMemoryManager->bSparseFabricSupported &&
+        osReadRegistryDword(pGpu, NV_REG_STR_RM_ALLOC_FABRIC_AS_SPARSE, &data32) == NV_OK)
+    {
+        pMemoryManager->bAllocFabricAsSparse = data32;
+        NV_PRINTF(LEVEL_INFO, "Overriding fabric sparse behavior to 0x%x.\n", data32);
+    }
+
     pMemoryManager->bCePhysicalVidmemAccessNotSupported = gpuIsSelfHosted(pGpu);
 }
 
@@ -373,7 +380,9 @@ memmgrStatePreInitLocked_IMPL
     {
         pMemoryManager->bUseVirtualCopyOnSuspend = NV_FALSE;
     }
-    
+
+    memacctInitGpuInfo(pGpu);
+
     return NV_OK;
 }
 
@@ -774,7 +783,7 @@ memmgrVerifyGspDmaOps_IMPL
 {
     KernelBus *pKernelBus = GPU_GET_KERNEL_BUS(pGpu);
     NV_STATUS status = NV_OK;
-    MEMORY_DESCRIPTOR *pMemDesc = NULL;
+    MEMORY_DESCRIPTOR *pMemDesc;
     NvU8 *pTestBuffer;
     NvU32 testData = 0xdeadbeef;
     TRANSFER_SURFACE surf = {0};
@@ -793,7 +802,7 @@ memmgrVerifyGspDmaOps_IMPL
 
     status = memdescCreate(&pMemDesc, pGpu, RM_PAGE_SIZE, RM_PAGE_SIZE,
                            NV_TRUE, ADDR_FBMEM, NV_MEMORY_UNCACHED, 0);
-    NV_ASSERT_OR_GOTO(status == NV_OK, failed);
+    NV_ASSERT_OR_RETURN(status == NV_OK, status);
 
     memdescTagAlloc(status,
                     NV_FB_ALLOC_RM_INTERNAL_OWNER_UNNAMED_TAG_20, pMemDesc);
@@ -944,6 +953,8 @@ memmgrStateDestroy_IMPL
     KernelMemorySystem *pKernelMemorySystem = GPU_GET_KERNEL_MEMORY_SYSTEM(pGpu);
     Heap *pHeap = MEMORY_MANAGER_GET_HEAP(pMemoryManager);
     NvU32 i;
+
+    memacctRemoveGpu(pGpu);
 
     _memmgrFreeInternalClientObjects(pMemoryManager);
 

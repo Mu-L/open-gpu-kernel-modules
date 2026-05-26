@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2019-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -254,10 +254,6 @@ int nv_soc_register_irqs(nv_state_t *nv)
     int rc;
     int dpauxindex;
 
-    /* Skip registering interrupts for OpenRM */
-    if (nv->request_firmware)
-        return 0;
-
     nv->current_soc_irq = -1;
 
     rc = nv_request_soc_irq(nvl, nv->interrupt_line,
@@ -269,6 +265,10 @@ int nv_soc_register_irqs(nv_state_t *nv)
         nv_printf(NV_DBG_ERRORS, "failed to request display irq (%d)\n", rc);
         return rc;
     }
+
+    /* Skip registering other interrupts than nvdisplay for OpenRM */
+    if (nv->request_firmware)
+        return 0;
 
     rc = nv_request_soc_irq(nvl, nv->hdacodec_irq, NV_SOC_IRQ_HDACODEC_TYPE,
                             nv_default_irq_flags(nv), 0, "hdacodec");
@@ -930,6 +930,7 @@ static int nv_platform_device_display_probe(struct platform_device *plat_dev)
     nv->hdacodec_regs->size = res_size;
     nv->soc_is_dpalt_mode_supported = false;
     nv->soc_is_hfrp_supported = false;
+    nv->soc_is_external_phy_supported = false;
 
     nv->hdacodec_irq = platform_get_irq_byname(plat_dev, "hdacodec");
     if (nv->hdacodec_irq < 0)
@@ -958,6 +959,12 @@ static int nv_platform_device_display_probe(struct platform_device *plat_dev)
     if (rc == true)
     {
         nv->soc_is_hfrp_supported = true;
+    }
+
+    rc = of_property_read_bool(nvl->dev->of_node, "nvidia,external-phy-supported");
+    if (rc == true)
+    {
+        nv->soc_is_external_phy_supported = true;
     }
 
     NV_KMALLOC(nv->mipical_regs, sizeof(*(nv->mipical_regs)));
@@ -1101,6 +1108,9 @@ static int nv_platform_device_display_probe(struct platform_device *plat_dev)
         goto err_destroy_lock;
     }
 
+    /* Initialize per-device init_on_probe from registry value NVreg_GpuInitOnProbe */
+    nvl->init_on_probe = (NVreg_GpuInitOnProbe != 0);
+
     if (nv_linux_init_open_q(nvl) != 0)
     {
         nv_printf(NV_DBG_ERRORS, "NVRM: nv_linux_init_open_q() failed!\n");
@@ -1123,6 +1133,20 @@ static int nv_platform_device_display_probe(struct platform_device *plat_dev)
         rc = -ENODEV;
         goto err_stop_open_q;
     }
+    UNLOCK_NV_LINUX_DEVICES();
+
+    if ((nvl->init_on_probe) && !(nv->flags & NV_FLAG_EXCLUDE))
+    {
+        int ret;
+        ret = nv_start_device(nv, sp);
+        if (ret)
+        {
+            nv_printf(NV_DBG_ERRORS, "NVRM: failed to start device\n");
+            goto err_remove_minor;
+        }
+    }
+
+    LOCK_NV_LINUX_DEVICES();
     nv_linux_add_device_locked(nvl);
     UNLOCK_NV_LINUX_DEVICES();
 
@@ -1170,8 +1194,13 @@ static int nv_platform_device_display_probe(struct platform_device *plat_dev)
 
 err_remove_device:
     LOCK_NV_LINUX_DEVICES();
-    nv_linux_remove_minor_locked(nvl);
     nv_linux_remove_device_locked(nvl);
+    UNLOCK_NV_LINUX_DEVICES();
+    if (nvl->init_on_probe)
+        nv_stop_device(nv, sp);
+err_remove_minor:
+    LOCK_NV_LINUX_DEVICES();
+    nv_linux_remove_minor_locked(nvl);
     UNLOCK_NV_LINUX_DEVICES();
 err_stop_open_q:
     nv_linux_stop_open_q(nvl);
@@ -1237,9 +1266,14 @@ static void nv_platform_device_display_remove(struct platform_device *plat_dev)
     nv_linux_stop_open_q(nvl);
 
     LOCK_NV_LINUX_DEVICES();
-
-    nv_linux_remove_minor_locked(nvl);
     nv_linux_remove_device_locked(nvl);
+    UNLOCK_NV_LINUX_DEVICES();
+
+    if ((nvl->init_on_probe) && !(nv->flags & NV_FLAG_EXCLUDE))
+        nv_stop_device(nv, sp);
+
+    LOCK_NV_LINUX_DEVICES();
+    nv_linux_remove_minor_locked(nvl);
 
     /*
      * TODO: procfs

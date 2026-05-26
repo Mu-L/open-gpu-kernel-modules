@@ -1,5 +1,5 @@
 /*******************************************************************************
-    Copyright (c) 2016-2024 NVIDIA Corporation
+    Copyright (c) 2016-2026 NVIDIA Corporation
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
@@ -154,7 +154,8 @@ static NV_STATUS check_accessible_from_gpu(uvm_gpu_t *gpu, uvm_mem_t *mem)
 
     for (i = 0; i < verif_size / sizeof(*sys_verif); ++i) {
         if (sys_verif[i] != mem->size + i) {
-            UVM_TEST_PRINT("Verif failed for %zd = 0x%llx instead of 0x%llx, verif_size=0x%llx mem(size=0x%llx, page_size=%llu, processor=%u)\n",
+            UVM_TEST_PRINT("Verif failed for %zd = 0x%llx instead of 0x%llx, verif_size=0x%llx, "
+                           "mem(size=0x%llx, page_size=%llu, processor=%u)\n",
                            i,
                            sys_verif[i],
                            (NvU64)(verif_size + i),
@@ -355,16 +356,15 @@ static NV_STATUS test_all(uvm_va_space_t *va_space)
     // Create allocations of these sizes
     static const size_t sizes[] = { 1, 4, 16, 1024, 4096, 1024 * 1024, 7 * 1024 * 1024 + 17 };
 
-    // Pascal+ can map sysmem with 4K, 64K and 2M PTEs, other GPUs can only use
-    // 4K. Test all of the sizes supported by Pascal+ and 128K to match big page
-    // size on pre-Pascal GPUs with 128K big page size.
+    // Turing+ can map sysmem with 4K, 64K and 2M PTEs, test all of the sizes
+    // supported by Turing+.
     // Ampere+ supports 512M PTEs and Blackwell+ supports 256G PTEs, but since
     // UVM's maximum chunk size is 2M, we don't test for these page sizes.
-    static const NvU64 cpu_chunk_sizes = PAGE_SIZE | UVM_PAGE_SIZE_64K | UVM_PAGE_SIZE_128K | UVM_PAGE_SIZE_2M;
+    static const NvU64 cpu_chunk_sizes = PAGE_SIZE | UVM_PAGE_SIZE_64K | UVM_PAGE_SIZE_2M;
 
-    // All supported page sizes will be tested, CPU has the most with 4 and +1
-    // for the default.
-    static const int max_supported_page_sizes = 4 + 1;
+    // All supported page sizes masked by UVM_CHUNK_SIZES_MASK will be tested,
+    // see comment above for the supported page sizes.
+    static const int max_supported_page_sizes = 3 + 1;
     int i;
 
     // TODO: Bug 3839176: the test is waived on Confidential Computing because
@@ -416,8 +416,6 @@ static NV_STATUS test_all(uvm_va_space_t *va_space)
             if (gpu->mem_info.size == 0)
                 continue;
 
-            UVM_ASSERT(max_supported_page_sizes >= hweight_long(page_sizes));
-
             status = test_alloc_vidmem(gpu, UVM_PAGE_SIZE_DEFAULT, sizes[i], &mem);
             if (status != NV_OK) {
                 UVM_TEST_PRINT("Test alloc vidmem failed, page_size default size %zd GPU %s\n",
@@ -428,6 +426,9 @@ static NV_STATUS test_all(uvm_va_space_t *va_space)
             all_mem[current_alloc++] = mem;
 
             page_sizes &= UVM_CHUNK_SIZES_MASK;
+
+            UVM_ASSERT(max_supported_page_sizes >= hweight_long(page_sizes));
+
             for_each_page_size(page_size, page_sizes) {
                 status = test_alloc_vidmem(gpu, page_size, sizes[i], &mem);
                 if (status != NV_OK) {
@@ -438,7 +439,6 @@ static NV_STATUS test_all(uvm_va_space_t *va_space)
                     goto cleanup;
                 }
                 all_mem[current_alloc++] = mem;
-
             }
         }
 

@@ -117,6 +117,16 @@ PORT_UTIL_INLINE void portUtilWriteBigEndian32(void *pBuf, NvU32 value);
 PORT_UTIL_INLINE void portUtilWriteBigEndian64(void *pBuf, NvU64 value);
 
 /**
+ * @brief Convert an ASCII character to uppercase.
+ */
+PORT_UTIL_INLINE char portUtilToUpper(char c);
+
+/**
+ * @brief Convert an ASCII character to lowercase.
+ */
+PORT_UTIL_INLINE char portUtilToLower(char c);
+
+/**
  * @brief Efficient spinloop body that doesn't waste power.
  *
  * This function will spin for a very short time, then return, so it should be

@@ -679,6 +679,7 @@ kbusDetermineFlaRangeAndAllocate_GA100
             base = pGpu->gpuInstance * size;
         }
     }
+
     NV_ASSERT_OK_OR_RETURN(kbusAllocateFlaVaspace_HAL(pGpu, pKernelBus, base, size));
     return status;
 }

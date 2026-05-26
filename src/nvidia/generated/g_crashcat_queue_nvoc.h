@@ -137,7 +137,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_CrashCatQueue;
     ((CrashCatQueue*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(CrashCatQueue)))
 #endif //__nvoc_crashcat_queue_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_CrashCatQueue(CrashCatQueue**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_CrashCatQueue(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_CrashCatQueue(CrashCatQueue**, Dynamic*, NvU32, CrashCatQueueConfig *pQueueConfig);
 #define __objCreate_CrashCatQueue(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pQueueConfig) \

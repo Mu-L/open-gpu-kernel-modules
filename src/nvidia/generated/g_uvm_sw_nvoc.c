@@ -35,7 +35,7 @@ void __nvoc_init__UvmSwObject(UvmSwObject*, RmHalspecOwner *pRmhalspecowner);
 void __nvoc_init_funcTable_UvmSwObject(UvmSwObject*, RmHalspecOwner *pRmhalspecowner);
 NV_STATUS __nvoc_ctor_UvmSwObject(UvmSwObject*, RmHalspecOwner *pRmhalspecowner, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_UvmSwObject(UvmSwObject*, RmHalspecOwner *pRmhalspecowner);
-void __nvoc_dtor_UvmSwObject(UvmSwObject*);
+void __nvoc_dtor_UvmSwObject(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__UvmSwObject;
@@ -160,7 +160,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_UvmSwObject =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "UvmSwObject",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_UvmSwObject,
+    .objCreatefn =        &__nvoc_objCreateDynamic_UvmSwObject,
     .pCastInfo =          &__nvoc_castinfo__UvmSwObject,
     .pExportInfo =        &__nvoc_export_info__UvmSwObject
 };
@@ -169,7 +169,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_UvmSwObject =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__UvmSwObject __nvoc_metadata__UvmSwObject = {
     .rtti.pClassDef = &__nvoc_class_def_UvmSwObject,    // (uvmsw) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_UvmSwObject,
+    .rtti.dtor      = &__nvoc_dtor_UvmSwObject,
     .rtti.offset    = 0,
     .metadata__ChannelDescendant.rtti.pClassDef = &__nvoc_class_def_ChannelDescendant,    // (chandes) super
     .metadata__ChannelDescendant.rtti.dtor      = &__nvoc_destructFromBase,
@@ -528,16 +528,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__UvmSwObject =
 
 // Destruct UvmSwObject object.
 void __nvoc_uvmswDestruct(UvmSwObject*);
-void __nvoc_dtor_ChannelDescendant(ChannelDescendant*);
-void __nvoc_dtor_UvmSwObject(UvmSwObject* pThis) {
+void __nvoc_dtor_ChannelDescendant(Dynamic*);
+void __nvoc_dtor_UvmSwObject(Dynamic* pThis) {
+
+    UvmSwObject *__nvoc_this = (UvmSwObject *) pThis;
 
 // Call destructor.
-    __nvoc_uvmswDestruct(pThis);
+    __nvoc_uvmswDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_ChannelDescendant(&pThis->__nvoc_base_ChannelDescendant);
+    __nvoc_dtor_ChannelDescendant((Dynamic *) &__nvoc_this->__nvoc_base_ChannelDescendant);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_UvmSwObject(UvmSwObject *pThis, RmHalspecOwner *pRmhalspecowner) {
     RmVariantHal *rmVariantHal = &pRmhalspecowner->rmVariantHal;
@@ -568,7 +570,7 @@ NV_STATUS __nvoc_ctor_UvmSwObject(UvmSwObject *pUvmSw, RmHalspecOwner *pRmhalspe
 
     // Unwind on error.
 __nvoc_ctor_UvmSwObject_fail__init:
-    __nvoc_dtor_ChannelDescendant(&pUvmSw->__nvoc_base_ChannelDescendant);
+    __nvoc_dtor_ChannelDescendant((Dynamic *)&pUvmSw->__nvoc_base_ChannelDescendant);
 __nvoc_ctor_UvmSwObject_fail_ChannelDescendant:
 __nvoc_ctor_UvmSwObject_exit:
     return status;
@@ -700,13 +702,10 @@ __nvoc_objCreate_UvmSwObject_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_UvmSwObject(UvmSwObject **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_UvmSwObject(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_UvmSwObject(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_UvmSwObject((UvmSwObject **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

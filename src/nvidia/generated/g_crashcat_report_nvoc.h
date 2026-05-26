@@ -151,7 +151,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_CrashCatReport;
     ((CrashCatReport*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(CrashCatReport)))
 #endif //__nvoc_crashcat_report_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_CrashCatReport(CrashCatReport**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_CrashCatReport(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_CrashCatReport(CrashCatReport**, Dynamic*, NvU32,
         NV_CRASHCAT_PACKET_FORMAT_VERSION CrashCatReportHal_version, CrashCatImplementer CrashCatReportHal_implementer, void **ppReportBytes, NvLength bytesRemaining);

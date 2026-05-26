@@ -26,7 +26,7 @@ void __nvoc_init__OBJHOSTENG(OBJHOSTENG*, GpuHalspecOwner *pGpuhalspecowner);
 void __nvoc_init_funcTable_OBJHOSTENG(OBJHOSTENG*, GpuHalspecOwner *pGpuhalspecowner);
 NV_STATUS __nvoc_ctor_OBJHOSTENG(OBJHOSTENG*, GpuHalspecOwner *pGpuhalspecowner);
 void __nvoc_init_dataField_OBJHOSTENG(OBJHOSTENG*, GpuHalspecOwner *pGpuhalspecowner);
-void __nvoc_dtor_OBJHOSTENG(OBJHOSTENG*);
+void __nvoc_dtor_OBJHOSTENG(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJHOSTENG;
@@ -46,7 +46,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJHOSTENG =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJHOSTENG",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) NULL,
+    .objCreatefn =        NULL,
     .pCastInfo =          &__nvoc_castinfo__OBJHOSTENG,
     .pExportInfo =        &__nvoc_export_info__OBJHOSTENG
 };
@@ -55,7 +55,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJHOSTENG =
 // Metadata with per-class RTTI and vtable
 static const struct NVOC_METADATA__OBJHOSTENG __nvoc_metadata__OBJHOSTENG = {
     .rtti.pClassDef = &__nvoc_class_def_OBJHOSTENG,    // (hosteng) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJHOSTENG,
+    .rtti.dtor      = &__nvoc_dtor_OBJHOSTENG,
     .rtti.offset    = 0,
 
     .vtable.__hostengHaltAndReset__ = &hostengHaltAndReset_IMPL,    // virtual
@@ -78,8 +78,10 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJHOSTENG =
 
 
 // Destruct OBJHOSTENG object.
-void __nvoc_dtor_OBJHOSTENG(OBJHOSTENG* pThis) {
-    PORT_UNREFERENCED_VARIABLE(pThis);
+void __nvoc_dtor_OBJHOSTENG(Dynamic* pThis) {
+
+    OBJHOSTENG *__nvoc_this = (OBJHOSTENG *) pThis;
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJHOSTENG(OBJHOSTENG *pThis, GpuHalspecOwner *pGpuhalspecowner) {
     ChipHal *chipHal = &pGpuhalspecowner->chipHal;
@@ -91,7 +93,7 @@ void __nvoc_init_dataField_OBJHOSTENG(OBJHOSTENG *pThis, GpuHalspecOwner *pGpuha
 
     // NVOC Property Hal field -- PDB_PROP_HOSTENG_ENSURE_HALT_SUCCEEDS_BEFORE_RESET
     if (( ((chipHal_HalVarIdx >> 5) == 1UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0xbc000000UL) ) ||
-        ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000003f9UL) )) /* ChipHal: GH100 | GB100 | GB102 | GB10B | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C */ 
+        ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000030ffUL) )) /* ChipHal: GH100 | GB100 | GB102 | GB10B | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C | GR100 | GR102 */ 
     {
         pThis->setProperty(pThis, PDB_PROP_HOSTENG_ENSURE_HALT_SUCCEEDS_BEFORE_RESET, NV_TRUE);
     }

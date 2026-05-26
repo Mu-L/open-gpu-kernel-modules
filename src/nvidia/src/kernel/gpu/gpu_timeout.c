@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -294,9 +294,9 @@ timeoutSet
         // by the start of the tick. Mitigate this by always padding the
         // timeout using the OS tick resolution, to bump us to the next tick.
         //
-        timeoutNs += osGetMonotonicTickResolutionNs();
+        timeoutNs += portTimeGetUptimeResolution();
 
-        timeInNs = osGetMonotonicTimeNs();
+        timeInNs = portTimeGetUptimeNanoseconds();
 
         pTimeout->pTmrGpu = NULL;
         pTimeout->timeout = timeInNs + timeoutNs;
@@ -366,7 +366,7 @@ _checkTimeout
 
     if (pTimeout->flags & GPU_TIMEOUT_FLAGS_OSTIMER)
     {
-        timeInNs = osGetMonotonicTimeNs();
+        timeInNs = portTimeGetUptimeNanoseconds();
         if (timeInNs >= pTimeout->timeout)
         {
             if (!(pTimeout->flags & GPU_TIMEOUT_FLAGS_BYPASS_JOURNAL_LOG))

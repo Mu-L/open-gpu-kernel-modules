@@ -25,6 +25,7 @@ NVIDIA_DRM_SOURCES += nvidia-drm/nvidia-drm-gem-user-memory.c
 NVIDIA_DRM_SOURCES += nvidia-drm/nvidia-drm-gem-dma-buf.c
 NVIDIA_DRM_SOURCES += nvidia-drm/nvidia-drm-format.c
 NVIDIA_DRM_SOURCES += nvidia-drm/nvidia-drm-os-interface.c
+NVIDIA_DRM_SOURCES += nvidia-drm/nvidia-drm-color-pipeline.c
 
 #
 # Register the conftests needed by nvidia-drm.ko
@@ -64,6 +65,7 @@ NV_CONFTEST_FUNCTION_COMPILE_TESTS += vmf_insert_mixed
 NV_CONFTEST_FUNCTION_COMPILE_TESTS += drm_gem_prime_mmap
 NV_CONFTEST_FUNCTION_COMPILE_TESTS += drm_sysfs_connector_property_event
 NV_CONFTEST_FUNCTION_COMPILE_TESTS += drm_sysfs_connector_status_event
+NV_CONFTEST_FUNCTION_COMPILE_TESTS += pfn_is_map_memory
 NV_CONFTEST_FUNCTION_COMPILE_TESTS += vm_flags_set
 
 NV_CONFTEST_TYPE_COMPILE_TESTS += drm_driver_has_legacy_dev_list
@@ -109,3 +111,6 @@ NV_CONFTEST_TYPE_COMPILE_TESTS += drm_output_poll_changed
 NV_CONFTEST_TYPE_COMPILE_TESTS += drm_driver_has_date
 NV_CONFTEST_TYPE_COMPILE_TESTS += drm_connector_helper_funcs_mode_valid_has_const_mode_arg
 NV_CONFTEST_TYPE_COMPILE_TESTS += drm_fb_create_takes_format_info
+NV_CONFTEST_TYPE_COMPILE_TESTS += drm_crtc_funcs_has_get_vblank_timestamp
+NV_CONFTEST_TYPE_COMPILE_TESTS += drm_color_lut32_present
+NV_CONFTEST_TYPE_COMPILE_TESTS += drm_colorop_has_funcs

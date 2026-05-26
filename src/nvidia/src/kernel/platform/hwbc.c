@@ -544,13 +544,13 @@ objClGetBr03Bar0
          pCl->getProperty(pCl, PDB_PROP_CL_PCIE_CONFIG_ACCESSIBLE) &&
          pCl->pPcieConfigSpaceBase)
     {
-        RmPhysAddr pcieConfigSpaceBase;
+        NvU64 pcieConfigSpaceBase;
 
         pcieConfigSpaceBase = clFindPcieConfigSpaceBase(pCl,
                                                         pBR03->ctrlDev.domain,
                                                         pBR03->ctrlDev.bus);
         if ((pcieConfigSpaceBase) &&
-           ((pcieConfigSpaceBase & ~((RmPhysAddr)(0xFFFFFFFF))) == 0 ))
+           ((pcieConfigSpaceBase & ~((NvU64)(0xFFFFFFFF))) == 0 ))
         {
             //
             // if pcieConfigSpaceBase is limited to under 4GB then the cast is fine.
@@ -626,13 +626,13 @@ objClFreeBr03Bar0
          pCl->getProperty(pCl, PDB_PROP_CL_PCIE_CONFIG_ACCESSIBLE) &&
          pCl->pPcieConfigSpaceBase)
     {
-        RmPhysAddr pcieConfigSpaceBase;
+        NvU64 pcieConfigSpaceBase;
 
         pcieConfigSpaceBase = clFindPcieConfigSpaceBase(pCl,
                                                         pBR03->ctrlDev.domain,
                                                         pBR03->ctrlDev.bus);
         if ((pcieConfigSpaceBase) &&
-           ((pcieConfigSpaceBase & ~((RmPhysAddr)(0xFFFFFFFF))) == 0 ))
+           ((pcieConfigSpaceBase & ~((NvU64)(0xFFFFFFFF))) == 0 ))
         {
             // If pcieConfigSpaceBase is limited under 4GB then the cast is fine.
             bar0 = (NvU32)pcieConfigSpaceBase | pBR03->ctrlDev.bus << PCIE_BUS_SHIFT;
@@ -1327,13 +1327,13 @@ Nvidia_BR04_GetBar0
     if (pCl->getProperty(pCl, PDB_PROP_CL_PCIE_CONFIG_ACCESSIBLE) &&
         pCl->pPcieConfigSpaceBase)
     {
-        RmPhysAddr pcieConfigSpaceBase;
+        NvU64 pcieConfigSpaceBase;
 
         pcieConfigSpaceBase = clFindPcieConfigSpaceBase(pCl,
                                                         pBR04->ctrlDev.domain,
                                                         pBR04->ctrlDev.bus);
         if ((pcieConfigSpaceBase) &&
-           ((pcieConfigSpaceBase & ~((RmPhysAddr)(0xFFFFFFFF))) == 0 ))
+           ((pcieConfigSpaceBase & ~((NvU64)(0xFFFFFFFF))) == 0 ))
         {
             if (portNum >= 0)
             {

@@ -28,7 +28,7 @@ void __nvoc_init__SysmemScrubber(SysmemScrubber*);
 void __nvoc_init_funcTable_SysmemScrubber(SysmemScrubber*);
 NV_STATUS __nvoc_ctor_SysmemScrubber(SysmemScrubber*, struct OBJGPU *pGpu);
 void __nvoc_init_dataField_SysmemScrubber(SysmemScrubber*);
-void __nvoc_dtor_SysmemScrubber(SysmemScrubber*);
+void __nvoc_dtor_SysmemScrubber(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__SysmemScrubber;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_SysmemScrubber =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "SysmemScrubber",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_SysmemScrubber,
+    .objCreatefn =        &__nvoc_objCreateDynamic_SysmemScrubber,
     .pCastInfo =          &__nvoc_castinfo__SysmemScrubber,
     .pExportInfo =        &__nvoc_export_info__SysmemScrubber
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_SysmemScrubber =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__SysmemScrubber __nvoc_metadata__SysmemScrubber = {
     .rtti.pClassDef = &__nvoc_class_def_SysmemScrubber,    // (sysmemscrub) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_SysmemScrubber,
+    .rtti.dtor      = &__nvoc_dtor_SysmemScrubber,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -82,16 +82,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__SysmemScrubber =
 
 // Destruct SysmemScrubber object.
 void __nvoc_sysmemscrubDestruct(SysmemScrubber*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_SysmemScrubber(SysmemScrubber* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_SysmemScrubber(Dynamic* pThis) {
+
+    SysmemScrubber *__nvoc_this = (SysmemScrubber *) pThis;
 
 // Call destructor.
-    __nvoc_sysmemscrubDestruct(pThis);
+    __nvoc_sysmemscrubDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_SysmemScrubber(SysmemScrubber *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -117,7 +119,7 @@ NV_STATUS __nvoc_ctor_SysmemScrubber(SysmemScrubber *pSysmemScrubber, struct OBJ
 
     // Unwind on error.
 __nvoc_ctor_SysmemScrubber_fail__init:
-    __nvoc_dtor_Object(&pSysmemScrubber->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&pSysmemScrubber->__nvoc_base_Object);
 __nvoc_ctor_SysmemScrubber_fail_Object:
 __nvoc_ctor_SysmemScrubber_exit:
     return status;
@@ -221,12 +223,9 @@ __nvoc_objCreate_SysmemScrubber_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_SysmemScrubber(SysmemScrubber **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_SysmemScrubber(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct OBJGPU *pGpu = va_arg(__nvoc_args, struct OBJGPU *);
 
-    __nvoc_status = __nvoc_objCreate_SysmemScrubber(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pGpu);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_SysmemScrubber((SysmemScrubber **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pGpu);
 }
 

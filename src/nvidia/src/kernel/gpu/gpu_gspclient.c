@@ -371,7 +371,7 @@ gpuResetRequiredStateChanged_FWCLIENT
 }
 
 NvBool
-gpuIsSystemRebootRequired_FWCLIENT
+gpuIsBusResetRequired_FWCLIENT
 (
     OBJGPU *pGpu
 )
@@ -382,5 +382,5 @@ gpuIsSystemRebootRequired_FWCLIENT
         return NV_FALSE;
     }
 
-    return pGSCI->bSystemRebootRequired;
+    return pGSCI->bBusResetRequired;
 }

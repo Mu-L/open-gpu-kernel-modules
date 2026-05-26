@@ -46,7 +46,7 @@
 // Don't define LIBSPDM_DEBUG_ENABLE, as it will override these settings below.
 //
 #define LIBSPDM_DEBUG_ASSERT_ENABLE               1
-#define LIBSPDM_DEBUG_PRINT_ENABLE                1
+#define LIBSPDM_DEBUG_PRINT_ENABLE                0
 #define LIBSPDM_DEBUG_BLOCK_ENABLE                0
 
 // These settings are all libspdm default.

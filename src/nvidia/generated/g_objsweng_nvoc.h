@@ -141,7 +141,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJSWENG;
 #define PDB_PROP_SWENG_IS_MISSING_BASE_NAME PDB_PROP_ENGSTATE_IS_MISSING
 
 
-NV_STATUS __nvoc_objCreateDynamic_OBJSWENG(OBJSWENG**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJSWENG(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJSWENG(OBJSWENG**, Dynamic*, NvU32);
 #define __objCreate_OBJSWENG(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

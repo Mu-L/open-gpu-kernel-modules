@@ -35,7 +35,7 @@ void __nvoc_init__VgpuConfigApi(VgpuConfigApi*);
 void __nvoc_init_funcTable_VgpuConfigApi(VgpuConfigApi*);
 NV_STATUS __nvoc_ctor_VgpuConfigApi(VgpuConfigApi*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_VgpuConfigApi(VgpuConfigApi*);
-void __nvoc_dtor_VgpuConfigApi(VgpuConfigApi*);
+void __nvoc_dtor_VgpuConfigApi(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__VgpuConfigApi;
@@ -128,7 +128,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_VgpuConfigApi =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "VgpuConfigApi",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_VgpuConfigApi,
+    .objCreatefn =        &__nvoc_objCreateDynamic_VgpuConfigApi,
     .pCastInfo =          &__nvoc_castinfo__VgpuConfigApi,
     .pExportInfo =        &__nvoc_export_info__VgpuConfigApi
 };
@@ -138,6 +138,163 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_VgpuConfigApi =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigSetInfo__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigSetInfo_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigEnumerateVgpuPerPgpu__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigEnumerateVgpuPerPgpu_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigGetVgpuTypeInfo__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigGetVgpuTypeInfo_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigGetSupportedVgpuTypes__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigGetSupportedVgpuTypes_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigGetCreatableVgpuTypes__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigGetCreatableVgpuTypes_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigEventSetNotification__EXPORT(void *pVgpuConfigApi, void *pSetEventParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigEventSetNotification_IMPL(pVgpuConfigApi, pSetEventParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigSetCapability__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigSetCapability_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigGetCapability__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigGetCapability_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigGetCreatablePlacements__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigGetCreatablePlacements_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigUpdatePgpuInfo__EXPORT(void *pVgpuConfigApi) {
+    return vgpuconfigapiCtrlCmdVgpuConfigUpdatePgpuInfo_IMPL(pVgpuConfigApi);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigSetVgpuInstanceEncoderCapacity__EXPORT(void *pVgpuConfigApi, void *pEncoderParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigSetVgpuInstanceEncoderCapacity_IMPL(pVgpuConfigApi, pEncoderParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigGetVgpuFbUsage__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigGetVgpuFbUsage_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigGetMigrationCap__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigGetMigrationCap_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigGetHostFbReservation__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigGetHostFbReservation_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigGetPgpuMetadataString__EXPORT(void *pVgpuConfigApi, void *pGpuMetadataStringParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigGetPgpuMetadataString_IMPL(pVgpuConfigApi, pGpuMetadataStringParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigGetDoorbellEmulationSupport__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigGetDoorbellEmulationSupport_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigGetFreeSwizzId__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigGetFreeSwizzId_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdPgpuGetMultiVgpuSupportInfo__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdPgpuGetMultiVgpuSupportInfo_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdPgpuGetVgpuStreamingCapability__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdPgpuGetVgpuStreamingCapability_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdGetVgpuDriversCaps__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdGetVgpuDriversCaps_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigSetPgpuInfo__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigSetPgpuInfo_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigValidateSwizzId__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigValidateSwizzId_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigUpdatePlacementInfo__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigUpdatePlacementInfo_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuSetVmName__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuSetVmName_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigGetMigrationBandwidth__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigGetMigrationBandwidth_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuconfigapiCtrlCmdVgpuConfigEnumerateVgpuPerGpuInstance__EXPORT(void *pVgpuConfigApi, void *pParams) {
+    return vgpuconfigapiCtrlCmdVgpuConfigEnumerateVgpuPerGpuInstance_IMPL(pVgpuConfigApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConfigApi[] = 
 {
@@ -145,7 +302,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigSetInfo_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigSetInfo__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*flags=*/      0x4u,
         /*accessRight=*/0x0u,
@@ -160,7 +317,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigEnumerateVgpuPerPgpu_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigEnumerateVgpuPerPgpu__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -175,7 +332,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetVgpuTypeInfo_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetVgpuTypeInfo__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -190,7 +347,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetSupportedVgpuTypes_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetSupportedVgpuTypes__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -205,7 +362,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetCreatableVgpuTypes_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetCreatableVgpuTypes__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -220,7 +377,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigEventSetNotification_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigEventSetNotification__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -235,7 +392,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigUpdatePgpuInfo_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigUpdatePgpuInfo__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -250,7 +407,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigSetVgpuInstanceEncoderCapacity_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigSetVgpuInstanceEncoderCapacity__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -265,7 +422,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetVgpuFbUsage_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetVgpuFbUsage__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -280,7 +437,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetMigrationCap_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetMigrationCap__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -295,7 +452,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetHostFbReservation_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetHostFbReservation__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -310,7 +467,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetPgpuMetadataString_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetPgpuMetadataString__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -325,7 +482,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetDoorbellEmulationSupport_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetDoorbellEmulationSupport__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -340,7 +497,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetFreeSwizzId_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetFreeSwizzId__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*flags=*/      0x4u,
         /*accessRight=*/0x0u,
@@ -355,7 +512,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdPgpuGetMultiVgpuSupportInfo_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdPgpuGetMultiVgpuSupportInfo__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -370,7 +527,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdGetVgpuDriversCaps_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdGetVgpuDriversCaps__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -385,7 +542,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigSetPgpuInfo_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigSetPgpuInfo__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*flags=*/      0x4u,
         /*accessRight=*/0x0u,
@@ -400,7 +557,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigValidateSwizzId_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigValidateSwizzId__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*flags=*/      0x4u,
         /*accessRight=*/0x0u,
@@ -415,7 +572,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigUpdatePlacementInfo_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigUpdatePlacementInfo__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -430,7 +587,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetCreatablePlacements_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetCreatablePlacements__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -445,7 +602,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdPgpuGetVgpuStreamingCapability_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdPgpuGetVgpuStreamingCapability__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -460,7 +617,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigSetCapability_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigSetCapability__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -475,7 +632,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetCapability_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetCapability__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -490,7 +647,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuSetVmName_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuSetVmName__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -505,7 +662,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetMigrationBandwidth_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigGetMigrationBandwidth__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -520,7 +677,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigEnumerateVgpuPerGpuInstance_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuconfigapiCtrlCmdVgpuConfigEnumerateVgpuPerGpuInstance__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -537,7 +694,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuConf
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__VgpuConfigApi __nvoc_metadata__VgpuConfigApi = {
     .rtti.pClassDef = &__nvoc_class_def_VgpuConfigApi,    // (vgpuconfigapi) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_VgpuConfigApi,
+    .rtti.dtor      = &__nvoc_dtor_VgpuConfigApi,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -845,18 +1002,20 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__VgpuConfigApi =
 
 // Destruct VgpuConfigApi object.
 void __nvoc_vgpuconfigapiDestruct(VgpuConfigApi*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_Notifier(Notifier*);
-void __nvoc_dtor_VgpuConfigApi(VgpuConfigApi* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_Notifier(Dynamic*);
+void __nvoc_dtor_VgpuConfigApi(Dynamic* pThis) {
+
+    VgpuConfigApi *__nvoc_this = (VgpuConfigApi *) pThis;
 
 // Call destructor.
-    __nvoc_vgpuconfigapiDestruct(pThis);
+    __nvoc_vgpuconfigapiDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
-    __nvoc_dtor_Notifier(&pThis->__nvoc_base_Notifier);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
+    __nvoc_dtor_Notifier((Dynamic *) &__nvoc_this->__nvoc_base_Notifier);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_VgpuConfigApi(VgpuConfigApi *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -885,9 +1044,9 @@ NV_STATUS __nvoc_ctor_VgpuConfigApi(VgpuConfigApi *pResource, struct CALL_CONTEX
 
     // Unwind on error.
 __nvoc_ctor_VgpuConfigApi_fail__init:
-    __nvoc_dtor_Notifier(&pResource->__nvoc_base_Notifier);
+    __nvoc_dtor_Notifier((Dynamic *)&pResource->__nvoc_base_Notifier);
 __nvoc_ctor_VgpuConfigApi_fail_Notifier:
-    __nvoc_dtor_GpuResource(&pResource->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pResource->__nvoc_base_GpuResource);
 __nvoc_ctor_VgpuConfigApi_fail_GpuResource:
 __nvoc_ctor_VgpuConfigApi_exit:
     return status;
@@ -1004,13 +1163,10 @@ __nvoc_objCreate_VgpuConfigApi_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_VgpuConfigApi(VgpuConfigApi **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_VgpuConfigApi(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_VgpuConfigApi(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_VgpuConfigApi((VgpuConfigApi **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

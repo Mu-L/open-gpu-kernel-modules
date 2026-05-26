@@ -66,22 +66,22 @@ _nvswitch_read_max_tsense_temperature_ls10
     NvU32 channel
 )
 {
-    NvU32  offset;
-    NvU32  temperature;
+    NvU32  val;
+    NvTemp temperature;
 
-    temperature = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_MAXIMUM_TEMPERATURE);
-    temperature = DRF_VAL(_THERM_TSENSE, _MAXIMUM_TEMPERATURE, _MAXIMUM_TEMPERATURE, temperature);
-    temperature = NV_TSENSE_FXP_9_5_TO_24_8(temperature);
+    val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_MAXIMUM_TEMPERATURE);
+    val = DRF_VAL(_THERM_TSENSE, _MAXIMUM_TEMPERATURE, _MAXIMUM_TEMPERATURE, val);
+    temperature = NV_TSENSE_FXP_9_5_TO_24_8(val);
 
     if (channel == NVSWITCH_THERM_CHANNEL_LR10_TSENSE_MAX)
     {
-        offset = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_0_TEMPERATURE_MODIFICATIONS);
-        offset = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_0_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, offset);
+        val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_0_TEMPERATURE_MODIFICATIONS);
+        val = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_0_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, val);
 
         // Temperature of the sensor reported equals calculation of the max temperature reported
         // from the TSENSE HUB plus the temperature offset programmed by SW. This offset needs to
         // be substracted to get the actual temperature of the sensor.
-        temperature -= NV_TSENSE_FXP_9_5_TO_24_8(offset);
+        temperature -= NV_TSENSE_FXP_9_5_TO_24_8(val);
     }
 
     info->temperature[channel] = temperature;
@@ -114,7 +114,8 @@ nvswitch_ctrl_therm_read_temperature_ls10
 {
     NvU32 channel;
     NvU32 val;
-    NvU32 offset;
+    NvTemp offset;
+    NvTemp temperature;
 
     if (!info->channelMask)
     {
@@ -172,144 +173,144 @@ nvswitch_ctrl_therm_read_temperature_ls10
     channel = NVSWITCH_THERM_CHANNEL_LS10_TSENSE_0;
     if (info->channelMask & NVBIT(channel))
     {
-        offset = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_0_TEMPERATURE_MODIFICATIONS);
-        offset = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_0_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, offset);
-        offset = NV_TSENSE_FXP_9_5_TO_24_8(offset);
+        val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_0_TEMPERATURE_MODIFICATIONS);
+        val = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_0_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, val);
+        offset = NV_TSENSE_FXP_9_5_TO_24_8(val);
 
         val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_0);
         val = DRF_VAL(_THERM, _TSENSE_U2_A_0_BJT_0, _TEMPERATURE, val);
-        val = NV_TSENSE_FXP_9_5_TO_24_8(val);
-        val -= offset;
+        temperature = NV_TSENSE_FXP_9_5_TO_24_8(val);
+        temperature -= offset;
 
-        info->temperature[channel] = val;
+        info->temperature[channel] = temperature;
         info->channelMask &= ~NVBIT(channel);
     }
 
     channel = NVSWITCH_THERM_CHANNEL_LS10_TSENSE_1;
     if (info->channelMask & NVBIT(channel))
     {
-        offset = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_1_TEMPERATURE_MODIFICATIONS);
-        offset = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_1_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, offset);
-        offset = NV_TSENSE_FXP_9_5_TO_24_8(offset);
+        val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_1_TEMPERATURE_MODIFICATIONS);
+        val = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_1_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, val);
+        offset = NV_TSENSE_FXP_9_5_TO_24_8(val);
 
         val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_1);
         val = DRF_VAL(_THERM, _TSENSE_U2_A_0_BJT_1, _TEMPERATURE, val);
-        val = NV_TSENSE_FXP_9_5_TO_24_8(val);
-        val -= offset;
+        temperature = NV_TSENSE_FXP_9_5_TO_24_8(val);
+        temperature -= offset;
 
-        info->temperature[channel] = val;
+        info->temperature[channel] = temperature;
         info->channelMask &= ~NVBIT(channel);
     }
 
     channel = NVSWITCH_THERM_CHANNEL_LS10_TSENSE_2;
     if (info->channelMask & NVBIT(channel))
     {
-        offset = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_2_TEMPERATURE_MODIFICATIONS);
-        offset = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_2_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, offset);
-        offset = NV_TSENSE_FXP_9_5_TO_24_8(offset);
+        val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_2_TEMPERATURE_MODIFICATIONS);
+        val = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_2_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, val);
+        offset = NV_TSENSE_FXP_9_5_TO_24_8(val);
 
         val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_2);
         val = DRF_VAL(_THERM, _TSENSE_U2_A_0_BJT_2, _TEMPERATURE, val);
-        val = NV_TSENSE_FXP_9_5_TO_24_8(val);
-        val -= offset;
+        temperature = NV_TSENSE_FXP_9_5_TO_24_8(val);
+        temperature -= offset;
 
-        info->temperature[channel] = val;
+        info->temperature[channel] = temperature;
         info->channelMask &= ~NVBIT(channel);
     }
 
     channel = NVSWITCH_THERM_CHANNEL_LS10_TSENSE_3;
     if (info->channelMask & NVBIT(channel))
     {
-        offset = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_3_TEMPERATURE_MODIFICATIONS);
-        offset = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_3_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, offset);
-        offset = NV_TSENSE_FXP_9_5_TO_24_8(offset);
+        val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_3_TEMPERATURE_MODIFICATIONS);
+        val = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_3_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, val);
+        offset = NV_TSENSE_FXP_9_5_TO_24_8(val);
 
         val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_3);
         val = DRF_VAL(_THERM, _TSENSE_U2_A_0_BJT_3, _TEMPERATURE, val);
-        val = NV_TSENSE_FXP_9_5_TO_24_8(val);
-        val -= offset;
+        temperature = NV_TSENSE_FXP_9_5_TO_24_8(val);
+        temperature -= offset;
 
-        info->temperature[channel] = val;
+        info->temperature[channel] = temperature;
         info->channelMask &= ~NVBIT(channel);
     }
 
     channel = NVSWITCH_THERM_CHANNEL_LS10_TSENSE_4;
     if (info->channelMask & NVBIT(channel))
     {
-        offset = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_4_TEMPERATURE_MODIFICATIONS);
-        offset = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_4_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, offset);
-        offset = NV_TSENSE_FXP_9_5_TO_24_8(offset);
+        val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_4_TEMPERATURE_MODIFICATIONS);
+        val = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_4_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, val);
+        offset = NV_TSENSE_FXP_9_5_TO_24_8(val);
 
         val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_4);
         val = DRF_VAL(_THERM, _TSENSE_U2_A_0_BJT_4, _TEMPERATURE, val);
-        val = NV_TSENSE_FXP_9_5_TO_24_8(val);
-        val -= offset;
+        temperature = NV_TSENSE_FXP_9_5_TO_24_8(val);
+        temperature -= offset;
 
-        info->temperature[channel] = val;
+        info->temperature[channel] = temperature;
         info->channelMask &= ~NVBIT(channel);
     }
 
     channel = NVSWITCH_THERM_CHANNEL_LS10_TSENSE_5;
     if (info->channelMask & NVBIT(channel))
     {
-        offset = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_5_TEMPERATURE_MODIFICATIONS);
-        offset = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_5_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, offset);
-        offset = NV_TSENSE_FXP_9_5_TO_24_8(offset);
+        val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_5_TEMPERATURE_MODIFICATIONS);
+        val = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_5_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, val);
+        offset = NV_TSENSE_FXP_9_5_TO_24_8(val);
 
         val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_5);
         val = DRF_VAL(_THERM, _TSENSE_U2_A_0_BJT_5, _TEMPERATURE, val);
-        val = NV_TSENSE_FXP_9_5_TO_24_8(val);
-        val -= offset;
+        temperature = NV_TSENSE_FXP_9_5_TO_24_8(val);
+        temperature -= offset;
 
-        info->temperature[channel] = val;
+        info->temperature[channel] = temperature;
         info->channelMask &= ~NVBIT(channel);
     }
 
     channel = NVSWITCH_THERM_CHANNEL_LS10_TSENSE_6;
     if (info->channelMask & NVBIT(channel))
     {
-        offset = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_6_TEMPERATURE_MODIFICATIONS);
-        offset = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_6_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, offset);
-        offset = NV_TSENSE_FXP_9_5_TO_24_8(offset);
+        val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_6_TEMPERATURE_MODIFICATIONS);
+        val = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_6_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, val);
+        offset = NV_TSENSE_FXP_9_5_TO_24_8(val);
 
         val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_6);
         val = DRF_VAL(_THERM, _TSENSE_U2_A_0_BJT_6, _TEMPERATURE, val);
-        val = NV_TSENSE_FXP_9_5_TO_24_8(val);
-        val -= offset;
+        temperature = NV_TSENSE_FXP_9_5_TO_24_8(val);
+        temperature -= offset;
 
-        info->temperature[channel] = val;
+        info->temperature[channel] = temperature;
         info->channelMask &= ~NVBIT(channel);
     }
 
     channel = NVSWITCH_THERM_CHANNEL_LS10_TSENSE_7;
     if (info->channelMask & NVBIT(channel))
     {
-        offset = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_7_TEMPERATURE_MODIFICATIONS);
-        offset = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_7_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, offset);
-        offset = NV_TSENSE_FXP_9_5_TO_24_8(offset);
+        val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_7_TEMPERATURE_MODIFICATIONS);
+        val = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_7_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, val);
+        offset = NV_TSENSE_FXP_9_5_TO_24_8(val);
 
         val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_7);
         val = DRF_VAL(_THERM, _TSENSE_U2_A_0_BJT_7, _TEMPERATURE, val);
-        val = NV_TSENSE_FXP_9_5_TO_24_8(val);
-        val -= offset;
+        temperature = NV_TSENSE_FXP_9_5_TO_24_8(val);
+        temperature -= offset;
 
-        info->temperature[channel] = val;
+        info->temperature[channel] = temperature;
         info->channelMask &= ~NVBIT(channel);
     }
 
     channel = NVSWITCH_THERM_CHANNEL_LS10_TSENSE_8;
     if (info->channelMask & NVBIT(channel))
     {
-        offset = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_8_TEMPERATURE_MODIFICATIONS);
-        offset = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_8_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, offset);
-        offset = NV_TSENSE_FXP_9_5_TO_24_8(offset);
+        val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_8_TEMPERATURE_MODIFICATIONS);
+        val = DRF_VAL(_THERM_TSENSE, _U2_A_0_BJT_8_TEMPERATURE_MODIFICATIONS, _TEMPERATURE_OFFSET, val);
+        offset = NV_TSENSE_FXP_9_5_TO_24_8(val);
 
         val = NVSWITCH_REG_RD32(device, _THERM, _TSENSE_U2_A_0_BJT_8);
         val = DRF_VAL(_THERM, _TSENSE_U2_A_0_BJT_8, _TEMPERATURE, val);
-        val = NV_TSENSE_FXP_9_5_TO_24_8(val);
-        val -= offset;
+        temperature = NV_TSENSE_FXP_9_5_TO_24_8(val);
+        temperature -= offset;
 
-        info->temperature[channel] = val;
+        info->temperature[channel] = temperature;
         info->channelMask &= ~NVBIT(channel);
     }
 

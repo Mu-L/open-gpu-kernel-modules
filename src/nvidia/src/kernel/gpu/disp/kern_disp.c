@@ -68,6 +68,11 @@
 
 #include "class/clc77d.h"
 
+#include "class/clc87a.h"
+#include "class/clc87b.h"
+#include "class/clc87d.h"
+#include "class/clc87e.h"
+
 #include "class/clc97a.h"
 #include "class/clc97b.h"
 #include "class/clc97d.h"
@@ -120,6 +125,13 @@ kdispConstructEngine_IMPL(OBJGPU        *pGpu,
     //
     if (pKernelDisplay->getProperty(pKernelDisplay, PDB_PROP_KDISP_IS_MISSING))
         return NV_ERR_NOT_SUPPORTED;
+
+    // Construct IO aperture during ConstructEngine so it's ready before any register reads.
+    status = kdispConstructIoAperture_HAL(pGpu, pKernelDisplay);
+    if (status != NV_OK)
+    {
+        return status;
+    }
 
     // Create children
     pKernelDisplay->pInst = NULL;
@@ -178,6 +190,9 @@ kdispDestruct_IMPL
     kdispDestructInstMem_HAL(pKernelDisplay);
     kdispDestructKhead(pKernelDisplay);
     kdispDestroyVBlank(pKernelDisplay);
+
+    // Destroy display aperture
+    kdispDestructIoAperture_HAL(pKernelDisplay);
 }
 
 /*! Constructor for DisplayInstanceMemory */
@@ -209,6 +224,115 @@ kdispDestructInstMem_IMPL
 {
     objDelete(pKernelDisplay->pInst);
     pKernelDisplay->pInst = NULL;
+}
+
+/*!
+ * @brief Construct display register IO aperture for Tegra SOC
+ *
+ * This creates an IoAperture abstraction for display register access,
+ * handling the base offset adjustment automatically.
+ *
+ * @param[in]  pGpu             OBJGPU pointer
+ * @param[in]  pKernelDisplay   KernelDisplay pointer
+ *
+ * @return NV_OK on success
+ */
+NV_STATUS
+kdispConstructIoAperture_IMPL
+(
+    OBJGPU        *pGpu,
+    KernelDisplay *pKernelDisplay
+)
+{
+    NV_STATUS status;
+    IoAperture *pAperture = NULL;
+    IoAperture *pParentAperture = NULL;
+    DEVICE_MAPPING *pMapping = NULL;
+    NvU32 deviceIndex;
+    NvS32 baseOffset;
+    NvU32 apertureLength;
+
+    // Get the display base offset (negative value like -0x610000)
+    baseOffset = kdispGetBaseOffset_HAL(pGpu, pKernelDisplay);
+
+    // Get display MMIO range size via HAL
+    apertureLength = kdispGetDisplayApertureLength_HAL(pGpu, pKernelDisplay);
+    if (apertureLength == 0)
+    {
+        NV_PRINTF(LEVEL_ERROR,
+                  "Invalid display aperture length\n");
+        return NV_ERR_INVALID_STATE;
+    }
+
+    // Setup aperture parameters based on platform
+    if (pGpu->getProperty(pGpu, PDB_PROP_GPU_TEGRA_SOC_NVDISPLAY))
+    {
+        deviceIndex = DEVICE_INDEX_DISPLAY;
+        pParentAperture = NULL;
+        pMapping = &pGpu->deviceMappings[SOC_DEV_MAPPING_DISP];
+
+        if (pMapping->gpuNvAddr == NULL)
+        {
+            NV_PRINTF(LEVEL_ERROR,
+                      "Display device mapping not initialized for Tegra\n");
+            return NV_ERR_INVALID_STATE;
+        }
+    }
+    else
+    {
+        deviceIndex = DEVICE_INDEX_GPU;
+        pParentAperture = pGpu->pIOApertures[DEVICE_INDEX_GPU];
+        pMapping = NULL;
+
+        if (pParentAperture == NULL)
+        {
+            NV_PRINTF(LEVEL_ERROR,
+                      "GPU IO aperture not initialized for dGPU\n");
+            return NV_ERR_INVALID_STATE;
+        }
+    }
+
+    // Create and initialize the IoAperture object
+    status = objCreate(&pAperture,
+                      pKernelDisplay,
+                      IoAperture,
+                      pParentAperture,
+                      pGpu,
+                      deviceIndex,
+                      0,
+                      pMapping,
+                      -baseOffset,
+                      0,
+                      apertureLength);
+    if (status != NV_OK)
+    {
+        NV_PRINTF(LEVEL_ERROR,
+                  "Failed to create IoAperture (status=0x%x)\n",
+                  status);
+        return status;
+    }
+
+    pKernelDisplay->pAperture = pAperture;
+
+    return NV_OK;
+}
+
+/*!
+ * @brief Destruct display register IO aperture
+ *
+ * @param[in]  pKernelDisplay   KernelDisplay pointer
+ */
+void
+kdispDestructIoAperture_IMPL
+(
+    KernelDisplay *pKernelDisplay
+)
+{
+    if (pKernelDisplay && pKernelDisplay->pAperture != NULL)
+    {
+        objDelete(pKernelDisplay->pAperture);
+        pKernelDisplay->pAperture = NULL;
+    }
 }
 
 /*! Constructor for Kernel head */
@@ -736,6 +860,7 @@ kdispGetIntChnClsForHwCls_IMPL
     {
         case NVC57A_CURSOR_IMM_CHANNEL_PIO:
         case NVC67A_CURSOR_IMM_CHANNEL_PIO:
+        case NVC87A_CURSOR_IMM_CHANNEL_PIO:
         case NVC97A_CURSOR_IMM_CHANNEL_PIO:
         case NVCA7A_CURSOR_IMM_CHANNEL_PIO:
         case NVCB7A_CURSOR_IMM_CHANNEL_PIO:
@@ -746,6 +871,7 @@ kdispGetIntChnClsForHwCls_IMPL
         case NVC57D_CORE_CHANNEL_DMA:
         case NVC67D_CORE_CHANNEL_DMA:
         case NVC77D_CORE_CHANNEL_DMA:
+        case NVC87D_CORE_CHANNEL_DMA:
         case NVC97D_CORE_CHANNEL_DMA:
         case NVCA7D_CORE_CHANNEL_DMA:
         case NVCB7D_CORE_CHANNEL_DMA:
@@ -755,6 +881,7 @@ kdispGetIntChnClsForHwCls_IMPL
 
         case NVC57B_WINDOW_IMM_CHANNEL_DMA:
         case NVC67B_WINDOW_IMM_CHANNEL_DMA:
+        case NVC87B_WINDOW_IMM_CHANNEL_DMA:
         case NVC97B_WINDOW_IMM_CHANNEL_DMA:
         case NVCA7B_WINDOW_IMM_CHANNEL_DMA:
         case NVCB7B_WINDOW_IMM_CHANNEL_DMA:
@@ -764,6 +891,7 @@ kdispGetIntChnClsForHwCls_IMPL
 
         case NVC57E_WINDOW_CHANNEL_DMA:
         case NVC67E_WINDOW_CHANNEL_DMA:
+        case NVC87E_WINDOW_CHANNEL_DMA:
         case NVC97E_WINDOW_CHANNEL_DMA:
         case NVCA7E_WINDOW_CHANNEL_DMA:
         case NVCB7E_WINDOW_CHANNEL_DMA:
@@ -887,7 +1015,7 @@ kdispNotifyEvent_IMPL
     while (serverutilShareIterNext(&it))
     {
         RsShared   *pShared = it.pShared;
-        DispObject *pDispObject;
+        NvDispApi  *pNvDispApi;
         DisplayApi *pDisplayApi;
         INotifier  *pNotifier;
         Device     *pDevice;
@@ -897,18 +1025,18 @@ kdispNotifyEvent_IMPL
             continue;
 
         pNotifier = pNotifierShare->pNotifier;
-        pDispObject = dynamicCast(pNotifier, DispObject);
+        pNvDispApi = dynamicCast(pNotifier, NvDispApi);
 
         // Only notify matching GPUs
-        if (pDispObject == NULL)
+        if (pNvDispApi == NULL)
             continue;
 
-        pDevice = dynamicCast(RES_GET_REF(pDispObject)->pParentRef->pResource, Device);
+        pDevice = dynamicCast(RES_GET_REF(pNvDispApi)->pParentRef->pResource, Device);
 
         if (GPU_RES_GET_GPU(pDevice) != pGpu)
             continue;
 
-        pDisplayApi = staticCast(pDispObject, DisplayApi);
+        pDisplayApi = staticCast(pNvDispApi, DisplayApi);
 
         gpuSetThreadBcState(GPU_RES_GET_GPU(pDevice), pDisplayApi->bBcResource);
 
@@ -1063,8 +1191,12 @@ NV_STATUS kdispOptimizePerFrameOsCallbacks_IMPL
     //
     // Handle AWAKEN interrupts inline to avoid regressing high fps performance
     // with enabling of immediate flip completion notification to OS (Bug 1976509)
-    //    
-    kdispServiceAwakenIntr_HAL(pGpu, pKernelDisplay, pThreadState);
+    // Skip on DCE client where AWAKEN is handled by DCE RM to avoid race conditions.
+    //
+    if (!IS_DCE_CLIENT(pGpu))
+    {
+        kdispServiceAwakenIntr_HAL(pGpu, pKernelDisplay, pThreadState);
+    }
 
     exVblankServiceHeadMask = kdispGetDeferredVblankHeadMask(pKernelDisplay);
 
@@ -1419,8 +1551,11 @@ kdispServiceLowLatencyIntrs_KERNEL
     // handle win_sem interrupt
     kdispHandleWinSemEvt_HAL(pGpu, pKernelDisplay, pThreadState);
 
-    // handle awaken interrupt
-    kdispServiceAwakenIntr_HAL(pGpu, pKernelDisplay, pThreadState);
+    // handle awaken interrupt (it's handled by DCE on Tegra)
+    if (!IS_DCE_CLIENT(pGpu))
+    {
+        kdispServiceAwakenIntr_HAL(pGpu, pKernelDisplay, pThreadState);
+    }
 
     for (head = 0; head < kdispGetNumHeads(pKernelDisplay); ++head)
     {
@@ -1634,10 +1769,14 @@ kdispServiceLowLatencyIntrs_KERNEL
         if (IS_FW_CLIENT(pGpu) ||
             pKernelDisplay->getProperty(pKernelDisplay, PDB_PROP_KDISP_HAS_SEPARATE_LOW_LATENCY_LINE))
         {
-            for (Head = 0; Head < kdispGetNumHeads(pKernelDisplay); Head++)
+            // LAST_DATA is handled by DCE on Tegra
+            if (!IS_DCE_CLIENT(pGpu))
             {
-                pKernelHead = KDISP_GET_HEAD(pKernelDisplay, Head);         
-                kheadResetPendingLastData_HAL(pGpu, pKernelHead, pThreadState);
+                for (Head = 0; Head < kdispGetNumHeads(pKernelDisplay); Head++)
+                {
+                    pKernelHead = KDISP_GET_HEAD(pKernelDisplay, Head);
+                    kheadResetPendingLastData_HAL(pGpu, pKernelHead, pThreadState);
+                }
             }
         }
 
@@ -1692,7 +1831,8 @@ kdispServiceLowLatencyIntrs_KERNEL
         for (i = 0; i < kdispGetNumHeads(pKernelDisplay); i++)
         {
             pKernelHead = KDISP_GET_HEAD(pKernelDisplay, i);
-            if (IS_FW_CLIENT(pGpu))
+            // LAST_DATA is handled by DCE on Tegra
+            if (IS_FW_CLIENT(pGpu) && !IS_DCE_CLIENT(pGpu))
             {
                 kheadResetPendingLastData_HAL(pGpu, pKernelHead, pThreadState);
             }
@@ -1701,12 +1841,16 @@ kdispServiceLowLatencyIntrs_KERNEL
     else
     {
         // reset the VBlank intrs we've handled, and don't reset the vblank intrs we haven't.
-        for (i = 0; i < kdispGetNumHeads(pKernelDisplay); i++)
+        // LAST_DATA is handled by DCE on Tegra
+        if (!IS_DCE_CLIENT(pGpu))
         {
-            pKernelHead = KDISP_GET_HEAD(pKernelDisplay, i);
-            if (pending & NVBIT(i) & ~maskCallbacksStillPending)
+            for (i = 0; i < kdispGetNumHeads(pKernelDisplay); i++)
             {
-                kheadResetPendingLastData_HAL(pGpu, pKernelHead, pThreadState);
+                pKernelHead = KDISP_GET_HEAD(pKernelDisplay, i);
+                if (pending & NVBIT(i) & ~maskCallbacksStillPending)
+                {
+                    kheadResetPendingLastData_HAL(pGpu, pKernelHead, pThreadState);
+                }
             }
         }
     }

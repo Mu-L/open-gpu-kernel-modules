@@ -41,6 +41,18 @@ MODULE_PARM_DESC(
 module_param_named(fbdev, nv_drm_fbdev_module_param, bool, 0400);
 #endif
 
+MODULE_PARM_DESC(
+    vblank,
+    "Enable drm vblank notification support (1 = enable, 0 = disable (default))");
+module_param_named(vblank, nv_drm_vblank_module_param, bool, 0400);
+
+#if defined(NV_DRM_HAS_COLOROP)
+MODULE_PARM_DESC(
+    color_pipeline,
+    "Enable DRM color pipeline support (1 = enable (default), 0 = disable)");
+module_param_named(color_pipeline, nv_drm_color_pipeline_module_param, bool, 0444);
+#endif
+
 #endif /* NV_DRM_AVAILABLE */
 
 /*************************************************************************

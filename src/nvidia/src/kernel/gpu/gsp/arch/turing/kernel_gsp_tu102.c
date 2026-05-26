@@ -52,10 +52,10 @@
 
 #include "gpu/sec2/kernel_sec2.h"
 
+#include "gpu/conf_compute/conf_compute.h"
+
 #include "g_all_dcl_pb.h"
 #include "lib/protobuf/prb.h"
-
-static NvBool _kgspIsProcessorSuspended(OBJGPU *pGpu, void *pVoid);
 
 void
 kgspConfigureFalcon_TU102
@@ -115,7 +115,10 @@ kgspAllocBootArgs_TU102
     NV_STATUS nvStatus = NV_OK;
     NvU64 flags = MEMDESC_FLAGS_NONE;
 
-    flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    if (confComputeForceUnprotAlloc(pGpu))
+    {
+        flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    }
 
     // Allocate WPR meta data
     NV_ASSERT_OK_OR_GOTO(nvStatus,
@@ -311,6 +314,48 @@ kgspFreeBootArgs_TU102
         memdescDestroy(pKernelGsp->pSysmemHeapDescriptor);
         pKernelGsp->pSysmemHeapDescriptor = NULL;
     }
+
+    //
+    // This should already have been freed after INIT_DONE, but maybe we errored
+    // out earlier and need to do cleanup..
+    //
+    if (pKernelGsp->pExternalBindata != NULL)
+    {
+        memdescFree(pKernelGsp->pExternalBindata);
+        memdescDestroy(pKernelGsp->pExternalBindata);
+        pKernelGsp->pExternalBindata = NULL;
+    }
+}
+
+// For LibOS2 this is called LIBOS_INTERRUPT_PROCESSOR_SUSPENDED
+// For LibOS3 it got renamed to the #define we use below but the binary
+// values are identical and the usage is the same.
+#define INTERRUPT_PROCESSOR_SUSPENDED_VALUE 0x80000000
+
+static NvBool
+_kgspIsProcessorSuspended
+(
+    OBJGPU  *pGpu,
+    void    *pVoid
+)
+{
+    KernelGsp *pKernelGsp = reinterpretCast(pVoid, KernelGsp *);
+    NvU32 mailbox;
+
+    // Check for LIBOS_INTERRUPT_PROCESSOR_SUSPENDED in mailbox
+    mailbox = kflcnRegRead_HAL(pGpu, staticCast(pKernelGsp, KernelFalcon),
+                               NV_PFALCON_FALCON_MAILBOX0);
+    return (mailbox & INTERRUPT_PROCESSOR_SUSPENDED_VALUE) != 0;
+}
+
+NV_STATUS
+kgspWaitForProcessorSuspend_TU102
+(
+    OBJGPU    *pGpu,
+    KernelGsp *pKernelGsp
+)
+{
+    return gpuTimeoutCondWait(pGpu, _kgspIsProcessorSuspended, pKernelGsp, NULL);
 }
 
 /*!
@@ -965,12 +1010,12 @@ kgspHealthCheck_TU102
             // as they are not considered as errors
             if (crashcatReportIsWatchdog_HAL(pReport))
             {
-                errorId = 0; 
+                errorId = 0;
                 pKernelGsp->bWatchdogReported = NV_TRUE;
             }
             else
                 errorId = GSP_ERROR;
-            
+
             // only errors impact GSP-RM health. Timeouts are not considered as errors
             if (kgspCrashCatReportImpactsGspRm(pReport) && !crashcatReportIsWatchdog_HAL(pReport))
                 bHealthy = NV_FALSE;
@@ -1046,14 +1091,17 @@ kgspService_TU102
     KernelGsp  *pKernelGsp
 )
 {
-    NvU32         intrStatus;
     KernelFalcon *pKernelFalcon = staticCast(pKernelGsp, KernelFalcon);
+    NvU32         intrStatus;
+    NvBool        bEccErrorPending = NV_FALSE;
 
     // Get the IRQ status for sources routed to host
     intrStatus = kflcnGetPendingHostInterrupts(pGpu, pKernelFalcon);
 
+    bEccErrorPending = kgspEccIsErrorPending_HAL(pGpu, pKernelGsp, intrStatus);
+
     // Exit immediately if there is nothing to do
-    if (intrStatus == 0)
+    if ((intrStatus == 0) && !bEccErrorPending)
     {
         NV_ASSERT_FAILED("KGSP service called when no KGSP interrupt pending\n");
         return 0;
@@ -1103,7 +1151,7 @@ kgspService_TU102
 
     kgspServiceFatalHwError_HAL(pGpu, pKernelGsp, intrStatus);
 
-    if (intrStatus & kflcnGetEccInterruptMask_HAL(pGpu, pKernelFalcon))
+    if (bEccErrorPending)
     {
         kgspEccServiceEvent_HAL(pGpu, pKernelGsp);
     }
@@ -1118,37 +1166,6 @@ kgspService_TU102
     }
 
     return kflcnGetPendingHostInterrupts(pGpu, pKernelFalcon);
-}
-
-// For LibOS2 this is called LIBOS_INTERRUPT_PROCESSOR_SUSPENDED
-// For LibOS3 it got renamed to the #define we use below but the binary
-// values are identical and the usage is the same.
-#define INTERRUPT_PROCESSOR_SUSPENDED_VALUE 0x80000000
-
-static NvBool
-_kgspIsProcessorSuspended
-(
-    OBJGPU  *pGpu,
-    void    *pVoid
-)
-{
-    KernelGsp *pKernelGsp = reinterpretCast(pVoid, KernelGsp *);
-    NvU32 mailbox;
-
-    // Check for LIBOS_INTERRUPT_PROCESSOR_SUSPENDED in mailbox
-    mailbox = kflcnRegRead_HAL(pGpu, staticCast(pKernelGsp, KernelFalcon),
-                               NV_PFALCON_FALCON_MAILBOX0);
-    return (mailbox & INTERRUPT_PROCESSOR_SUSPENDED_VALUE) != 0;
-}
-
-NV_STATUS
-kgspWaitForProcessorSuspend_TU102
-(
-    OBJGPU    *pGpu,
-    KernelGsp *pKernelGsp
-)
-{
-    return gpuTimeoutCondWait(pGpu, _kgspIsProcessorSuspended, pKernelGsp, NULL);
 }
 
 NvBool

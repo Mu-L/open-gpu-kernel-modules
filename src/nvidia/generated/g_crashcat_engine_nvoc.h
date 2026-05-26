@@ -155,7 +155,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_CrashCatEngine;
     ((CrashCatEngine*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(CrashCatEngine)))
 #endif //__nvoc_crashcat_engine_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_CrashCatEngine(CrashCatEngine**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_CrashCatEngine(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_CrashCatEngine(CrashCatEngine**, Dynamic*, NvU32);
 #define __objCreate_CrashCatEngine(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

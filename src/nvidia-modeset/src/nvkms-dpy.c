@@ -428,7 +428,6 @@ static NvBool ReadDSITimingsFromResman(
 
     NVDispEvoPtr pDispEvo = pDpyEvo->pDispEvo;
     NVDevEvoPtr pDevEvo = pDispEvo->pDevEvo;
-    dsiModeTimingParams.subDeviceInstance = pDispEvo->displayOwner;
 
     /*
      * Currently displayId must be hardcoded to 0 to receive timings from RM.
@@ -559,7 +558,6 @@ static NvBool ReadDPSerializerTimings(
     NVDevEvoPtr pDevEvo = pDispEvo->pDevEvo;
     NvU32 ret;
 
-    timingParams.subDeviceInstance = pDispEvo->displayOwner;
     timingParams.displayId = nvDpyIdToNvU32(pDpyEvo->pConnectorEvo->displayId);
     timingParams.stream = pDpyEvo->dp.serializerStreamIndex;
 
@@ -732,7 +730,6 @@ DpyGetPassiveDpDongleType(const NVDpyEvoRec *pDpyEvo,
     }
 
     params.displayId = nvDpyIdToNvU32(pConnectorEvo->displayId);
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.flags = 0;
 
     ret = nvRmApiControl(nvEvoGlobal.clientHandle,
@@ -824,7 +821,6 @@ void nvDpyProbeMaxPixelClock(NVDpyEvoPtr pDpyEvo)
     /* First, get the RM-reported value. */
 
     params.displayId = nvDpyIdToNvU32(pDpyEvo->pConnectorEvo->displayId);
-    params.subDeviceInstance = pDispEvo->displayOwner;
 
     ret = nvRmApiControl(nvEvoGlobal.clientHandle,
                          pDevEvo->displayCommonHandle,
@@ -1315,7 +1311,6 @@ static NvBool ReadEdidFromResman(const NVDpyEvoRec *pDpyEvo, NVEdidPtr pEdid,
 
  query_edid:
 
-    getEdidParams->subDeviceInstance = pDispEvo->displayOwner;
     getEdidParams->displayId = nvDpyEvoGetConnectorId(pDpyEvo);
     getEdidParams->flags = NV0073_CTRL_SPECIFIC_GET_EDID_FLAGS_COPY_CACHE_NO;
 
@@ -1487,6 +1482,14 @@ static NvBool ValidateEdid(const NVDpyEvoRec *pDpyEvo, NVEdidPtr pEdid,
     }
 
     status &= ~(NVT_EDID_VALIDATION_ERR_MASK(NVT_EDID_VALIDATION_ERR_EXT_DTD));
+
+    /*
+     * If the range limits descriptor is bad, there is an error with either the vfreq or hfreq range.
+     * This will be handled either at EDID parse time by NvTiming_CalculateEDIDLimits(), or at mode
+     * validation time given the client does not override the relevant checks. So, we can safely
+     * ignore this error here.
+     */
+    status &= ~(NVT_EDID_VALIDATION_ERR_MASK(NVT_EDID_VALIDATION_ERR_RANGE_LIMIT));
 
     return (status == 0);
 }
@@ -2110,7 +2113,6 @@ static void ClearCustomEdid(const NVDpyEvoRec *pDpyEvo)
         return;
     }
 
-    setEdidParams->subDeviceInstance = pDispEvo->displayOwner;
     setEdidParams->displayId = nvDpyEvoGetConnectorId(pDpyEvo);
     setEdidParams->bufferSize = 0;
 
@@ -2150,7 +2152,6 @@ static void WriteEdidToResman(const NVDpyEvoRec *pDpyEvo,
         goto done;
     }
 
-    setEdidParams->subDeviceInstance = pDispEvo->displayOwner;
     setEdidParams->displayId = nvDpyEvoGetConnectorId(pDpyEvo);
     nvkms_memcpy(&setEdidParams->edidBuffer, pEdid->buffer, pEdid->length);
     setEdidParams->bufferSize = pEdid->length;
@@ -2494,8 +2495,8 @@ NVDpyEvoPtr nvAllocDpyEvo(NVDispEvoPtr pDispEvo,
         pDpyEvo->dp.sinkIsAudioCapable = FALSE;
     }
 
-    pDpyEvo->requestedColorSpace =
-        NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_SPACE_RGB;
+    pDpyEvo->requestedColorFormat =
+        NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT_RGB;
     pDpyEvo->requestedColorRange =
         NV_KMS_DPY_ATTRIBUTE_COLOR_RANGE_FULL;
 
@@ -2644,6 +2645,8 @@ void nvConstructDpVscSdp(const NVDispHeadInfoFrameStateEvoRec *pInfoFrame,
 {
     nvkms_memset(sdp, 0, sizeof(*sdp));
 
+    sdp->dataSize = SDP_VSC_VALID_DATA_BYTES_PSR2_COLOR;
+
     // Header
     // Per DP1.3 spec
     sdp->hb.hb0 = 0;
@@ -2655,16 +2658,16 @@ void nvConstructDpVscSdp(const NVDispHeadInfoFrameStateEvoRec *pInfoFrame,
     sdp->db.psrState = 0;
     sdp->db.contentType = SDP_VSC_CONTENT_TYPE_GRAPHICS;
     switch (pDpyColor->format) {
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_RGB:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_RGB:
             sdp->db.pixEncoding = SDP_VSC_PIX_ENC_RGB;
             break;
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr444:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr444:
             sdp->db.pixEncoding = SDP_VSC_PIX_ENC_YCBCR444;
             break;
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr422:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr422:
             sdp->db.pixEncoding = SDP_VSC_PIX_ENC_YCBCR422;
             break;
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr420:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr420:
             sdp->db.pixEncoding = SDP_VSC_PIX_ENC_YCBCR420;
             break;
         default:
@@ -2673,7 +2676,7 @@ void nvConstructDpVscSdp(const NVDispHeadInfoFrameStateEvoRec *pInfoFrame,
     }
 
     switch (pDpyColor->format) {
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_RGB:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_RGB:
             switch (pDpyColor->colorimetry) {
                 case NVKMS_OUTPUT_COLORIMETRY_BT2100:
                     sdp->db.colorimetryFormat =
@@ -2702,9 +2705,9 @@ void nvConstructDpVscSdp(const NVDispHeadInfoFrameStateEvoRec *pInfoFrame,
                     break;
             }
             break;
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr444:
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr422:
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr420:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr444:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr422:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr420:
             switch (pDpyColor->colorimetry) {
                 case NVKMS_OUTPUT_COLORIMETRY_BT2100:
                     sdp->db.colorimetryFormat =
@@ -2766,13 +2769,11 @@ static void UpdateDpVscSdpInfoFrame(
     const NVDpyAttributeColor *pDpyColor,
     const NVDispHeadInfoFrameStateEvoRec *pInfoFrame)
 {
-    const NVDispHeadStateEvoRec *pHeadState =
-                                &pDispEvo->headState[head];
-    NV0073_CTRL_SPECIFIC_SET_OD_PACKET_PARAMS params = { 0 };
-    NVDevEvoPtr pDevEvo = pDispEvo->pDevEvo;
-    DPSDP_DP_VSC_SDP_DESCRIPTOR *sdp;
-    NvU32 ret;
-
+    DPSDP_DESCRIPTOR sdp = { };
+    const NVDevEvoPtr pDevEvo = pDispEvo->pDevEvo;
+    const NvEvoInfoFrameTransmitControl transmitCtrl =
+        NV_EVO_INFOFRAME_TRANSMIT_CONTROL_EVERY_FRAME;
+    
     /*
      * If the hardware supports the VSC SDP programming using the core
      * channel, the VSC SDP is already programmed during modeset.
@@ -2781,36 +2782,12 @@ static void UpdateDpVscSdpInfoFrame(
         return;
     }
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
-    params.displayId = pHeadState->activeRmId;
+    ct_assert(sizeof(DPSDP_DESCRIPTOR) >= sizeof(DPSDP_DP_VSC_SDP_DESCRIPTOR));
 
-    // DPSDP_DP_VSC_SDP_DESCRIPTOR has a (dataSize, hb, db) layout, while
-    // NV0073_CTRL_SPECIFIC_SET_OD_PACKET_PARAMS.aPacket needs to contain
-    // (hb, db) without dataSize, so this makes sdp->hb align with aPacket.
-    sdp = (DPSDP_DP_VSC_SDP_DESCRIPTOR *)(params.aPacket -
-        offsetof(DPSDP_DP_VSC_SDP_DESCRIPTOR, hb));
+    nvConstructDpVscSdp(pInfoFrame, pDpyColor,
+                        (DPSDP_DP_VSC_SDP_DESCRIPTOR *) &sdp);
 
-    nvAssert((void *)&sdp->hb == (void *)params.aPacket);
-
-    nvConstructDpVscSdp(pInfoFrame, pDpyColor, sdp);
-
-    params.packetSize = sizeof(sdp->hb) + sdp->hb.numValidDataBytes;
-
-    params.transmitControl =
-        DRF_DEF(0073_CTRL_SPECIFIC, _SET_OD_PACKET_TRANSMIT_CONTROL, _ENABLE, _YES) |
-        DRF_DEF(0073_CTRL_SPECIFIC, _SET_OD_PACKET_TRANSMIT_CONTROL, _OTHER_FRAME, _DISABLE) |
-        DRF_DEF(0073_CTRL_SPECIFIC, _SET_OD_PACKET_TRANSMIT_CONTROL, _SINGLE_FRAME, _DISABLE) |
-        DRF_DEF(0073_CTRL_SPECIFIC, _SET_OD_PACKET_TRANSMIT_CONTROL, _ON_HBLANK, _DISABLE);
-
-    ret = nvRmApiControl(nvEvoGlobal.clientHandle,
-                         pDevEvo->displayCommonHandle,
-                         NV0073_CTRL_CMD_SPECIFIC_SET_OD_PACKET,
-                         &params,
-                         sizeof(params));
-
-    if (ret != NVOS_STATUS_SUCCESS) {
-        nvAssert(!"NV0073_CTRL_CMD_SPECIFIC_SET_OD_PACKET failed");
-    }
+    pDevEvo->hal->SendDpInfoFrameSdp(pDispEvo, head, transmitCtrl, &sdp);
 }
 
 static void UpdateDpInfoFrames(const NVDispEvoRec *pDispEvo,
@@ -3271,7 +3248,7 @@ void nvDpyUpdateCurrentAttributes(NVDpyEvoRec *pDpyEvo)
         pDpyEvo->currentAttributes.color.format) {
         nvSendDpyAttributeChangedEventEvo(
             pDpyEvo,
-            NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE,
+            NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT,
             newAttributes.color.format);
     }
 
@@ -3359,6 +3336,40 @@ NvBool nvDpyIsAdaptiveSyncDefaultlisted(const NVDpyEvoRec *pDpyEvo)
     }
 
     return params.bDefaultAdaptivesync;
+}
+
+void nvDpyUpdateAdaptiveSyncSdp(const NVDpyEvoRec *pDpyEvo,
+                                const NVHwModeTimingsEvo *pTimings,
+                                const NvBool enable)
+{
+    const NVDispEvoRec *pDispEvo = pDpyEvo->pDispEvo;
+    const NVDevEvoRec *pDevEvo = pDispEvo->pDevEvo;
+    NvU32 apiHead = pDpyEvo->apiHead;
+    NvU32 head = nvGetPrimaryHwHead(pDispEvo, apiHead);
+
+    DPSDP_DESCRIPTOR sdp = { };
+    NVT_ADAPTIVE_SYNC_SDP_CTRL sdpCtrl = { };
+
+    NvEvoInfoFrameTransmitControl transmitCtrl =
+        NV_EVO_INFOFRAME_TRANSMIT_CONTROL_EVERY_FRAME;
+
+    if (!pDevEvo->caps.adaptiveSyncSdpSupported) {
+        return;
+    }
+
+    if (!enable) {
+        pDevEvo->hal->DisableAdaptiveSyncSdp(pDispEvo, head);
+        return;
+    }
+
+    sdpCtrl.minVTotal = pTimings->rasterSize.y;
+
+    ct_assert((sizeof(DPSDP_DESCRIPTOR) - 1) >= sizeof(NVT_ADAPTIVE_SYNC_SDP));
+
+    NvTiming_ConstructAdaptiveSyncSDP(&sdpCtrl, (NVT_ADAPTIVE_SYNC_SDP *) &(sdp.hb));
+    sdp.dataSize = NVT_DP_ADAPTIVE_SYNC_SDP_LENGTH;
+
+    pDevEvo->hal->SendDpInfoFrameSdp(pDispEvo, head, transmitCtrl, &sdp);
 }
 
 static enum NvKmsDpyAttributeColorBpcValue GetYuv422MaxBpc(

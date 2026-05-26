@@ -29,7 +29,7 @@ void __nvoc_init__KernelCtxShare(KernelCtxShare*, RmHalspecOwner *pRmhalspecowne
 void __nvoc_init_funcTable_KernelCtxShare(KernelCtxShare*, RmHalspecOwner *pRmhalspecowner);
 NV_STATUS __nvoc_ctor_KernelCtxShare(KernelCtxShare*, RmHalspecOwner *pRmhalspecowner);
 void __nvoc_init_dataField_KernelCtxShare(KernelCtxShare*, RmHalspecOwner *pRmhalspecowner);
-void __nvoc_dtor_KernelCtxShare(KernelCtxShare*);
+void __nvoc_dtor_KernelCtxShare(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__KernelCtxShare;
@@ -48,7 +48,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelCtxShare =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "KernelCtxShare",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_KernelCtxShare,
+    .objCreatefn =        &__nvoc_objCreateDynamic_KernelCtxShare,
     .pCastInfo =          &__nvoc_castinfo__KernelCtxShare,
     .pExportInfo =        &__nvoc_export_info__KernelCtxShare
 };
@@ -57,7 +57,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelCtxShare =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__KernelCtxShare __nvoc_metadata__KernelCtxShare = {
     .rtti.pClassDef = &__nvoc_class_def_KernelCtxShare,    // (kctxshare) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_KernelCtxShare,
+    .rtti.dtor      = &__nvoc_dtor_KernelCtxShare,
     .rtti.offset    = 0,
     .metadata__RsShared.rtti.pClassDef = &__nvoc_class_def_RsShared,    // (shr) super
     .metadata__RsShared.rtti.dtor      = &__nvoc_destructFromBase,
@@ -87,16 +87,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__KernelCtxShare =
 
 // Destruct KernelCtxShare object.
 void __nvoc_kctxshareDestruct(KernelCtxShare*);
-void __nvoc_dtor_RsShared(RsShared*);
-void __nvoc_dtor_KernelCtxShare(KernelCtxShare* pThis) {
+void __nvoc_dtor_RsShared(Dynamic*);
+void __nvoc_dtor_KernelCtxShare(Dynamic* pThis) {
+
+    KernelCtxShare *__nvoc_this = (KernelCtxShare *) pThis;
 
 // Call destructor.
-    __nvoc_kctxshareDestruct(pThis);
+    __nvoc_kctxshareDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RsShared(&pThis->__nvoc_base_RsShared);
+    __nvoc_dtor_RsShared((Dynamic *) &__nvoc_this->__nvoc_base_RsShared);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_KernelCtxShare(KernelCtxShare *pThis, RmHalspecOwner *pRmhalspecowner) {
     RmVariantHal *rmVariantHal = &pRmhalspecowner->rmVariantHal;
@@ -127,7 +129,7 @@ NV_STATUS __nvoc_ctor_KernelCtxShare(KernelCtxShare *pKernelCtxShare, RmHalspecO
 
     // Unwind on error.
 __nvoc_ctor_KernelCtxShare_fail__init:
-    __nvoc_dtor_RsShared(&pKernelCtxShare->__nvoc_base_RsShared);
+    __nvoc_dtor_RsShared((Dynamic *)&pKernelCtxShare->__nvoc_base_RsShared);
 __nvoc_ctor_KernelCtxShare_fail_RsShared:
 __nvoc_ctor_KernelCtxShare_exit:
     return status;
@@ -247,12 +249,9 @@ __nvoc_objCreate_KernelCtxShare_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_KernelCtxShare(KernelCtxShare **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_KernelCtxShare(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_KernelCtxShare(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_KernelCtxShare((KernelCtxShare **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 
 
@@ -273,7 +272,7 @@ void __nvoc_init__KernelCtxShareApi(KernelCtxShareApi*);
 void __nvoc_init_funcTable_KernelCtxShareApi(KernelCtxShareApi*);
 NV_STATUS __nvoc_ctor_KernelCtxShareApi(KernelCtxShareApi*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_KernelCtxShareApi(KernelCtxShareApi*);
-void __nvoc_dtor_KernelCtxShareApi(KernelCtxShareApi*);
+void __nvoc_dtor_KernelCtxShareApi(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__KernelCtxShareApi;
@@ -356,7 +355,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelCtxShareApi =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "KernelCtxShareApi",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_KernelCtxShareApi,
+    .objCreatefn =        &__nvoc_objCreateDynamic_KernelCtxShareApi,
     .pCastInfo =          &__nvoc_castinfo__KernelCtxShareApi,
     .pExportInfo =        &__nvoc_export_info__KernelCtxShareApi
 };
@@ -366,6 +365,25 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelCtxShareApi =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000040u)
+static NV_STATUS kctxshareapiCtrlCmdSetTpcPartitionTable__EXPORT(void *pKernelCtxShareApi, void *pParams) {
+    return kctxshareapiCtrlCmdSetTpcPartitionTable_IMPL(pKernelCtxShareApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000040u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000040u)
+static NV_STATUS kctxshareapiCtrlCmdGetCwdWatermark__EXPORT(void *pKernelCtxShareApi, void *pParams) {
+    return kctxshareapiCtrlCmdGetCwdWatermark_IMPL(pKernelCtxShareApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000040u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000040u)
+static NV_STATUS kctxshareapiCtrlCmdSetCwdWatermark__EXPORT(void *pKernelCtxShareApi, void *pParams) {
+    return kctxshareapiCtrlCmdSetCwdWatermark_IMPL(pKernelCtxShareApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000040u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelCtxShareApi[] = 
 {
@@ -373,7 +391,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelCt
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x40u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kctxshareapiCtrlCmdSetTpcPartitionTable_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kctxshareapiCtrlCmdSetTpcPartitionTable__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x40u)
         /*flags=*/      0x40u,
         /*accessRight=*/0x0u,
@@ -388,7 +406,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelCt
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x40u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kctxshareapiCtrlCmdGetCwdWatermark_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kctxshareapiCtrlCmdGetCwdWatermark__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x40u)
         /*flags=*/      0x40u,
         /*accessRight=*/0x0u,
@@ -403,7 +421,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelCt
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x40u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kctxshareapiCtrlCmdSetCwdWatermark_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kctxshareapiCtrlCmdSetCwdWatermark__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x40u)
         /*flags=*/      0x40u,
         /*accessRight=*/0x0u,
@@ -420,7 +438,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelCt
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__KernelCtxShareApi __nvoc_metadata__KernelCtxShareApi = {
     .rtti.pClassDef = &__nvoc_class_def_KernelCtxShareApi,    // (kctxshareapi) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_KernelCtxShareApi,
+    .rtti.dtor      = &__nvoc_dtor_KernelCtxShareApi,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -683,16 +701,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__KernelCtxShareApi =
 
 // Destruct KernelCtxShareApi object.
 void __nvoc_kctxshareapiDestruct(KernelCtxShareApi*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_KernelCtxShareApi(KernelCtxShareApi* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_KernelCtxShareApi(Dynamic* pThis) {
+
+    KernelCtxShareApi *__nvoc_this = (KernelCtxShareApi *) pThis;
 
 // Call destructor.
-    __nvoc_kctxshareapiDestruct(pThis);
+    __nvoc_kctxshareapiDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_KernelCtxShareApi(KernelCtxShareApi *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -718,7 +738,7 @@ NV_STATUS __nvoc_ctor_KernelCtxShareApi(KernelCtxShareApi *pKernelCtxShareApi, s
 
     // Unwind on error.
 __nvoc_ctor_KernelCtxShareApi_fail__init:
-    __nvoc_dtor_GpuResource(&pKernelCtxShareApi->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pKernelCtxShareApi->__nvoc_base_GpuResource);
 __nvoc_ctor_KernelCtxShareApi_fail_GpuResource:
 __nvoc_ctor_KernelCtxShareApi_exit:
     return status;
@@ -830,13 +850,10 @@ __nvoc_objCreate_KernelCtxShareApi_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_KernelCtxShareApi(KernelCtxShareApi **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_KernelCtxShareApi(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_KernelCtxShareApi(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_KernelCtxShareApi((KernelCtxShareApi **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

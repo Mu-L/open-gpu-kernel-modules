@@ -170,6 +170,12 @@ static NvBool UpdateProposedFlipStateOneApiHead(
         pProposedApiHead->hdr.dpyColor.colorimetry = pParams->colorimetry.val;
     }
 
+    if (pParams->dithering.specified) {
+        pProposedApiHead->dirty.dithering = TRUE;
+        pProposedApiHead->dithering.state = pParams->dithering.state;
+        pProposedApiHead->dithering.mode = pParams->dithering.mode;
+    }
+
     if (pParams->hdrInfoFrame.specified) {
         pProposedApiHead->dirty.hdr = TRUE;
         pProposedApiHead->hdr.infoFrameOverride =
@@ -198,9 +204,9 @@ static NvBool UpdateProposedFlipStateOneApiHead(
                 return FALSE;
             }
 
-            /* NVKMS_OUTPUT_TF_PQ requires the RGB color space */
+            /* NVKMS_OUTPUT_TF_PQ requires the RGB color format */
             if (pProposedApiHead->hdr.dpyColor.format !=
-                    NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_RGB) {
+                    NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_RGB) {
                 return FALSE;
             }
         }
@@ -379,8 +385,8 @@ static void FlipEvoOneApiHead(NVDispEvoRec *pDispEvo,
                          pUpdateState);
 
         if (pProposedApiHead->dirty.hdr) {
-            /* Update hardware's current colorSpace and colorRange */
-            nvUpdateCurrentHardwareColorSpaceAndRangeEvo(
+            /* Update hardware's current color format and colorRange */
+            nvUpdateCurrentHardwareColorFormatAndRangeEvo(
                 pDispEvo,
                 head,
                 &pProposedApiHead->hdr.dpyColor,
@@ -403,6 +409,31 @@ static void FlipEvoOneApiHead(NVDispEvoRec *pDispEvo,
     if (pProposedApiHead->dirty.viewPortPointIn) {
         pApiHeadState->viewPortPointIn =
             pProposedApiHead->viewPortPointIn;
+    }
+
+    if (pProposedApiHead->dirty.dithering) {
+        /* Update requested dithering on all dpys for this head */
+        NVDpyEvoRec *pDpyEvoIter;
+        FOR_ALL_EVO_DPYS(pDpyEvoIter, pApiHeadState->activeDpys, pDispEvo) {
+            pDpyEvoIter->requestedDithering.state =
+                pProposedApiHead->dithering.state;
+            pDpyEvoIter->requestedDithering.mode =
+                pProposedApiHead->dithering.mode;
+        }
+
+        /* Choose and apply dithering */
+        nvChooseDitheringEvo(pDpyEvo->pConnectorEvo,
+                             pApiHeadState->attributes.color.bpc,
+                             pApiHeadState->attributes.color.colorimetry,
+                             &pDpyEvo->requestedDithering,
+                             &pApiHeadState->attributes.dithering);
+
+        FOR_EACH_EVO_HW_HEAD_IN_MASK(pApiHeadState->hwHeadsMask, head) {
+            nvSetDitheringEvo(pDispEvo,
+                              head,
+                              &pApiHeadState->attributes.dithering,
+                              pUpdateState);
+        }
     }
 }
 
@@ -786,11 +817,9 @@ void nvApiHeadSetViewportPointIn(const NVDispEvoRec *pDispEvo,
             nvAssert(hwViewportInWidth == pTimings->viewPort.in.width);
         }
 
-        nvPushEvoSubDevMaskDisp(pDispEvo);
         pDevEvo->hal->SetViewportPointIn(pDevEvo, head,
             x + (hwViewportInWidth * pHeadState->mergeHeadSection), y,
             &updateState);
-        nvPopEvoSubDevMask(pDevEvo);
 
         firstHead = NV_FALSE;
     }
@@ -829,29 +858,25 @@ NvU32 nvApiHeadGetActiveViewportOffset(NVDispEvoRec *pDispEvo,
 void nvApiHeadIdleMainLayerChannels(NVDevEvoRec *pDevEvo,
     const NvU32 apiHeadMaskPerSd[NVKMS_MAX_SUBDEVICES])
 {
-    NVEvoChannelMask idleChannelMaskPerSd[NVKMS_MAX_SUBDEVICES] = { };
-    const NVDispEvoRec *pDispEvo;
-    NvU32 dispIndex, apiHead;
+    NVEvoChannelMask idleChannelMask = 0;
+    const NVDispEvoRec *pDispEvo = pDevEvo->pDispEvo[0];
+    NvU32 apiHead;
     NvBool found = FALSE;
 
-    FOR_ALL_EVO_DISPLAYS(pDispEvo, dispIndex, pDevEvo) {
-        for (apiHead = 0; apiHead < pDevEvo->numApiHeads; apiHead++) {
-            const NVDispApiHeadStateEvoRec *pApiHeadState =
-                &pDispEvo->apiHeadState[apiHead];
-            NvU32 head;
+    for (apiHead = 0; apiHead < pDevEvo->numApiHeads; apiHead++) {
+        const NVDispApiHeadStateEvoRec *pApiHeadState =
+            &pDispEvo->apiHeadState[apiHead];
+        NvU32 head;
 
-            if ((apiHeadMaskPerSd[pDispEvo->displayOwner] &
-                    NVBIT(apiHead)) == 0x0) {
-                continue;
-            }
+        if ((apiHeadMaskPerSd[0] & NVBIT(apiHead)) == 0x0) {
+            continue;
+        }
 
-            FOR_EACH_EVO_HW_HEAD_IN_MASK(pApiHeadState->hwHeadsMask, head) {
-                NVEvoChannelPtr pMainLayerChannel =
-                    pDevEvo->head[head].layer[NVKMS_MAIN_LAYER];
-                idleChannelMaskPerSd[pDispEvo->displayOwner] |=
-                    pMainLayerChannel->channelMask;
-                found = TRUE;
-            }
+        FOR_EACH_EVO_HW_HEAD_IN_MASK(pApiHeadState->hwHeadsMask, head) {
+            NVEvoChannelPtr pMainLayerChannel =
+                pDevEvo->head[head].layer[NVKMS_MAIN_LAYER];
+            idleChannelMask |= pMainLayerChannel->channelMask;
+            found = TRUE;
         }
     }
 
@@ -859,7 +884,7 @@ void nvApiHeadIdleMainLayerChannels(NVDevEvoRec *pDevEvo,
         return;
     }
 
-    nvIdleMainLayerChannels(pDevEvo, idleChannelMaskPerSd,
+    nvIdleMainLayerChannels(pDevEvo, idleChannelMask,
                             FALSE /* allowForceIdle */);
 }
 
@@ -867,48 +892,43 @@ void nvApiHeadUpdateFlipLock(NVDevEvoRec *pDevEvo,
                              const NvU32 apiHeadMaskPerSd[NVKMS_MAX_SUBDEVICES],
                              const NvBool enable)
 {
-    NvU32 dispIndex;
-    NVDispEvoPtr pDispEvo;
-    NvU32 headMaskPerSd[NVKMS_MAX_SUBDEVICES] = { };
-    NVEvoChannelMask channelMaskPerSd[NVKMS_MAX_SUBDEVICES] = { };
+    NVDispEvoPtr pDispEvo = pDevEvo->pDispEvo[0];
+    NvU32 headMask = 0;
+    NVEvoChannelMask channelMask = 0;
     NvBool found = FALSE;
 
     /* Determine which channels need to enable or disable fliplock. */
-    FOR_ALL_EVO_DISPLAYS(pDispEvo, dispIndex, pDevEvo) {
-        NvU32 apiHead;
-        for (apiHead = 0; apiHead < pDevEvo->numApiHeads; apiHead++) {
-            const NVDispApiHeadStateEvoRec *pApiHeadState =
-                &pDispEvo->apiHeadState[apiHead];
-            NvU32 head;
+    NvU32 apiHead;
+    for (apiHead = 0; apiHead < pDevEvo->numApiHeads; apiHead++) {
+        const NVDispApiHeadStateEvoRec *pApiHeadState =
+            &pDispEvo->apiHeadState[apiHead];
+        NvU32 head;
 
-            if ((apiHeadMaskPerSd[pDispEvo->displayOwner] &
-                    NVBIT(apiHead)) == 0x0) {
+        if ((apiHeadMaskPerSd[0] & NVBIT(apiHead)) == 0x0) {
+            continue;
+        }
+
+        FOR_EACH_EVO_HW_HEAD_IN_MASK(pApiHeadState->hwHeadsMask, head) {
+            NVEvoChannelPtr pMainLayerChannel =
+                pDevEvo->head[head].layer[NVKMS_MAIN_LAYER];
+
+            if (!nvNeedToToggleFlipLock(pDispEvo, head, enable)) {
                 continue;
             }
 
-            FOR_EACH_EVO_HW_HEAD_IN_MASK(pApiHeadState->hwHeadsMask, head) {
-                NVEvoChannelPtr pMainLayerChannel =
-                    pDevEvo->head[head].layer[NVKMS_MAIN_LAYER];
-
-                if (!nvNeedToToggleFlipLock(pDispEvo, head, enable)) {
-                    continue;
-                }
-
-                if (enable) {
-                    /*
-                     * Override the prohibition of fliplock on pDispEvos with
-                     * headsurface enabled (calculated earlier in
-                     * HsConfigAllowFlipLock) to allow enabling fliplock for
-                     * headSurface swapgroups.
-                     */
-                    nvAllowFlipLockEvo(pDispEvo, TRUE /* allowFlipLock */);
-                }
-
-                headMaskPerSd[pDispEvo->displayOwner] |= NVBIT(head);
-                channelMaskPerSd[pDispEvo->displayOwner] |=
-                    pMainLayerChannel->channelMask;
-                found = TRUE;
+            if (enable) {
+                /*
+                 * Override the prohibition of fliplock on pDispEvos with
+                 * headsurface enabled (calculated earlier in
+                 * HsConfigAllowFlipLock) to allow enabling fliplock for
+                 * headSurface swapgroups.
+                 */
+                nvAllowFlipLockEvo(pDispEvo, TRUE /* allowFlipLock */);
             }
+
+            headMask |= NVBIT(head);
+            channelMask |= pMainLayerChannel->channelMask;
+            found = TRUE;
         }
     }
 
@@ -921,14 +941,10 @@ void nvApiHeadUpdateFlipLock(NVDevEvoRec *pDevEvo,
      * idle.  This shouldn't timeout if we're enabling fliplock while bringing
      * up swapgroups on a new head.
      */
-    nvIdleMainLayerChannels(pDevEvo, channelMaskPerSd, !enable /* forceIdle */);
+    nvIdleMainLayerChannels(pDevEvo, channelMask, !enable /* forceIdle */);
 
     /* Now that all channels are idle, update fliplock. */
-    FOR_ALL_EVO_DISPLAYS(pDispEvo, dispIndex, pDevEvo) {
-        nvToggleFlipLockPerDisp(pDispEvo,
-                                headMaskPerSd[pDispEvo->displayOwner],
-                                enable);
-    }
+    nvToggleFlipLockPerDisp(pDispEvo, headMask, enable);
 }
 
 NvBool nvIdleMainLayerChannelCheckIdleOneApiHead(NVDispEvoPtr pDispEvo,
@@ -1018,33 +1034,29 @@ NvU32 nvCollectSurfaceUsageMaskOneApiHead(const NVDispEvoRec *pDispEvo,
 }
 
 void nvIdleLayerChannels(NVDevEvoRec *pDevEvo,
-    NvU32 layerMaskPerSdApiHead[NVKMS_MAX_SUBDEVICES][NVKMS_MAX_HEADS_PER_DISP])
+    NvU32 layerMaskPerApiHead[NVKMS_MAX_HEADS_PER_DISP])
 {
-    NVEvoChannelMask channelMaskPerSd[NVKMS_MAX_SUBDEVICES] = { };
-    const NVDispEvoRec *pDispEvo;
-    NvU32 sd;
+    NVEvoChannelMask channelMask = 0;
+    const NVDispEvoRec *pDispEvo = pDevEvo->pDispEvo[0];
     NvU64 startTime = 0;
     const NvU32 timeout = 500000; // .5 seconds
     NvBool allIdle;
 
-    FOR_ALL_EVO_DISPLAYS(pDispEvo, sd, pDevEvo) {
-        for (NvU32 apiHead = 0; apiHead < pDevEvo->numApiHeads; apiHead++) {
-            const NVDispApiHeadStateEvoRec *pApiHeadState =
-                &pDispEvo->apiHeadState[apiHead];
-            NvU32 head;
+    for (NvU32 apiHead = 0; apiHead < pDevEvo->numApiHeads; apiHead++) {
+        const NVDispApiHeadStateEvoRec *pApiHeadState =
+            &pDispEvo->apiHeadState[apiHead];
+        NvU32 head;
 
-            if (!nvApiHeadIsActive(pDispEvo, apiHead)) {
-                continue;
-            }
+        if (!nvApiHeadIsActive(pDispEvo, apiHead)) {
+            continue;
+        }
 
-            FOR_EACH_EVO_HW_HEAD_IN_MASK(pApiHeadState->hwHeadsMask, head) {
-                for (NvU32 layer = 0;
-                     layer < pDevEvo->head[head].numLayers; layer++) {
-                    if ((NVBIT(layer) &
-                            layerMaskPerSdApiHead[sd][apiHead]) != 0x0) {
-                        channelMaskPerSd[sd] |=
-                            pDevEvo->head[head].layer[layer]->channelMask;
-                    }
+        FOR_EACH_EVO_HW_HEAD_IN_MASK(pApiHeadState->hwHeadsMask, head) {
+            for (NvU32 layer = 0;
+                 layer < pDevEvo->head[head].numLayers; layer++) {
+                if ((NVBIT(layer) & layerMaskPerApiHead[apiHead]) != 0x0) {
+                    channelMask |=
+                        pDevEvo->head[head].layer[layer]->channelMask;
                 }
             }
         }
@@ -1052,35 +1064,33 @@ void nvIdleLayerChannels(NVDevEvoRec *pDevEvo,
 
     do {
         allIdle = TRUE;
-        FOR_ALL_EVO_DISPLAYS(pDispEvo, sd, pDevEvo) {
 
-            for (NvU32 head = 0; head < pDevEvo->numHeads; head++) {
-                NvU32 layer;
+        for (NvU32 head = 0; head < pDevEvo->numHeads; head++) {
+            NvU32 layer;
 
-                if (!nvHeadIsActive(pDispEvo, head)) {
+            if (!nvHeadIsActive(pDispEvo, head)) {
+                continue;
+            }
+
+            for (layer = 0;
+                 layer < pDevEvo->head[head].numLayers; layer++) {
+                NVEvoChannelPtr pLayerChannel =
+                    pDevEvo->head[head].layer[layer];
+                NvBool isMethodPending;
+
+                if ((pLayerChannel->channelMask &
+                        channelMask) == 0x0) {
                     continue;
                 }
 
-                for (layer = 0;
-                     layer < pDevEvo->head[head].numLayers; layer++) {
-                    NVEvoChannelPtr pLayerChannel =
-                        pDevEvo->head[head].layer[layer];
-                    NvBool isMethodPending;
+                if (pDevEvo->hal->IsChannelMethodPending(pDevEvo,
+                        pLayerChannel, 0, &isMethodPending) &&
+                        isMethodPending) {
 
-                    if ((pLayerChannel->channelMask &
-                            channelMaskPerSd[sd]) == 0x0) {
-                        continue;
-                    }
-
-                    if (pDevEvo->hal->IsChannelMethodPending(pDevEvo,
-                            pLayerChannel, sd, &isMethodPending) &&
-                            isMethodPending) {
-
-                        allIdle = FALSE;
-                    } else {
-                        /* This has been completed, no need to keep trying */
-                        channelMaskPerSd[sd] &= ~pLayerChannel->channelMask;
-                    }
+                    allIdle = FALSE;
+                } else {
+                    /* This has been completed, no need to keep trying */
+                    channelMask &= ~pLayerChannel->channelMask;
                 }
             }
         }
@@ -1098,26 +1108,21 @@ void nvIdleLayerChannels(NVDevEvoRec *pDevEvo,
         NVEvoIdleChannelState idleChannelState = { };
         NvBool tryToForceIdle = FALSE;
 
-        FOR_ALL_EVO_DISPLAYS(pDispEvo, sd, pDevEvo) {
+        for (NvU32 head = 0; head < pDevEvo->numHeads; head++) {
+            NvU32 layer;
 
-            for (NvU32 head = 0; head < pDevEvo->numHeads; head++) {
-                NvU32 layer;
+            if (!nvHeadIsActive(pDispEvo, head)) {
+                continue;
+            }
 
-                if (!nvHeadIsActive(pDispEvo, head)) {
-                    continue;
-                }
+            for (layer = 0;
+                 layer < pDevEvo->head[head].numLayers; layer++) {
+                NVEvoChannelPtr pLayerChannel =
+                    pDevEvo->head[head].layer[layer];
 
-                for (layer = 0;
-                     layer < pDevEvo->head[head].numLayers; layer++) {
-                    NVEvoChannelPtr pLayerChannel =
-                        pDevEvo->head[head].layer[layer];
-
-                    if ((pLayerChannel->channelMask &
-                            channelMaskPerSd[sd]) != 0x0) {
-                        idleChannelState.subdev[sd].channelMask |=
-                            pLayerChannel->channelMask;
-                        tryToForceIdle = TRUE;
-                    }
+                if ((pLayerChannel->channelMask & channelMask) != 0x0) {
+                    idleChannelState.channelMask |= pLayerChannel->channelMask;
+                    tryToForceIdle = TRUE;
                 }
             }
         }
@@ -1185,8 +1190,7 @@ NvBool nvIdleBaseChannelOneApiHead(NVDispEvoRec *pDispEvo, NvU32 apiHead,
     *pStoppedBase = FALSE;
     FOR_EACH_EVO_HW_HEAD_IN_MASK(pApiHeadState->hwHeadsMask, head) {
         NvBool stoppedBase = FALSE;
-        if (!nvRMIdleBaseChannel(pDevEvo, head,
-                pDispEvo->displayOwner, &stoppedBase)) {
+        if (!nvRMIdleBaseChannel(pDevEvo, head, &stoppedBase)) {
             ret = FALSE;
         } else if (stoppedBase) {
             *pStoppedBase = TRUE;

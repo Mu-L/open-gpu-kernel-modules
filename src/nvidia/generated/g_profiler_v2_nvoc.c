@@ -32,7 +32,7 @@ void __nvoc_init__ProfilerBase(ProfilerBase*, RmHalspecOwner *pRmhalspecowner);
 void __nvoc_init_funcTable_ProfilerBase(ProfilerBase*, RmHalspecOwner *pRmhalspecowner);
 NV_STATUS __nvoc_ctor_ProfilerBase(ProfilerBase*, RmHalspecOwner *pRmhalspecowner, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_ProfilerBase(ProfilerBase*, RmHalspecOwner *pRmhalspecowner);
-void __nvoc_dtor_ProfilerBase(ProfilerBase*);
+void __nvoc_dtor_ProfilerBase(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__ProfilerBase;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ProfilerBase =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "ProfilerBase",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_ProfilerBase,
+    .objCreatefn =        &__nvoc_objCreateDynamic_ProfilerBase,
     .pCastInfo =          &__nvoc_castinfo__ProfilerBase,
     .pExportInfo =        &__nvoc_export_info__ProfilerBase
 };
@@ -125,6 +125,211 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ProfilerBase =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010318u)
+static NV_STATUS profilerBaseCtrlCmdReserveHwpmLegacy__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdReserveHwpmLegacy_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010318u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x000100c8u)
+static NV_STATUS profilerBaseCtrlCmdInternalReserveHwpmLegacy__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdInternalReserveHwpmLegacy_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x000100c8u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+static NV_STATUS profilerBaseCtrlCmdReleaseHwpmLegacy__EXPORT(void *pProfiler) {
+    return profilerBaseCtrlCmdReleaseHwpmLegacy_IMPL(pProfiler);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS profilerBaseCtrlCmdReservePmAreaSmpc__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdReservePmAreaSmpc_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+static NV_STATUS profilerBaseCtrlCmdReleasePmAreaSmpc__EXPORT(void *pProfiler) {
+    return profilerBaseCtrlCmdReleasePmAreaSmpc_IMPL(pProfiler);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010008u)
+static NV_STATUS profilerBaseCtrlCmdAllocPmaStream__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdAllocPmaStream_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010008u)
+static NV_STATUS profilerBaseCtrlCmdFreePmaStream__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdFreePmaStream_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x000500c8u)
+static NV_STATUS profilerBaseCtrlCmdInternalFreePmaStream__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdInternalFreePmaStream_DISPATCH(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x000500c8u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x000500c8u)
+static NV_STATUS profilerBaseCtrlCmdInternalGetMaxPmas__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdInternalGetMaxPmas_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x000500c8u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010008u)
+static NV_STATUS profilerBaseCtrlCmdBindPmResources__EXPORT(void *pProfiler) {
+    return profilerBaseCtrlCmdBindPmResources_IMPL(pProfiler);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS profilerBaseCtrlCmdUnbindPmResources__EXPORT(void *pProfiler) {
+    return profilerBaseCtrlCmdUnbindPmResources_DISPATCH(pProfiler);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x000100c8u)
+static NV_STATUS profilerBaseCtrlCmdInternalBindPmResources__EXPORT(void *pProfiler) {
+    return profilerBaseCtrlCmdInternalBindPmResources_IMPL(pProfiler);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x000100c8u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x000000c8u)
+static NV_STATUS profilerBaseCtrlCmdInternalUnbindPmResources__EXPORT(void *pProfiler) {
+    return profilerBaseCtrlCmdInternalUnbindPmResources_IMPL(pProfiler);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x000000c8u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00050048u)
+static NV_STATUS profilerBaseCtrlCmdPmaStreamUpdateGetPut__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdPmaStreamUpdateGetPut_DISPATCH(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00050048u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS profilerBaseCtrlCmdExecRegops__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdExecRegops_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x000500c8u)
+static NV_STATUS profilerBaseCtrlCmdInternalAllocPmaStream__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdInternalAllocPmaStream_DISPATCH(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x000500c8u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010048u)
+static NV_STATUS profilerBaseCtrlCmdInternalQuiescePmaChannel__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdInternalQuiescePmaChannel_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010048u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00050008u)
+static NV_STATUS profilerBaseCtrlCmdInternalSriovPromotePmaStream__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdInternalSriovPromotePmaStream_DISPATCH(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00050008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+static NV_STATUS profilerBaseCtrlCmdInternalPermissionsInit__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdInternalPermissionsInit_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS profilerBaseCtrlCmdReservePmAreaPcSampler__EXPORT(void *pProfiler) {
+    return profilerBaseCtrlCmdReservePmAreaPcSampler_IMPL(pProfiler);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS profilerBaseCtrlCmdReleasePmAreaPcSampler__EXPORT(void *pProfiler) {
+    return profilerBaseCtrlCmdReleasePmAreaPcSampler_IMPL(pProfiler);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS profilerBaseCtrlCmdGetTotalHsCredits__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdGetTotalHsCredits_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS profilerBaseCtrlCmdGetChipletHsCredits__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdGetChipletHsCredits_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS profilerBaseCtrlCmdGetHsCreditsMapping__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdGetHsCreditsMapping_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS profilerBaseCtrlCmdGetHsCredits__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdGetHsCredits_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS profilerBaseCtrlCmdSetHsCredits__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdSetHsCredits_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS profilerBaseCtrlCmdReserveHes__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdReserveHes_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS profilerBaseCtrlCmdReleaseHes__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdReleaseHes_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS profilerBaseCtrlCmdReserveCcuProf__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdReserveCcuProf_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+static NV_STATUS profilerBaseCtrlCmdReleaseCcuProf__EXPORT(void *pProfiler) {
+    return profilerBaseCtrlCmdReleaseCcuProf_IMPL(pProfiler);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010248u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00040048u)
+static NV_STATUS profilerBaseCtrlCmdRequestCgControls__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdRequestCgControls_DISPATCH(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00040048u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00040048u)
+static NV_STATUS profilerBaseCtrlCmdReleaseCgControls__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdReleaseCgControls_DISPATCH(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00040048u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+static NV_STATUS profilerBaseCtrlCmdDisableDynamicMMABoost__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdDisableDynamicMMABoost_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+static NV_STATUS profilerBaseCtrlCmdGetDynamicMMABoostStatus__EXPORT(void *pProfiler, void *pParams) {
+    return profilerBaseCtrlCmdGetDynamicMMABoostStatus_IMPL(pProfiler, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000048u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ProfilerBase[] = 
 {
@@ -132,7 +337,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10318u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReserveHwpmLegacy_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReserveHwpmLegacy__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10318u)
         /*flags=*/      0x10318u,
         /*accessRight=*/0x0u,
@@ -147,7 +352,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReleaseHwpmLegacy_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReleaseHwpmLegacy__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*flags=*/      0x48u,
         /*accessRight=*/0x0u,
@@ -162,7 +367,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReservePmAreaSmpc_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReservePmAreaSmpc__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -177,7 +382,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReleasePmAreaSmpc_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReleasePmAreaSmpc__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*flags=*/      0x48u,
         /*accessRight=*/0x0u,
@@ -192,7 +397,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdAllocPmaStream_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdAllocPmaStream__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
         /*flags=*/      0x10008u,
         /*accessRight=*/0x0u,
@@ -207,7 +412,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdFreePmaStream_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdFreePmaStream__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
         /*flags=*/      0x10008u,
         /*accessRight=*/0x0u,
@@ -222,7 +427,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdBindPmResources_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdBindPmResources__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
         /*flags=*/      0x10008u,
         /*accessRight=*/0x0u,
@@ -237,7 +442,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdUnbindPmResources_DISPATCH,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdUnbindPmResources__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -252,7 +457,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x50048u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdPmaStreamUpdateGetPut_DISPATCH,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdPmaStreamUpdateGetPut__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x50048u)
         /*flags=*/      0x50048u,
         /*accessRight=*/0x0u,
@@ -267,7 +472,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdExecRegops_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdExecRegops__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -282,7 +487,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReservePmAreaPcSampler_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReservePmAreaPcSampler__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -297,7 +502,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReleasePmAreaPcSampler_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReleasePmAreaPcSampler__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -312,7 +517,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdGetTotalHsCredits_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdGetTotalHsCredits__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -327,7 +532,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdSetHsCredits_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdSetHsCredits__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -342,7 +547,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdGetHsCredits_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdGetHsCredits__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -357,7 +562,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReserveHes_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReserveHes__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -372,7 +577,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReleaseHes_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReleaseHes__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -387,7 +592,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdGetChipletHsCredits_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdGetChipletHsCredits__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -402,7 +607,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdGetHsCreditsMapping_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdGetHsCreditsMapping__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -417,7 +622,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdDisableDynamicMMABoost_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdDisableDynamicMMABoost__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*flags=*/      0x48u,
         /*accessRight=*/0x0u,
@@ -432,7 +637,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdGetDynamicMMABoostStatus_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdGetDynamicMMABoostStatus__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*flags=*/      0x48u,
         /*accessRight=*/0x0u,
@@ -447,7 +652,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReserveCcuProf_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReserveCcuProf__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -462,7 +667,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReleaseCcuProf_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReleaseCcuProf__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10248u)
         /*flags=*/      0x10248u,
         /*accessRight=*/0x0u,
@@ -477,7 +682,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10048u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalQuiescePmaChannel_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalQuiescePmaChannel__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10048u)
         /*flags=*/      0x10048u,
         /*accessRight=*/0x0u,
@@ -492,7 +697,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x50008u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalSriovPromotePmaStream_DISPATCH,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalSriovPromotePmaStream__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x50008u)
         /*flags=*/      0x50008u,
         /*accessRight=*/0x0u,
@@ -507,7 +712,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalPermissionsInit_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalPermissionsInit__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
         /*flags=*/      0x48u,
         /*accessRight=*/0x0u,
@@ -522,7 +727,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x500c8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalAllocPmaStream_DISPATCH,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalAllocPmaStream__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x500c8u)
         /*flags=*/      0x500c8u,
         /*accessRight=*/0x0u,
@@ -537,7 +742,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x500c8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalFreePmaStream_DISPATCH,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalFreePmaStream__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x500c8u)
         /*flags=*/      0x500c8u,
         /*accessRight=*/0x0u,
@@ -552,7 +757,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x500c8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalGetMaxPmas_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalGetMaxPmas__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x500c8u)
         /*flags=*/      0x500c8u,
         /*accessRight=*/0x0u,
@@ -567,7 +772,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x100c8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalBindPmResources_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalBindPmResources__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x100c8u)
         /*flags=*/      0x100c8u,
         /*accessRight=*/0x0u,
@@ -582,7 +787,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0xc8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalUnbindPmResources_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalUnbindPmResources__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0xc8u)
         /*flags=*/      0xc8u,
         /*accessRight=*/0x0u,
@@ -597,7 +802,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x100c8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalReserveHwpmLegacy_IMPL,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdInternalReserveHwpmLegacy__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x100c8u)
         /*flags=*/      0x100c8u,
         /*accessRight=*/0x0u,
@@ -612,7 +817,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x40048u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdRequestCgControls_DISPATCH,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdRequestCgControls__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x40048u)
         /*flags=*/      0x40048u,
         /*accessRight=*/0x0u,
@@ -627,7 +832,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x40048u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReleaseCgControls_DISPATCH,
+        /*pFunc=*/      (void (*)(void)) &profilerBaseCtrlCmdReleaseCgControls__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x40048u)
         /*flags=*/      0x40048u,
         /*accessRight=*/0x0u,
@@ -644,7 +849,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Profiler
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__ProfilerBase __nvoc_metadata__ProfilerBase = {
     .rtti.pClassDef = &__nvoc_class_def_ProfilerBase,    // (profilerBase) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_ProfilerBase,
+    .rtti.dtor      = &__nvoc_dtor_ProfilerBase,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -904,16 +1109,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__ProfilerBase =
 
 // Destruct ProfilerBase object.
 void __nvoc_profilerBaseDestruct(ProfilerBase*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_ProfilerBase(ProfilerBase* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_ProfilerBase(Dynamic* pThis) {
+
+    ProfilerBase *__nvoc_this = (ProfilerBase *) pThis;
 
 // Call destructor.
-    __nvoc_profilerBaseDestruct(pThis);
+    __nvoc_profilerBaseDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_ProfilerBase(ProfilerBase *pThis, RmHalspecOwner *pRmhalspecowner) {
     RmVariantHal *rmVariantHal = &pRmhalspecowner->rmVariantHal;
@@ -944,7 +1151,7 @@ NV_STATUS __nvoc_ctor_ProfilerBase(ProfilerBase *pProf, RmHalspecOwner *pRmhalsp
 
     // Unwind on error.
 __nvoc_ctor_ProfilerBase_fail__init:
-    __nvoc_dtor_GpuResource(&pProf->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pProf->__nvoc_base_GpuResource);
 __nvoc_ctor_ProfilerBase_fail_GpuResource:
 __nvoc_ctor_ProfilerBase_exit:
     return status;
@@ -1162,14 +1369,11 @@ __nvoc_objCreate_ProfilerBase_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_ProfilerBase(ProfilerBase **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_ProfilerBase(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_ProfilerBase(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_ProfilerBase((ProfilerBase **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 
 
@@ -1191,7 +1395,7 @@ void __nvoc_init__ProfilerCtx(ProfilerCtx*, RmHalspecOwner *pRmhalspecowner);
 void __nvoc_init_funcTable_ProfilerCtx(ProfilerCtx*, RmHalspecOwner *pRmhalspecowner);
 NV_STATUS __nvoc_ctor_ProfilerCtx(ProfilerCtx*, RmHalspecOwner *pRmhalspecowner, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_ProfilerCtx(ProfilerCtx*, RmHalspecOwner *pRmhalspecowner);
-void __nvoc_dtor_ProfilerCtx(ProfilerCtx*);
+void __nvoc_dtor_ProfilerCtx(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__ProfilerCtx;
@@ -1299,7 +1503,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ProfilerCtx =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "ProfilerCtx",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_ProfilerCtx,
+    .objCreatefn =        &__nvoc_objCreateDynamic_ProfilerCtx,
     .pCastInfo =          &__nvoc_castinfo__ProfilerCtx,
     .pExportInfo =        &__nvoc_export_info__ProfilerCtx
 };
@@ -1308,7 +1512,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ProfilerCtx =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__ProfilerCtx __nvoc_metadata__ProfilerCtx = {
     .rtti.pClassDef = &__nvoc_class_def_ProfilerCtx,    // (profilerCtx) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_ProfilerCtx,
+    .rtti.dtor      = &__nvoc_dtor_ProfilerCtx,
     .rtti.offset    = 0,
     .metadata__ProfilerBase.rtti.pClassDef = &__nvoc_class_def_ProfilerBase,    // (profilerBase) super
     .metadata__ProfilerBase.rtti.dtor      = &__nvoc_destructFromBase,
@@ -1597,16 +1801,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__ProfilerCtx =
 
 // Destruct ProfilerCtx object.
 void __nvoc_profilerCtxDestruct(ProfilerCtx*);
-void __nvoc_dtor_ProfilerBase(ProfilerBase*);
-void __nvoc_dtor_ProfilerCtx(ProfilerCtx* pThis) {
+void __nvoc_dtor_ProfilerBase(Dynamic*);
+void __nvoc_dtor_ProfilerCtx(Dynamic* pThis) {
+
+    ProfilerCtx *__nvoc_this = (ProfilerCtx *) pThis;
 
 // Call destructor.
-    __nvoc_profilerCtxDestruct(pThis);
+    __nvoc_profilerCtxDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_ProfilerBase(&pThis->__nvoc_base_ProfilerBase);
+    __nvoc_dtor_ProfilerBase((Dynamic *) &__nvoc_this->__nvoc_base_ProfilerBase);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_ProfilerCtx(ProfilerCtx *pThis, RmHalspecOwner *pRmhalspecowner) {
     RmVariantHal *rmVariantHal = &pRmhalspecowner->rmVariantHal;
@@ -1637,7 +1843,7 @@ NV_STATUS __nvoc_ctor_ProfilerCtx(ProfilerCtx *pResource, RmHalspecOwner *pRmhal
 
     // Unwind on error.
 __nvoc_ctor_ProfilerCtx_fail__init:
-    __nvoc_dtor_ProfilerBase(&pResource->__nvoc_base_ProfilerBase);
+    __nvoc_dtor_ProfilerBase((Dynamic *)&pResource->__nvoc_base_ProfilerBase);
 __nvoc_ctor_ProfilerCtx_fail_ProfilerBase:
 __nvoc_ctor_ProfilerCtx_exit:
     return status;
@@ -1817,14 +2023,11 @@ __nvoc_objCreate_ProfilerCtx_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_ProfilerCtx(ProfilerCtx **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_ProfilerCtx(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_ProfilerCtx(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_ProfilerCtx((ProfilerCtx **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 
 
@@ -1846,7 +2049,7 @@ void __nvoc_init__ProfilerDev(ProfilerDev*, RmHalspecOwner *pRmhalspecowner);
 void __nvoc_init_funcTable_ProfilerDev(ProfilerDev*, RmHalspecOwner *pRmhalspecowner);
 NV_STATUS __nvoc_ctor_ProfilerDev(ProfilerDev*, RmHalspecOwner *pRmhalspecowner, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_ProfilerDev(ProfilerDev*, RmHalspecOwner *pRmhalspecowner);
-void __nvoc_dtor_ProfilerDev(ProfilerDev*);
+void __nvoc_dtor_ProfilerDev(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__ProfilerDev;
@@ -1954,7 +2157,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ProfilerDev =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "ProfilerDev",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_ProfilerDev,
+    .objCreatefn =        &__nvoc_objCreateDynamic_ProfilerDev,
     .pCastInfo =          &__nvoc_castinfo__ProfilerDev,
     .pExportInfo =        &__nvoc_export_info__ProfilerDev
 };
@@ -1963,7 +2166,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ProfilerDev =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__ProfilerDev __nvoc_metadata__ProfilerDev = {
     .rtti.pClassDef = &__nvoc_class_def_ProfilerDev,    // (profilerDev) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_ProfilerDev,
+    .rtti.dtor      = &__nvoc_dtor_ProfilerDev,
     .rtti.offset    = 0,
     .metadata__ProfilerBase.rtti.pClassDef = &__nvoc_class_def_ProfilerBase,    // (profilerBase) super
     .metadata__ProfilerBase.rtti.dtor      = &__nvoc_destructFromBase,
@@ -2252,16 +2455,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__ProfilerDev =
 
 // Destruct ProfilerDev object.
 void __nvoc_profilerDevDestruct(ProfilerDev*);
-void __nvoc_dtor_ProfilerBase(ProfilerBase*);
-void __nvoc_dtor_ProfilerDev(ProfilerDev* pThis) {
+void __nvoc_dtor_ProfilerBase(Dynamic*);
+void __nvoc_dtor_ProfilerDev(Dynamic* pThis) {
+
+    ProfilerDev *__nvoc_this = (ProfilerDev *) pThis;
 
 // Call destructor.
-    __nvoc_profilerDevDestruct(pThis);
+    __nvoc_profilerDevDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_ProfilerBase(&pThis->__nvoc_base_ProfilerBase);
+    __nvoc_dtor_ProfilerBase((Dynamic *) &__nvoc_this->__nvoc_base_ProfilerBase);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_ProfilerDev(ProfilerDev *pThis, RmHalspecOwner *pRmhalspecowner) {
     RmVariantHal *rmVariantHal = &pRmhalspecowner->rmVariantHal;
@@ -2292,7 +2497,7 @@ NV_STATUS __nvoc_ctor_ProfilerDev(ProfilerDev *pResource, RmHalspecOwner *pRmhal
 
     // Unwind on error.
 __nvoc_ctor_ProfilerDev_fail__init:
-    __nvoc_dtor_ProfilerBase(&pResource->__nvoc_base_ProfilerBase);
+    __nvoc_dtor_ProfilerBase((Dynamic *)&pResource->__nvoc_base_ProfilerBase);
 __nvoc_ctor_ProfilerDev_fail_ProfilerBase:
 __nvoc_ctor_ProfilerDev_exit:
     return status;
@@ -2472,13 +2677,10 @@ __nvoc_objCreate_ProfilerDev_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_ProfilerDev(ProfilerDev **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_ProfilerDev(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_ProfilerDev(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_ProfilerDev((ProfilerDev **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

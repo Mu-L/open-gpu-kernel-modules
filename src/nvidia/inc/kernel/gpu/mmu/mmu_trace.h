@@ -48,7 +48,8 @@ typedef const void *(*MmuTraceCbGetFmtPde)(const void *pFmt, const MMU_FMT_LEVEL
                                            NvU32 sublevel);
 typedef const void *(*MmuTraceCbGetFmtPte)(const void *pFmt);
 typedef NvU64 (*MmuTraceCbGetPdePa)(OBJGPU *pGpu, const void *pFmtPde, const MMU_ENTRY *pPde);
-typedef NvU64 (*MmuTraceCbGetPtePa)(OBJGPU *pGpu, const void *pFmtPte, const MMU_ENTRY *pPte);
+typedef NvU64 (*MmuTraceCbGetPtePa)(OBJGPU *pGpu, const void *pFmtPte,
+                                    const MMU_FMT_LEVEL *pFmtLevel, const MMU_ENTRY *pPte);
 typedef void (*MmuTraceCbPrintPdb)(OBJGPU *pGpu, OBJVASPACE *pVAS, NvU64 va,
                                    NvU64 vaLimit);
 typedef void (*MmuTraceCbPrintPde)(OBJGPU *pGpu, const void *pFmt, const MMU_FMT_LEVEL *pFmtLevel,

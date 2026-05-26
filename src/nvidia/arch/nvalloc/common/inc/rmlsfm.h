@@ -184,6 +184,7 @@
 #define LSF_FALCON_ID_END_30           (30U)
 
 #define LSF_FALCON_INSTANCE_DEFAULT_0           (0x0U)
+#define LSF_FALCON_INSTANCE_DEFAULT_3           (0x3U)
 #define LSF_FALCON_INSTANCE_DEFAULT_4           (0x4U)
 #define LSF_FALCON_INSTANCE_COUNT_DEFAULT_1     (0x1U)
 

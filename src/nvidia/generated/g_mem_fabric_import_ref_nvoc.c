@@ -31,7 +31,7 @@ void __nvoc_init__MemoryFabricImportedRef(MemoryFabricImportedRef*);
 void __nvoc_init_funcTable_MemoryFabricImportedRef(MemoryFabricImportedRef*);
 NV_STATUS __nvoc_ctor_MemoryFabricImportedRef(MemoryFabricImportedRef*, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_MemoryFabricImportedRef(MemoryFabricImportedRef*);
-void __nvoc_dtor_MemoryFabricImportedRef(MemoryFabricImportedRef*);
+void __nvoc_dtor_MemoryFabricImportedRef(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__MemoryFabricImportedRef;
@@ -89,7 +89,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_MemoryFabricImportedRef =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "MemoryFabricImportedRef",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_MemoryFabricImportedRef,
+    .objCreatefn =        &__nvoc_objCreateDynamic_MemoryFabricImportedRef,
     .pCastInfo =          &__nvoc_castinfo__MemoryFabricImportedRef,
     .pExportInfo =        &__nvoc_export_info__MemoryFabricImportedRef
 };
@@ -99,6 +99,13 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_MemoryFabricImportedRef =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0000010bu)
+static NV_STATUS memoryfabricimportedrefCtrlValidate__EXPORT(void *pMemoryFabricImportedRef, void *pParams) {
+    return memoryfabricimportedrefCtrlValidate_IMPL(pMemoryFabricImportedRef, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0000010bu)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MemoryFabricImportedRef[] = 
 {
@@ -106,7 +113,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MemoryFa
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10bu)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &memoryfabricimportedrefCtrlValidate_IMPL,
+        /*pFunc=*/      (void (*)(void)) &memoryfabricimportedrefCtrlValidate__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10bu)
         /*flags=*/      0x10bu,
         /*accessRight=*/0x0u,
@@ -123,7 +130,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MemoryFa
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__MemoryFabricImportedRef __nvoc_metadata__MemoryFabricImportedRef = {
     .rtti.pClassDef = &__nvoc_class_def_MemoryFabricImportedRef,    // (memoryfabricimportedref) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_MemoryFabricImportedRef,
+    .rtti.dtor      = &__nvoc_dtor_MemoryFabricImportedRef,
     .rtti.offset    = 0,
     .metadata__RmResource.rtti.pClassDef = &__nvoc_class_def_RmResource,    // (rmres) super
     .metadata__RmResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -333,16 +340,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__MemoryFabricImportedRef =
 
 // Destruct MemoryFabricImportedRef object.
 void __nvoc_memoryfabricimportedrefDestruct(MemoryFabricImportedRef*);
-void __nvoc_dtor_RmResource(RmResource*);
-void __nvoc_dtor_MemoryFabricImportedRef(MemoryFabricImportedRef* pThis) {
+void __nvoc_dtor_RmResource(Dynamic*);
+void __nvoc_dtor_MemoryFabricImportedRef(Dynamic* pThis) {
+
+    MemoryFabricImportedRef *__nvoc_this = (MemoryFabricImportedRef *) pThis;
 
 // Call destructor.
-    __nvoc_memoryfabricimportedrefDestruct(pThis);
+    __nvoc_memoryfabricimportedrefDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RmResource(&pThis->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *) &__nvoc_this->__nvoc_base_RmResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_MemoryFabricImportedRef(MemoryFabricImportedRef *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -368,7 +377,7 @@ NV_STATUS __nvoc_ctor_MemoryFabricImportedRef(MemoryFabricImportedRef *pMemoryFa
 
     // Unwind on error.
 __nvoc_ctor_MemoryFabricImportedRef_fail__init:
-    __nvoc_dtor_RmResource(&pMemoryFabricImportedRef->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *)&pMemoryFabricImportedRef->__nvoc_base_RmResource);
 __nvoc_ctor_MemoryFabricImportedRef_fail_RmResource:
 __nvoc_ctor_MemoryFabricImportedRef_exit:
     return status;
@@ -478,13 +487,10 @@ __nvoc_objCreate_MemoryFabricImportedRef_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_MemoryFabricImportedRef(MemoryFabricImportedRef **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_MemoryFabricImportedRef(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_MemoryFabricImportedRef(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_MemoryFabricImportedRef((MemoryFabricImportedRef **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

@@ -47,6 +47,12 @@ static void __nv_drm_gem_nvkms_memory_free(struct nv_drm_gem_object *nv_gem)
             iounmap(nv_nvkms_memory->pWriteCombinedIORemapAddress);
         }
 
+#if defined(NVCPU_AARCH64)
+        if (nv_nvkms_memory->pNumaVMapAddress != NULL) {
+            nv_drm_vunmap(nv_nvkms_memory->pNumaVMapAddress);
+        }
+#endif
+
         nvKms->unmapMemory(nv_dev->pDevice,
                            nv_nvkms_memory->base.pMemory,
                            NVKMS_KAPI_MAPPING_TYPE_USER,
@@ -186,12 +192,15 @@ static int __nv_drm_gem_nvkms_map(
     /*
      * XXX Physical mapping currently broken in cases where we can't guarantee
      * that the mapping is contiguous. Fail on platforms that don't have
-     * guaranteed contiguous physical mappings.
+     * guaranteed contiguous physical mappings if the memory itself isn't
+     * physically contiguous.
      */
-    if (!nv_dev->contiguousPhysicalMappings) {
+    if (!nv_dev->contiguousPhysicalMappings
+        && !nvKms->isContiguous(pMemory)
+    ) {
         NV_DRM_DEV_LOG_INFO(
             nv_dev,
-            "Mapping vidmem NvKmsKapiMemory 0x%p is currently "
+            "Mapping non-contiguous vidmem NvKmsKapiMemory 0x%p is currently "
             "unsupported on coherent GPU memory configurations",
             pMemory);
         ret = -ENOMEM;
@@ -210,16 +219,65 @@ static int __nv_drm_gem_nvkms_map(
         goto done;
     }
 
-    nv_nvkms_memory->pWriteCombinedIORemapAddress = ioremap_wc(
-            (uintptr_t)nv_nvkms_memory->pPhysicalAddress,
-            nv_nvkms_memory->base.base.size);
+#if defined(NVCPU_AARCH64)
+    if (!nv_aarch64_pfn_is_map_memory(
+            __phys_to_pfn((phys_addr_t) nv_nvkms_memory->pPhysicalAddress)))
+#endif
+    {
+        nv_nvkms_memory->pWriteCombinedIORemapAddress = ioremap_wc(
+                (uintptr_t)nv_nvkms_memory->pPhysicalAddress,
+                nv_nvkms_memory->base.base.size);
 
-    if (!nv_nvkms_memory->pWriteCombinedIORemapAddress) {
-        NV_DRM_DEV_LOG_INFO(
-            nv_dev,
-            "Failed to ioremap_wc NvKmsKapiMemory 0x%p",
-            pMemory);
+        if (!nv_nvkms_memory->pWriteCombinedIORemapAddress) {
+            NV_DRM_DEV_LOG_INFO(
+                nv_dev,
+                "Failed to ioremap_wc NvKmsKapiMemory 0x%p",
+                pMemory);
+        }
     }
+#if defined(NVCPU_AARCH64)
+    else {
+        /*
+         * Handle NUMA on aarch64. In this case, video memory allocations may also
+         * be kernel managed system memory, requiring vmap() instead of ioremap().
+         */
+        unsigned long i;
+        unsigned long pages_count = nv_nvkms_memory->base.base.size / PAGE_SIZE;
+        struct page **pages = nv_drm_calloc(pages_count, sizeof(struct page *));
+
+        WARN_ON((nv_nvkms_memory->base.base.size % PAGE_SIZE) != 0);
+
+        if (pages == NULL) {
+            NV_DRM_DEV_LOG_INFO(
+                nv_dev,
+                "Failed to allocate page list for vmap NvKmsKapiMemory 0x%p",
+                pMemory);
+        } else {
+            /*
+             * Since this is a video memory allocation from the perspective of
+             * RM, we can't use nvKms->getMemoryPages(). Instead, derive a list
+             * of contiguous pages from the physical address.
+             */
+            const unsigned long base_pfn =
+                __phys_to_pfn((phys_addr_t) nv_nvkms_memory->pPhysicalAddress);
+            for (i = 0; i < pages_count; i++) {
+                unsigned long pfn = base_pfn + i;
+                WARN_ON(!pfn_valid(pfn));
+                pages[i] = pfn_to_page(pfn);
+            }
+
+            nv_nvkms_memory->pNumaVMapAddress = nv_drm_vmap(pages, pages_count, false);
+            if (!nv_nvkms_memory->pNumaVMapAddress) {
+                NV_DRM_DEV_LOG_INFO(
+                    nv_dev,
+                    "Failed to vmap NvKmsKapiMemory 0x%p",
+                    pMemory);
+            }
+
+            nv_drm_free(pages);
+        }
+    }
+#endif
 
     nv_nvkms_memory->physically_mapped = true;
 
@@ -240,6 +298,20 @@ static void *__nv_drm_gem_nvkms_prime_vmap(
     }
 
     if (nv_nvkms_memory->physically_mapped) {
+        void *address;
+
+        if (nv_nvkms_memory->pWriteCombinedIORemapAddress != NULL) {
+            address = nv_nvkms_memory->pWriteCombinedIORemapAddress;
+        }
+#if defined(NVCPU_AARCH64)
+        else if (nv_nvkms_memory->pNumaVMapAddress != NULL) {
+            address = nv_nvkms_memory->pNumaVMapAddress;
+        }
+#endif
+        else {
+            return ERR_PTR(-ENOMEM);
+        }
+
         /*
          * For CPU mappings of vidmem, increment the GC6 blocker refcount to
          * keep the GPU awake while the kernel is using the mapping.
@@ -248,7 +320,8 @@ static void *__nv_drm_gem_nvkms_prime_vmap(
             !nvKms->gc6BlockerRefCntInc(nv_gem->nv_dev->pDevice)) {
             return ERR_PTR(-ENOMEM);
         }
-        return nv_nvkms_memory->pWriteCombinedIORemapAddress;
+
+        return address;
     }
 
     /*

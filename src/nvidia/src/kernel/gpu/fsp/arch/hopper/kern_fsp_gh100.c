@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -37,10 +37,10 @@
 #include "fsp/nvdm_payload_cmd_response.h"
 #include "fsp/fsp_clock_boost_rpc.h"
 #include "fsp/fsp_caps_query_rpc.h"
+#include "fsp/fsp_emem_channels.h"
 
 #include "published/hopper/gh100/dev_fsp_pri.h"
 #include "published/hopper/gh100/dev_fsp_addendum.h"
-#include "fsp/fsp_nvdm_format.h"
 #include "published/hopper/gh100/dev_bus.h"
 #include "published/hopper/gh100/dev_bus_addendum.h"
 #include "published/hopper/gh100/dev_gc6_island_addendum.h"
@@ -51,6 +51,13 @@
 #include "os/os.h"
 #include "nvRmReg.h"
 #include "nverror.h"
+#include "cper/gpu_cper.h"
+
+#include "mctp_format.h"
+#include "nvdm_format.h"
+
+#define KFSP_GH100_GPU_INIT_ERROR_FMT \
+    "Error status 0x%x while polling for FSP boot complete, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x"
 
 #include "gpu/conf_compute/conf_compute.h"
 
@@ -292,57 +299,6 @@ kfspNvdmToSeid_GH100
     }
 
     return seid;
-}
-
-/*!
- * @brief Create MCTP header
- *
- * @param[in] pGpu       OBJGPU pointer
- * @param[in] pKernelFsp KernelFsp pointer
- * @param[in] som        Start of Message flag
- * @param[in] eom        End of Message flag
- * @param[in] tag        Message tag
- * @param[in] seq        Packet sequence number
- *
- * @return Constructed MCTP header
- */
-NvU32
-kfspCreateMctpHeader_GH100
-(
-    OBJGPU    *pGpu,
-    KernelFsp *pKernelFsp,
-    NvU8       som,
-    NvU8       eom,
-    NvU8       seid,
-    NvU8       seq
-)
-{
-    return REF_NUM(MCTP_HEADER_SOM,  (som)) |
-           REF_NUM(MCTP_HEADER_EOM,  (eom)) |
-           REF_NUM(MCTP_HEADER_SEID, (seid)) |
-           REF_NUM(MCTP_HEADER_SEQ,  (seq));
-}
-
-/*!
- * @brief Create NVDM payload header
- *
- * @param[in] pGpu       OBJGPU pointer
- * @param[in] pKernelFsp KernelFsp pointer
- * @param[in] nvdmType   NVDM type to include in header
- *
- * @return Constructed NVDM payload header
- */
-NvU32
-kfspCreateNvdmHeader_GH100
-(
-    OBJGPU    *pGpu,
-    KernelFsp *pKernelFsp,
-    NvU32      nvdmType
-)
-{
-    return REF_DEF(MCTP_MSG_HEADER_TYPE, _VENDOR_PCI) |
-           REF_DEF(MCTP_MSG_HEADER_VENDOR_ID, _NV)    |
-           REF_NUM(MCTP_MSG_HEADER_NVDM_TYPE, (nvdmType));
 }
 
 /*!
@@ -806,15 +762,21 @@ kfspWaitForSecureBoot_GH100
 
     if (status != NV_OK)
     {
+        NvU32 fspBootComplete = GPU_REG_RD32(pGpu, NV_THERM_I2CS_SCRATCH_FSP_BOOT_COMPLETE);
+        NvU32 s0 = GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(0));
+        NvU32 s1 = GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(1));
+        NvU32 s2 = GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(2));
+        NvU32 s3 = GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(3));
+        char xidMessage[NV_CPER_NV_GPU_LEGACY_XID_MAX_MSG_LEN + 1];
+        static const NV_CPER_GUID notifyType = NV_CPER_NOTIFY_NVIDIA_GPU_TIMEOUT_GUID;
+
         NV_ASSERT_OK(gpuMarkDeviceForReset(pGpu));
-        NV_ERROR_LOG((void*) pGpu, GPU_INIT_ERROR, "Error status 0x%x while polling for FSP boot complete, "
-                     "0x%x, 0x%x, 0x%x, 0x%x, 0x%x",
-                     status,
-                     GPU_REG_RD32(pGpu, NV_THERM_I2CS_SCRATCH_FSP_BOOT_COMPLETE),
-                     GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(0)),
-                     GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(1)),
-                     GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(2)),
-                     GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(3)));
+        NV_ERROR_LOG((void*) pGpu, GPU_INIT_ERROR, KFSP_GH100_GPU_INIT_ERROR_FMT,
+                     status, fspBootComplete, s0, s1, s2, s3);
+
+        nvDbgSnprintf(xidMessage, sizeof(xidMessage), KFSP_GH100_GPU_INIT_ERROR_FMT,
+                      status, fspBootComplete, s0, s1, s2, s3);
+        kfspEmitGpuInitErrorCper(pGpu, pKernelFsp, &notifyType, 0x0001u, xidMessage);
     }
     return status;
 }
@@ -888,7 +850,7 @@ kfspGetGspUcodeArchive
                 // For debug board, when CC enabled, only pick SPDM profile if SPDM is enabled.
                 if  (pCC->getProperty(pCC, PDB_PROP_CONFCOMPUTE_ENABLED))
                 {
-                    if (confComputeIsSpdmEnabled(pGpu, pCC) &&
+                    if (confComputeIsSpdmSupported(pGpu, pCC) &&
                         pSpdm->getProperty(pSpdm, PDB_PROP_SPDM_ENABLED))
                     {
                         return gspGetBinArchiveGspFmcSpdmGfwDebugSigned_HAL(pGsp);
@@ -926,7 +888,7 @@ kfspGetGspUcodeArchive
 
                 if (pCC->getProperty(pCC, PDB_PROP_CONFCOMPUTE_ENABLED))
                 {
-                    if (confComputeIsSpdmEnabled(pGpu, pCC) &&
+                    if (confComputeIsSpdmSupported(pGpu, pCC) &&
                         pSpdm->getProperty(pSpdm, PDB_PROP_SPDM_ENABLED))
                     {
                         return gspGetBinArchiveGspCcFmcGfwProdSigned_HAL(pGsp);
@@ -1013,7 +975,10 @@ kfspSetupGspImages
     // On systems with SEV enabled, the GSP-FMC image has to be accessible
     // to FSP (an unit inside GPU) and hence placed in unprotected sysmem
     //
-    flags = MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    if (confComputeForceUnprotAlloc(pGpu))
+    {
+        flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    }
 
     // Detect the mode of operation for GSP and fetch the right image to boot
     pBinArchive = kfspGetGspUcodeArchive(pGpu, pKernelFsp);
@@ -1192,6 +1157,8 @@ kfspDumpDebugState_GH100
               GPU_REG_RD32(pGpu, NV_PGSP_FALCON_MAILBOX0));
     NV_PRINTF(LEVEL_ERROR, "NV_PGSP_FALCON_MAILBOX1 = 0x%x\n",
               GPU_REG_RD32(pGpu, NV_PGSP_FALCON_MAILBOX1));
+    NV_PRINTF(LEVEL_ERROR, "NV_PBUS_SW_SCRATCH_GSP_FMC_ERROR = 0x%x\n",
+              GPU_REG_RD32(pGpu, NV_PBUS_SW_SCRATCH_GSP_FMC_ERROR));
 }
 
 /*!
@@ -1383,7 +1350,11 @@ kfspPrepareBootCommands_GH100
         // On systems with SEV enabled, the FRTS has to be accessible to
         // FSP (an unit inside GPU) and hence placed in unprotected sysmem
         //
-        flags = MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+        if (confComputeForceUnprotAlloc(pGpu))
+        {
+            flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+        }
+
         if ((pKernelFsp->pSysmemFrtsMemdesc == NULL) || !bReUseInitMem)
         {
             NV_ASSERT(pKernelFsp->pSysmemFrtsMemdesc == NULL); // If we assert the pointer becomes a zombie.
@@ -1512,15 +1483,6 @@ failed:
     return status;
 }
 
-void kfspResetGspFmcErrorCode_GH100
-(
-    OBJGPU    *pGpu,
-    KernelFsp *pKernelFsp
-)
-{
-    GPU_REG_WR32(pGpu, NV_PBUS_SW_SCRATCH_GSP_FMC_ERROR, 0);
-}
-
 /*!
  * @brief Send GSP-FMC and FRTS info to FSP
  *
@@ -1546,10 +1508,11 @@ kfspSendBootCommands_GH100
     NV_ASSERT_OR_RETURN(pKernelFsp->pCotPayload != NULL, NV_ERR_INVALID_STATE);
 
     // Reset the GSP-FMC error code register to prevent reporting stale data
-    kfspResetGspFmcErrorCode_HAL(pGpu, pKernelFsp);
+    gpuResetGspFmcErrorCode_HAL(pGpu);
 
     status = kfspSendAndReadMessage(pGpu, pKernelFsp, (NvU8 *)pKernelFsp->pCotPayload,
                                     sizeof(NVDM_PAYLOAD_COT), NVDM_TYPE_COT, NULL, 0);
+
     if (status != NV_OK)
     {
         NV_PRINTF(LEVEL_ERROR, "Sent following content to FSP: \n");

@@ -62,7 +62,7 @@ struct uvm_global_struct
     uvm_parent_gpu_peer_t parent_gpu_peers[UVM_MAX_UNIQUE_PARENT_GPU_PAIRS];
 
     // peer-to-peer copy mode
-    // Pascal+ GPUs support virtual addresses in p2p copies.
+    // Turing+ GPUs support virtual addresses in p2p copies.
     // Ampere+ GPUs add support for physical addresses in p2p copies.
     uvm_gpu_peer_copy_mode_t peer_copy_mode;
 
@@ -123,6 +123,8 @@ struct uvm_global_struct
         bool enabled;
     } ats;
 
+    bool cdmm_enabled;
+
     // List of all active VA spaces
     struct
     {
@@ -140,8 +142,15 @@ struct uvm_global_struct
         struct page *page;
     } unload_state;
 
-    // True if the VM has AMD's SEV, or equivalent HW security extensions such
-    // as Intel's TDX, enabled. The flag is always false on the host.
+    // True if the VM has AMD's SEV, Intel's TDX or equivalent HW security
+    // extensions enabled.
+    //
+    // This field is set once during global initialization (uvm_global_init),
+    // and can be read afterwards without acquiring any locks.
+    bool hw_conf_computing_enabled;
+
+    // True if hw_conf_computing_enabled. The flag may be force-enabled in non-VM
+    // environment by providing uvm_force_conf_computing = 1 module parameter.
     //
     // This value moves in tandem with that of Confidential Computing in the
     // GPU(s) in all supported configurations, so it is used as a proxy for the

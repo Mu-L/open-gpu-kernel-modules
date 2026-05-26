@@ -31,6 +31,7 @@
 #include "uvm_kvmalloc.h"
 #include "nv_uvm_interface.h"
 #include "nv_uvm_types.h"
+#include "uvm_devmem.h"
 
 static struct kmem_cache *g_uvm_va_range_device_p2p_cache __read_mostly;
 
@@ -258,35 +259,11 @@ static NV_STATUS get_gpu_pfns(uvm_gpu_t *gpu,
 
 #if defined(CONFIG_PCI_P2PDMA) && defined(NV_STRUCT_PAGE_HAS_ZONE_DEVICE_DATA)
 static bool pci_p2pdma_page_free(struct page *page) {
-    return is_pci_p2pdma_page(page) && !page->zone_device_data && page_ref_count(page) == 1;
-}
-
-// page->zone_device_data does not exist in kernels versions older than v5.3
-// which don't support CONFIG_PCI_P2PDMA. Therefore we need these accessor
-// functions to ensure compilation succeeeds on older kernels.
-static void page_set_zone_device_data(struct page *page, void *zone_device_data)
-{
-    page->zone_device_data = zone_device_data;
-}
-
-static void *page_get_zone_device_data(struct page *page)
-{
-    return page->zone_device_data;
+    return is_pci_p2pdma_page(page) && !page_get_zone_device_p2p_data(page) && page_ref_count(page) == 1;
 }
 #else
 static bool pci_p2pdma_page_free(struct page *page) {
     return false;
-}
-
-static void page_set_zone_device_data(struct page *page, void *zone_device_data)
-{
-    UVM_ASSERT(0);
-}
-
-static void *page_get_zone_device_data(struct page *page)
-{
-    UVM_ASSERT(0);
-    return NULL;
 }
 #endif
 
@@ -361,7 +338,7 @@ static NV_STATUS alloc_device_p2p_mem(uvm_gpu_t *gpu,
             return NV_ERR_INVALID_ARGUMENT;
         }
 
-        page_set_zone_device_data(page, p2p_mem);
+        page_set_zone_device_p2p_data(page, p2p_mem);
 
 #if UVM_CDMM_PAGES_SUPPORTED()
         // The page reference count was taken unconditionally above by setting
@@ -430,7 +407,7 @@ static NV_STATUS alloc_zone_device_p2p(uvm_gpu_t *gpu,
     // also ensures if we don't find a p2p_mem object that we don't race with
     // some other thread assigning or clearing zone_device_data.
     uvm_mutex_lock(&gpu->device_p2p_lock);
-    p2p_mem = page_get_zone_device_data(pfn_to_page(pfn));
+    p2p_mem = page_get_zone_device_p2p_data(pfn_to_page(pfn));
     if (!p2p_mem) {
         // We have not previously allocated p2pdma pages for this RM handle so do
         // so now.

@@ -530,7 +530,7 @@ typedef struct NV0000_CTRL_GPU_GET_VIDEO_LINKS_PARAMS {
  * specified by the GPU UUID passed in.
  *
  * Generally only GPUs that have been attached are visible to this call. Therefore
- * queries on unattached GPUs will fail with NV_ERR_OBJECT_NOT_FOUND.  However, 
+ * queries on unattached GPUs will fail with NV_ERR_OBJECT_NOT_FOUND.  However,
  * a query for a SHA1 UUID may succeed for an unattached GPU in cases where the GID
  * is cached, such as an excluded GPU.
  *
@@ -898,14 +898,13 @@ typedef struct NV0000_CTRL_GPU_PUSH_UCODE_IMAGE_PARAMS {
  * NVLINK_BW_MODE is an NOP for non-NVLink GPUs.
  *
  *   [in] mode
- *      BW mode requested defined as a DRF
  *      Possible Legacy values that can be set in bits 2:0:
  *        NV0000_CTRL_CMD_GPU_NVLINK_BW_MODE_FULL
  *        NV0000_CTRL_CMD_GPU_NVLINK_BW_MODE_OFF
  *        NV0000_CTRL_CMD_GPU_NVLINK_BW_MODE_MIN
  *        NV0000_CTRL_CMD_GPU_NVLINK_BW_MODE_HALF
  *        NV0000_CTRL_CMD_GPU_NVLINK_BW_MODE_3QUARTER
- *      Link count can be requested on Blackwell+ in bits 7:3
+ *        bits  3:15   can be used to specify link count
  *
  * Possible status values returned are:
  *   NV_OK
@@ -935,7 +934,7 @@ typedef struct NV0000_CTRL_GPU_PUSH_UCODE_IMAGE_PARAMS {
 #define NV0000_CTRL_GPU_SET_NVLINK_BW_MODE_PARAMS_MESSAGE_ID (0x86U)
 
 typedef struct NV0000_CTRL_GPU_SET_NVLINK_BW_MODE_PARAMS {
-    NvU8 mode;
+    NvU16 mode;
 } NV0000_CTRL_GPU_SET_NVLINK_BW_MODE_PARAMS;
 
 /*

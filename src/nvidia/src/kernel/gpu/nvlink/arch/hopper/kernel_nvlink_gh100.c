@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -500,7 +500,7 @@ knvlinkGetEffectivePeerLinkMask_GH100
     NvU32 numIoctrls = 0;
     KernelNvlink *pRemoteKernelNvlink;
     NvU32 numLinksToBeReduced;
-    NvU32 linkMaskToBeReduced;
+    NVLINK_BIT_VECTOR linkMaskToBeReduced;
     NvU32 linkId, count, i;
     NV_STATUS status = NV_OK;
 
@@ -512,13 +512,9 @@ knvlinkGetEffectivePeerLinkMask_GH100
         if (gpuFabricProbeGetlinkMaskToBeReduced(pGpu->pGpuFabricProbeInfoKernel,
                                                  &linkMaskToBeReduced) == NV_OK)
         {
-            NVLINK_BIT_VECTOR linkMaskToBeReducedVec;
             NVLINK_BIT_VECTOR complementLinkMaskToBeReducedVec;
             NV_CHECK_OK_OR_ELSE(status, LEVEL_ERROR,
-                convertMaskToBitVector(linkMaskToBeReduced, &linkMaskToBeReducedVec),
-                return; );
-            NV_CHECK_OK_OR_ELSE(status, LEVEL_ERROR,
-                bitVectorComplement(&complementLinkMaskToBeReducedVec, &linkMaskToBeReducedVec),
+                bitVectorComplement(&complementLinkMaskToBeReducedVec, &linkMaskToBeReduced),
                 return; );
             NV_CHECK_OK_OR_ELSE(status, LEVEL_ERROR,
                 bitVectorAnd(pPeerLinkMask, pPeerLinkMask, &complementLinkMaskToBeReducedVec),
@@ -528,7 +524,7 @@ knvlinkGetEffectivePeerLinkMask_GH100
         return;
     }
 
-    peerLinkMask = KNVLINK_GET_MASK(pKernelNvlink, peerLinkMasks[remoteGpuInstance], 32);
+    peerLinkMask = (NvU32)NvU64_LO32(kNvlinkGetLinkMaskAsPrimitve(&pKernelNvlink->peerLinkMasks[remoteGpuInstance]));
     if (peerLinkMask == 0)
     {
         return;
@@ -540,7 +536,7 @@ knvlinkGetEffectivePeerLinkMask_GH100
     // the masks must be equal.
     //
     pRemoteKernelNvlink = GPU_GET_KERNEL_NVLINK(pRemoteGpu);
-    remotePeerLinkMask = KNVLINK_GET_MASK(pRemoteKernelNvlink, peerLinkMasks[gpuInstance], 32);
+    remotePeerLinkMask = (NvU32)NvU64_LO32(kNvlinkGetLinkMaskAsPrimitve(&pRemoteKernelNvlink->peerLinkMasks[gpuInstance]));
     NV_ASSERT(nvPopCount32(remotePeerLinkMask) == nvPopCount32(peerLinkMask));
 
     // Find out number of active NVLinks between the two GPUs.

@@ -190,6 +190,8 @@ struct KernelChannelGroup {
     struct MapNode mapNode;
     KernelChannelGroupApiList apiObjList;
     NvBool bIsCallingContextVgpuPlugin;
+    NvBool bNonPreemptableDebuggerSessionActive;
+    NvU32 recoverySuppressionExpirationTime;
     NvU32 tsgUniqueId;
 };
 
@@ -218,7 +220,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelChannelGroup;
     ((KernelChannelGroup*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(KernelChannelGroup)))
 #endif //__nvoc_kernel_channel_group_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_KernelChannelGroup(KernelChannelGroup**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelChannelGroup(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelChannelGroup(KernelChannelGroup**, Dynamic*, NvU32);
 #define __objCreate_KernelChannelGroup(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

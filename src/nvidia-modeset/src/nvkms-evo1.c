@@ -34,6 +34,7 @@
 #include "nvkms-utils.h"
 
 #include "hdmi_spec.h"
+#include "displayport/displayport.h"
 
 /*!
  * Return the value to use for HEAD_SET_STORAGE_PITCH.
@@ -256,7 +257,6 @@ void nvEvo1DisableHdmiInfoFrame(const NVDispEvoRec *pDispEvo,
         return;
     }
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = pHeadState->activeRmId;
     params.type = hdmiPacketType;
     params.transmitControl = DRF_DEF(0073_CTRL_SPECIFIC,
@@ -274,6 +274,58 @@ void nvEvo1DisableHdmiInfoFrame(const NVDispEvoRec *pDispEvo,
     }
 }
 
+void nvEvo1DisableAdaptiveSyncSdp(const NVDispEvoRec *pDispEvo,
+                                  const NvU32 head,
+                                  const NVHDMIPKT_TYPE type)
+{
+    const NVDispHeadStateEvoRec *pHeadState = &pDispEvo->headState[head];
+    NVDevEvoPtr pDevEvo = pDispEvo->pDevEvo;
+    NVHDMIPKT_RESULT ret;
+
+    ret = NvHdmiPkt_PacketCtrl(pDevEvo->hdmiLib.handle,
+                               pDispEvo->displayOwner,
+                               pHeadState->activeRmId,
+                               head,
+                               type,
+                               NVHDMIPKT_TRANSMIT_CONTROL_DISABLE);
+
+    if (ret != NVHDMIPKT_SUCCESS) {
+        nvAssert(!"Failed to disable AdaptiveSync SDP");
+    }
+}
+
+static void SendAdaptiveSyncSdp(const NVDispEvoRec *pDispEvo,
+                                const NvU32 head,
+                                const DPSDP_DESCRIPTOR *sdp)
+{
+    NVHDMIPKT_RESULT ret;
+    NvU32 packetSize;
+    NvU8 packet[36] = { }; 
+
+    const NVDevEvoPtr pDevEvo = pDispEvo->pDevEvo;
+    const NVHDMIPKT_TC transmitCtrl =
+        NVHDMIPKT_TRANSMIT_CONTROL_ENABLE_EVERY_FRAME_LOC_VSYNC;
+    const NVDispHeadStateEvoRec *pHeadState =
+        &pDispEvo->headState[head];
+    
+    packetSize = sizeof(sdp->hb) + sdp->dataSize;
+    nvAssert(packetSize <= sizeof(packet));
+    nvkms_memcpy(packet, &sdp->hb, packetSize);
+
+    ret = NvHdmiPkt_PacketWrite(pDevEvo->hdmiLib.handle,
+                                pDispEvo->displayOwner,
+                                pHeadState->activeRmId,
+                                head,
+                                NVHDMIPKT_TYPE_SHARED_GENERIC1,
+                                transmitCtrl,
+                                packetSize,       
+                                packet);
+                                
+    if (ret != NVHDMIPKT_SUCCESS) {
+        nvAssert(ret != NVHDMIPKT_SUCCESS);
+    }
+}
+
 void nvEvo1SendDpInfoFrameSdp(const NVDispEvoRec *pDispEvo,
                               const NvU32 head,
                               const NvEvoInfoFrameTransmitControl transmitCtrl,
@@ -284,9 +336,14 @@ void nvEvo1SendDpInfoFrameSdp(const NVDispEvoRec *pDispEvo,
                                 &pDispEvo->headState[head];
     NVDevEvoPtr pDevEvo = pDispEvo->pDevEvo;
     NV0073_CTRL_SPECIFIC_SET_OD_PACKET_PARAMS params = {
-        .subDeviceInstance = pDispEvo->displayOwner,
         .displayId = pHeadState->activeRmId,
     };
+
+    if (sdp->hb.hb1 == NVT_DP_ADAPTIVE_SYNC_SDP_PACKET_TYPE) {
+        nvAssert(transmitCtrl == NV_EVO_INFOFRAME_TRANSMIT_CONTROL_EVERY_FRAME);
+        SendAdaptiveSyncSdp(pDispEvo, head, sdp);
+        return;
+    }
 
     switch (transmitCtrl) {
         case NV_EVO_INFOFRAME_TRANSMIT_CONTROL_EVERY_FRAME:
@@ -304,8 +361,21 @@ void nvEvo1SendDpInfoFrameSdp(const NVDispEvoRec *pDispEvo,
     params.transmitControl |=
         DRF_DEF(0073_CTRL_SPECIFIC, _SET_OD_PACKET_TRANSMIT_CONTROL, _OTHER_FRAME,  _DISABLE) |
         DRF_DEF(0073_CTRL_SPECIFIC, _SET_OD_PACKET_TRANSMIT_CONTROL, _ENABLE,       _YES)     |
-        DRF_DEF(0073_CTRL_SPECIFIC, _SET_OD_PACKET_TRANSMIT_CONTROL, _GEN_INFOFRAME_MODE, _INFOFRAME1) |
         DRF_DEF(0073_CTRL_SPECIFIC, _SET_OD_PACKET_TRANSMIT_CONTROL, _ON_HBLANK,    _DISABLE);
+
+    switch (sdp->hb.hb1) {
+        case dp_pktType_VideoStreamconfig:
+            // VSC packet; Use INFOFRAME0 (default)
+            break;
+        case dp_pktType_DynamicRangeMasteringInfoFrame:
+            // HDR packet; use INFOFRAME1
+            params.transmitControl |= DRF_DEF(0073_CTRL_SPECIFIC, _SET_OD_PACKET_TRANSMIT_CONTROL,
+                                              _GEN_INFOFRAME_MODE, _INFOFRAME1);
+            break;
+        default:
+            nvAssert(!"Could not determine infoframe mode for NV0073_CTRL_CMD_SPECIFIC_SET_OD_PACKET. "
+                      "Defaulting to INFOFRAME0");
+    }
 
     nvAssert((sizeof(sdp->hb) + sdp->dataSize) <= sizeof(params.aPacket));
 

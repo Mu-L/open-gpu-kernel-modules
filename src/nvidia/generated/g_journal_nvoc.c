@@ -30,7 +30,7 @@ void __nvoc_init__OBJRCDB(OBJRCDB*);
 void __nvoc_init_funcTable_OBJRCDB(OBJRCDB*);
 NV_STATUS __nvoc_ctor_OBJRCDB(OBJRCDB*);
 void __nvoc_init_dataField_OBJRCDB(OBJRCDB*);
-void __nvoc_dtor_OBJRCDB(OBJRCDB*);
+void __nvoc_dtor_OBJRCDB(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJRCDB;
@@ -49,7 +49,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJRCDB =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJRCDB",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_OBJRCDB,
+    .objCreatefn =        &__nvoc_objCreateDynamic_OBJRCDB,
     .pCastInfo =          &__nvoc_castinfo__OBJRCDB,
     .pExportInfo =        &__nvoc_export_info__OBJRCDB
 };
@@ -58,7 +58,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJRCDB =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__OBJRCDB __nvoc_metadata__OBJRCDB = {
     .rtti.pClassDef = &__nvoc_class_def_OBJRCDB,    // (rcdb) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJRCDB,
+    .rtti.dtor      = &__nvoc_dtor_OBJRCDB,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -88,22 +88,25 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJRCDB =
 
 // Destruct OBJRCDB object.
 void __nvoc_rcdbDestruct(OBJRCDB*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_OBJTRACEABLE(OBJTRACEABLE*);
-void __nvoc_dtor_OBJRCDB(OBJRCDB* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_OBJTRACEABLE(Dynamic*);
+void __nvoc_dtor_OBJRCDB(Dynamic* pThis) {
+
+    OBJRCDB *__nvoc_this = (OBJRCDB *) pThis;
 
 // Call destructor.
-    __nvoc_rcdbDestruct(pThis);
+    __nvoc_rcdbDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
-    __nvoc_dtor_OBJTRACEABLE(&pThis->__nvoc_base_OBJTRACEABLE);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
+    __nvoc_dtor_OBJTRACEABLE((Dynamic *) &__nvoc_this->__nvoc_base_OBJTRACEABLE);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJRCDB(OBJRCDB *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
     pThis->setProperty(pThis, PDB_PROP_RCDB_COMPRESS, NV_TRUE);
+    pThis->setProperty(pThis, PDB_PROP_RCDB_NOCAT_EVTBUF_SUPPORTED, NV_FALSE);
 }
 
 
@@ -129,9 +132,9 @@ NV_STATUS __nvoc_ctor_OBJRCDB(OBJRCDB *pRcdb) {
 
     // Unwind on error.
 __nvoc_ctor_OBJRCDB_fail__init:
-    __nvoc_dtor_OBJTRACEABLE(&pRcdb->__nvoc_base_OBJTRACEABLE);
+    __nvoc_dtor_OBJTRACEABLE((Dynamic *)&pRcdb->__nvoc_base_OBJTRACEABLE);
 __nvoc_ctor_OBJRCDB_fail_OBJTRACEABLE:
-    __nvoc_dtor_Object(&pRcdb->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&pRcdb->__nvoc_base_Object);
 __nvoc_ctor_OBJRCDB_fail_Object:
 __nvoc_ctor_OBJRCDB_exit:
     return status;
@@ -238,11 +241,8 @@ __nvoc_objCreate_OBJRCDB_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_OBJRCDB(OBJRCDB **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_OBJRCDB(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_OBJRCDB(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_OBJRCDB((OBJRCDB **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

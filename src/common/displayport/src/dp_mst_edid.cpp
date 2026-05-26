@@ -70,7 +70,14 @@ void EdidReadMultistream::startReadingEdid()
         DDCAddress >> 1,                // right shifted DDC Address (request identifier in spec)
         EDID_BLOCK_SIZE);               // requested size
 
-    manager->post(&remoteI2cRead, this);
+    if (manager->isPollingEnabledForDpMstDetection())
+    {
+        manager->send(&remoteI2cRead, this);
+    }
+    else
+    {
+        manager->post(&remoteI2cRead, this);
+    }
 }
 
 void EdidReadMultistream::messageCompleted(MessageManager::Message * from)
@@ -155,7 +162,14 @@ void EdidReadMultistream::readNextBlock(NvU8 seg, NvU8 offset)
         DDCAddress >> 1,                // right shifted DDC Address (request identifier in spec)
         EDID_BLOCK_SIZE);               // requested size
 
-    manager->post(&remoteI2cRead, this, false);
+    if (manager->isPollingEnabledForDpMstDetection())
+    {
+        manager->send(&remoteI2cRead, this);
+    }
+    else
+    {
+        manager->post(&remoteI2cRead, this);
+    }
 }
 
 void EdidReadMultistream::expired(const void * tag)

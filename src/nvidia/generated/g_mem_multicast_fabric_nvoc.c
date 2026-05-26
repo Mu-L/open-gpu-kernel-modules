@@ -32,7 +32,7 @@ void __nvoc_init__MemoryMulticastFabric(MemoryMulticastFabric*);
 void __nvoc_init_funcTable_MemoryMulticastFabric(MemoryMulticastFabric*);
 NV_STATUS __nvoc_ctor_MemoryMulticastFabric(MemoryMulticastFabric*, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_MemoryMulticastFabric(MemoryMulticastFabric*);
-void __nvoc_dtor_MemoryMulticastFabric(MemoryMulticastFabric*);
+void __nvoc_dtor_MemoryMulticastFabric(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__MemoryMulticastFabric;
@@ -116,7 +116,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_MemoryMulticastFabric =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "MemoryMulticastFabric",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_MemoryMulticastFabric,
+    .objCreatefn =        &__nvoc_objCreateDynamic_MemoryMulticastFabric,
     .pCastInfo =          &__nvoc_castinfo__MemoryMulticastFabric,
     .pExportInfo =        &__nvoc_export_info__MemoryMulticastFabric
 };
@@ -126,6 +126,49 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_MemoryMulticastFabric =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0000010bu)
+static NV_STATUS memorymulticastfabricCtrlGetInfo__EXPORT(void *pMemoryMulticastFabric, void *pParams) {
+    return memorymulticastfabricCtrlGetInfo_IMPL(pMemoryMulticastFabric, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0000010bu)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+static NV_STATUS memorymulticastfabricCtrlAttachMem__EXPORT(void *pMemoryMulticastFabric, void *pParams) {
+    return memorymulticastfabricCtrlAttachMem_IMPL(pMemoryMulticastFabric, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+static NV_STATUS memorymulticastfabricCtrlDetachMem__EXPORT(void *pMemoryMulticastFabric, void *pParams) {
+    return memorymulticastfabricCtrlDetachMem_IMPL(pMemoryMulticastFabric, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+static NV_STATUS memorymulticastfabricCtrlAttachGpu__EXPORT(void *pMemoryMulticastFabric, void *pParams) {
+    return memorymulticastfabricCtrlAttachGpu_IMPL(pMemoryMulticastFabric, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0000010bu)
+static NV_STATUS memorymulticastfabricCtrlRegisterEvent__EXPORT(void *pMemoryMulticastFabric, void *pParams) {
+    return memorymulticastfabricCtrlRegisterEvent_IMPL(pMemoryMulticastFabric, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0000010bu)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+static NV_STATUS memorymulticastfabricCtrlAttachRemoteGpu__EXPORT(void *pMemoryMulticastFabric, void *pParams) {
+    return memorymulticastfabricCtrlAttachRemoteGpu_IMPL(pMemoryMulticastFabric, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0000010bu)
+static NV_STATUS memorymulticastfabricCtrlSetFailure__EXPORT(void *pMemoryMulticastFabric, void *pParams) {
+    return memorymulticastfabricCtrlSetFailure_IMPL(pMemoryMulticastFabric, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0000010bu)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MemoryMulticastFabric[] = 
 {
@@ -133,7 +176,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MemoryMu
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10bu)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &memorymulticastfabricCtrlGetInfo_IMPL,
+        /*pFunc=*/      (void (*)(void)) &memorymulticastfabricCtrlGetInfo__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10bu)
         /*flags=*/      0x10bu,
         /*accessRight=*/0x0u,
@@ -148,7 +191,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MemoryMu
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &memorymulticastfabricCtrlAttachMem_IMPL,
+        /*pFunc=*/      (void (*)(void)) &memorymulticastfabricCtrlAttachMem__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*flags=*/      0x109u,
         /*accessRight=*/0x0u,
@@ -163,7 +206,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MemoryMu
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10bu)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &memorymulticastfabricCtrlRegisterEvent_IMPL,
+        /*pFunc=*/      (void (*)(void)) &memorymulticastfabricCtrlRegisterEvent__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10bu)
         /*flags=*/      0x10bu,
         /*accessRight=*/0x0u,
@@ -178,7 +221,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MemoryMu
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &memorymulticastfabricCtrlAttachGpu_IMPL,
+        /*pFunc=*/      (void (*)(void)) &memorymulticastfabricCtrlAttachGpu__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*flags=*/      0x109u,
         /*accessRight=*/0x0u,
@@ -193,7 +236,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MemoryMu
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &memorymulticastfabricCtrlDetachMem_IMPL,
+        /*pFunc=*/      (void (*)(void)) &memorymulticastfabricCtrlDetachMem__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*flags=*/      0x109u,
         /*accessRight=*/0x0u,
@@ -208,7 +251,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MemoryMu
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &memorymulticastfabricCtrlAttachRemoteGpu_IMPL,
+        /*pFunc=*/      (void (*)(void)) &memorymulticastfabricCtrlAttachRemoteGpu__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*flags=*/      0x109u,
         /*accessRight=*/0x0u,
@@ -223,7 +266,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MemoryMu
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10bu)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &memorymulticastfabricCtrlSetFailure_IMPL,
+        /*pFunc=*/      (void (*)(void)) &memorymulticastfabricCtrlSetFailure__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10bu)
         /*flags=*/      0x10bu,
         /*accessRight=*/0x0u,
@@ -240,7 +283,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MemoryMu
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__MemoryMulticastFabric __nvoc_metadata__MemoryMulticastFabric = {
     .rtti.pClassDef = &__nvoc_class_def_MemoryMulticastFabric,    // (memorymulticastfabric) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_MemoryMulticastFabric,
+    .rtti.dtor      = &__nvoc_dtor_MemoryMulticastFabric,
     .rtti.offset    = 0,
     .metadata__Memory.rtti.pClassDef = &__nvoc_class_def_Memory,    // (mem) super
     .metadata__Memory.rtti.dtor      = &__nvoc_destructFromBase,
@@ -511,16 +554,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__MemoryMulticastFabric =
 
 // Destruct MemoryMulticastFabric object.
 void __nvoc_memorymulticastfabricDestruct(MemoryMulticastFabric*);
-void __nvoc_dtor_Memory(Memory*);
-void __nvoc_dtor_MemoryMulticastFabric(MemoryMulticastFabric* pThis) {
+void __nvoc_dtor_Memory(Dynamic*);
+void __nvoc_dtor_MemoryMulticastFabric(Dynamic* pThis) {
+
+    MemoryMulticastFabric *__nvoc_this = (MemoryMulticastFabric *) pThis;
 
 // Call destructor.
-    __nvoc_memorymulticastfabricDestruct(pThis);
+    __nvoc_memorymulticastfabricDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Memory(&pThis->__nvoc_base_Memory);
+    __nvoc_dtor_Memory((Dynamic *) &__nvoc_this->__nvoc_base_Memory);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_MemoryMulticastFabric(MemoryMulticastFabric *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -546,7 +591,7 @@ NV_STATUS __nvoc_ctor_MemoryMulticastFabric(MemoryMulticastFabric *pMemoryMultic
 
     // Unwind on error.
 __nvoc_ctor_MemoryMulticastFabric_fail__init:
-    __nvoc_dtor_Memory(&pMemoryMulticastFabric->__nvoc_base_Memory);
+    __nvoc_dtor_Memory((Dynamic *)&pMemoryMulticastFabric->__nvoc_base_Memory);
 __nvoc_ctor_MemoryMulticastFabric_fail_Memory:
 __nvoc_ctor_MemoryMulticastFabric_exit:
     return status;
@@ -658,13 +703,10 @@ __nvoc_objCreate_MemoryMulticastFabric_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_MemoryMulticastFabric(MemoryMulticastFabric **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_MemoryMulticastFabric(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_MemoryMulticastFabric(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_MemoryMulticastFabric((MemoryMulticastFabric **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

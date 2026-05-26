@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -27,12 +27,15 @@
 /* ------------------------ System Includes --------------------------------- */
 /* ------------------------ Application Includes ---------------------------- */
 #include "utils/nvbitvector.h"
-#include "ctrl/ctrl2080/ctrl2080nvlink_common.h" // rmcontrol mask structures
+#include "ctrl/ctrl2080/ctrl2080nvlink_common.h"
+#include "nvfixedtypes.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /* ------------------------ Global Variables -------------------------------- */
 // NVLINK_BIT_VECTOR is the global bitvector type used in nvlink code
 MAKE_BITVECTOR(NVLINK_BIT_VECTOR, NV2080_CTRL_NVLINK_MAX_LINKS);
-
 /* ------------------------ Macros and Defines ------------------------------ */
 /* ------------------------ Function Prototypes ----------------------------- */
 
@@ -84,4 +87,59 @@ convertLinkMasksToBitVector(const void *pLinkMask1, NvU32 linkMask1Size,
                             const NV2080_CTRL_NVLINK_LINK_MASK *pLinkMask2,
                             NVLINK_BIT_VECTOR *pOutputBitVector);
 
+/*!
+ * @brief Gets slice from bitvector, safe for unaligned output pointers.
+ * @param[in]  pBitVector      Source bitvector (NV_BITVECTOR*)
+ * @param[in]  bitVectorLast   Size of bitvector
+ * @param[in]  offset          Starting bit offset
+ * @param[in]  size            Number of bits to extract (must be <= 64)
+ * @param[out] pSlice          Output pointer (may be unaligned)
+ */
+NV_STATUS
+bitVectorGetSliceAtOffsetUnaligned_IMPL
+(
+    NV_BITVECTOR *pBitVector,
+    NvU16         bitVectorLast,
+    NvU32         offset,
+    NvU32         size,
+    NvU64        *pSlice
+);
+
+NV_STATUS
+nvlinkConvertSplitMasksToBitVector_IMPL
+(
+    NvU32         numMasks,
+    NvU64         mask0,
+    NvU64         mask1,
+    NvU64         mask2,
+    NvU64         mask3,
+    NV_BITVECTOR *pOutBitVector,
+    NvU16         bitVectorLast
+);
+NV_STATUS
+nvlinkConvertBitVectorToSplitMasks_IMPL
+(
+    const NV_BITVECTOR *pInBitVector,
+    NvU16               bitVectorLast,
+    NvU32               numMasks,
+    NvU64              *pMask0,
+    NvU64              *pMask1,
+    NvU64              *pMask2,
+    NvU64              *pMask3
+);
+
+#define bitVectorGetSliceAtOffsetUnaligned(pBitVector, offset, size, pSlice) \
+    bitVectorGetSliceAtOffsetUnaligned_IMPL(&((pBitVector)->real),           \
+        sizeof(((pBitVector)->last->_)), (offset), (size), (pSlice))
+
+#define nvlinkConvertSplitMasksToBitVector(numMasks, mask0, mask1, mask2, mask3, pBitVector) \
+    nvlinkConvertSplitMasksToBitVector_IMPL((numMasks), (mask0), (mask1), (mask2), (mask3),  \
+        &((pBitVector)->real), sizeof(((pBitVector)->last->_)))
+#define nvlinkConvertBitVectorToSplitMasks(pBitVector, numMasks, pMask0, pMask1, pMask2, pMask3) \
+    nvlinkConvertBitVectorToSplitMasks_IMPL(&((pBitVector)->real), sizeof(((pBitVector)->last->_)), \
+        (numMasks), (pMask0), (pMask1), (pMask2), (pMask3))
+
+#ifdef __cplusplus
+}
+#endif
 #endif // BITVECTOR_NVLINK_H

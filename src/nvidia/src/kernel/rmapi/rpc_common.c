@@ -151,11 +151,12 @@ NV_STATUS rpcWriteCommonHeader(OBJGPU *pGpu, OBJRPC *pRpc, NvU32 func, NvU32 par
     else
         portMemSet(pRpc->message_buffer, 0, pRpc->maxRpcSize);
 
-    vgpu_rpc_message_header_v->header_version     = DRF_DEF(_VGPU, _MSG_HEADER_VERSION, _MAJOR, _TOT) |
+    rpc_message_header_v *pVgpuRpcHeader = rpcGetVgpuMessageHeader(pRpc);
+    pVgpuRpcHeader->header_version     = DRF_DEF(_VGPU, _MSG_HEADER_VERSION, _MAJOR, _TOT) |
                                                     DRF_DEF(_VGPU, _MSG_HEADER_VERSION, _MINOR, _TOT);
-    vgpu_rpc_message_header_v->signature          = NV_VGPU_MSG_SIGNATURE_VALID;
-    vgpu_rpc_message_header_v->rpc_result         = NV_VGPU_MSG_RESULT_RPC_PENDING;
-    vgpu_rpc_message_header_v->rpc_result_private = NV_VGPU_MSG_RESULT_RPC_PENDING;
+    pVgpuRpcHeader->signature          = NV_VGPU_MSG_SIGNATURE_VALID;
+    pVgpuRpcHeader->rpc_result         = NV_VGPU_MSG_RESULT_RPC_PENDING;
+    pVgpuRpcHeader->rpc_result_private = NV_VGPU_MSG_RESULT_RPC_PENDING;
     if (gpuIsSriovEnabled(pGpu) && IS_GSP_CLIENT(pGpu))
     {
         // rpcWriteCommonHeader can be called by NV_RM_RPC_ALLOC_SHARE_DEVICE.
@@ -164,23 +165,23 @@ NV_STATUS rpcWriteCommonHeader(OBJGPU *pGpu, OBJRPC *pRpc, NvU32 func, NvU32 par
         // to avoid HOST_VGPU_DEVICE check in vgpuGetCallingContextHostVgpuDevice.
         Device *pDevice = vgpuGetCallingContextDevice(pGpu);
 
-        vgpu_rpc_message_header_v->u.cpuRmGfid = 0;
+        pVgpuRpcHeader->u.cpuRmGfid = 0;
         if (pDevice != NULL)
         {
             if (pDevice->pKernelHostVgpuDevice != NULL)
             {
                 NV_ASSERT_OR_RETURN(pDevice->pKernelHostVgpuDevice->bGspPluginTaskInitialized,
                                     NV_ERR_INVALID_STATE);
-                vgpu_rpc_message_header_v->u.cpuRmGfid = pDevice->pKernelHostVgpuDevice->gfid;
+                pVgpuRpcHeader->u.cpuRmGfid = pDevice->pKernelHostVgpuDevice->gfid;
             }
         }
     }
     else
     {
-        vgpu_rpc_message_header_v->u.spare        = NV_VGPU_MSG_UNION_INIT;
+        pVgpuRpcHeader->u.spare        = NV_VGPU_MSG_UNION_INIT;
     }
-    vgpu_rpc_message_header_v->function           = func;
-    vgpu_rpc_message_header_v->length             = sizeof(rpc_message_header_v) + paramLength;
+    pVgpuRpcHeader->function           = func;
+    pVgpuRpcHeader->length             = sizeof(rpc_message_header_v) + paramLength;
 
     return status;
 }

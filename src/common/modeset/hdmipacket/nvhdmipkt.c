@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2012-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2012-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -35,14 +35,6 @@
 
 #include "class/cl9170.h"
 #include "class/cl917d.h"
-#include "class/cl9270.h"
-#include "class/cl927d.h"
-#include "class/cl9470.h"
-#include "class/cl947d.h"
-#include "class/cl9570.h"
-#include "class/cl957d.h"
-#include "class/clc370.h"
-#include "class/clc37d.h"
 #include "class/clc570.h"
 #include "class/clc57d.h"
 #include "class/clc670.h"
@@ -117,47 +109,7 @@ static const NVHDMIPKT_CLASS_HIERARCHY hierarchy[] =
         NV9170_DISPLAY,                   // displayClass
         NV917D_CORE_CHANNEL_DMA           // coreDmaClass
     },
-    [NVHDMIPKT_9271_CLASS] = {// Index 2==NVHDMIPKT_9271_CLASS
-        NVHDMIPKT_9271_CLASS,             // classId
-        NVHDMIPKT_9171_CLASS,             // parentClassId
-        NV_FALSE,                         // isRootClass
-        initializeHdmiPktInterface9271,   // initInterface
-        hdmiConstructor9271,              // constructor
-        hdmiDestructor9271,               // destructor
-        NV9270_DISPLAY,                   // displayClass
-        NV927D_CORE_CHANNEL_DMA           // coreDmaClass
-    },
-    [NVHDMIPKT_9471_CLASS] = {// Index 3==NVHDMIPKT_9471_CLASS
-        NVHDMIPKT_9471_CLASS,             // classId
-        NVHDMIPKT_9171_CLASS,             // parentClassId
-        NV_FALSE,                         // isRootClass
-        initializeHdmiPktInterface9471,   // initInterface
-        hdmiConstructor9471,              // constructor
-        hdmiDestructor9471,               // destructor
-        NV9470_DISPLAY,                   // displayClass
-        NV947D_CORE_CHANNEL_DMA           // coreDmaClass
-    },
-    [NVHDMIPKT_9571_CLASS] = {// Index 4==NVHDMIPKT_9571_CLASS
-        NVHDMIPKT_9571_CLASS,             // classId
-        NVHDMIPKT_9171_CLASS,             // parentClassId
-        NV_FALSE,                         // isRootClass
-        initializeHdmiPktInterface9571,   // initInterface
-        hdmiConstructor9571,              // constructor
-        hdmiDestructor9571,               // destructor
-        NV9570_DISPLAY,                   // displayClass
-        NV957D_CORE_CHANNEL_DMA           // coreDmaClass
-    },
-    [NVHDMIPKT_C371_CLASS] = {// Index 5==NVHDMIPKT_C371_CLASS
-        NVHDMIPKT_C371_CLASS,             // classId
-        NVHDMIPKT_9171_CLASS,             // parentClassId
-        NV_FALSE,                         // isRootClass
-        initializeHdmiPktInterfaceC371,   // initInterface
-        hdmiConstructorC371,              // constructor
-        hdmiDestructorC371,               // destructor
-        NVC370_DISPLAY,                   // displayClass
-        NVC37D_CORE_CHANNEL_DMA           // coreDmaClass
-    },
-    [NVHDMIPKT_C571_CLASS] = {// Index 6==NVHDMIPKT_C571_CLASS
+    [NVHDMIPKT_C571_CLASS] = {// Index 2==NVHDMIPKT_C571_CLASS
      // Note that Turing (C57x) has a distinct displayClass and coreDmaClass,
      // but it inherits the _DISP_SF_USER class from Volta (C37x).  We call this
      // NVHDMIPKT_C571_CLASS, but reuse initInterface()/constructor()/destructor()
@@ -171,7 +123,7 @@ static const NVHDMIPKT_CLASS_HIERARCHY hierarchy[] =
         NVC570_DISPLAY,                   // displayClass
         NVC57D_CORE_CHANNEL_DMA           // coreDmaClass
     },
-    [NVHDMIPKT_C671_CLASS] = {// Index 7==NVHDMIPKT_C671_CLASS
+    [NVHDMIPKT_C671_CLASS] = {// Index 3==NVHDMIPKT_C671_CLASS
         NVHDMIPKT_C671_CLASS,             // classId
         NVHDMIPKT_9171_CLASS,             // parentClassId
         NV_FALSE,                         // isRootClass
@@ -181,7 +133,7 @@ static const NVHDMIPKT_CLASS_HIERARCHY hierarchy[] =
         NVC670_DISPLAY,                   // displayClass
         NVC67D_CORE_CHANNEL_DMA           // coreDmaClass
     },
-    [NVHDMIPKT_C771_CLASS] = {// Index 8==NVHDMIPKT_C771_CLASS
+    [NVHDMIPKT_C771_CLASS] = {// Index 4==NVHDMIPKT_C771_CLASS
         NVHDMIPKT_C771_CLASS,             // classId
         NVHDMIPKT_C671_CLASS,             // parentClassId
         NV_FALSE,                         // isRootClass
@@ -191,7 +143,7 @@ static const NVHDMIPKT_CLASS_HIERARCHY hierarchy[] =
         NVC770_DISPLAY,                   // displayClass
         NVC67D_CORE_CHANNEL_DMA           // coreDmaClass
     },
-    [NVHDMIPKT_C871_CLASS] = {// Index 9==NVHDMIPKT_C871_CLASS
+    [NVHDMIPKT_C871_CLASS] = {// Index 5==NVHDMIPKT_C871_CLASS
         NVHDMIPKT_C871_CLASS,             // classId
         NVHDMIPKT_C671_CLASS,             // parentClassId
         NV_FALSE,                         // isRootClass
@@ -201,7 +153,7 @@ static const NVHDMIPKT_CLASS_HIERARCHY hierarchy[] =
         NVC870_DISPLAY,                   // displayClass
         NVC87D_CORE_CHANNEL_DMA           // coreDmaClass
     },
-    [NVHDMIPKT_C971_CLASS] = {// Index 10==NVHDMIPKT_C971_CLASS
+    [NVHDMIPKT_C971_CLASS] = {// Index 6==NVHDMIPKT_C971_CLASS
         NVHDMIPKT_C971_CLASS,             // classId
         NVHDMIPKT_C871_CLASS,             // parentClassId
         NV_FALSE,                         // isRootClass
@@ -211,7 +163,7 @@ static const NVHDMIPKT_CLASS_HIERARCHY hierarchy[] =
         NVC970_DISPLAY,                   // displayClass
         NVC97D_CORE_CHANNEL_DMA           // coreDmaClass
     },
-    [NVHDMIPKT_CA71_CLASS] = {// Index 11==NVHDMIPKT_CA71_CLASS
+    [NVHDMIPKT_CA71_CLASS] = {// Index 7==NVHDMIPKT_CA71_CLASS
         NVHDMIPKT_CA71_CLASS,             // classId
         NVHDMIPKT_C971_CLASS,             // parentClassId
         NV_FALSE,                         // isRootClass
@@ -221,7 +173,7 @@ static const NVHDMIPKT_CLASS_HIERARCHY hierarchy[] =
         NVCA70_DISPLAY,                   // displayClass
         NVCA7D_CORE_CHANNEL_DMA           // coreDmaClass
     },
-    [NVHDMIPKT_CB71_CLASS] = {// Index 12==NVHDMIPKT_CB71_CLASS
+    [NVHDMIPKT_CB71_CLASS] = {// Index 8==NVHDMIPKT_CB71_CLASS
         NVHDMIPKT_CB71_CLASS,             // classId
         NVHDMIPKT_C971_CLASS,             // parentClassId
         NV_FALSE,                         // isRootClass
@@ -231,7 +183,7 @@ static const NVHDMIPKT_CLASS_HIERARCHY hierarchy[] =
         NVCB70_DISPLAY,                   // displayClass
         NVCB7D_CORE_CHANNEL_DMA           // coreDmaClass
     },
-    [NVHDMIPKT_CC71_CLASS] = {// Index 13==NVHDMIPKT_CC71_CLASS
+    [NVHDMIPKT_CC71_CLASS] = {// Index 9==NVHDMIPKT_CC71_CLASS
         NVHDMIPKT_CC71_CLASS,             // classId
         NVHDMIPKT_C971_CLASS,             // parentClassId
         NV_FALSE,                         // isRootClass
@@ -375,6 +327,39 @@ NvHdmiPkt_SetupAdvancedInfoframe(NvHdmiPkt_Handle          libHandle,
                                             head,
                                             packetReg,
                                             pInfoframe);
+}
+
+NVHDMIPKT_RESULT
+NvHdmiPkt_AdvancedPacketCtrl(NvHdmiPkt_Handle                  libHandle,
+                             NvU32                             subDevice,
+                             NvU32                             head,
+                             NVHDMIPKT_TYPE                    packetType,
+                             ADVANCED_INFOFRAME_CTRL const    *pInfoframeCtrl)
+{
+    if (libHandle == NVHDMIPKT_INVALID_HANDLE)
+    {
+        return NVHDMIPKT_LIBRARY_INIT_FAIL;
+    }
+
+    if (pInfoframeCtrl == NULL)
+    {
+        return NVHDMIPKT_INVALID_ARG;
+    }
+
+    if ((packetType < NVHDMIPKT_TYPE_SHARED_GENERIC1) ||
+        (packetType > NVHDMIPKT_TYPE_SHARED_GENERIC10))
+    {
+        return NVHDMIPKT_INVALID_ARG;
+    }
+
+    NVHDMIPKT_CLASS* pClass = fromHdmiPktHandle(libHandle);
+
+    // Call the C871 hardware-specific function
+    return hdmiAdvancedPacketCtrlC871(pClass,
+                                      subDevice,
+                                      head,
+                                      packetType,
+                                      pInfoframeCtrl);
 }
 
 NVHDMIPKT_RESULT
@@ -528,7 +513,7 @@ NvHdmi_ClearFRLConfig(NvHdmiPkt_Handle     libHandle,
 static NVHDMIPKT_CLASS_ID
 NvHdmiPkt_HwClass2HdmiClass(NvU32 const hwClass)
 {
-    NVHDMIPKT_CLASS_ID hdmiClassId = NVHDMIPKT_9571_CLASS;
+    NVHDMIPKT_CLASS_ID hdmiClassId = NVHDMIPKT_C571_CLASS;
     NvU32 i = 0;
 
     for (i = 0; i < NVHDMIPKT_INVALID_CLASS; i++)

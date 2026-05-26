@@ -1227,8 +1227,58 @@ typedef struct NV83DE_CTRL_DEBUG_GET_MODE_MMU_GCC_DEBUG_PARAMS {
     NvU32 value;
 } NV83DE_CTRL_DEBUG_GET_MODE_MMU_GCC_DEBUG_PARAMS;
 
-#define NV83DE_CTRL_CMD_DEBUG_GET_MODE_MMU_GCC_DEBUG_ENABLED  (0x00000001)
-#define NV83DE_CTRL_CMD_DEBUG_GET_MODE_MMU_GCC_DEBUG_DISABLED (0x00000002)
+#define NV83DE_CTRL_CMD_DEBUG_GET_MODE_MMU_GCC_DEBUG_ENABLED       (0x00000001)
+#define NV83DE_CTRL_CMD_DEBUG_GET_MODE_MMU_GCC_DEBUG_DISABLED      (0x00000002)
+
+/*
+ * NV83DE_CTRL_CMD_DEBUG_SET_NON_PREEMPTABLE_DEBUGGER_CONTEXT
+ *
+ * This command sets the preemptable mode of the debugger session. 
+ * This allows the caller to control the behaviour of preemption-related events for the 3D-class object.
+ * 
+ * If this command is not called, then the default behaviour is to preempt the current debugging session (ie. do not disable the ctxsw timeout)
+ *
+ *  state [IN] 
+ *      Determines the behaviour of preemption-related events for the 3D-class object. This control call must be called via
+ *      the escape NVL_ESC_ID_COMMON_DEBUG_SET_NON_PREEMPTABLE_DEBUGGER_CONTEXT.
+ *      If NV_TRUE, ctxsw timeout will be disabled for the resident channel on which a 3D context is currently being debugged. 
+ *      If NV_FALSE, the debugged session will be preempted once ctxsw timeout is encountered. 
+ * 
+ * If this is called on Linux, the call will return NV_ERR_NOT_SUPPORTED.
+ */
+
+#define NV83DE_CTRL_CMD_DEBUG_SET_NON_PREEMPTABLE_DEBUGGER_CONTEXT (0x83de022d) /* finn: Evaluated from "(FINN_GT200_DEBUGGER_FIFO_INTERFACE_ID << 8) | NV83DE_CTRL_DEBUG_SET_NON_PREEMPTABLE_DEBUGGER_CONTEXT_PARAMS_MESSAGE_ID" */
+
+#define NV83DE_CTRL_DEBUG_SET_NON_PREEMPTABLE_DEBUGGER_CONTEXT_PARAMS_MESSAGE_ID (0x2DU)
+
+typedef struct NV83DE_CTRL_DEBUG_SET_NON_PREEMPTABLE_DEBUGGER_CONTEXT_PARAMS {
+    NvBool state;
+} NV83DE_CTRL_DEBUG_SET_NON_PREEMPTABLE_DEBUGGER_CONTEXT_PARAMS;
+
+#define NV83DE_CTRL_CMD_DEBUG_SET_NON_PREEMPTABLE_DEBUGGER_CONTEXT_ACTIVE   (0x00000001)
+#define NV83DE_CTRL_CMD_DEBUG_SET_NON_PREEMPTABLE_DEBUGGER_CONTEXT_INACTIVE (0x00000000)
+
+/*
+ * NV83DE_CTRL_CMD_DEBUG_SET_RECOVERY_SUPPRESSION_TIMEOUT
+ *
+ * This command updates the timeout used to disable RC recovery. 
+ * If this command is not called, the timeout will use a default value of 1 second on all OS.
+ *
+ *  timeoutSec [IN] 
+ *      Sets the timeout for suppressing RC recovery. Once this timeout expires, a CTXSW timeout on the TSG associated with the debugging session will result in RC recovery.
+ *      The timeout will get reset each time a BPT.PAUSE event is trigered. 
+ * 
+ * If this is called before NV83DE_CTRL_CMD_DEBUG_SET_NON_PREEMPTABLE_DEBUGGER_CONTEXT, the call will return NV_ERR_NOT_SUPPORTED.
+*/
+#define NV83DE_CTRL_CMD_DEBUG_SET_RECOVERY_SUPPRESSION_TIMEOUT              (0x83de022e) /* finn: Evaluated from "(FINN_GT200_DEBUGGER_FIFO_INTERFACE_ID << 8) | NV83DE_CTRL_DEBUG_SET_RECOVERY_SUPPRESSION_TIMEOUT_PARAMS_MESSAGE_ID" */
+
+#define NV83DE_CTRL_DEBUG_SET_RECOVERY_SUPPRESSION_TIMEOUT_PARAMS_MESSAGE_ID (0x2EU)
+
+typedef struct NV83DE_CTRL_DEBUG_SET_RECOVERY_SUPPRESSION_TIMEOUT_PARAMS {
+    NvU32 timeoutSec;
+} NV83DE_CTRL_DEBUG_SET_RECOVERY_SUPPRESSION_TIMEOUT_PARAMS;
+
+
 
 /* _ctrl83dedebug_h_ */
 

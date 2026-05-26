@@ -485,7 +485,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_IoAperture;
     ((IoAperture*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(IoAperture)))
 #endif //__nvoc_gpu_access_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_IoAperture(IoAperture**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_IoAperture(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_IoAperture(IoAperture**, Dynamic*, NvU32, struct IoAperture *pParentAperture, OBJGPU *pGpu, NvU32 deviceIndex, NvU32 deviceInstance, DEVICE_MAPPING *pMapping, NvU32 mappingStartAddr, NvU32 offset, NvU64 length);
 #define __objCreate_IoAperture(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pParentAperture, pGpu, deviceIndex, deviceInstance, pMapping, mappingStartAddr, offset, length) \
@@ -678,7 +678,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_SwBcAperture;
     ((SwBcAperture*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(SwBcAperture)))
 #endif //__nvoc_gpu_access_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_SwBcAperture(SwBcAperture**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_SwBcAperture(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_SwBcAperture(SwBcAperture**, Dynamic*, NvU32, struct IoAperture *pApertures, NvU32 numApertures);
 #define __objCreate_SwBcAperture(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pApertures, numApertures) \

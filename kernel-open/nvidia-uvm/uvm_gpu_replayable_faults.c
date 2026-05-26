@@ -423,10 +423,6 @@ static NV_STATUS push_cancel_on_gpu_global(uvm_gpu_t *gpu, uvm_gpu_phys_address_
     return push_cancel_on_gpu(gpu, instance_ptr, true, 0, 0, tracker);
 }
 
-// Volta implements a targeted VA fault cancel that simplifies the fault cancel
-// process. You only need to specify the address, type, and mmu_engine_id for
-// the access to be cancelled. Caller must hold the VA space lock for the access
-// to be cancelled.
 static NV_STATUS cancel_fault_precise_va(uvm_fault_buffer_entry_t *fault_entry,
                                          uvm_fault_cancel_va_mode_t cancel_va_mode)
 {
@@ -684,8 +680,8 @@ static inline int cmp_fault_instance_ptr(const uvm_fault_buffer_entry_t *a,
                                          const uvm_fault_buffer_entry_t *b)
 {
     int result = uvm_gpu_phys_addr_cmp(a->instance_ptr, b->instance_ptr);
-    // On Volta+ we need to sort by {instance_ptr + subctx_id} pair since it can
-    // map to a different VA space
+    // We need to sort by {instance_ptr + subctx_id} pair since it can
+    // map to a different VA space.
     if (result != 0)
         return result;
     return UVM_CMP_DEFAULT(a->fault_source.ve_id, b->fault_source.ve_id);
@@ -825,10 +821,6 @@ static bool fetch_fault_buffer_try_merge_entry(uvm_fault_buffer_entry_t *current
 //
 // *We only merge faults from different uTLBs if the new fault has an access
 // type with the same or lower level of intrusiveness.
-//
-// This optimization cannot be performed during fault cancel on Pascal GPUs
-// (fetch_mode == FAULT_FETCH_MODE_ALL) since we need accurate tracking of all
-// the faults in each uTLB in order to guarantee precise fault attribution.
 static NV_STATUS fetch_fault_buffer_entries(uvm_parent_gpu_t *parent_gpu,
                                             uvm_fault_service_batch_context_t *batch_context,
                                             fault_fetch_mode_t fetch_mode)
@@ -1355,7 +1347,7 @@ static uvm_fault_access_type_t check_fault_access_permissions(uvm_gpu_t *gpu,
 // - NV_ERR_MORE_PROCESSING_REQUIRED if servicing needs allocation retry
 // - NV_ERR_NO_MEMORY if the faults could not be serviced due to OOM
 // - Any other value is a UVM-global error
-static NV_STATUS service_fault_batch_block_locked(uvm_gpu_t *gpu,
+static NV_STATUS service_fault_batch_block_locked(uvm_gpu_va_space_t *gpu_va_space,
                                                   uvm_va_block_t *va_block,
                                                   uvm_va_block_retry_t *va_block_retry,
                                                   uvm_fault_service_batch_context_t *batch_context,
@@ -1368,7 +1360,7 @@ static NV_STATUS service_fault_batch_block_locked(uvm_gpu_t *gpu,
     uvm_page_index_t first_page_index;
     uvm_page_index_t last_page_index;
     NvU32 page_fault_count = 0;
-    uvm_range_group_range_iter_t iter;
+    uvm_gpu_t *gpu = gpu_va_space->gpu;
     uvm_replayable_fault_buffer_t *replayable_faults = &gpu->parent->fault_buffer.replayable;
     uvm_fault_buffer_entry_t **ordered_fault_cache = batch_context->ordered_fault_cache;
     uvm_fault_buffer_entry_t *first_fault_entry = ordered_fault_cache[first_fault_index];
@@ -1391,8 +1383,6 @@ static NV_STATUS service_fault_batch_block_locked(uvm_gpu_t *gpu,
     uvm_processor_mask_zero(&block_context->resident_processors);
     block_context->thrashing_pin_count = 0;
     block_context->read_duplicate_count = 0;
-
-    uvm_range_group_range_migratability_iter_first(va_space, va_block->start, va_block->end, &iter);
 
     // The first entry is guaranteed to fall within this block
     UVM_ASSERT(first_fault_entry->va_space == va_space);
@@ -1466,13 +1456,6 @@ static NV_STATUS service_fault_batch_block_locked(uvm_gpu_t *gpu,
                 continue;
         }
 
-        // Ensure that the migratability iterator covers the current fault
-        // address
-        while (iter.end < current_entry->fault_address)
-            uvm_range_group_range_migratability_iter_next(va_space, &iter, va_block->end);
-
-        UVM_ASSERT(iter.start <= current_entry->fault_address && iter.end >= current_entry->fault_address);
-
         service_access_type = check_fault_access_permissions(gpu,
                                                              batch_context,
                                                              va_block,
@@ -1539,6 +1522,24 @@ static NV_STATUS service_fault_batch_block_locked(uvm_gpu_t *gpu,
                                                       hmm_migratable,
                                                       &read_duplicate);
 
+        // If this is a ATS processor and the page is already resident in the
+        // correct location then it should already be mapped on the CPU so handle this as a
+        // minor fault.
+        if (uvm_va_block_is_hmm(va_block) && gpu->parent->ats_supported) {
+            uvm_va_block_page_resident_processors(va_block, page_index,
+                                                  &block_context->block_context->scratch_processor_mask);
+            if (uvm_processor_mask_test(&block_context->block_context->scratch_processor_mask, gpu->id)) {
+                unsigned int flags = FAULT_FLAG_REMOTE;
+
+                if (service_access_type >= UVM_FAULT_ACCESS_TYPE_WRITE)
+                    flags |= FAULT_FLAG_WRITE;
+
+                UVM_HANDLE_MM_FAULT(block_context->block_context->hmm.vma,
+                                    uvm_va_block_cpu_page_address(va_block, page_index), flags);
+                continue;
+            }
+        }
+
         if (!uvm_processor_mask_test_and_set(&block_context->resident_processors, new_residency))
             uvm_page_mask_zero(&block_context->per_processor_masks[uvm_id_value(new_residency)].new_residency);
 
@@ -1555,6 +1556,14 @@ static NV_STATUS service_fault_batch_block_locked(uvm_gpu_t *gpu,
 
         block_context->access_type[page_index] = service_access_type;
 
+        // Since mixed-coherency now involves the va_block to handle pageable
+        // memory ats faults, we need to ensure that 4K pages are handled the
+        // same way as in the ats faulting path for numa. See the comment at the
+        // end of uvm_ats_service_faults_region() in the numa path for why this
+        // flush is necessary.
+        if (PAGE_SIZE == UVM_PAGE_SIZE_4K && gpu->parent->ats_supported && uvm_va_block_is_hmm(va_block))
+            uvm_flush_tlb_va_region(gpu_va_space, current_entry->fault_address, UVM_PAGE_SIZE_4K, UVM_FAULT_CLIENT_TYPE_GPC);
+
         if (page_index < first_page_index)
             first_page_index = page_index;
         if (page_index > last_page_index)
@@ -1565,7 +1574,7 @@ static NV_STATUS service_fault_batch_block_locked(uvm_gpu_t *gpu,
     // are pages to be serviced
     if (page_fault_count > 0) {
         block_context->region = uvm_va_block_region(first_page_index, last_page_index + 1);
-        status = uvm_va_block_service_locked(gpu->id, va_block, va_block_retry, block_context);
+        status = uvm_va_block_service_locked(gpu, va_block, va_block_retry, block_context);
     }
 
     *block_faults = i - first_fault_index;
@@ -1582,7 +1591,7 @@ static NV_STATUS service_fault_batch_block_locked(uvm_gpu_t *gpu,
 //
 // See the comments for function service_fault_batch_block_locked for
 // implementation details and error codes.
-static NV_STATUS service_fault_batch_block(uvm_gpu_t *gpu,
+static NV_STATUS service_fault_batch_block(uvm_gpu_va_space_t *gpu_va_space,
                                            uvm_va_block_t *va_block,
                                            uvm_fault_service_batch_context_t *batch_context,
                                            NvU32 first_fault_index,
@@ -1592,6 +1601,7 @@ static NV_STATUS service_fault_batch_block(uvm_gpu_t *gpu,
     NV_STATUS status;
     uvm_va_block_retry_t va_block_retry;
     NV_STATUS tracker_status;
+    uvm_gpu_t *gpu = gpu_va_space->gpu;
     uvm_replayable_fault_buffer_t *replayable_faults = &gpu->parent->fault_buffer.replayable;
     uvm_service_block_context_t *fault_block_context = &replayable_faults->block_service_context;
 
@@ -1604,7 +1614,7 @@ static NV_STATUS service_fault_batch_block(uvm_gpu_t *gpu,
     uvm_mutex_lock(&va_block->lock);
 
     status = UVM_VA_BLOCK_RETRY_LOCKED(va_block, &va_block_retry,
-                                       service_fault_batch_block_locked(gpu,
+                                       service_fault_batch_block_locked(gpu_va_space,
                                                                         va_block,
                                                                         &va_block_retry,
                                                                         batch_context,
@@ -1961,7 +1971,21 @@ static NV_STATUS service_fault_batch_dispatch(uvm_va_space_t *va_space,
         status = NV_ERR_INVALID_ADDRESS;
 
     if (status == NV_OK) {
-        status = service_fault_batch_block(gpu, va_block, batch_context, fault_index, hmm_migratable, block_faults);
+        if (uvm_va_block_is_hmm(va_block) &&
+            gpu->parent->ats_supported &&
+            uvm_ats_check_in_gmmu_region(va_space, fault_address, va_range_next)) {
+
+            service_fault_batch_fatal_notify(gpu,
+                                             batch_context,
+                                             fault_index,
+                                             NV_ERR_INVALID_ADDRESS,
+                                             UVM_FAULT_CANCEL_VA_MODE_ALL,
+                                             block_faults);
+            status = NV_OK;
+        }
+        else {
+            status = service_fault_batch_block(gpu_va_space, va_block, batch_context, fault_index, hmm_migratable, block_faults);
+        }
     }
     else if ((status == NV_ERR_INVALID_ADDRESS) && uvm_ats_can_service_faults(gpu_va_space, mm)) {
         NvU64 outer = ~0ULL;

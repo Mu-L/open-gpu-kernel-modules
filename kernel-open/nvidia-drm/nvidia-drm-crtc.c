@@ -34,6 +34,11 @@
 #include "nvidia-drm-format.h"
 #include "nv_drm_common_ioctl.h"
 
+#if defined(NV_DRM_HAS_COLOROP)
+#include "nvidia-drm-color-pipeline.h"
+#include <drm/drm_atomic_uapi.h>
+#endif
+
 #include "nvmisc.h"
 #include "nv_common_utils.h"
 
@@ -43,6 +48,52 @@
 #include <drm/drm_atomic.h>
 #include <drm/drm_atomic_helper.h>
 #include <drm/drm_color_mgmt.h>
+
+#include <drm/drm_vblank.h>
+
+/**
+ * Helper macros for handling both 16-bit (vendor) and 32-bit (colorop) LUT blobs.
+ * Vendor properties provide 16-bit drm_color_lut, colorops provide 32-bit drm_color_lut32.
+ * These macros detect the format and convert on-the-fly to avoid redundant allocations.
+ */
+
+/* Check if blob is 16-bit format (drm_color_lut) vs 32-bit (drm_color_lut32) */
+#define IS_LUT16_BLOB(blob, num_entries) \
+    ((blob)->length == sizeof(struct drm_color_lut) * (num_entries))
+
+/* Read LUT entry and convert to 32-bit UNORM, detecting format automatically */
+#define READ_LUT_AS_UNORM32(blob, num_entries, idx, channel) \
+    ({ \
+        NvU32 __val; \
+        if (IS_LUT16_BLOB(blob, num_entries)) { \
+            const struct drm_color_lut *__lut16 = \
+                (const struct drm_color_lut *)(blob)->data; \
+            NvU16 __v16 = __lut16[idx].channel; \
+            /* Replicate 16-bit to 32-bit: (x << 16) | x */ \
+            __val = ((NvU32)__v16 << 16) | __v16; \
+        } else { \
+            const struct drm_color_lut32 *__lut32 = \
+                (const struct drm_color_lut32 *)(blob)->data; \
+            __val = __lut32[idx].channel; \
+        } \
+        __val; \
+    })
+
+/* Read LUT entry and convert to 16-bit UNORM, detecting format automatically */
+#define READ_LUT_AS_UNORM16(blob, num_entries, idx, channel) \
+    ({ \
+        NvU16 __val; \
+        if (IS_LUT16_BLOB(blob, num_entries)) { \
+            const struct drm_color_lut *__lut16 = \
+                (const struct drm_color_lut *)(blob)->data; \
+            __val = __lut16[idx].channel; \
+        } else { \
+            const struct drm_color_lut32 *__lut32 = \
+                (const struct drm_color_lut32 *)(blob)->data; \
+            __val = __lut32[idx].channel >> 16; \
+        } \
+        __val; \
+    })
 
 /*
  * The two arrays below specify the PQ EOTF transfer function that's used to
@@ -129,48 +180,14 @@ static const NvU16 __oetf_pq_512_entries[] = {
 
 #define NUM_VSS_HEADER_ENTRIES (NVKMS_LUT_VSS_HEADER_SIZE / NVKMS_LUT_CAPS_LUT_ENTRY_SIZE)
 
-static int
-nv_drm_atomic_replace_property_blob_from_id(struct drm_device *dev,
-                                            struct drm_property_blob **blob,
-                                            uint64_t blob_id,
-                                            ssize_t expected_size,
-                                            NvBool *replaced)
-{
-    struct drm_property_blob *old_blob = *blob;
-    struct drm_property_blob *new_blob = NULL;
-
-    if (blob_id != 0) {
-        new_blob = drm_property_lookup_blob(dev, blob_id);
-        if (new_blob == NULL) {
-            return -EINVAL;
-        }
-
-        if ((expected_size > 0) &&
-            (new_blob->length != expected_size)) {
-            drm_property_blob_put(new_blob);
-            return -EINVAL;
-        }
-    }
-
-    if (old_blob != new_blob) {
-        drm_property_blob_put(old_blob);
-        if (new_blob) {
-            drm_property_blob_get(new_blob);
-        }
-        *blob = new_blob;
-        *replaced = true;
-    } else {
-        *replaced = false;
-    }
-
-    drm_property_blob_put(new_blob);
-
-    return 0;
-}
-
 static void nv_drm_plane_destroy(struct drm_plane *plane)
 {
     struct nv_drm_plane *nv_plane = to_nv_plane(plane);
+
+#if defined(NV_DRM_HAS_COLOROP)
+    /* Clean up color pipeline if it exists */
+    nv_drm_plane_destroy_color_pipelines(plane);
+#endif
 
     /* plane->state gets freed here */
     drm_plane_cleanup(plane);
@@ -519,13 +536,13 @@ static void free_drm_lut_surface(struct kref *ref)
 }
 
 static NvU32 fp32_lut_interp(
-    NvU16 entry0,
-    NvU16 entry1,
+    NvU32 entry0,
+    NvU32 entry1,
     NvU32 interp,
     NvU32 interp_max)
 {
-    NvU32 fp32_entry0 = nvKmsKapiUI32ToF32((NvU32) entry0);
-    NvU32 fp32_entry1 = nvKmsKapiUI32ToF32((NvU32) entry1);
+    NvU32 fp32_entry0 = nvKmsKapiUI32ToF32(entry0);
+    NvU32 fp32_entry1 = nvKmsKapiUI32ToF32(entry1);
 
     NvU32 fp32_num0  = nvKmsKapiUI32ToF32(interp_max - interp);
     NvU32 fp32_num1  = nvKmsKapiUI32ToF32(interp);
@@ -547,7 +564,6 @@ static struct nv_drm_lut_surface *create_drm_ilut_surface_vss(
 {
     static const NvU32 fp_norm  = 0x42FA0000; // FP32 125.0
     static const NvU32 u10_norm = 0x447FC000; // FP32 1023.0
-    static const NvU32 u16_norm = 0x477FFF00; // FP32 UINT16_MAX
     // FP32 UINT32_MAX (Precision limited to 2^32)
     static const NvU32 u32_norm = 0x4F800000;
 
@@ -567,16 +583,21 @@ static struct nv_drm_lut_surface *create_drm_ilut_surface_vss(
 
     WARN_ON(!nv_plane->ilut_caps.supported);
     WARN_ON(nv_plane->ilut_caps.entryFormat != NVKMS_LUT_FORMAT_FP16);
-    WARN_ON(nv_plane->ilut_caps.vssSupport != NVKMS_LUT_VSS_SUPPORTED);
     WARN_ON(nv_plane->ilut_caps.vssType != NVKMS_LUT_VSS_TYPE_LINEAR);
 
     /* Convert multiplier from S31.32 Sign-Magnitude format to FP32. */
-    if (nv_drm_plane_state->degamma_multiplier != (((NvU64) 1) << 32)) {
+    if (nv_drm_plane_state->degamma_multiplier != NV_DRM_S31_32_ONE) {
         NvU32 upper = (NvU32) (nv_drm_plane_state->degamma_multiplier >> 32);
         NvU32 lower = (NvU32) nv_drm_plane_state->degamma_multiplier;
 
-        /* Range property is configured to ensure sign bit = 0. */
-        WARN_ON(nv_drm_plane_state->degamma_multiplier & (((NvU64) 1) << 63));
+        /*
+         * Reject negative multipliers (sign bit = 1). Vendor property has
+         * range enforcement, but colorops cannot enforce this via property
+         * ranges, so we validate here.
+         */
+        if (nv_drm_plane_state->degamma_multiplier & (((NvU64) 1) << 63)) {
+            return ERR_PTR(-EINVAL);
+        }
 
         fp32_multiplier =
             nvKmsKapiF32Add(
@@ -618,7 +639,7 @@ static struct nv_drm_lut_surface *create_drm_ilut_surface_vss(
                               NUM_VSS_HEADER_ENTRIES,
                               num_entries);
     if (!drm_lut_surface) {
-        return NULL;
+        return ERR_PTR(-ENOMEM);
     }
 
     lut_data = (NvU16 *) drm_lut_surface->base.buffer;
@@ -644,11 +665,13 @@ static struct nv_drm_lut_surface *create_drm_ilut_surface_vss(
         NvU32 data_idx = entry_idx + NUM_VSS_HEADER_ENTRIES;
 
         if (nv_drm_plane_state->degamma_lut != NULL) {
-            /* Use provided Degamma LUT. */
+            /*
+             * Use provided Degamma LUT. Convert 16-bit vendor format to 32-bit
+             * on-the-fly if needed. Colorop format is already 32-bit.
+             */
             static const NvU32 interp_max = (((NvU32) 1) << (32 - 10)) - 1;
-
-            const struct drm_color_lut *degamma_lut =
-                (struct drm_color_lut *) nv_drm_plane_state->degamma_lut->data;
+            const struct drm_property_blob *degamma_lut =
+                nv_drm_plane_state->degamma_lut;
 
             NvU16 lut_idx;
             NvU32 interp = 0;
@@ -681,30 +704,45 @@ static struct nv_drm_lut_surface *create_drm_ilut_surface_vss(
             /* Perform interpolation or direct indexing. */
             if (interp > 0 && ((lut_idx + 1) < NVKMS_LUT_ARRAY_SIZE)) {
                 fp32_r =
-                    fp32_lut_interp(degamma_lut[lut_idx].red,
-                                    degamma_lut[lut_idx + 1].red,
-                                    interp,
-                                    interp_max);
+                    fp32_lut_interp(
+                        READ_LUT_AS_UNORM32(degamma_lut,
+                                           NVKMS_LUT_ARRAY_SIZE, lut_idx, red),
+                        READ_LUT_AS_UNORM32(degamma_lut,
+                                           NVKMS_LUT_ARRAY_SIZE, lut_idx + 1, red),
+                        interp,
+                        interp_max);
                 fp32_g =
-                    fp32_lut_interp(degamma_lut[lut_idx].green,
-                                    degamma_lut[lut_idx + 1].green,
-                                    interp,
-                                    interp_max);
+                    fp32_lut_interp(
+                        READ_LUT_AS_UNORM32(degamma_lut,
+                                           NVKMS_LUT_ARRAY_SIZE, lut_idx, green),
+                        READ_LUT_AS_UNORM32(degamma_lut,
+                                           NVKMS_LUT_ARRAY_SIZE, lut_idx + 1, green),
+                        interp,
+                        interp_max);
                 fp32_b =
-                    fp32_lut_interp(degamma_lut[lut_idx].blue,
-                                    degamma_lut[lut_idx + 1].blue,
-                                    interp,
-                                    interp_max);
+                    fp32_lut_interp(
+                        READ_LUT_AS_UNORM32(degamma_lut,
+                                           NVKMS_LUT_ARRAY_SIZE, lut_idx, blue),
+                        READ_LUT_AS_UNORM32(degamma_lut,
+                                           NVKMS_LUT_ARRAY_SIZE, lut_idx + 1, blue),
+                        interp,
+                        interp_max);
             } else {
-                fp32_r = nvKmsKapiUI32ToF32((NvU32) degamma_lut[lut_idx].red);
-                fp32_g = nvKmsKapiUI32ToF32((NvU32) degamma_lut[lut_idx].green);
-                fp32_b = nvKmsKapiUI32ToF32((NvU32) degamma_lut[lut_idx].blue);
+                fp32_r = nvKmsKapiUI32ToF32(
+                    READ_LUT_AS_UNORM32(degamma_lut,
+                                       NVKMS_LUT_ARRAY_SIZE, lut_idx, red));
+                fp32_g = nvKmsKapiUI32ToF32(
+                    READ_LUT_AS_UNORM32(degamma_lut,
+                                       NVKMS_LUT_ARRAY_SIZE, lut_idx, green));
+                fp32_b = nvKmsKapiUI32ToF32(
+                    READ_LUT_AS_UNORM32(degamma_lut,
+                                       NVKMS_LUT_ARRAY_SIZE, lut_idx, blue));
             }
 
-            /* Convert UNORM16 to 1.0-normalized FP32. */
-            fp32_r = nvKmsKapiF32Div(fp32_r, u16_norm);
-            fp32_g = nvKmsKapiF32Div(fp32_g, u16_norm);
-            fp32_b = nvKmsKapiF32Div(fp32_b, u16_norm);
+            /* Convert UNORM32 to 1.0-normalized FP32. */
+            fp32_r = nvKmsKapiF32Div(fp32_r, u32_norm);
+            fp32_g = nvKmsKapiF32Div(fp32_g, u32_norm);
+            fp32_b = nvKmsKapiF32Div(fp32_b, u32_norm);
         } else if (vss_entries != NULL) {
             /* Use VSS LUT directly, but normalized to 1.0. */
             // TODO: Use pre-1.0-normalized VSS LUT table?
@@ -739,56 +777,6 @@ static struct nv_drm_lut_surface *create_drm_ilut_surface_vss(
 
 #define UNORM16_TO_UNORM14_WAR_813188(u16) ((u16 >> 2) & ~7) + 0x6000
 
-static struct nv_drm_lut_surface *create_drm_ilut_surface_legacy(
-    struct nv_drm_device *nv_dev,
-    struct nv_drm_plane *nv_plane,
-    struct nv_drm_plane_state *nv_drm_plane_state)
-
-{
-    struct nv_drm_lut_surface *drm_lut_surface;
-    NvU16 *lut_data;
-    NvU32 entry_idx;
-
-    const struct drm_color_lut *degamma_lut;
-
-    WARN_ON(!nv_plane->ilut_caps.supported);
-    WARN_ON(nv_plane->ilut_caps.entryFormat != NVKMS_LUT_FORMAT_UNORM14_WAR_813188);
-    WARN_ON(nv_plane->ilut_caps.vssSupport == NVKMS_LUT_VSS_REQUIRED);
-    WARN_ON((NVKMS_LUT_ARRAY_SIZE + 1) > nv_plane->ilut_caps.lutEntries);
-
-    BUG_ON(nv_drm_plane_state->degamma_lut == NULL);
-
-    degamma_lut =
-        (struct drm_color_lut *) nv_drm_plane_state->degamma_lut->data;
-
-    /* Allocate displayable LUT surface. */
-    drm_lut_surface =
-        alloc_drm_lut_surface(nv_dev,
-                              NVKMS_LUT_FORMAT_UNORM14_WAR_813188,
-                              NVKMS_LUT_VSS_TYPE_NONE,
-                              0, 0,
-                              NVKMS_LUT_ARRAY_SIZE + 1);
-    if (drm_lut_surface == NULL) {
-        return NULL;
-    }
-
-    lut_data = (NvU16 *) drm_lut_surface->base.buffer;
-
-    /* Fill LUT surface. */
-    for (entry_idx = 0; entry_idx < NVKMS_LUT_ARRAY_SIZE; entry_idx++) {
-        lut_data[(entry_idx * 4) + 0] =
-            UNORM16_TO_UNORM14_WAR_813188(degamma_lut[entry_idx].red);
-        lut_data[(entry_idx * 4) + 1] =
-            UNORM16_TO_UNORM14_WAR_813188(degamma_lut[entry_idx].green);
-        lut_data[(entry_idx * 4) + 2] =
-            UNORM16_TO_UNORM14_WAR_813188(degamma_lut[entry_idx].blue);
-    }
-    ((NvU64 *) lut_data)[NVKMS_LUT_ARRAY_SIZE] =
-        ((NvU64 *) lut_data)[NVKMS_LUT_ARRAY_SIZE - 1];
-
-    return drm_lut_surface;
-}
-
 static struct nv_drm_lut_surface *create_drm_tmo_surface(
     struct nv_drm_device *nv_dev,
     struct nv_drm_plane *nv_plane,
@@ -799,27 +787,28 @@ static struct nv_drm_lut_surface *create_drm_tmo_surface(
     NvU16 *lut_data;
     NvU32 entry_idx;
 
-    const struct drm_color_lut *tmo_lut;
-
     const NvU32 num_vss_header_segments = 64;
     const NvU32 tmo_seg_size_log2 = 4;
 
     WARN_ON(!nv_plane->tmo_caps.supported);
     WARN_ON(nv_plane->tmo_caps.entryFormat != NVKMS_LUT_FORMAT_UNORM16);
-    WARN_ON(nv_plane->tmo_caps.vssSupport != NVKMS_LUT_VSS_REQUIRED);
     WARN_ON(nv_plane->tmo_caps.vssType != NVKMS_LUT_VSS_TYPE_LINEAR);
     WARN_ON(num_vss_header_segments != nv_plane->tmo_caps.vssSegments);
     WARN_ON((NVKMS_LUT_ARRAY_SIZE + 1) > nv_plane->tmo_caps.lutEntries);
 
     BUG_ON(nv_drm_plane_state->tmo_lut == NULL);
 
-    tmo_lut = (struct drm_color_lut *) nv_drm_plane_state->tmo_lut->data;
-
     /* Verify that all channels are equal. */
     for (entry_idx = 0; entry_idx < NVKMS_LUT_ARRAY_SIZE; entry_idx++) {
-        if ((tmo_lut[entry_idx].red != tmo_lut[entry_idx].green) ||
-            (tmo_lut[entry_idx].red != tmo_lut[entry_idx].blue)) {
-            return NULL;
+        NvU16 r = READ_LUT_AS_UNORM16(nv_drm_plane_state->tmo_lut,
+                                      NVKMS_LUT_ARRAY_SIZE, entry_idx, red);
+        NvU16 g = READ_LUT_AS_UNORM16(nv_drm_plane_state->tmo_lut,
+                                      NVKMS_LUT_ARRAY_SIZE, entry_idx, green);
+        NvU16 b = READ_LUT_AS_UNORM16(nv_drm_plane_state->tmo_lut,
+                                      NVKMS_LUT_ARRAY_SIZE, entry_idx, blue);
+
+        if ((r != g) || (r != b)) {
+            return ERR_PTR(-EINVAL);
         }
     }
 
@@ -835,7 +824,7 @@ static struct nv_drm_lut_surface *create_drm_tmo_surface(
                               NUM_VSS_HEADER_ENTRIES,
                               NVKMS_LUT_ARRAY_SIZE + 1);
     if (drm_lut_surface == NULL) {
-        return NULL;
+        return ERR_PTR(-ENOMEM);
     }
 
     lut_data = (NvU16 *) drm_lut_surface->base.buffer;
@@ -852,13 +841,22 @@ static struct nv_drm_lut_surface *create_drm_tmo_surface(
         ((NvU64 *) lut_data)[entry_idx] = vss_header_entry;
     }
 
-    /* Fill LUT surface. */
+    /*
+     * Fill LUT surface. Convert input (16-bit or 32-bit) to 16-bit for hardware.
+     * The helper macro reads 16-bit directly or converts 32-bit down to 16-bit.
+     */
     for (entry_idx = 0; entry_idx < NVKMS_LUT_ARRAY_SIZE; entry_idx++) {
         NvU32 data_idx = entry_idx + NUM_VSS_HEADER_ENTRIES;
 
-        lut_data[(data_idx * 4) + 0] = tmo_lut[entry_idx].red;
-        lut_data[(data_idx * 4) + 1] = tmo_lut[entry_idx].green;
-        lut_data[(data_idx * 4) + 2] = tmo_lut[entry_idx].blue;
+        lut_data[(data_idx * 4) + 0] =
+            READ_LUT_AS_UNORM16(nv_drm_plane_state->tmo_lut,
+                               NVKMS_LUT_ARRAY_SIZE, entry_idx, red);
+        lut_data[(data_idx * 4) + 1] =
+            READ_LUT_AS_UNORM16(nv_drm_plane_state->tmo_lut,
+                               NVKMS_LUT_ARRAY_SIZE, entry_idx, green);
+        lut_data[(data_idx * 4) + 2] =
+            READ_LUT_AS_UNORM16(nv_drm_plane_state->tmo_lut,
+                               NVKMS_LUT_ARRAY_SIZE, entry_idx, blue);
     }
     ((NvU64 *) lut_data)[NUM_VSS_HEADER_ENTRIES + NVKMS_LUT_ARRAY_SIZE] =
         ((NvU64 *) lut_data)[NUM_VSS_HEADER_ENTRIES + NVKMS_LUT_ARRAY_SIZE - 1];
@@ -902,7 +900,6 @@ static struct nv_drm_lut_surface *create_drm_olut_surface_vss(
 
     WARN_ON(!nv_crtc->olut_caps.supported);
     WARN_ON(nv_crtc->olut_caps.entryFormat != NVKMS_LUT_FORMAT_UNORM16);
-    WARN_ON(nv_crtc->olut_caps.vssSupport != NVKMS_LUT_VSS_SUPPORTED);
     WARN_ON(nv_crtc->olut_caps.vssType != NVKMS_LUT_VSS_TYPE_LOGARITHMIC);
 
     /* Determine configuration based on specified OETF. */
@@ -1027,61 +1024,12 @@ static struct nv_drm_lut_surface *create_drm_olut_surface_vss(
     return drm_lut_surface;
 }
 
-static struct nv_drm_lut_surface *create_drm_olut_surface_legacy(
-    struct nv_drm_device *nv_dev,
-    struct nv_drm_crtc *nv_crtc,
-    struct nv_drm_crtc_state *nv_drm_crtc_state)
-
-{
-    struct nv_drm_lut_surface *drm_lut_surface;
-    NvU16 *lut_data;
-    NvU32 entry_idx;
-
-    const struct drm_color_lut *regamma_lut;
-
-    WARN_ON(!nv_crtc->olut_caps.supported);
-    WARN_ON(nv_crtc->olut_caps.entryFormat != NVKMS_LUT_FORMAT_UNORM14_WAR_813188);
-    WARN_ON(nv_crtc->olut_caps.vssSupport == NVKMS_LUT_VSS_REQUIRED);
-    WARN_ON((NVKMS_LUT_ARRAY_SIZE + 1) > nv_crtc->olut_caps.lutEntries);
-
-    BUG_ON(nv_drm_crtc_state->regamma_lut == NULL);
-
-    regamma_lut =
-        (struct drm_color_lut *) nv_drm_crtc_state->regamma_lut->data;
-
-    /* Allocate displayable LUT surface. */
-    drm_lut_surface =
-        alloc_drm_lut_surface(nv_dev,
-                              NVKMS_LUT_FORMAT_UNORM14_WAR_813188,
-                              NVKMS_LUT_VSS_TYPE_NONE,
-                              0, 0,
-                              NVKMS_LUT_ARRAY_SIZE + 1);
-    if (drm_lut_surface == NULL) {
-        return NULL;
-    }
-
-    lut_data = (NvU16 *) drm_lut_surface->base.buffer;
-
-    /* Fill LUT surface. */
-    for (entry_idx = 0; entry_idx < NVKMS_LUT_ARRAY_SIZE; entry_idx++) {
-        lut_data[(entry_idx * 4) + 0] =
-            UNORM16_TO_UNORM14_WAR_813188(regamma_lut[entry_idx].red);
-        lut_data[(entry_idx * 4) + 1] =
-            UNORM16_TO_UNORM14_WAR_813188(regamma_lut[entry_idx].green);
-        lut_data[(entry_idx * 4) + 2] =
-            UNORM16_TO_UNORM14_WAR_813188(regamma_lut[entry_idx].blue);
-    }
-    ((NvU64 *) lut_data)[NVKMS_LUT_ARRAY_SIZE] =
-        ((NvU64 *) lut_data)[NVKMS_LUT_ARRAY_SIZE - 1];
-
-    return drm_lut_surface;
-}
-
 static bool
 update_matrix_override(struct drm_property_blob *blob,
                        struct NvKmsCscMatrix *new_matrix,
                        const struct NvKmsCscMatrix *old_matrix,
                        bool old_enabled,
+                       bool default_to_identity,
                        bool *changed)
 {
     bool enabled;
@@ -1089,7 +1037,12 @@ update_matrix_override(struct drm_property_blob *blob,
         ctm_3x4_to_csc(new_matrix, (struct drm_color_ctm_3x4 *) blob->data);
         enabled = true;
     } else {
-        enabled = false;
+        if (default_to_identity) {
+            *new_matrix = NVKMS_IDENTITY_CSC_MATRIX;
+            enabled = true;
+        } else {
+            enabled = false;
+        }
     }
     *changed |= (enabled != old_enabled) ||
                 memcmp(new_matrix, old_matrix, sizeof(*old_matrix));
@@ -1307,21 +1260,45 @@ plane_req_config_update(struct drm_plane *plane,
 #endif
 
 #if defined(NV_DRM_PLANE_CREATE_COLOR_PROPERTIES_PRESENT)
-    if ((nv_drm_plane_state->input_colorspace == NV_DRM_INPUT_COLOR_SPACE_NONE) &&
-        nv_drm_format_is_yuv(plane_state->fb->format->format)) {
-
-        req_config->config.inputColorSpace =
-            nv_drm_color_encoding_to_nvkms_colorspace(plane_state->color_encoding);
-        req_config->config.inputColorRange =
-            nv_drm_color_range_to_nvkms_color_range(plane_state->color_range);
-        req_config->config.inputTf = NVKMS_INPUT_TF_LINEAR;
-    } else {
-#endif
+    /*
+     * Ignore COLOR_RANGE and COLOR_ENCODING when color pipeline cap is set.
+     * Per upstream spec: "Drivers shall ignore any existing pre-blend color
+     * operations when this cap is set, such as COLOR_RANGE and COLOR_ENCODING."
+     * Instead, the FMT matrix is exposed via the FMT_CTM colorop.
+     *
+     * If colorop creation failed, allow COLOR_RANGE/COLOR_ENCODING to work even if
+     * the cap is set, so clients have some form of color management.
+     */
+#if defined(NV_DRM_HAS_COLOROP)
+    if (plane_state->state->plane_color_pipeline &&
+        (nv_plane->num_color_pipelines > 0)) {
+        /* Color pipeline cap is set and pipelines exist - ignore legacy props */
         req_config->config.inputColorSpace =
             nv_get_nvkms_input_colorspace(nv_drm_plane_state->input_colorspace);
         req_config->config.inputColorRange = NVKMS_INPUT_COLOR_RANGE_DEFAULT;
         req_config->config.inputTf =
             nv_get_nvkms_input_tf(nv_drm_plane_state->input_colorspace);
+    } else
+#endif
+    {
+        /* Use COLOR_RANGE/COLOR_ENCODING if applicable */
+        if ((nv_drm_plane_state->input_colorspace == NV_DRM_INPUT_COLOR_SPACE_NONE) &&
+            nv_drm_format_is_yuv(plane_state->fb->format->format)) {
+
+            req_config->config.inputColorSpace =
+                nv_drm_color_encoding_to_nvkms_colorspace(plane_state->color_encoding);
+            req_config->config.inputColorRange =
+                nv_drm_color_range_to_nvkms_color_range(plane_state->color_range);
+            req_config->config.inputTf = NVKMS_INPUT_TF_LINEAR;
+        } else
+#endif
+        {
+            req_config->config.inputColorSpace =
+                nv_get_nvkms_input_colorspace(nv_drm_plane_state->input_colorspace);
+            req_config->config.inputColorRange = NVKMS_INPUT_COLOR_RANGE_DEFAULT;
+            req_config->config.inputTf =
+                nv_get_nvkms_input_tf(nv_drm_plane_state->input_colorspace);
+        }
 #if defined(NV_DRM_PLANE_CREATE_COLOR_PROPERTIES_PRESENT)
     }
 #endif
@@ -1407,29 +1384,40 @@ plane_req_config_update(struct drm_plane *plane,
     req_config->flags.outputTfChanged = (old_config.outputTf != req_config->config.outputTf);
 #endif
 
+    req_config->config.matrixOverrides.enabled.fmtCtm =
+        update_matrix_override(nv_drm_plane_state->fmt_ctm,
+                               &req_config->config.matrixOverrides.fmtCtm,
+                               &old_config.matrixOverrides.fmtCtm,
+                               old_config.matrixOverrides.enabled.fmtCtm,
+                               nv_drm_plane_state->ctms_default_to_identity,
+                               &matrix_overrides_changed);
     req_config->config.matrixOverrides.enabled.lmsCtm =
         update_matrix_override(nv_drm_plane_state->lms_ctm,
                                &req_config->config.matrixOverrides.lmsCtm,
                                &old_config.matrixOverrides.lmsCtm,
                                old_config.matrixOverrides.enabled.lmsCtm,
+                               nv_drm_plane_state->ctms_default_to_identity,
                                &matrix_overrides_changed);
     req_config->config.matrixOverrides.enabled.lmsToItpCtm =
         update_matrix_override(nv_drm_plane_state->lms_to_itp_ctm,
                                &req_config->config.matrixOverrides.lmsToItpCtm,
                                &old_config.matrixOverrides.lmsToItpCtm,
                                old_config.matrixOverrides.enabled.lmsToItpCtm,
+                               nv_drm_plane_state->ctms_default_to_identity,
                                &matrix_overrides_changed);
     req_config->config.matrixOverrides.enabled.itpToLmsCtm =
         update_matrix_override(nv_drm_plane_state->itp_to_lms_ctm,
                                &req_config->config.matrixOverrides.itpToLmsCtm,
                                &old_config.matrixOverrides.itpToLmsCtm,
                                old_config.matrixOverrides.enabled.itpToLmsCtm,
+                               nv_drm_plane_state->ctms_default_to_identity,
                                &matrix_overrides_changed);
     req_config->config.matrixOverrides.enabled.blendCtm =
         update_matrix_override(nv_drm_plane_state->blend_ctm,
                                &req_config->config.matrixOverrides.blendCtm,
                                &old_config.matrixOverrides.blendCtm,
                                old_config.matrixOverrides.enabled.blendCtm,
+                               nv_drm_plane_state->ctms_default_to_identity,
                                &matrix_overrides_changed);
     req_config->flags.matrixOverridesChanged = matrix_overrides_changed;
 
@@ -1440,27 +1428,17 @@ plane_req_config_update(struct drm_plane *plane,
             nv_drm_plane_state->degamma_drm_lut_surface = NULL;
         }
 
-        if (nv_plane->ilut_caps.vssSupport == NVKMS_LUT_VSS_SUPPORTED) {
-            if ((nv_drm_plane_state->degamma_tf  != NV_DRM_TRANSFER_FUNCTION_DEFAULT) ||
-                (nv_drm_plane_state->degamma_lut != NULL) ||
-                (nv_drm_plane_state->degamma_multiplier != ((uint64_t) 1) << 32)) {
+        if ((nv_drm_plane_state->degamma_tf  != NV_DRM_TRANSFER_FUNCTION_DEFAULT) ||
+            (nv_drm_plane_state->degamma_lut != NULL) ||
+            (nv_drm_plane_state->degamma_multiplier != NV_DRM_S31_32_ONE)) {
 
-                nv_drm_plane_state->degamma_drm_lut_surface =
-                    create_drm_ilut_surface_vss(nv_dev, nv_plane,
-                                                nv_drm_plane_state);
-                if (nv_drm_plane_state->degamma_drm_lut_surface == NULL) {
-                    return -1;
-                }
-            }
-        } else {
-            WARN_ON(nv_plane->ilut_caps.vssSupport != NVKMS_LUT_VSS_NOT_SUPPORTED);
-            if (nv_drm_plane_state->degamma_lut != NULL) {
-                nv_drm_plane_state->degamma_drm_lut_surface =
-                    create_drm_ilut_surface_legacy(nv_dev, nv_plane,
-                                                   nv_drm_plane_state);
-                if (nv_drm_plane_state->degamma_drm_lut_surface == NULL) {
-                    return -1;
-                }
+            nv_drm_plane_state->degamma_drm_lut_surface =
+                create_drm_ilut_surface_vss(nv_dev, nv_plane,
+                                            nv_drm_plane_state);
+            if (IS_ERR(nv_drm_plane_state->degamma_drm_lut_surface)) {
+                int ret = PTR_ERR(nv_drm_plane_state->degamma_drm_lut_surface);
+                nv_drm_plane_state->degamma_drm_lut_surface = NULL;
+                return ret;
             }
         }
     }
@@ -1505,8 +1483,10 @@ plane_req_config_update(struct drm_plane *plane,
             nv_drm_plane_state->tmo_drm_lut_surface =
                 create_drm_tmo_surface(nv_dev, nv_plane,
                                        nv_drm_plane_state);
-            if (nv_drm_plane_state->tmo_drm_lut_surface == NULL) {
-                return -1;
+            if (IS_ERR(nv_drm_plane_state->tmo_drm_lut_surface)) {
+                int ret = PTR_ERR(nv_drm_plane_state->tmo_drm_lut_surface);
+                nv_drm_plane_state->tmo_drm_lut_surface = NULL;
+                return ret;
             }
         }
     }
@@ -1662,6 +1642,13 @@ static int nv_drm_plane_atomic_check(struct drm_plane *plane,
         }
 
         if (plane_state->crtc == crtc) {
+#if defined(NV_DRM_HAS_COLOROP)
+            /* Process color management state (mutual exclusion + colorop translation) */
+            ret = nv_drm_plane_process_color_mgmt_state(plane, plane_state);
+            if (ret != 0) {
+                return ret;
+            }
+#endif
             ret = plane_req_config_update(plane,
                                           plane_state,
                                           plane_requested_config);
@@ -1783,7 +1770,17 @@ static int nv_drm_atomic_crtc_set_property(
     return -EINVAL;
 }
 
-static int nv_drm_plane_atomic_set_property(
+/**
+ * nv_drm_plane_set_vendor_color_property - Handle vendor color properties
+ *
+ * Handles setting of vendor-specific color management properties. When
+ * DRM_CLIENT_CAP_PLANE_COLOR_PIPELINE is set and color pipelines exist,
+ * silently ignores these properties per DRM documentation: "Drivers shall
+ * ignore any existing pre-blend color operations when this cap is set."
+ *
+ * Returns: 0 on success, -EINVAL if property is not a vendor color property
+ */
+static int nv_drm_plane_set_vendor_color_property(
     struct drm_plane *plane,
     struct drm_plane_state *state,
     struct drm_property *property,
@@ -1794,24 +1791,33 @@ static int nv_drm_plane_atomic_set_property(
         to_nv_drm_plane_state(state);
     NvBool replaced = false;
 
-    if (property == nv_dev->nv_out_fence_property) {
-        nv_drm_plane_state->fd_user_ptr = (void __user *)(uintptr_t)(val);
-        return 0;
-    } else if (property == nv_dev->nv_input_colorspace_property) {
-        nv_drm_plane_state->input_colorspace = val;
-        return 0;
-    }
-#if defined(NV_DRM_HAS_HDR_OUTPUT_METADATA)
-    else if (property == nv_dev->nv_hdr_output_metadata_property) {
-        return nv_drm_atomic_replace_property_blob_from_id(
-                nv_dev->dev,
-                &nv_drm_plane_state->hdr_output_metadata,
-                val,
-                sizeof(struct hdr_output_metadata),
-                &replaced);
+#if defined(NV_DRM_HAS_COLOROP)
+    struct nv_drm_plane *nv_plane = to_nv_plane(plane);
+
+    /*
+     * Ignore vendor color properties when DRM_CLIENT_CAP_PLANE_COLOR_PIPELINE
+     * is set. Per DRM documentation: "Drivers shall ignore any existing
+     * pre-blend color operations when this cap is set."
+     *
+     * To handle cases where color pipeline creation failed or was disabled,
+     * unconditionally allow vendor color properties to work if no color
+     * pipelines exist.
+     */
+    if (nv_plane->num_color_pipelines > 0) {
+        if (state->state && state->state->plane_color_pipeline) {
+            return 0;
+        }
+
+        /*
+         * Clear DRM core's color_pipeline when vendor properties are used.
+         * This ensures drm_info sees accurate state and prevents colorops
+         * from being processed.
+         */
+        drm_atomic_set_colorop_for_plane(state, NULL);
     }
 #endif
-    else if (property == nv_dev->nv_plane_lms_ctm_property) {
+
+    if (property == nv_dev->nv_plane_lms_ctm_property) {
         return nv_drm_atomic_replace_property_blob_from_id(
                 nv_dev->dev,
                 &nv_drm_plane_state->lms_ctm,
@@ -1875,10 +1881,61 @@ static int nv_drm_plane_atomic_set_property(
         return ret;
     }
 
+    /* Not a vendor color property */
     return -EINVAL;
 }
 
-static int nv_drm_plane_atomic_get_property(
+static int nv_drm_plane_atomic_set_property(
+    struct drm_plane *plane,
+    struct drm_plane_state *state,
+    struct drm_property *property,
+    uint64_t val)
+{
+    struct nv_drm_device *nv_dev = to_nv_device(plane->dev);
+    struct nv_drm_plane_state *nv_drm_plane_state =
+        to_nv_drm_plane_state(state);
+
+    if (property == nv_dev->nv_out_fence_property) {
+        nv_drm_plane_state->fd_user_ptr = (void __user *)(uintptr_t)(val);
+        return 0;
+    } else if (property == nv_dev->nv_input_colorspace_property) {
+        nv_drm_plane_state->input_colorspace = val;
+        return 0;
+    }
+#if defined(NV_DRM_HAS_HDR_OUTPUT_METADATA)
+    else if (property == nv_dev->nv_hdr_output_metadata_property) {
+        NvBool replaced = false;
+        return nv_drm_atomic_replace_property_blob_from_id(
+                nv_dev->dev,
+                &nv_drm_plane_state->hdr_output_metadata,
+                val,
+                sizeof(struct hdr_output_metadata),
+                &replaced);
+    }
+#endif
+
+    /* Try vendor color properties */
+    {
+        int ret = nv_drm_plane_set_vendor_color_property(plane, state, property, val);
+        if (ret != -EINVAL) {
+            return ret;
+        }
+    }
+
+    return -EINVAL;
+}
+
+/**
+ * nv_drm_plane_get_vendor_color_property - Get vendor color property value
+ *
+ * Handles reading of vendor-specific color management properties.
+ * When a color pipeline is active, returns default values instead of actual
+ * values, since colorops and vendor properties share the same nv_plane_state
+ * fields (degamma_lut, lms_ctm, etc.) but represent different APIs.
+ *
+ * Returns: 0 on success, -EINVAL if property is not a vendor color property
+ */
+static int nv_drm_plane_get_vendor_color_property(
     struct drm_plane *plane,
     const struct drm_plane_state *state,
     struct drm_property *property,
@@ -1888,20 +1945,33 @@ static int nv_drm_plane_atomic_get_property(
     const struct nv_drm_plane_state *nv_drm_plane_state =
         to_nv_drm_plane_state_const(state);
 
-    if (property == nv_dev->nv_out_fence_property) {
-        return 0;
-    } else if (property == nv_dev->nv_input_colorspace_property) {
-        *val = nv_drm_plane_state->input_colorspace;
-        return 0;
-    }
-#if defined(NV_DRM_HAS_HDR_OUTPUT_METADATA)
-    else if (property ==  nv_dev->nv_hdr_output_metadata_property) {
-        *val = nv_drm_plane_state->hdr_output_metadata ?
-            nv_drm_plane_state->hdr_output_metadata->base.id : 0;
-        return 0;
+#if defined(NV_DRM_HAS_COLOROP)
+    /*
+     * When a color pipeline is active, return default values for vendor
+     * properties. This prevents exposing colorop values through vendor
+     * property reads, since both APIs write to the same nv_plane_state
+     * fields but color pipeline takes precedence when active.
+     */
+    if (state->color_pipeline) {
+        if (property == nv_dev->nv_plane_lms_ctm_property ||
+            property == nv_dev->nv_plane_lms_to_itp_ctm_property ||
+            property == nv_dev->nv_plane_itp_to_lms_ctm_property ||
+            property == nv_dev->nv_plane_blend_ctm_property ||
+            property == nv_dev->nv_plane_degamma_lut_property ||
+            property == nv_dev->nv_plane_tmo_lut_property) {
+            *val = 0;  /* NULL blob */
+            return 0;
+        } else if (property == nv_dev->nv_plane_degamma_tf_property) {
+            *val = NV_DRM_TRANSFER_FUNCTION_DEFAULT;
+            return 0;
+        } else if (property == nv_dev->nv_plane_degamma_multiplier_property) {
+            *val = 1ULL << 32;  /* Default multiplier (1.0) */
+            return 0;
+        }
     }
 #endif
-    else if (property == nv_dev->nv_plane_lms_ctm_property) {
+
+    if (property == nv_dev->nv_plane_lms_ctm_property) {
         *val = nv_drm_plane_state->lms_ctm ?
             nv_drm_plane_state->lms_ctm->base.id : 0;
         return 0;
@@ -1939,6 +2009,42 @@ static int nv_drm_plane_atomic_get_property(
          */
         *val = NVKMS_LUT_ARRAY_SIZE;
         return 0;
+    }
+
+    /* Not a vendor color property */
+    return -EINVAL;
+}
+
+static int nv_drm_plane_atomic_get_property(
+    struct drm_plane *plane,
+    const struct drm_plane_state *state,
+    struct drm_property *property,
+    uint64_t *val)
+{
+    struct nv_drm_device *nv_dev = to_nv_device(plane->dev);
+    const struct nv_drm_plane_state *nv_drm_plane_state =
+        to_nv_drm_plane_state_const(state);
+
+    if (property == nv_dev->nv_out_fence_property) {
+        return 0;
+    } else if (property == nv_dev->nv_input_colorspace_property) {
+        *val = nv_drm_plane_state->input_colorspace;
+        return 0;
+    }
+#if defined(NV_DRM_HAS_HDR_OUTPUT_METADATA)
+    else if (property ==  nv_dev->nv_hdr_output_metadata_property) {
+        *val = nv_drm_plane_state->hdr_output_metadata ?
+            nv_drm_plane_state->hdr_output_metadata->base.id : 0;
+        return 0;
+    }
+#endif
+
+    /* Try vendor color properties */
+    {
+        int ret = nv_drm_plane_get_vendor_color_property(plane, state, property, val);
+        if (ret != -EINVAL) {
+            return ret;
+        }
     }
 
     return -EINVAL;
@@ -2043,6 +2149,9 @@ nv_drm_plane_atomic_duplicate_state(struct drm_plane *plane)
     if (nv_plane_state->tmo_drm_lut_surface) {
         kref_get(&nv_plane_state->tmo_drm_lut_surface->base.refcount);
     }
+
+    nv_plane_state->ctms_default_to_identity =
+        nv_old_plane_state->ctms_default_to_identity;
 
     return &nv_plane_state->base;
 }
@@ -2295,6 +2404,58 @@ static void nv_drm_atomic_crtc_destroy_state(struct drm_crtc *crtc,
     nv_drm_free(nv_state);
 }
 
+static int nv_drm_crtc_enable_vblank(struct drm_crtc *crtc)
+{
+    struct nv_drm_crtc *nv_crtc = to_nv_crtc(crtc);
+    struct nv_drm_device *nv_dev = to_nv_device(nv_crtc->base.dev);
+
+    if (!nv_drm_vblank_module_param) {
+        return -ENODEV;
+    }
+
+    nv_drm_workthread_add_work(&nv_dev->vblank_worker, &nv_crtc->enable_vblank_work);
+    return 0;
+}
+
+static void nv_drm_crtc_disable_vblank(struct drm_crtc *crtc)
+{
+    struct nv_drm_crtc *nv_crtc = to_nv_crtc(crtc);
+    struct nv_drm_device *nv_dev = to_nv_device(nv_crtc->base.dev);
+
+    if (!nv_drm_vblank_module_param) {
+        return;
+    }
+
+    nv_drm_workthread_add_work(&nv_dev->vblank_worker, &nv_crtc->disable_vblank_work);
+}
+
+#if defined(NV_DRM_CRTC_FUNCS_HAS_GET_VBLANK_TIMESTAMP)
+static bool nv_drm_crtc_get_vblank_timestamp(
+    struct drm_crtc *crtc,
+    int *max_error,
+    ktime_t *vblank_time,
+    bool in_vblank_irq)
+{
+    struct nv_drm_crtc *nv_crtc = to_nv_crtc(crtc);
+    NvU64 timestamp;
+
+    /*
+     * DRM core calls this hook with locks held. To avoid deadlock, no NvKms
+     * KAPI call that would sleep should be made to get the vblank timestamp.
+     * Use the timestamp stored when the vblank callback occurred instead.
+     */
+    timestamp = nv_crtc->last_vblank_time;
+
+    if (timestamp != 0) {
+        *vblank_time = ns_to_ktime(timestamp);
+        return true;
+    }
+
+    /* fallback to DRM Core timestamp */
+    return false;
+}
+#endif
+
 static struct drm_crtc_funcs nv_crtc_funcs = {
     .set_config             = drm_atomic_helper_set_config,
     .page_flip              = drm_atomic_helper_page_flip,
@@ -2306,6 +2467,11 @@ static struct drm_crtc_funcs nv_crtc_funcs = {
     .atomic_destroy_state   = nv_drm_atomic_crtc_destroy_state,
 #if defined(NV_DRM_ATOMIC_HELPER_LEGACY_GAMMA_SET_PRESENT)
     .gamma_set = drm_atomic_helper_legacy_gamma_set,
+#endif
+    .enable_vblank = nv_drm_crtc_enable_vblank,
+    .disable_vblank = nv_drm_crtc_disable_vblank,
+#if defined(NV_DRM_CRTC_FUNCS_HAS_GET_VBLANK_TIMESTAMP)
+    .get_vblank_timestamp = nv_drm_crtc_get_vblank_timestamp,
 #endif
 };
 
@@ -2515,26 +2681,14 @@ static int nv_drm_crtc_atomic_check(struct drm_crtc *crtc,
             nv_crtc_state->regamma_drm_lut_surface = NULL;
         }
 
-        if (nv_crtc->olut_caps.vssSupport == NVKMS_LUT_VSS_SUPPORTED) {
-            if ((nv_crtc_state->regamma_tf  != NV_DRM_TRANSFER_FUNCTION_DEFAULT) ||
-                (nv_crtc_state->regamma_lut != NULL)) {
+        if ((nv_crtc_state->regamma_tf  != NV_DRM_TRANSFER_FUNCTION_DEFAULT) ||
+            (nv_crtc_state->regamma_lut != NULL)) {
 
-                nv_crtc_state->regamma_drm_lut_surface =
-                    create_drm_olut_surface_vss(nv_dev, nv_crtc,
-                                                nv_crtc_state);
-                if (nv_crtc_state->regamma_drm_lut_surface == NULL) {
-                    return -1;
-                }
-            }
-        } else {
-            WARN_ON(nv_crtc->olut_caps.vssSupport != NVKMS_LUT_VSS_NOT_SUPPORTED);
-            if (nv_crtc_state->regamma_lut != NULL) {
-                nv_crtc_state->regamma_drm_lut_surface =
-                    create_drm_olut_surface_legacy(nv_dev, nv_crtc,
-                                                   nv_crtc_state);
-                if (nv_crtc_state->regamma_drm_lut_surface == NULL) {
-                    return -1;
-                }
+            nv_crtc_state->regamma_drm_lut_surface =
+                create_drm_olut_surface_vss(nv_dev, nv_crtc,
+                                            nv_crtc_state);
+            if (nv_crtc_state->regamma_drm_lut_surface == NULL) {
+                return -1;
             }
         }
 
@@ -2563,7 +2717,7 @@ static int nv_drm_crtc_atomic_check(struct drm_crtc *crtc,
         WARN_ON(nv_crtc_state->regamma_divisor & (((NvU64) 1) << 63));
 
         req_config->flags.olutFpNormScaleChanged = NV_TRUE;
-        if (nv_crtc_state->regamma_divisor < (((NvU64) 1) << 32)) {
+        if (nv_crtc_state->regamma_divisor < NV_DRM_S31_32_ONE) {
             req_config->modeSetConfig.olutFpNormScale =
                 NVKMS_OLUT_FP_NORM_SCALE_DEFAULT;
         } else {
@@ -2602,19 +2756,17 @@ static void nv_drm_crtc_install_properties(
     struct nv_drm_crtc_state *nv_crtc_state = to_nv_crtc_state(crtc->state);
 
     if (nv_crtc->olut_caps.supported) {
-        if (nv_crtc->olut_caps.vssSupport == NVKMS_LUT_VSS_SUPPORTED) {
-            if (nv_dev->nv_crtc_regamma_tf_property) {
-                drm_object_attach_property(
-                    &crtc->base, nv_dev->nv_crtc_regamma_tf_property,
-                    NV_DRM_TRANSFER_FUNCTION_DEFAULT);
-            }
-            if (nv_dev->nv_crtc_regamma_divisor_property) {
-                /* Default to 1 */
-                nv_crtc_state->regamma_divisor = (((NvU64) 1) << 32);
-                drm_object_attach_property(
-                    &crtc->base, nv_dev->nv_crtc_regamma_divisor_property,
-                    nv_crtc_state->regamma_divisor);
-            }
+        if (nv_dev->nv_crtc_regamma_tf_property) {
+            drm_object_attach_property(
+                &crtc->base, nv_dev->nv_crtc_regamma_tf_property,
+                NV_DRM_TRANSFER_FUNCTION_DEFAULT);
+        }
+        if (nv_dev->nv_crtc_regamma_divisor_property) {
+            /* Default to 1 */
+            nv_crtc_state->regamma_divisor = NV_DRM_S31_32_ONE;
+            drm_object_attach_property(
+                &crtc->base, nv_dev->nv_crtc_regamma_divisor_property,
+                nv_crtc_state->regamma_divisor);
         }
         if (nv_dev->nv_crtc_regamma_lut_property) {
             drm_object_attach_property(
@@ -2696,19 +2848,17 @@ static void nv_drm_plane_install_properties(
         }
 
         if (nv_plane->ilut_caps.supported) {
-            if (nv_plane->ilut_caps.vssSupport == NVKMS_LUT_VSS_SUPPORTED) {
-                if (nv_dev->nv_plane_degamma_tf_property) {
-                    drm_object_attach_property(
-                        &plane->base, nv_dev->nv_plane_degamma_tf_property,
-                        NV_DRM_TRANSFER_FUNCTION_DEFAULT);
-                }
-                if (nv_dev->nv_plane_degamma_multiplier_property) {
-                    /* Default to 1 in S31.32 Sign-Magnitude Format */
-                    nv_plane_state->degamma_multiplier = ((uint64_t) 1) << 32;
-                    drm_object_attach_property(
-                        &plane->base, nv_dev->nv_plane_degamma_multiplier_property,
-                        nv_plane_state->degamma_multiplier);
-                }
+            if (nv_dev->nv_plane_degamma_tf_property) {
+                drm_object_attach_property(
+                    &plane->base, nv_dev->nv_plane_degamma_tf_property,
+                    NV_DRM_TRANSFER_FUNCTION_DEFAULT);
+            }
+            if (nv_dev->nv_plane_degamma_multiplier_property) {
+                /* Default to 1 in S31.32 Sign-Magnitude Format */
+                nv_plane_state->degamma_multiplier = NV_DRM_S31_32_ONE;
+                drm_object_attach_property(
+                    &plane->base, nv_dev->nv_plane_degamma_multiplier_property,
+                    nv_plane_state->degamma_multiplier);
             }
             if (nv_dev->nv_plane_degamma_lut_property) {
                 drm_object_attach_property(
@@ -2721,6 +2871,38 @@ static void nv_drm_plane_install_properties(
             }
         }
     }
+
+#if defined(NV_DRM_HAS_COLOROP)
+    /* Create color pipeline for upstream color management */
+    if (nv_drm_color_pipeline_module_param) {
+        int ret = nv_drm_plane_create_color_pipelines(plane, supportsICtCp);
+        if (ret != 0) {
+            NV_DRM_DEV_LOG_WARN(
+                nv_dev,
+                "Failed to create color pipeline for plane, error = %d", ret);
+            /*
+             * Non-fatal: NV_PLANE_* properties will still work.
+             * Vendor property setter checks if colorops exist before ignoring
+             * vendor property writes, so clients with the color pipeline cap
+             * set can still use vendor properties as fallback.
+             */
+        } else {
+            /* Create COLOR_PIPELINE property to advertise the pipeline */
+            ret = nv_drm_plane_create_color_pipeline_property(plane);
+            if (ret != 0) {
+                NV_DRM_DEV_LOG_WARN(
+                    nv_dev,
+                    "Failed to create COLOR_PIPELINE property, error = %d", ret);
+                /*
+                 * Clean up colorops since they're unusable without the property.
+                 * This ensures vendor properties work as fallback by setting
+                 * nv_plane->num_color_pipelines to 0.
+                 */
+                nv_drm_plane_destroy_color_pipelines(plane);
+            }
+        }
+    }
+#endif
 }
 
 static void
@@ -2942,6 +3124,82 @@ failed:
     return ERR_PTR(ret);
 }
 
+static void nv_drm_crtc_vblank_callback(NvU64 param1, NvU64 param2)
+{
+    struct nv_drm_crtc *nv_crtc = (void*)(NvUPtr)param1;
+    struct drm_crtc *crtc = &nv_crtc->base;
+    struct drm_device *dev = crtc->dev;
+    unsigned long irqflags;
+
+    spin_lock_irqsave(&dev->vblank_time_lock, irqflags);
+
+#if defined(NV_DRM_CRTC_FUNCS_HAS_GET_VBLANK_TIMESTAMP)
+    /* Store the timestamp passed from NvKms */
+    nv_crtc->last_vblank_time = param2;
+#endif
+
+    spin_unlock_irqrestore(&dev->vblank_time_lock, irqflags);
+
+    drm_handle_vblank(crtc->dev, drm_crtc_index(crtc));
+
+    spin_lock_irqsave(&dev->vblank_time_lock, irqflags);
+    /* Mark that a vblank interrupt has fired */
+    nv_crtc->vblank_intr_fired = true;
+    spin_unlock_irqrestore(&dev->vblank_time_lock, irqflags);
+}
+
+static void nv_drm_vblank_enable_fn(void *t)
+{
+    struct nv_drm_crtc *nv_crtc = t;
+    struct nv_drm_device *nv_dev = to_nv_device(nv_crtc->base.dev);
+    struct drm_device *dev = nv_crtc->base.dev;
+    unsigned long irqflags;
+
+    mutex_lock(&nv_crtc->vblank_q_lock);
+
+    /* Clear timestamp and mark as not fired until first real vblank arrives */
+    spin_lock_irqsave(&dev->vblank_time_lock, irqflags);
+#if defined(NV_DRM_CRTC_FUNCS_HAS_GET_VBLANK_TIMESTAMP)
+    nv_crtc->last_vblank_time = 0;
+#endif
+    nv_crtc->vblank_intr_fired = false;
+    spin_unlock_irqrestore(&dev->vblank_time_lock, irqflags);
+
+    if (nv_crtc->vblankIntrCallback == NULL) {
+        nv_crtc->vblankIntrCallback =
+            nvKms->registerVblankIntrCallback(nv_dev->pDevice, nv_crtc->head,
+                nv_drm_crtc_vblank_callback, (NvU64)(NvUPtr)nv_crtc);
+    }
+
+    mutex_unlock(&nv_crtc->vblank_q_lock);
+}
+
+static void nv_drm_vblank_disable_fn(void *t)
+{
+    struct nv_drm_crtc *nv_crtc = t;
+    struct drm_device *dev = nv_crtc->base.dev;
+    struct nv_drm_device *nv_dev = to_nv_device(dev);
+    unsigned long irqflags;
+
+    mutex_lock(&nv_crtc->vblank_q_lock);
+
+    if (nv_crtc->vblankIntrCallback != NULL) {
+        nvKms->unregisterVblankIntrCallback(nv_dev->pDevice, nv_crtc->head,
+            nv_crtc->vblankIntrCallback);
+        nv_crtc->vblankIntrCallback = NULL;
+    }
+
+    /* Clear timestamp and flag when callback is actually unregistered */
+    spin_lock_irqsave(&dev->vblank_time_lock, irqflags);
+#if defined(NV_DRM_CRTC_FUNCS_HAS_GET_VBLANK_TIMESTAMP)
+    nv_crtc->last_vblank_time = 0;
+#endif
+    nv_crtc->vblank_intr_fired = false;
+    spin_unlock_irqrestore(&dev->vblank_time_lock, irqflags);
+
+    mutex_unlock(&nv_crtc->vblank_q_lock);
+}
+
 /*
  * Add drm crtc for given head and supported enum NvKmsSurfaceMemoryFormats.
  */
@@ -2968,9 +3226,16 @@ static struct drm_crtc *__nv_drm_crtc_create(struct nv_drm_device *nv_dev,
     nv_crtc->base.state->crtc = &nv_crtc->base;
 
     nv_crtc->head = head;
+#if defined(NV_DRM_CRTC_FUNCS_HAS_GET_VBLANK_TIMESTAMP)
+    nv_crtc->last_vblank_time = 0;
+#endif
     INIT_LIST_HEAD(&nv_crtc->flip_list);
     spin_lock_init(&nv_crtc->flip_list_lock);
+    mutex_init(&nv_crtc->vblank_q_lock);
     nv_crtc->modeset_permission_filep = NULL;
+
+    nv_drm_workthread_work_init(&nv_crtc->disable_vblank_work, nv_drm_vblank_disable_fn, nv_crtc);
+    nv_drm_workthread_work_init(&nv_crtc->enable_vblank_work, nv_drm_vblank_enable_fn, nv_crtc);
 
     ret = drm_crtc_init_with_planes(nv_dev->dev,
                                     &nv_crtc->base,

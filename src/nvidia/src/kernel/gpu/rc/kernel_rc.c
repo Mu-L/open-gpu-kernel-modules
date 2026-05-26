@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -571,8 +571,13 @@ krcCheckBusError_KERNEL
 
     if (clDevCtrlStatusFlags_Org)
     {
-        // clear the corelogic status after we had a chance to examine it
-        clPcieClearDevCtrlStatus(pGpu, pCl, &clDevCtrlStatus);
+        // Do not clear the status if we have a fatal error.
+        if (!(clDevCtrlStatusFlags &
+            NV2080_CTRL_BUS_INFO_PCIE_LINK_ERRORS_FATAL_ERROR))
+        {
+            // clear the corelogic status after we had a chance to examine it
+            clPcieClearDevCtrlStatus(pGpu, pCl, &clDevCtrlStatus);
+        }
     }
 
     return NV_OK;

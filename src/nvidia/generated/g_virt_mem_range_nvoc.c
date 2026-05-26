@@ -34,7 +34,7 @@ void __nvoc_init__VirtualMemoryRange(VirtualMemoryRange*);
 void __nvoc_init_funcTable_VirtualMemoryRange(VirtualMemoryRange*);
 NV_STATUS __nvoc_ctor_VirtualMemoryRange(VirtualMemoryRange*, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_VirtualMemoryRange(VirtualMemoryRange*);
-void __nvoc_dtor_VirtualMemoryRange(VirtualMemoryRange*);
+void __nvoc_dtor_VirtualMemoryRange(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__VirtualMemoryRange;
@@ -170,7 +170,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_VirtualMemoryRange =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "VirtualMemoryRange",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_VirtualMemoryRange,
+    .objCreatefn =        &__nvoc_objCreateDynamic_VirtualMemoryRange,
     .pCastInfo =          &__nvoc_castinfo__VirtualMemoryRange,
     .pExportInfo =        &__nvoc_export_info__VirtualMemoryRange
 };
@@ -179,7 +179,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_VirtualMemoryRange =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__VirtualMemoryRange __nvoc_metadata__VirtualMemoryRange = {
     .rtti.pClassDef = &__nvoc_class_def_VirtualMemoryRange,    // (vmrange) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_VirtualMemoryRange,
+    .rtti.dtor      = &__nvoc_dtor_VirtualMemoryRange,
     .rtti.offset    = 0,
     .metadata__VirtualMemory.rtti.pClassDef = &__nvoc_class_def_VirtualMemory,    // (virtmem) super
     .metadata__VirtualMemory.rtti.dtor      = &__nvoc_destructFromBase,
@@ -505,13 +505,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__VirtualMemoryRange =
 
 
 // Destruct VirtualMemoryRange object.
-void __nvoc_dtor_VirtualMemory(VirtualMemory*);
-void __nvoc_dtor_VirtualMemoryRange(VirtualMemoryRange* pThis) {
+void __nvoc_dtor_VirtualMemory(Dynamic*);
+void __nvoc_dtor_VirtualMemoryRange(Dynamic* pThis) {
+
+    VirtualMemoryRange *__nvoc_this = (VirtualMemoryRange *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_VirtualMemory(&pThis->__nvoc_base_VirtualMemory);
+    __nvoc_dtor_VirtualMemory((Dynamic *) &__nvoc_this->__nvoc_base_VirtualMemory);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_VirtualMemoryRange(VirtualMemoryRange *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -537,7 +539,7 @@ NV_STATUS __nvoc_ctor_VirtualMemoryRange(VirtualMemoryRange *pVmRange, CALL_CONT
 
     // Unwind on error.
 __nvoc_ctor_VirtualMemoryRange_fail__init:
-    __nvoc_dtor_VirtualMemory(&pVmRange->__nvoc_base_VirtualMemory);
+    __nvoc_dtor_VirtualMemory((Dynamic *)&pVmRange->__nvoc_base_VirtualMemory);
 __nvoc_ctor_VirtualMemoryRange_fail_VirtualMemory:
 __nvoc_ctor_VirtualMemoryRange_exit:
     return status;
@@ -653,13 +655,10 @@ __nvoc_objCreate_VirtualMemoryRange_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_VirtualMemoryRange(VirtualMemoryRange **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_VirtualMemoryRange(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_VirtualMemoryRange(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_VirtualMemoryRange((VirtualMemoryRange **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

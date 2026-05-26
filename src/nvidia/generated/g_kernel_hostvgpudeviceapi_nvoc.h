@@ -114,7 +114,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelHostVgpuDeviceShr;
     ((KernelHostVgpuDeviceShr*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(KernelHostVgpuDeviceShr)))
 #endif //__nvoc_kernel_hostvgpudeviceapi_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_KernelHostVgpuDeviceShr(KernelHostVgpuDeviceShr**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelHostVgpuDeviceShr(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelHostVgpuDeviceShr(KernelHostVgpuDeviceShr**, Dynamic*, NvU32);
 #define __objCreate_KernelHostVgpuDeviceShr(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -249,7 +249,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelHostVgpuDeviceApi;
     ((KernelHostVgpuDeviceApi*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(KernelHostVgpuDeviceApi)))
 #endif //__nvoc_kernel_hostvgpudeviceapi_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_KernelHostVgpuDeviceApi(KernelHostVgpuDeviceApi**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelHostVgpuDeviceApi(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelHostVgpuDeviceApi(KernelHostVgpuDeviceApi**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_KernelHostVgpuDeviceApi(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

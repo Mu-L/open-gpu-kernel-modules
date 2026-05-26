@@ -476,13 +476,9 @@ static NvU32 HsGetSemaphoreIndex(
     const NVFlipNIsoSurfaceEvoHwState *pSemaSurface)
 {
     const NvU32 offsetInBytes = pSemaSurface->offsetInWords * 4;
-    const enum NvKmsNIsoFormat format = pSemaSurface->format;
-    const NvU32 sizeOfSemaphore = nvKmsSizeOfSemaphore(format);
+    const NvU32 sizeOfSemaphore = nvKmsSizeOfSemaphore();
 
-    /*
-     * The semaphore size must be greater than zero.  Flip validation should
-     * prevent us from getting here with an invalid NvKmsNIsoFormat.
-     */
+    /* The semaphore size must be greater than zero. */
     nvAssert(sizeOfSemaphore > 0);
 
     /* The semaphore offset should be a multiple of the semaphore size. */
@@ -498,7 +494,6 @@ static NvU32 HsFlipQueueReadSemaphore(
     const NVHsChannelEvoRec *pHsChannel,
     const NVFlipNIsoSurfaceEvoHwState *pSemaSurface)
 {
-    const enum NvKmsNIsoFormat format = pSemaSurface->format;
     const NvU32 semaphoreIndex = HsGetSemaphoreIndex(pSemaSurface);
     const NvU32 sd = pHsChannel->pDispEvo->displayOwner;
     const void *ptr;
@@ -514,7 +509,7 @@ static NvU32 HsFlipQueueReadSemaphore(
         return 0;
     }
 
-    nvKmsParseSemaphore(format, semaphoreIndex, ptr, &parsedSemaphore);
+    nvKmsParseSemaphore(semaphoreIndex, ptr, &parsedSemaphore);
 
     return parsedSemaphore.payload;
 }
@@ -610,7 +605,6 @@ static void HsReleaseFlipQueueEntry(
 
         nvHs3dReleaseSemaphore(pHsChannel,
                                pFlipState->syncObject.u.semaphores.releaseSurface.pSurfaceEvo,
-                               pFlipState->syncObject.u.semaphores.releaseSurface.format,
                                pFlipState->syncObject.u.semaphores.releaseSurface.offsetInWords,
                                pFlipState->syncObject.u.semaphores.releaseValue,
                                TRUE /* allPreceedingReads */);
@@ -1032,22 +1026,6 @@ static NvBool RegisterNotifiersWithNvKms(NVHsDeviceEvoRec *pHsDevice)
     return (pHsDevice->notifiers.pSurfaceEvo != NULL);
 }
 
-static void AssignNIsoFormat(NVHsDeviceEvoRec *pHsDevice)
-{
-    const NVDevEvoRec *pDevEvo = pHsDevice->pDevEvo;
-
-    if (pDevEvo->caps.validNIsoFormatMask &
-        NVBIT(NVKMS_NISO_FORMAT_FOUR_WORD_NVDISPLAY)) {
-        /* If available, use the "nvdisplay" format. */
-        pHsDevice->notifiers.nIsoFormat = NVKMS_NISO_FORMAT_FOUR_WORD_NVDISPLAY;
-    } else {
-        /* Otherwise, use the "legacy" format. */
-        nvAssert((pDevEvo->caps.validNIsoFormatMask &
-                  NVBIT(NVKMS_NISO_FORMAT_LEGACY)) != 0);
-        pHsDevice->notifiers.nIsoFormat = NVKMS_NISO_FORMAT_LEGACY;
-    }
-}
-
 static NvBool AllocNotifiers(NVHsDeviceEvoRec *pHsDevice)
 {
     NvU32 ret;
@@ -1079,7 +1057,7 @@ static NvBool AllocNotifiers(NVHsDeviceEvoRec *pHsDevice)
         goto fail;
     }
 
-    AssignNIsoFormat(pHsDevice);
+    pHsDevice->notifiers.nIsoFormat = NVKMS_NISO_FORMAT_FOUR_WORD_NVDISPLAY;
 
     return TRUE;
 
@@ -1146,15 +1124,11 @@ static void HsInitNotifiers(
     NvU8 slot, buffer;
 
     for (slot = 0; slot < NVKMS_HEAD_SURFACE_MAX_NOTIFIERS_PER_HEAD; slot++) {
-        nvKmsResetNotifier(pHsNotifiers->nIsoFormat,
-                           FALSE /* overlay */,
-                           slot,
-                           pHsNotifiersOneSd->notifier[apiHead]);
+        nvKmsResetNotifier(slot, pHsNotifiersOneSd->notifier[apiHead]);
     }
 
     for (buffer = 0; buffer < NVKMS_HEAD_SURFACE_MAX_BUFFERS; buffer++) {
-        nvKmsResetSemaphore(pHsNotifiers->nIsoFormat,
-                            buffer, pHsNotifiersOneSd->semaphore[apiHead],
+        nvKmsResetSemaphore(buffer, pHsNotifiersOneSd->semaphore[apiHead],
                             NVKMS_HEAD_SURFACE_FRAME_SEMAPHORE_RENDERABLE);
     }
 }
@@ -1186,8 +1160,7 @@ static NvU16 PrepareNextNotifier(
     NvU32 sd,
     NvU32 apiHead)
 {
-    const NvU32 notifierSize =
-        nvKmsSizeOfNotifier(pHsNotifiers->nIsoFormat, FALSE /* overlay */);
+    const NvU32 notifierSize = nvKmsSizeOfNotifier();
 
     const NvU8 nextSlot = pHsNotifiers->sd[sd].apiHead[apiHead].nextSlot;
 
@@ -1201,8 +1174,7 @@ static NvU16 PrepareNextNotifier(
 
     nvAssert(notifierSize <= NVKMS_HEAD_SURFACE_MAX_NOTIFIER_SIZE);
 
-    nvKmsResetNotifier(pHsNotifiers->nIsoFormat, FALSE /* overlay */,
-                       nextSlot, pHsNotifiersOneSd->notifier[apiHead]);
+    nvKmsResetNotifier(nextSlot, pHsNotifiersOneSd->notifier[apiHead]);
 
     pHsNotifiers->sd[sd].apiHead[apiHead].nextSlot =
         (nextSlot + 1) % NVKMS_HEAD_SURFACE_MAX_NOTIFIERS_PER_HEAD;
@@ -1766,7 +1738,6 @@ void nvHsNextFrame(
         nvHs3dReleaseSemaphore(
             pHsChannel,
             pHsDevice->notifiers.pSurfaceEvo,
-            pHsDevice->notifiers.nIsoFormat,
             HsGetFrameSemaphoreOffsetInWords(pHsChannel),
             NVKMS_HEAD_SURFACE_FRAME_SEMAPHORE_DISPLAYABLE,
             FALSE /* allPreceedingReads */);
@@ -1946,8 +1917,7 @@ static NvBool IsPreviousFlipDone(NVHsChannelEvoPtr pHsChannel)
         A_minus_b_with_wrap_U8(nextSlot, 1,
                                NVKMS_HEAD_SURFACE_MAX_NOTIFIERS_PER_HEAD);
 
-    nvKmsParseNotifier(pHsNotifiers->nIsoFormat, FALSE /* overlay */,
-                       prevSlot, pHsNotifiersOneSd->notifier[apiHead], &parsed);
+    nvKmsParseNotifier(prevSlot, pHsNotifiersOneSd->notifier[apiHead], &parsed);
 
     return parsed.status == NVKMS_NOTIFIER_STATUS_BEGUN;
 }
@@ -2032,21 +2002,12 @@ static void HsUpdateClientNotifier(NVHsChannelEvoPtr pHsChannel)
         A_minus_b_with_wrap_U8(nextSlot, 1,
                                NVKMS_HEAD_SURFACE_MAX_NOTIFIERS_PER_HEAD);
 
-    nvKmsParseNotifier(pHsNotifiers->nIsoFormat, FALSE /* overlay */,
-                       prevSlot, pHsNotifiersOneSd->notifier[apiHead], &parsed);
+    nvKmsParseNotifier(prevSlot, pHsNotifiersOneSd->notifier[apiHead], &parsed);
 
     nvAssert(parsed.status == NVKMS_NOTIFIER_STATUS_BEGUN);
-
-    /*
-     * XXX NVKMS HEADSURFACE TODO: Get valid timestamp through other means to
-     * support this on platforms with legacy HW semaphores without valid
-     * HW notifier timestamps in the main channel.
-     */
     nvAssert(parsed.timeStampValid);
 
-    nvKmsSetNotifier(pClientNotifier->format,
-                     FALSE /* overlay */,
-                     pClientNotifier->offsetInWords / 4,
+    nvKmsSetNotifier(pClientNotifier->offsetInWords / 4,
                      pClientNotifier->pSurfaceEvo->cpuAddress[sd],
                      parsed.timeStamp);
 }

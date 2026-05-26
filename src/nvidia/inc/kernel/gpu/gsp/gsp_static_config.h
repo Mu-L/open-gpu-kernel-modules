@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2019-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -28,6 +28,9 @@
 // This header describes the set of static GPU configuration information
 // that is collected during GSP RM init and made available to the
 // CPU RM (aka GSP client) via NV_RM_RPC_GET_GSP_STATIC_INFO() call.
+//
+
+#include "rmconfig.h"
 
 #include "ctrl/ctrl0080/ctrl0080gpu.h"
 #include "ctrl/ctrl2080/ctrl2080bios.h"
@@ -130,6 +133,8 @@ typedef struct GspStaticConfigInfo_t
     NvBool bVbiosValid;
     NvU32 vbiosSubVendor;
     NvU32 vbiosSubDevice;
+    NvU32 vbiosRevision;       // packed 0xAABBCCDD
+    NvU32 vbiosOemRevision;    // low 8 bits are the OEM revision (EE)
 
     NvBool bPageRetirementSupported;
 
@@ -148,6 +153,7 @@ typedef struct GspStaticConfigInfo_t
 
     NvBool bSelfHostedMode;
     NvBool bAtsSupported;
+    NvBool bSysL2CacheCoherentMode;
 
     NvBool bIsGpuUefi;
     NvBool bIsEfiInit;
@@ -156,7 +162,7 @@ typedef struct GspStaticConfigInfo_t
 
     FW_WPR_LAYOUT_OFFSET fwWprLayoutOffset;
 
-    NvBool bSystemRebootRequired;
+    NvBool bBusResetRequired;
 
 } GspStaticConfigInfo;
 
@@ -219,6 +225,7 @@ typedef struct GspSystemInfo
     NvU32  pciePowerControlValue;
     NvBool bPciePowerControlPresent;
     NvU32  pf0DeviceControl2Reg;
+    NvBool bIsCxlDevice;
 } GspSystemInfo;
 
 

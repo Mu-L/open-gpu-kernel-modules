@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2004-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2004-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -75,6 +75,7 @@ typedef struct GPUATTACHARG GPUATTACHARG;
 #include "class/cl2080.h"
 
 #include "nvlimits.h"
+#include "nvpcie.h"
 #include "utils/nv_enum.h"
 
 #include "gpu/gpu_arch.h"
@@ -292,7 +293,8 @@ typedef enum
     NV_ENUM_ENTRY(x, OOR_ARCH_PPC64LE, 0x00000001) \
     NV_ENUM_ENTRY(x, OOR_ARCH_ARM,     0x00000002) \
     NV_ENUM_ENTRY(x, OOR_ARCH_AARCH64, 0x00000003) \
-    NV_ENUM_ENTRY(x, OOR_ARCH_NONE,    0x00000004)
+    NV_ENUM_ENTRY(x, OOR_ARCH_RISCV64, 0x00000004) \
+    NV_ENUM_ENTRY(x, OOR_ARCH_NONE,    0x00000005)
 
 NV_ENUM_DEF(OOR_ARCH, OOR_ARCH_DEF)
 
@@ -489,8 +491,9 @@ NvU32 gpuGenerate32BitIdFromPhysAddr(RmPhysAddr addr);
 #define GPU_ARCH_SHIFT                  0x4
 
 // Registry key for inst mem modification defines
-#define INSTMEM_TAG_MASK    (0xf0000000)
-#define INSTMEM_TAG(a)      ((INSTMEM_TAG_MASK & (a)) >> 28)
+// Use bits 31:30 to avoid corrupting unified address space
+#define INSTMEM_TAG_MASK    (0xc0000000)
+#define INSTMEM_TAG(a)      ((INSTMEM_TAG_MASK & (a)) >> 30)
 
 
 typedef struct
@@ -563,30 +566,6 @@ typedef struct
 //
 // PCI Express Support
 //
-typedef struct NBADDR
-{
-    NvU32  domain;
-    NvU8   bus;
-    NvU8   device;
-    NvU8   func;
-    NvU8   valid;
-    void  *handle;
-} NBADDR;
-
-typedef struct
-{
-    NBADDR  addr;
-    void   *vAddr;              // virtual address of the port, if it has been mapped . Not used starting with Win10 BuildXXXXX
-    NvU32   PCIECapPtr;         // offset of the PCIE capptr in the NB
-    // Capability register set in enhanced configuration space
-    //
-    NvU32   PCIEErrorCapPtr;    // offset of the Advanced Error Reporting Capability register set
-    NvU32   PCIEVCCapPtr;       // offset of the Virtual Channel (VC) Capability register set
-    NvU32   PCIEL1SsCapPtr;     // Offset of the L1 Substates Capabilities
-    NvU32   PCIEAcsCapPtr;      // Offset of the ACS redirect Capabilities
-    NvU16   DeviceID, VendorID; // device and vendor ID for port
-} PORTDATA;
-
 typedef struct // GPU specific data for core logic object, stored in GPU object
 {
     PORTDATA  upstreamPort;     // the upstream port info for the GPU
@@ -757,6 +736,7 @@ typedef struct
 #define GPU_MAX_OFAS                    2
 #define GPU_MAX_GSPLITES                4
 #define GPU_MAX_LPSECS                  8
+
 //
 // Macro defines for OBJGPU fields -- Macro defines inside NVOC class block is
 // gone after NVOC preprocessing stage.  For macros used outside gpu/gpu.h should
@@ -891,6 +871,28 @@ typedef enum
     THERMAL_SYSTEM_EXECUTE_V2_CACHE_ENTRY_LAST = 6
 } THERMAL_SYSTEM_EXECUTE_V2_CACHE_ENTRY;
 
+/*!
+ * Compute mode state - controls access restrictions for NV50_COMPUTE objects.
+ * In non-MIG mode, this is tracked at the GPU level. In MIG mode, each compute
+ * instance has its own ComputeModeState.
+ *
+ * See NV2080_CTRL_CMD_GPU_SET_COMPUTE_MODE_RULES for detailed behavior.
+ */
+typedef struct ComputeModeState
+{
+    /*!
+     * Access control rules. Valid values: NV2080_CTRL_GPU_COMPUTE_MODE_RULES_*
+     *   - NONE: No restrictions
+     *   - EXCLUSIVE_COMPUTE: Only one NV50_COMPUTE instance allowed
+     *   - COMPUTE_PROHIBITED: No new NV50_COMPUTE allocations allowed
+     *   - EXCLUSIVE_COMPUTE_PROCESS: Single-process exclusive access
+     */
+    NvU32               computeModeRules;
+
+    /*! hClient that currently holds the compute mode reservation */
+    NvHandle            hComputeModeReservation;
+} ComputeModeState;
+
 //
 // The actual GPU object definition
 //
@@ -984,7 +986,7 @@ struct OBJGPU {
     struct OBJTRACEABLE *__nvoc_pbase_OBJTRACEABLE;    // traceable super
     struct OBJGPU *__nvoc_pbase_OBJGPU;    // gpu
 
-    // Vtable with 116 per-object function pointers
+    // Vtable with 121 per-object function pointers
     NV_STATUS (*__gpuConstructDeviceInfoTable__)(struct OBJGPU * /*this*/);  // halified (3 hals) body
     NV_STATUS (*__gpuGetNameString__)(struct OBJGPU * /*this*/, void *);  // halified (3 hals)
     NV_STATUS (*__gpuGetShortNameString__)(struct OBJGPU * /*this*/, NvU8 *);  // halified (3 hals)
@@ -1023,21 +1025,22 @@ struct OBJGPU {
     NV_STATUS (*__gpuWriteBusConfigCycle__)(struct OBJGPU * /*this*/, NvU32, NvU32);  // halified (2 hals)
     NV_STATUS (*__gpuReadPcieConfigCycle__)(struct OBJGPU * /*this*/, NvU32, NvU32 *, NvU8);  // halified (2 hals) body
     NV_STATUS (*__gpuWritePcieConfigCycle__)(struct OBJGPU * /*this*/, NvU32, NvU32, NvU8);  // halified (2 hals) body
-    void (*__gpuGetIdInfo__)(struct OBJGPU * /*this*/);  // halified (5 hals) body
-    NV_STATUS (*__gpuGenGidData__)(struct OBJGPU * /*this*/, NvU8 *, NvU32, NvU32);  // halified (3 hals) body
+    void (*__gpuGetIdInfo__)(struct OBJGPU * /*this*/);  // halified (6 hals) body
+    NV_STATUS (*__gpuGenGidData__)(struct OBJGPU * /*this*/, NvU8 *, NvU32, NvU32);  // halified (4 hals) body
+    NV_STATUS (*__gpuValidateUuid__)(struct OBJGPU * /*this*/);  // halified (2 hals) body
     NV_STATUS (*__gpuGenUgidData__)(struct OBJGPU * /*this*/, NvU8 *, NvU32, NvU32, NvU32);  // halified (2 hals) body
     NvU8 (*__gpuGetChipSubRev__)(struct OBJGPU * /*this*/);  // halified (2 hals) body
     NV_STATUS (*__gpuGetSkuInfo__)(struct OBJGPU * /*this*/, NV2080_CTRL_BIOS_GET_SKU_INFO_PARAMS *);  // halified (2 hals) body
     NvU32 (*__gpuGetVirtRegPhysOffset__)(struct OBJGPU * /*this*/);  // halified (2 hals) body
     NV_STATUS (*__gpuGetRegBaseOffset__)(struct OBJGPU * /*this*/, NvU32, NvU32 *);  // halified (4 hals) body
     void (*__gpuHandleSanityCheckRegReadError__)(struct OBJGPU * /*this*/, NvU32, NvU32);  // halified (4 hals) body
-    void (*__gpuHandleSecFault__)(struct OBJGPU * /*this*/);  // halified (6 hals) body
+    void (*__gpuHandleSecFault__)(struct OBJGPU * /*this*/);  // halified (7 hals) body
     void (*__gpuGetSanityCheckRegReadError__)(struct OBJGPU * /*this*/, NvU32, const char **);  // halified (2 hals) body
     NV_STATUS (*__gpuSanityCheckVirtRegAccess__)(struct OBJGPU * /*this*/, NvU32);  // halified (5 hals) body
     const GPUCHILDORDER * (*__gpuGetChildrenOrder__)(struct OBJGPU * /*this*/, NvU32 *);  // halified (2 hals)
-    const GPUCHILDPRESENT * (*__gpuGetChildrenPresent__)(struct OBJGPU * /*this*/, NvU32 *);  // halified (13 hals)
-    const CLASSDESCRIPTOR * (*__gpuGetEngClassDescriptorList__)(struct OBJGPU * /*this*/, NvU32 *);  // halified (16 hals)
-    const NvU32 * (*__gpuGetNoEngClassList__)(struct OBJGPU * /*this*/, NvU32 *);  // halified (16 hals)
+    const GPUCHILDPRESENT * (*__gpuGetChildrenPresent__)(struct OBJGPU * /*this*/, NvU32 *);  // halified (15 hals)
+    const CLASSDESCRIPTOR * (*__gpuGetEngClassDescriptorList__)(struct OBJGPU * /*this*/, NvU32 *);  // halified (19 hals)
+    const NvU32 * (*__gpuGetNoEngClassList__)(struct OBJGPU * /*this*/, NvU32 *);  // halified (19 hals)
     NV_STATUS (*__gpuInitSriov__)(struct OBJGPU * /*this*/);  // halified (3 hals) body
     NV_STATUS (*__gpuDeinitSriov__)(struct OBJGPU * /*this*/);  // halified (3 hals) body
     NV_STATUS (*__gpuMnocMboxSyncRecv__)(struct OBJGPU * /*this*/, struct IoAperture *, NvU32, RMTIMEOUT *, void *, NvU32 *);  // halified (2 hals) body
@@ -1072,9 +1075,9 @@ struct OBJGPU {
     NvU64 (*__gpuGetFlaVasSize__)(struct OBJGPU * /*this*/, NvBool);  // halified (3 hals) body
     NvBool (*__gpuIsAtsSupportedWithSmcMemPartitioning__)(struct OBJGPU * /*this*/);  // halified (2 hals) body
     NvBool (*__gpuIsGlobalPoisonFuseEnabled__)(struct OBJGPU * /*this*/);  // halified (2 hals)
-    NvBool (*__gpuIsSystemRebootRequired__)(struct OBJGPU * /*this*/);  // halified (2 hals) body
+    NvBool (*__gpuIsBusResetRequired__)(struct OBJGPU * /*this*/);  // halified (2 hals) body
     void (*__gpuDetermineSelfHostedMode__)(struct OBJGPU * /*this*/);  // halified (2 hals) body
-    NvU32 (*__gpuDetermineSelfHostedSocType__)(struct OBJGPU * /*this*/);  // halified (2 hals) body
+    NvU32 (*__gpuDetermineSelfHostedSocType__)(struct OBJGPU * /*this*/);  // halified (3 hals) body
     NvBool (*__gpuValidateMIGSupport__)(struct OBJGPU * /*this*/);  // halified (2 hals) body
     NV_STATUS (*__gpuInitOptimusSettings__)(struct OBJGPU * /*this*/);  // halified (2 hals) body
     NV_STATUS (*__gpuDeinitOptimusSettings__)(struct OBJGPU * /*this*/);  // halified (2 hals) body
@@ -1085,6 +1088,9 @@ struct OBJGPU {
     NvBool (*__gpuIsProtectedPcieSupportedInFirmware__)(struct OBJGPU * /*this*/);  // halified (3 hals) body
     NvBool (*__gpuIsMultiGpuNvleEnabledInHw__)(struct OBJGPU * /*this*/);  // halified (3 hals) body
     NvBool (*__gpuIsNvleModeEnabledInHw__)(struct OBJGPU * /*this*/);  // halified (3 hals) body
+    void (*__gpuResetGspFmcErrorCode__)(struct OBJGPU * /*this*/);  // halified (3 hals) body
+    NvBool (*__gpuCheckGspFmcErrorCode__)(struct OBJGPU * /*this*/);  // halified (3 hals) body
+    void (*__gpuReportGspFmcErrorCode__)(struct OBJGPU * /*this*/);  // halified (3 hals) body
     NvBool (*__gpuIsCtxBufAllocInPmaSupported__)(struct OBJGPU * /*this*/);  // halified (2 hals) body
     const NV_ERROR_CONT_STATE_TABLE * (*__gpuGetErrorContStateTableAndSize__)(struct OBJGPU * /*this*/, NvU32 *);  // halified (3 hals) body
     NV_STATUS (*__gpuUpdateErrorContainmentState__)(struct OBJGPU * /*this*/, NV_ERROR_CONT_ERR_ID, NV_ERROR_CONT_LOCATION, NvU32 *);  // halified (2 hals) body
@@ -1098,6 +1104,7 @@ struct OBJGPU {
     NvBool (*__gpuIsInternalSkuFuseEnabled__)(struct OBJGPU * /*this*/);  // halified (2 hals) body
     NV_STATUS (*__gpuRequireGrCePresence__)(struct OBJGPU * /*this*/, ENGDESCRIPTOR, NvBool *);  // halified (2 hals) body
     NvBool (*__gpuWaitForBarFirewallHal__)(struct OBJGPU * /*this*/, NvU32, NvU8, NvU8, NvU8, NvU16, NvU16);  // halified (2 hals) body
+    NvU32 (*__gpuGetDefaultResetFSMStateTransitionUs__)(struct OBJGPU * /*this*/);  // halified (2 hals) body
     NvBool (*__gpuGetIsCmpSku__)(struct OBJGPU * /*this*/);  // halified (2 hals) body
     NvU32 (*__gpuGetXtlBaseAddr__)(struct OBJGPU * /*this*/);  // halified (3 hals) body
     NvU32 (*__gpuGetPrimaryFuseBaseAddr__)(struct OBJGPU * /*this*/);  // halified (2 hals) body
@@ -1112,9 +1119,9 @@ struct OBJGPU {
     NvBool PDB_PROP_GPU_EMULATION;
     NvBool PDB_PROP_GPU_PRIMARY_DEVICE;
     NvBool PDB_PROP_GPU_HYBRID_MGPU;
-    NvBool PDB_PROP_GPU_ALTERNATE_TREE_HANDLE_LOCKLESS;
     NvBool PDB_PROP_GPU_3D_CONTROLLER;
     NvBool PDB_PROP_GPU_IS_ALL_INST_IN_SYSMEM;
+    NvBool PDB_PROP_GPU_INST_IN_SYSMEM_BY_ACR_ENABLED;
     NvBool PDB_PROP_GPU_IS_CONNECTED;
     NvBool PDB_PROP_GPU_BROKEN_FB;
     NvBool PDB_PROP_GPU_SOC_FRM_RESTORE_HIBERNATE_RESUME;
@@ -1223,7 +1230,7 @@ struct OBJGPU {
     NvBool PDB_PROP_GPU_FASTPATH_SEQ_ENABLED;
     NvBool PDB_PROP_GPU_PREPARING_FULLCHIP_RESET;
     NvBool PDB_PROP_GPU_RECOVERY_DRAIN_P2P_REQUIRED;
-    NvBool PDB_PROP_GPU_RECOVERY_REBOOT_REQUIRED;
+    NvBool PDB_PROP_GPU_BUS_RESET_REQUIRED;
     NvBool PDB_PROP_GPU_RECOVERY_SQUASH_XID154;
     NvBool PDB_PROP_GPU_REUSE_INIT_CONTING_MEM;
     NvBool PDB_PROP_GPU_RUSD_POLLING_SUPPORT_MONOLITHIC;
@@ -1294,9 +1301,8 @@ struct OBJGPU {
     void *gpuCfgAddr;
     TIMEOUT_DATA timeoutData;
     NvU32 bug5203024OverrideTimeouts;
-    NvU32 computeModeRules;
+    ComputeModeState computeModeState;
     NvS32 computeModeRefCount;
-    NvHandle hComputeModeReservation;
     NvBool bIsDebugModeEnabled;
     NvU64 lastCallbackTime;
     _Atomic(NvU32) bCallbackQueued;
@@ -1435,9 +1441,12 @@ struct OBJGPU {
     NvBool bVoltaHubIntrSupported;
     NvBool bUsePmcDeviceEnableForHostEngine;
     NvBool bBlockNewWorkload;
+    NvBool bCperDumpEnabled;
     struct __nvoc_inner_struc_OBJGPU_2__ thermalSystemExecuteV2Cache;
     NVPOWERSTATE_FAILURE powerStateFailure;
     NvBool bMemsubsysErrDetectionEnabled;
+    NvU8 pcieP2PReadCaps;
+    NvU8 pcieP2PWriteCaps;
     _GPU_GC6_STATE gc6State;
     NvU32 numUserKernelChannel;
 };
@@ -1489,12 +1498,12 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJGPU;
 #define PDB_PROP_GPU_PRIMARY_DEVICE_BASE_NAME PDB_PROP_GPU_PRIMARY_DEVICE
 #define PDB_PROP_GPU_HYBRID_MGPU_BASE_CAST
 #define PDB_PROP_GPU_HYBRID_MGPU_BASE_NAME PDB_PROP_GPU_HYBRID_MGPU
-#define PDB_PROP_GPU_ALTERNATE_TREE_HANDLE_LOCKLESS_BASE_CAST
-#define PDB_PROP_GPU_ALTERNATE_TREE_HANDLE_LOCKLESS_BASE_NAME PDB_PROP_GPU_ALTERNATE_TREE_HANDLE_LOCKLESS
 #define PDB_PROP_GPU_3D_CONTROLLER_BASE_CAST
 #define PDB_PROP_GPU_3D_CONTROLLER_BASE_NAME PDB_PROP_GPU_3D_CONTROLLER
 #define PDB_PROP_GPU_IS_ALL_INST_IN_SYSMEM_BASE_CAST
 #define PDB_PROP_GPU_IS_ALL_INST_IN_SYSMEM_BASE_NAME PDB_PROP_GPU_IS_ALL_INST_IN_SYSMEM
+#define PDB_PROP_GPU_INST_IN_SYSMEM_BY_ACR_ENABLED_BASE_CAST
+#define PDB_PROP_GPU_INST_IN_SYSMEM_BY_ACR_ENABLED_BASE_NAME PDB_PROP_GPU_INST_IN_SYSMEM_BY_ACR_ENABLED
 #define PDB_PROP_GPU_IS_CONNECTED_BASE_CAST
 #define PDB_PROP_GPU_IS_CONNECTED_BASE_NAME PDB_PROP_GPU_IS_CONNECTED
 #define PDB_PROP_GPU_BROKEN_FB_BASE_CAST
@@ -1711,8 +1720,8 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJGPU;
 #define PDB_PROP_GPU_PREPARING_FULLCHIP_RESET_BASE_NAME PDB_PROP_GPU_PREPARING_FULLCHIP_RESET
 #define PDB_PROP_GPU_RECOVERY_DRAIN_P2P_REQUIRED_BASE_CAST
 #define PDB_PROP_GPU_RECOVERY_DRAIN_P2P_REQUIRED_BASE_NAME PDB_PROP_GPU_RECOVERY_DRAIN_P2P_REQUIRED
-#define PDB_PROP_GPU_RECOVERY_REBOOT_REQUIRED_BASE_CAST
-#define PDB_PROP_GPU_RECOVERY_REBOOT_REQUIRED_BASE_NAME PDB_PROP_GPU_RECOVERY_REBOOT_REQUIRED
+#define PDB_PROP_GPU_BUS_RESET_REQUIRED_BASE_CAST
+#define PDB_PROP_GPU_BUS_RESET_REQUIRED_BASE_NAME PDB_PROP_GPU_BUS_RESET_REQUIRED
 #define PDB_PROP_GPU_RECOVERY_SQUASH_XID154_BASE_CAST
 #define PDB_PROP_GPU_RECOVERY_SQUASH_XID154_BASE_NAME PDB_PROP_GPU_RECOVERY_SQUASH_XID154
 #define PDB_PROP_GPU_REUSE_INIT_CONTING_MEM_BASE_CAST
@@ -1727,7 +1736,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJGPU;
 #define PDB_PROP_GPU_HFRP_IS_KERNEL_OBJECT_ACTIVE_WAR_BASE_NAME PDB_PROP_GPU_HFRP_IS_KERNEL_OBJECT_ACTIVE_WAR
 
 
-NV_STATUS __nvoc_objCreateDynamic_OBJGPU(OBJGPU**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJGPU(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJGPU(OBJGPU**, Dynamic*, NvU32,
         NvU32 ChipHal_arch, NvU32 ChipHal_impl, NvU32 ChipHal_hidrev,
@@ -1827,6 +1836,15 @@ static inline NV_STATUS gpuStateDestroy(struct OBJGPU *pGpu) {
 }
 #else // __nvoc_gpu_h_disabled
 #define gpuStateDestroy(pGpu) gpuStateDestroy_IMPL(pGpu)
+#endif // __nvoc_gpu_h_disabled
+
+void gpuDestroyInternalHandles_IMPL(struct OBJGPU *pGpu);
+#ifdef __nvoc_gpu_h_disabled
+static inline void gpuDestroyInternalHandles(struct OBJGPU *pGpu) {
+    NV_ASSERT_FAILED_PRECOMP("OBJGPU was disabled!");
+}
+#else // __nvoc_gpu_h_disabled
+#define gpuDestroyInternalHandles(pGpu) gpuDestroyInternalHandles_IMPL(pGpu)
 #endif // __nvoc_gpu_h_disabled
 
 #ifdef __nvoc_gpu_h_disabled
@@ -2693,6 +2711,25 @@ static inline void gpuUnmarkDeviceForDrainP2P(struct OBJGPU *pGpu) {
 #define gpuUnmarkDeviceForDrainP2P(pGpu) gpuUnmarkDeviceForDrainP2P_KERNEL(pGpu)
 #endif // __nvoc_gpu_h_disabled
 
+void gpuSetRecoveryBusReset_IMPL(struct OBJGPU *pGpu, NvBool bResetRequired, NvBool bBlockNewWorkload);
+#ifdef __nvoc_gpu_h_disabled
+static inline void gpuSetRecoveryBusReset(struct OBJGPU *pGpu, NvBool bResetRequired, NvBool bBlockNewWorkload) {
+    NV_ASSERT_FAILED_PRECOMP("OBJGPU was disabled!");
+}
+#else // __nvoc_gpu_h_disabled
+#define gpuSetRecoveryBusReset(pGpu, bResetRequired, bBlockNewWorkload) gpuSetRecoveryBusReset_IMPL(pGpu, bResetRequired, bBlockNewWorkload)
+#endif // __nvoc_gpu_h_disabled
+
+const char * gpuRecoveryActionName_IMPL(struct OBJGPU *pGpu, NV2080_CTRL_GPU_RECOVERY_ACTION action);
+#ifdef __nvoc_gpu_h_disabled
+static inline const char * gpuRecoveryActionName(struct OBJGPU *pGpu, NV2080_CTRL_GPU_RECOVERY_ACTION action) {
+    NV_ASSERT_FAILED_PRECOMP("OBJGPU was disabled!");
+    return NULL;
+}
+#else // __nvoc_gpu_h_disabled
+#define gpuRecoveryActionName(pGpu, action) gpuRecoveryActionName_IMPL(pGpu, action)
+#endif // __nvoc_gpu_h_disabled
+
 #ifdef __nvoc_gpu_h_disabled
 static inline void gpuLogOobXidMessage(struct OBJGPU *pGpu, NvU32 xid, const char *string, NvU32 len) {
     NV_ASSERT_FAILED_PRECOMP("OBJGPU was disabled!");
@@ -2991,15 +3028,6 @@ static inline NvU32 gpuGetDeviceIDList(struct OBJGPU *pGpu, DEVICE_ID_MAPPING **
 }
 #else // __nvoc_gpu_h_disabled
 #define gpuGetDeviceIDList(pGpu, arg2) gpuGetDeviceIDList_b2b553(pGpu, arg2)
-#endif // __nvoc_gpu_h_disabled
-
-#ifdef __nvoc_gpu_h_disabled
-static inline NV_STATUS gpuValidateUuid(struct OBJGPU *pGpu) {
-    NV_ASSERT_FAILED_PRECOMP("OBJGPU was disabled!");
-    return NV_ERR_NOT_SUPPORTED;
-}
-#else // __nvoc_gpu_h_disabled
-#define gpuValidateUuid(pGpu) gpuValidateUuid_ac1694(pGpu)
 #endif // __nvoc_gpu_h_disabled
 
 void gpuInitChipInfo_IMPL(struct OBJGPU *pGpu);
@@ -3342,15 +3370,6 @@ static inline NV_STATUS gpuSocGetSecureRegionInfo(struct OBJGPU *pGpu, NvU32 srI
 #define gpuSocGetSecureRegionInfo(pGpu, srIndex, pBase, pSize) gpuSocGetSecureRegionInfo_395e98(pGpu, srIndex, pBase, pSize)
 #endif // __nvoc_gpu_h_disabled
 
-#ifdef __nvoc_gpu_h_disabled
-static inline NvU32 gpuGetDefaultResetFSMStateTransitionUs(struct OBJGPU *pGpu) {
-    NV_ASSERT_FAILED_PRECOMP("OBJGPU was disabled!");
-    return 0;
-}
-#else // __nvoc_gpu_h_disabled
-#define gpuGetDefaultResetFSMStateTransitionUs(pGpu) gpuGetDefaultResetFSMStateTransitionUs_f6f3c4(pGpu)
-#endif // __nvoc_gpu_h_disabled
-
 NvU32 gpuGetSchedulerPolicy_IMPL(struct OBJGPU *pGpu, RM_ENGINE_TYPE rmEngineType);
 #ifdef __nvoc_gpu_h_disabled
 static inline NvU32 gpuGetSchedulerPolicy(struct OBJGPU *pGpu, RM_ENGINE_TYPE rmEngineType) {
@@ -3378,15 +3397,6 @@ static inline void gpuApplySchedulerPolicy(struct OBJGPU *pGpu) {
 }
 #else // __nvoc_gpu_h_disabled
 #define gpuApplySchedulerPolicy(pGpu) gpuApplySchedulerPolicy_IMPL(pGpu)
-#endif // __nvoc_gpu_h_disabled
-
-void gpuSetRecoveryRebootRequired_IMPL(struct OBJGPU *pGpu, NvBool bRebootRequired, NvBool bBlockNewWorkload);
-#ifdef __nvoc_gpu_h_disabled
-static inline void gpuSetRecoveryRebootRequired(struct OBJGPU *pGpu, NvBool bRebootRequired, NvBool bBlockNewWorkload) {
-    NV_ASSERT_FAILED_PRECOMP("OBJGPU was disabled!");
-}
-#else // __nvoc_gpu_h_disabled
-#define gpuSetRecoveryRebootRequired(pGpu, bRebootRequired, bBlockNewWorkload) gpuSetRecoveryRebootRequired_IMPL(pGpu, bRebootRequired, bBlockNewWorkload)
 #endif // __nvoc_gpu_h_disabled
 
 #ifdef __nvoc_gpu_h_disabled
@@ -3556,7 +3566,9 @@ static inline NV_STATUS gpuRusdRequestPermanentDataPoll(struct OBJGPU *pGpu) {
 #define gpuGenGidData_FNPTR(pGpu) pGpu->__gpuGenGidData__
 #define gpuGenGidData(pGpu, pGidData, gidSize, gidFlags) gpuGenGidData_DISPATCH(pGpu, pGidData, gidSize, gidFlags)
 #define gpuGenGidData_HAL(pGpu, pGidData, gidSize, gidFlags) gpuGenGidData_DISPATCH(pGpu, pGidData, gidSize, gidFlags)
-#define gpuValidateUuid_HAL(pGpu) gpuValidateUuid(pGpu)
+#define gpuValidateUuid_FNPTR(pGpu) pGpu->__gpuValidateUuid__
+#define gpuValidateUuid(pGpu) gpuValidateUuid_DISPATCH(pGpu)
+#define gpuValidateUuid_HAL(pGpu) gpuValidateUuid_DISPATCH(pGpu)
 #define gpuGenUgidData_FNPTR(pGpu) pGpu->__gpuGenUgidData__
 #define gpuGenUgidData(pGpu, pGidData, gidSize, gidFlags, ugpuId) gpuGenUgidData_DISPATCH(pGpu, pGidData, gidSize, gidFlags, ugpuId)
 #define gpuGenUgidData_HAL(pGpu, pGidData, gidSize, gidFlags, ugpuId) gpuGenUgidData_DISPATCH(pGpu, pGidData, gidSize, gidFlags, ugpuId)
@@ -3714,9 +3726,9 @@ static inline NV_STATUS gpuRusdRequestPermanentDataPoll(struct OBJGPU *pGpu) {
 #define gpuIsGlobalPoisonFuseEnabled(pGpu) gpuIsGlobalPoisonFuseEnabled_DISPATCH(pGpu)
 #define gpuIsGlobalPoisonFuseEnabled_HAL(pGpu) gpuIsGlobalPoisonFuseEnabled_DISPATCH(pGpu)
 #define gpuIsAmpereErrorContainmentXidEnabled_HAL(pGpu) gpuIsAmpereErrorContainmentXidEnabled(pGpu)
-#define gpuIsSystemRebootRequired_FNPTR(pGpu) pGpu->__gpuIsSystemRebootRequired__
-#define gpuIsSystemRebootRequired(pGpu) gpuIsSystemRebootRequired_DISPATCH(pGpu)
-#define gpuIsSystemRebootRequired_HAL(pGpu) gpuIsSystemRebootRequired_DISPATCH(pGpu)
+#define gpuIsBusResetRequired_FNPTR(pGpu) pGpu->__gpuIsBusResetRequired__
+#define gpuIsBusResetRequired(pGpu) gpuIsBusResetRequired_DISPATCH(pGpu)
+#define gpuIsBusResetRequired_HAL(pGpu) gpuIsBusResetRequired_DISPATCH(pGpu)
 #define gpuDetermineSelfHostedMode_FNPTR(pGpu) pGpu->__gpuDetermineSelfHostedMode__
 #define gpuDetermineSelfHostedMode(pGpu) gpuDetermineSelfHostedMode_DISPATCH(pGpu)
 #define gpuDetermineSelfHostedMode_HAL(pGpu) gpuDetermineSelfHostedMode_DISPATCH(pGpu)
@@ -3756,6 +3768,15 @@ static inline NV_STATUS gpuRusdRequestPermanentDataPoll(struct OBJGPU *pGpu) {
 #define gpuIsNvleModeEnabledInHw_FNPTR(pGpu) pGpu->__gpuIsNvleModeEnabledInHw__
 #define gpuIsNvleModeEnabledInHw(pGpu) gpuIsNvleModeEnabledInHw_DISPATCH(pGpu)
 #define gpuIsNvleModeEnabledInHw_HAL(pGpu) gpuIsNvleModeEnabledInHw_DISPATCH(pGpu)
+#define gpuResetGspFmcErrorCode_FNPTR(pGpu) pGpu->__gpuResetGspFmcErrorCode__
+#define gpuResetGspFmcErrorCode(pGpu) gpuResetGspFmcErrorCode_DISPATCH(pGpu)
+#define gpuResetGspFmcErrorCode_HAL(pGpu) gpuResetGspFmcErrorCode_DISPATCH(pGpu)
+#define gpuCheckGspFmcErrorCode_FNPTR(pGpu) pGpu->__gpuCheckGspFmcErrorCode__
+#define gpuCheckGspFmcErrorCode(pGpu) gpuCheckGspFmcErrorCode_DISPATCH(pGpu)
+#define gpuCheckGspFmcErrorCode_HAL(pGpu) gpuCheckGspFmcErrorCode_DISPATCH(pGpu)
+#define gpuReportGspFmcErrorCode_FNPTR(pGpu) pGpu->__gpuReportGspFmcErrorCode__
+#define gpuReportGspFmcErrorCode(pGpu) gpuReportGspFmcErrorCode_DISPATCH(pGpu)
+#define gpuReportGspFmcErrorCode_HAL(pGpu) gpuReportGspFmcErrorCode_DISPATCH(pGpu)
 #define gpuIsCtxBufAllocInPmaSupported_FNPTR(pGpu) pGpu->__gpuIsCtxBufAllocInPmaSupported__
 #define gpuIsCtxBufAllocInPmaSupported(pGpu) gpuIsCtxBufAllocInPmaSupported_DISPATCH(pGpu)
 #define gpuIsCtxBufAllocInPmaSupported_HAL(pGpu) gpuIsCtxBufAllocInPmaSupported_DISPATCH(pGpu)
@@ -3800,7 +3821,9 @@ static inline NV_STATUS gpuRusdRequestPermanentDataPoll(struct OBJGPU *pGpu) {
 #define gpuWaitForBarFirewallHal_FNPTR(pGpu) pGpu->__gpuWaitForBarFirewallHal__
 #define gpuWaitForBarFirewallHal(pGpu, domain, bus, device, function, devId, subsystemId) gpuWaitForBarFirewallHal_DISPATCH(pGpu, domain, bus, device, function, devId, subsystemId)
 #define gpuWaitForBarFirewallHal_HAL(pGpu, domain, bus, device, function, devId, subsystemId) gpuWaitForBarFirewallHal_DISPATCH(pGpu, domain, bus, device, function, devId, subsystemId)
-#define gpuGetDefaultResetFSMStateTransitionUs_HAL(pGpu) gpuGetDefaultResetFSMStateTransitionUs(pGpu)
+#define gpuGetDefaultResetFSMStateTransitionUs_FNPTR(pGpu) pGpu->__gpuGetDefaultResetFSMStateTransitionUs__
+#define gpuGetDefaultResetFSMStateTransitionUs(pGpu) gpuGetDefaultResetFSMStateTransitionUs_DISPATCH(pGpu)
+#define gpuGetDefaultResetFSMStateTransitionUs_HAL(pGpu) gpuGetDefaultResetFSMStateTransitionUs_DISPATCH(pGpu)
 #define gpuGetIsCmpSku_FNPTR(pGpu) pGpu->__gpuGetIsCmpSku__
 #define gpuGetIsCmpSku(pGpu) gpuGetIsCmpSku_DISPATCH(pGpu)
 #define gpuGetIsCmpSku_HAL(pGpu) gpuGetIsCmpSku_DISPATCH(pGpu)
@@ -3971,6 +3994,10 @@ static inline void gpuGetIdInfo_DISPATCH(struct OBJGPU *pGpu) {
 
 static inline NV_STATUS gpuGenGidData_DISPATCH(struct OBJGPU *pGpu, NvU8 *pGidData, NvU32 gidSize, NvU32 gidFlags) {
     return pGpu->__gpuGenGidData__(pGpu, pGidData, gidSize, gidFlags);
+}
+
+static inline NV_STATUS gpuValidateUuid_DISPATCH(struct OBJGPU *pGpu) {
+    return pGpu->__gpuValidateUuid__(pGpu);
 }
 
 static inline NV_STATUS gpuGenUgidData_DISPATCH(struct OBJGPU *pGpu, NvU8 *pGidData, NvU32 gidSize, NvU32 gidFlags, NvU32 ugpuId) {
@@ -4161,8 +4188,8 @@ static inline NvBool gpuIsGlobalPoisonFuseEnabled_DISPATCH(struct OBJGPU *pGpu) 
     return pGpu->__gpuIsGlobalPoisonFuseEnabled__(pGpu);
 }
 
-static inline NvBool gpuIsSystemRebootRequired_DISPATCH(struct OBJGPU *pGpu) {
-    return pGpu->__gpuIsSystemRebootRequired__(pGpu);
+static inline NvBool gpuIsBusResetRequired_DISPATCH(struct OBJGPU *pGpu) {
+    return pGpu->__gpuIsBusResetRequired__(pGpu);
 }
 
 static inline void gpuDetermineSelfHostedMode_DISPATCH(struct OBJGPU *pGpu) {
@@ -4211,6 +4238,18 @@ static inline NvBool gpuIsMultiGpuNvleEnabledInHw_DISPATCH(struct OBJGPU *pGpu) 
 
 static inline NvBool gpuIsNvleModeEnabledInHw_DISPATCH(struct OBJGPU *pGpu) {
     return pGpu->__gpuIsNvleModeEnabledInHw__(pGpu);
+}
+
+static inline void gpuResetGspFmcErrorCode_DISPATCH(struct OBJGPU *pGpu) {
+    pGpu->__gpuResetGspFmcErrorCode__(pGpu);
+}
+
+static inline NvBool gpuCheckGspFmcErrorCode_DISPATCH(struct OBJGPU *pGpu) {
+    return pGpu->__gpuCheckGspFmcErrorCode__(pGpu);
+}
+
+static inline void gpuReportGspFmcErrorCode_DISPATCH(struct OBJGPU *pGpu) {
+    pGpu->__gpuReportGspFmcErrorCode__(pGpu);
 }
 
 static inline NvBool gpuIsCtxBufAllocInPmaSupported_DISPATCH(struct OBJGPU *pGpu) {
@@ -4263,6 +4302,10 @@ static inline NV_STATUS gpuRequireGrCePresence_DISPATCH(struct OBJGPU *pGpu, ENG
 
 static inline NvBool gpuWaitForBarFirewallHal_DISPATCH(struct OBJGPU *pGpu, NvU32 domain, NvU8 bus, NvU8 device, NvU8 function, NvU16 devId, NvU16 subsystemId) {
     return pGpu->__gpuWaitForBarFirewallHal__(pGpu, domain, bus, device, function, devId, subsystemId);
+}
+
+static inline NvU32 gpuGetDefaultResetFSMStateTransitionUs_DISPATCH(struct OBJGPU *pGpu) {
+    return pGpu->__gpuGetDefaultResetFSMStateTransitionUs__(pGpu);
 }
 
 static inline NvBool gpuGetIsCmpSku_DISPATCH(struct OBJGPU *pGpu) {
@@ -4456,6 +4499,8 @@ NV_STATUS gpuWritePcieConfigCycle_GB202(struct OBJGPU *pGpu, NvU32 hwDefAddr, Nv
 
 void gpuGetIdInfo_T234D(struct OBJGPU *pGpu);
 
+void gpuGetIdInfo_T239D(struct OBJGPU *pGpu);
+
 void gpuGetIdInfo_T264D(struct OBJGPU *pGpu);
 
 void gpuGetIdInfo_GM107(struct OBJGPU *pGpu);
@@ -4468,6 +4513,8 @@ void gpuUpdateIdInfo_GK104(struct OBJGPU *pGpu);
 
 void gpuUpdateIdInfo_GB100(struct OBJGPU *pGpu);
 
+NV_STATUS gpuGenGidData_GR100(struct OBJGPU *pGpu, NvU8 *pGidData, NvU32 gidSize, NvU32 gidFlags);
+
 NV_STATUS gpuGenGidData_SOC(struct OBJGPU *pGpu, NvU8 *pGidData, NvU32 gidSize, NvU32 gidFlags);
 
 NV_STATUS gpuGenGidData_GK104(struct OBJGPU *pGpu, NvU8 *pGidData, NvU32 gidSize, NvU32 gidFlags);
@@ -4475,6 +4522,8 @@ NV_STATUS gpuGenGidData_GK104(struct OBJGPU *pGpu, NvU8 *pGidData, NvU32 gidSize
 NV_STATUS gpuGenGidData_VF(struct OBJGPU *pGpu, NvU8 *pGidData, NvU32 gidSize, NvU32 gidFlags);
 
 NV_STATUS gpuGenGidData_FWCLIENT(struct OBJGPU *pGpu, NvU8 *pGidData, NvU32 gidSize, NvU32 gidFlags);
+
+NV_STATUS gpuValidateUuid_GR100(struct OBJGPU *pGpu);
 
 NV_STATUS gpuGenUgidData_GB100(struct OBJGPU *pGpu, NvU8 *pGidData, NvU32 gidSize, NvU32 gidFlags, NvU32 ugpuId);
 
@@ -4508,6 +4557,8 @@ void gpuHandleSecFault_GH100(struct OBJGPU *pGpu);
 
 void gpuHandleSecFault_GB10B(struct OBJGPU *pGpu);
 
+void gpuHandleSecFault_GR100(struct OBJGPU *pGpu);
+
 void gpuHandleSecFault_GB20B(struct OBJGPU *pGpu);
 
 void gpuHandleSecFault_GB202(struct OBJGPU *pGpu);
@@ -4540,13 +4591,17 @@ const GPUCHILDPRESENT * gpuGetChildrenPresent_GH100(struct OBJGPU *pGpu, NvU32 *
 
 const GPUCHILDPRESENT * gpuGetChildrenPresent_GB10B(struct OBJGPU *pGpu, NvU32 *pNumEntries);
 
+const GPUCHILDPRESENT * gpuGetChildrenPresent_GR100(struct OBJGPU *pGpu, NvU32 *pNumEntries);
+
+const GPUCHILDPRESENT * gpuGetChildrenPresent_GR102(struct OBJGPU *pGpu, NvU32 *pNumEntries);
+
 const GPUCHILDPRESENT * gpuGetChildrenPresent_GB100(struct OBJGPU *pGpu, NvU32 *pNumEntries);
 
 const GPUCHILDPRESENT * gpuGetChildrenPresent_GB20B(struct OBJGPU *pGpu, NvU32 *pNumEntries);
 
-const GPUCHILDPRESENT * gpuGetChildrenPresent_T234D(struct OBJGPU *pGpu, NvU32 *pNumEntries);
-
 const GPUCHILDPRESENT * gpuGetChildrenPresent_TU102(struct OBJGPU *pGpu, NvU32 *pNumEntries);
+
+const GPUCHILDPRESENT * gpuGetChildrenPresent_T234D(struct OBJGPU *pGpu, NvU32 *pNumEntries);
 
 const GPUCHILDPRESENT * gpuGetChildrenPresent_GA102(struct OBJGPU *pGpu, NvU32 *pNumEntries);
 
@@ -4572,7 +4627,13 @@ const CLASSDESCRIPTOR * gpuGetEngClassDescriptorList_GB20B(struct OBJGPU *pGpu, 
 
 const CLASSDESCRIPTOR * gpuGetEngClassDescriptorList_GB20C(struct OBJGPU *pGpu, NvU32 *arg2);
 
+const CLASSDESCRIPTOR * gpuGetEngClassDescriptorList_GR100(struct OBJGPU *pGpu, NvU32 *arg2);
+
+const CLASSDESCRIPTOR * gpuGetEngClassDescriptorList_GR102(struct OBJGPU *pGpu, NvU32 *arg2);
+
 const CLASSDESCRIPTOR * gpuGetEngClassDescriptorList_T234D(struct OBJGPU *pGpu, NvU32 *arg2);
+
+const CLASSDESCRIPTOR * gpuGetEngClassDescriptorList_T239D(struct OBJGPU *pGpu, NvU32 *arg2);
 
 const CLASSDESCRIPTOR * gpuGetEngClassDescriptorList_T264D(struct OBJGPU *pGpu, NvU32 *arg2);
 
@@ -4604,7 +4665,13 @@ const NvU32 * gpuGetNoEngClassList_GB20B(struct OBJGPU *pGpu, NvU32 *arg2);
 
 const NvU32 * gpuGetNoEngClassList_GB20C(struct OBJGPU *pGpu, NvU32 *arg2);
 
+const NvU32 * gpuGetNoEngClassList_GR100(struct OBJGPU *pGpu, NvU32 *arg2);
+
+const NvU32 * gpuGetNoEngClassList_GR102(struct OBJGPU *pGpu, NvU32 *arg2);
+
 const NvU32 * gpuGetNoEngClassList_T234D(struct OBJGPU *pGpu, NvU32 *arg2);
+
+const NvU32 * gpuGetNoEngClassList_T239D(struct OBJGPU *pGpu, NvU32 *arg2);
 
 const NvU32 * gpuGetNoEngClassList_T264D(struct OBJGPU *pGpu, NvU32 *arg2);
 
@@ -4726,6 +4793,8 @@ NvU32 gpuGetLitterValues_GB20C(struct OBJGPU *pGpu, NvU32 index);
 
 NvU32 gpuGetLitterValues_GB203(struct OBJGPU *pGpu, NvU32 index);
 
+NvU32 gpuGetLitterValues_GR100(struct OBJGPU *pGpu, NvU32 index);
+
 NvU32 gpuGetLitterValues_T234(struct OBJGPU *pGpu, NvU32 index);
 
 NvU32 gpuGetLitterValues_GB202(struct OBJGPU *pGpu, NvU32 index);
@@ -4752,11 +4821,15 @@ NvBool gpuIsGlobalPoisonFuseEnabled_FWCLIENT(struct OBJGPU *pGpu);
 
 NvBool gpuIsAmpereErrorContainmentXidEnabled_KERNEL(struct OBJGPU *pGpu);
 
-NvBool gpuIsSystemRebootRequired_FWCLIENT(struct OBJGPU *pGpu);
+NvBool gpuIsBusResetRequired_FWCLIENT(struct OBJGPU *pGpu);
+
+void gpuDetermineSelfHostedMode_PHYSICAL_GR100(struct OBJGPU *pGpu);
 
 void gpuDetermineSelfHostedMode_PHYSICAL_GH100(struct OBJGPU *pGpu);
 
 void gpuDetermineSelfHostedMode_KERNEL_GH100(struct OBJGPU *pGpu);
+
+NvU32 gpuDetermineSelfHostedSocType_GR100(struct OBJGPU *pGpu);
 
 NvU32 gpuDetermineSelfHostedSocType_GH100(struct OBJGPU *pGpu);
 
@@ -4793,6 +4866,12 @@ NvBool gpuIsProtectedPcieSupportedInFirmware_GH100(struct OBJGPU *pGpu);
 NvBool gpuIsMultiGpuNvleEnabledInHw_GB100(struct OBJGPU *pGpu);
 
 NvBool gpuIsNvleModeEnabledInHw_GB100(struct OBJGPU *pGpu);
+
+void gpuResetGspFmcErrorCode_GH100(struct OBJGPU *pGpu);
+
+NvBool gpuCheckGspFmcErrorCode_GH100(struct OBJGPU *pGpu);
+
+void gpuReportGspFmcErrorCode_GH100(struct OBJGPU *pGpu);
 
 NvBool gpuIsCtxBufAllocInPmaSupported_GA100(struct OBJGPU *pGpu);
 
@@ -5304,7 +5383,7 @@ static inline NvBool gpuIsAtsSupportedWithSmcMemPartitioning_d69453(struct OBJGP
     return NV_FALSE;
 }
 
-static inline NvBool gpuIsSystemRebootRequired_d69453(struct OBJGPU *pGpu){
+static inline NvBool gpuIsBusResetRequired_d69453(struct OBJGPU *pGpu){
     return NV_FALSE;
 }
 
@@ -5371,6 +5450,18 @@ static inline NvBool gpuIsMultiGpuNvleEnabledInHw_d69453(struct OBJGPU *pGpu){
 
 static inline NvBool gpuIsNvleModeEnabledInHw_d69453(struct OBJGPU *pGpu){
     return NV_FALSE;
+}
+
+static inline void gpuResetGspFmcErrorCode_d44104(struct OBJGPU *pGpu){
+    return;
+}
+
+static inline NvBool gpuCheckGspFmcErrorCode_d69453(struct OBJGPU *pGpu){
+    return NV_FALSE;
+}
+
+static inline void gpuReportGspFmcErrorCode_d44104(struct OBJGPU *pGpu){
+    return;
 }
 
 static inline NvBool gpuIsCtxBufAllocInPmaSupported_d69453(struct OBJGPU *pGpu){
@@ -5441,6 +5532,10 @@ static inline NvBool gpuWaitForBarFirewallHal_e661f0(struct OBJGPU *pGpu, NvU32 
     return NV_TRUE;
 }
 
+static inline NvU32 gpuGetDefaultResetFSMStateTransitionUs_e3445e(struct OBJGPU *pGpu){
+    return 400;
+}
+
 static inline NvU32 gpuGetDefaultResetFSMStateTransitionUs_f6f3c4(struct OBJGPU *pGpu){
     return 10;
 }
@@ -5506,6 +5601,14 @@ static inline ACPI_DSM_FUNCTION gpuGetStereo3dStateActiveFunc(struct OBJGPU *pGp
 
 static inline NvU32 gpuGetPmcBoot0(struct OBJGPU *pGpu){
     return pGpu->chipId0;
+}
+
+static inline NvU8 gpuGetPcieP2PReadCaps(struct OBJGPU *pGpu){
+    return pGpu->pcieP2PReadCaps;
+}
+
+static inline NvU8 gpuGetPcieP2PWriteCaps(struct OBJGPU *pGpu){
+    return pGpu->pcieP2PWriteCaps;
 }
 
 static inline struct OBJFIFO * gpuGetFifoShared(struct OBJGPU *pGpu){

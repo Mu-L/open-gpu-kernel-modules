@@ -27,6 +27,7 @@
 #include "nvrm_registry.h"
 #include "os/os.h"
 #include "vgpu/rpc.h"
+#include "gpu/timer/objtmr.h"
 
 NV_STATUS
 subdeviceCtrlCmdBiosGetSKUInfo_VF
@@ -287,5 +288,33 @@ subdeviceCtrlCmdCcuGetSampleInfo_VF
 
     portMemCopy(pParams, sizeof(*pParams), &pVSI->ccuSampleInfo, sizeof(pVSI->ccuSampleInfo));
 
+    return NV_OK;
+}
+
+NV_STATUS
+subdeviceCtrlCmdClkPmumonClkDomainsGetSamples_VF
+(
+    Subdevice *pSubdevice,
+    NV2080_CTRL_CLK_PMUMON_CLK_DOMAINS_GET_SAMPLES_PARAMS *pGetSamplesParams
+)
+{
+    OBJGPU           *pGpu        = GPU_RES_GET_GPU(pSubdevice);
+    VGPU_STATIC_INFO *pVSI        = GPU_GET_STATIC_INFO(pGpu);
+    OBJTMR           *pTmr        = GPU_GET_TIMER(pGpu);
+
+    NV_ASSERT_OR_RETURN(pVSI != NULL, NV_ERR_INVALID_STATE);
+    NV_ASSERT_OK_OR_RETURN(tmrGetCurrentTime(pTmr, &pGetSamplesParams->samples[0].super.timestamp));
+ 
+    pGetSamplesParams->samples[0].gpcClkFreqKHz       = pVSI->maxGpcClkFreqKHz;
+    pGetSamplesParams->samples[0].dramClkFreqKHz      = pVSI->maxDramClkFreqKHz;
+    pGetSamplesParams->samples[0].nvdClkFreqKHz       = pVSI->maxNvdClkFreqKHz;
+    pGetSamplesParams->samples[0].activeGpcClkFreqKHz = pVSI->maxGpcClkFreqKHz;
+    
+    // Return 1 new sample
+    pGetSamplesParams->super.numSamples = 1;
+    pGetSamplesParams->super.headIndex = pGetSamplesParams->super.tailIndex;
+    pGetSamplesParams->super.tailIndex = (pGetSamplesParams->super.tailIndex + 1) % 
+                                         NV2080_CTRL_CLK_PMUMON_CLK_DOMAINS_SAMPLE_COUNT;
+ 
     return NV_OK;
 }

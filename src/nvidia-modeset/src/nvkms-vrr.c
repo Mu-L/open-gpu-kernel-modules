@@ -182,10 +182,13 @@ nvGetAllowedDpyVrrType(const NVDpyEvoRec *pDpyEvo,
                        const enum NvKmsAllowAdaptiveSync allowAdaptiveSync)
 {
 
-    if (nvConnectorUsesDPLib(pDpyEvo->pConnectorEvo) &&
-        nvDPLibDpyUsesHDMIActivePcon(pDpyEvo)) {
+    if (nvConnectorUsesDPLib(pDpyEvo->pConnectorEvo)) {
+        if (((!nvDPLibDpyIsAdaptiveSyncSdpSupported(pDpyEvo)) ||
+             (!nvkms_enhanced_pcon_support())) &&
+            nvDPLibDpyUsesHDMIActivePcon(pDpyEvo)) {
 
-        return NVKMS_DPY_VRR_TYPE_NONE;
+            return NVKMS_DPY_VRR_TYPE_NONE;
+        }
     }
 
     if (nvDpyIsHdmiEvo(pDpyEvo)) {
@@ -366,7 +369,6 @@ static void TellRMAboutVrrHead(NVDispEvoPtr pDispEvo,
         NV0073_CTRL_SYSTEM_VRR_DISPLAY_INFO_PARAMS params = { };
         NvU32 ret;
 
-        params.subDeviceInstance = pDispEvo->displayOwner;
         params.displayId = pHeadState->activeRmId;
         params.bAddition = vrrPossible;
 
@@ -440,7 +442,10 @@ void nvDisableVrr(NVDevEvoPtr pDevEvo)
 
             if (nvIsAdaptiveSyncDpyVrrType(pHeadState->timings.vrr.type)) {
                 if (nvConnectorUsesDPLib(pHeadState->pConnectorEvo)) {
+                    const NVDpyEvoRec *pDpyEvo =
+                        nvGetOneArbitraryDpyEvo(pApiHeadState->activeDpys, pDispEvo);
                     nvDPLibSetAdaptiveSync(pDispEvo, head, FALSE);
+                    nvDpyUpdateAdaptiveSyncSdp(pDpyEvo, &pApiHeadState->timings, NV_FALSE);
                 } else {
                     nvHdmiSetVRR(pDispEvo, head,
                                  FALSE, &pApiHeadState->infoFrame.empCtrl);
@@ -506,7 +511,7 @@ void nvGetDpyMinRefreshRateValidValues(
          * refresh rate.
          */
         NvU32 minTimeoutMicroseconds =
-            axb_div_c(pTimings->rasterSize.y * 1000,
+            nvAxBDivC(pTimings->rasterSize.y * 1000,
                       pTimings->rasterSize.x, pTimings->pixelClock);
         NvU32 maxRefreshRate = 1000000 / minTimeoutMicroseconds;
 
@@ -571,6 +576,12 @@ void nvEnableVrr(NVDevEvoPtr pDevEvo)
 
             if (nvIsAdaptiveSyncDpyVrrType(pHeadState->timings.vrr.type)) {
                 if (nvConnectorUsesDPLib(pHeadState->pConnectorEvo)) {
+                    const NVDpyEvoRec *pDpyEvo =
+                        nvGetOneArbitraryDpyEvo(pApiHeadState->activeDpys, pDispEvo); 
+
+                    if (nvDPLibDpyIsAdaptiveSyncSdpSupported(pDpyEvo)) {
+                        nvDpyUpdateAdaptiveSyncSdp(pDpyEvo, &pApiHeadState->timings, NV_TRUE);
+                    }
                     nvDPLibSetAdaptiveSync(pDispEvo, head, TRUE);
                 } else {
                     nvHdmiSetVRR(pDispEvo, head,
@@ -611,7 +622,6 @@ static void ClearElvBlock(NVDispEvoPtr pDispEvo, NvU32 head)
     const NVDispHeadStateEvoRec *pHeadState = &pDispEvo->headState[head];
     NV0073_CTRL_SYSTEM_CLEAR_ELV_BLOCK_PARAMS params = { };
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = pHeadState->activeRmId;
 
     if (nvRmApiControl(nvEvoGlobal.clientHandle,
@@ -648,8 +658,8 @@ static void ConfigVrrPstateSwitch(NVDispEvoPtr pDispEvo, NvBool vrrEnabled,
     params.bVrrDirty = vrrDirty;
 
     if (params.bVrrDirty) {
-        NvU64 frameTimeUs = axb_div_c(pTimings->rasterSize.y * 1000ULL,
-                                      pTimings->rasterSize.x, pTimings->pixelClock);
+        NvU64 frameTimeUs = axb_div_c_64(pTimings->rasterSize.y * 1000ULL,
+                                         pTimings->rasterSize.x, pTimings->pixelClock);
         NvU64 timePerLineNs = (frameTimeUs * 1000ULL) / pTimings->rasterSize.y;
 
         NvU64 maxFrameTimeUs = pTimings->vrr.timeoutMicroseconds;
@@ -692,8 +702,6 @@ static void SetStallLockOneDisp(NVDispEvoPtr pDispEvo, NvU32 applyAllowVrrApiHea
                                     head);
         }
     }
-
-    nvPushEvoSubDevMaskDisp(pDispEvo);
 
     // Make sure any pending updates that we didn't wait for previously have
     // completed.
@@ -742,8 +750,6 @@ static void SetStallLockOneDisp(NVDispEvoPtr pDispEvo, NvU32 applyAllowVrrApiHea
                                           enableVrrOnHead[head], FALSE);
         }
     }
-
-    nvPopEvoSubDevMask(pDevEvo);
 
     for (apiHead = 0; apiHead < NVKMS_MAX_HEADS_PER_DISP; apiHead++) {
         if (!(applyAllowVrrApiHeadMask & (1 << apiHead))) {
@@ -961,7 +967,7 @@ VrrUnstallNow(NVDispEvoPtr pDispEvo)
             if (!nvHeadIsActive(pDispEvo, head)) {
                 continue;
             }
-            pDevEvo->cursorHal->ReleaseElv(pDevEvo, pDispEvo->displayOwner, head);
+            pDevEvo->cursorHal->ReleaseElv(pDevEvo, head);
         }
         pDispEvo->apiHeadState[apiHead].vrr.pendingCursorMotion = NV_FALSE;
     }

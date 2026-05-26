@@ -47,6 +47,8 @@ extern "C" {
 /**
  * Define NV_PRINTF_LEVEL to the minimum level for debug output.  This is compared
  * to the level for each NV_PRINT to cull them at compile time.
+ * In order to enable LEVEL_INFO NV_PRINTF logs, we need to set
+ * NVreg_ResmanDebugLevel regkey to 0 and NV_PRINTF_LEVEL to LEVEL_INFO.
  */
 #define NV_PRINTF_LEVEL  LEVEL_NOTICE
 
@@ -286,6 +288,8 @@ void NVRM_PRINTF_FUNCTION(const char *file,
  * debug prints or binary logging)
  *
  * By default, it is available on all builds that allow strings
+ * In order to enable LEVEL_INFO NV_PRINTF logs, we need to set
+ * NVreg_ResmanDebugLevel regkey to 0 and NV_PRINTF_LEVEL to LEVEL_INFO.
  */
 #ifndef NV_PRINTF_ENABLED
 #define NV_PRINTF_ENABLED NV_PRINTF_STRINGS_ALLOWED

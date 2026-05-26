@@ -512,6 +512,7 @@ eventbufferDestruct_IMPL
     gspTraceRemoveAllBindpoints(pEventBuffer);
 #endif
 
+
     _unmapAndFreeMemory(pEventBuffer->pHeaderDesc, bKernel, pKernelMap->headerAddr,
         pKernelMap->headerPriv, pClientMap->headerAddr, pClientMap->headerPriv);
 

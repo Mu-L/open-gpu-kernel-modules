@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -167,5 +167,12 @@ typedef enum
     UVM_ACCESS_COUNTER_GRANULARITY_16M = 3,
     UVM_ACCESS_COUNTER_GRANULARITY_16G = 4,
 } UVM_ACCESS_COUNTER_GRANULARITY;
+
+typedef enum
+{
+    UVM_ACCESS_BITS_DUMP_MODE_AGGREGATE = 0,
+    UVM_ACCESS_BITS_DUMP_MODE_DIFF = 1,
+    UVM_ACCESS_BITS_DUMP_MODE_CURRENT = 2,
+} UVM_ACCESS_BITS_DUMP_MODE;
 
 #endif // _NV_UVM_USER_TYPES_H_

@@ -212,6 +212,30 @@ kmemsysAssertFbAckTimeoutPending_GB100
 #endif
 }
 
+NvBool
+kmemsysCheckReadoutEccEnablement_GB100
+(
+    OBJGPU *pGpu,
+    KernelMemorySystem *pKernelMemorySystem
+)
+{
+    NvU32 fuse = GPU_REG_RD32(pGpu, gpuGetPrimaryFuseBaseAddr_HAL(pGpu) + NV_FUSE_ZB_FEATURE_READOUT);
+    return FLD_TEST_DRF(_FUSE_ZB, _FEATURE_READOUT, _ECC_DRAM, _ENABLED, fuse);
+}
+
+NvU32
+kmemsysGetL2EccDedCountRegAddr_GB100
+(
+    OBJGPU             *pGpu,
+    KernelMemorySystem *pKernelMemorySystem,
+    NvU32               fbpa,
+    NvU32               subp
+)
+{
+    return (NV_LTC_PRI_BASE + NV_PLTC_LTS0_L2_CACHE_ECC_UNCORRECTED_ERR_COUNT +
+            (fbpa * NV_LTC_PRI_STRIDE) + (subp * NV_LTS_PRI_STRIDE));
+}
+
 /*!
  * @brief Extract FB offset from LOCAL_MEMORY_RANGE register value
  */
@@ -261,26 +285,3 @@ kmemsysReadHdmTopFromVbios_GB100
     return NV_OK;
 }
 
-NvBool
-kmemsysCheckReadoutEccEnablement_GB100
-(
-    OBJGPU *pGpu,
-    KernelMemorySystem *pKernelMemorySystem
-)
-{
-    NvU32 fuse = GPU_REG_RD32(pGpu, gpuGetPrimaryFuseBaseAddr_HAL(pGpu) + NV_FUSE_ZB_FEATURE_READOUT);
-    return FLD_TEST_DRF(_FUSE_ZB, _FEATURE_READOUT, _ECC_DRAM, _ENABLED, fuse);
-}
-
-NvU32
-kmemsysGetL2EccDedCountRegAddr_GB100
-(
-    OBJGPU             *pGpu,
-    KernelMemorySystem *pKernelMemorySystem,
-    NvU32               fbpa,
-    NvU32               subp
-)
-{
-    return (NV_LTC_PRI_BASE + NV_PLTC_LTS0_L2_CACHE_ECC_UNCORRECTED_ERR_COUNT +
-            (fbpa * NV_LTC_PRI_STRIDE) + (subp * NV_LTS_PRI_STRIDE));
-}

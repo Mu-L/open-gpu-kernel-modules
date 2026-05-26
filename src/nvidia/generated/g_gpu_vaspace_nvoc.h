@@ -291,7 +291,7 @@ struct NVOC_VTABLE__OBJGVASPACE {
     PMEMORY_DESCRIPTOR (*__gvaspaceGetPageDirBase__)(struct OBJGVASPACE * /*this*/, struct OBJGPU *);  // virtual override (vaspace) base (vaspace)
     NV_STATUS (*__gvaspacePinRootPageDir__)(struct OBJGVASPACE * /*this*/, struct OBJGPU *);  // virtual override (vaspace) base (vaspace)
     void (*__gvaspaceUnpinRootPageDir__)(struct OBJGVASPACE * /*this*/, struct OBJGPU *);  // virtual override (vaspace) base (vaspace)
-    void (*__gvaspaceInvalidateTlb__)(struct OBJGVASPACE * /*this*/, struct OBJGPU *, VAS_PTE_UPDATE_TYPE);  // virtual override (vaspace) base (vaspace)
+    NV_STATUS (*__gvaspaceInvalidateTlb__)(struct OBJGVASPACE * /*this*/, struct OBJGPU *, VAS_PTE_UPDATE_TYPE);  // virtual override (vaspace) base (vaspace)
     NV_STATUS (*__gvaspaceGetVasInfo__)(struct OBJGVASPACE * /*this*/, NV0080_CTRL_DMA_ADV_SCHED_GET_VA_CAPS_PARAMS *);  // virtual override (vaspace) base (vaspace)
     NV_STATUS (*__gvaspaceGetPageTableInfo__)(struct OBJGVASPACE * /*this*/, NV0080_CTRL_DMA_GET_PDE_INFO_PARAMS *);  // virtual override (vaspace) base (vaspace)
     NV_STATUS (*__gvaspaceGetPteInfo__)(struct OBJGVASPACE * /*this*/, struct OBJGPU *, NV0080_CTRL_DMA_GET_PTE_INFO_PARAMS *, RmPhysAddr *);  // virtual override (vaspace) base (vaspace)
@@ -326,7 +326,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJGVASPACE;
     ((OBJGVASPACE*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(OBJGVASPACE)))
 #endif //__nvoc_gpu_vaspace_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_OBJGVASPACE(OBJGVASPACE**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJGVASPACE(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJGVASPACE(OBJGVASPACE**, Dynamic*, NvU32);
 #define __objCreate_OBJGVASPACE(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -690,8 +690,8 @@ static inline void gvaspaceUnpinRootPageDir_DISPATCH(struct OBJGVASPACE *pVAS, s
     pVAS->__nvoc_metadata_ptr->vtable.__gvaspaceUnpinRootPageDir__(pVAS, pGpu);
 }
 
-static inline void gvaspaceInvalidateTlb_DISPATCH(struct OBJGVASPACE *pVAS, struct OBJGPU *pGpu, VAS_PTE_UPDATE_TYPE type) {
-    pVAS->__nvoc_metadata_ptr->vtable.__gvaspaceInvalidateTlb__(pVAS, pGpu, type);
+static inline NV_STATUS gvaspaceInvalidateTlb_DISPATCH(struct OBJGVASPACE *pVAS, struct OBJGPU *pGpu, VAS_PTE_UPDATE_TYPE type) {
+    return pVAS->__nvoc_metadata_ptr->vtable.__gvaspaceInvalidateTlb__(pVAS, pGpu, type);
 }
 
 static inline NV_STATUS gvaspaceGetVasInfo_DISPATCH(struct OBJGVASPACE *pVAS, NV0080_CTRL_DMA_ADV_SCHED_GET_VA_CAPS_PARAMS *pParams) {
@@ -761,7 +761,7 @@ NV_STATUS gvaspacePinRootPageDir_IMPL(struct OBJGVASPACE *pVAS, struct OBJGPU *p
 
 void gvaspaceUnpinRootPageDir_IMPL(struct OBJGVASPACE *pVAS, struct OBJGPU *pGpu);
 
-void gvaspaceInvalidateTlb_IMPL(struct OBJGVASPACE *pVAS, struct OBJGPU *pGpu, VAS_PTE_UPDATE_TYPE type);
+NV_STATUS gvaspaceInvalidateTlb_IMPL(struct OBJGVASPACE *pVAS, struct OBJGPU *pGpu, VAS_PTE_UPDATE_TYPE type);
 
 NV_STATUS gvaspaceGetVasInfo_IMPL(struct OBJGVASPACE *pVAS, NV0080_CTRL_DMA_ADV_SCHED_GET_VA_CAPS_PARAMS *pParams);
 

@@ -38,7 +38,7 @@
 
 // Macros for FXP9.5 conversion
 
-#define NV_TSENSE_FXP_9_5_INTEGER            13:4
+#define NV_TSENSE_FXP_9_5_INTEGER            13:5
 #define NV_TSENSE_FXP_9_5_FRACTIONAL         4:0
 
 // Convert 32 bit Signed integer or Floating Point value to FXP9.5
@@ -53,10 +53,10 @@
 #define NV_TSENSE_FXP_9_5_SIGN(fxp)  \
     DRF_VAL(_TYPES, _SFXP, _INTEGER_SIGN(9,5), fxp)
 
-#define NV_TSENSE_FXP_9_5_TO_24_8(fxp)                  \
-    (NvTemp) ((NV_TSENSE_FXP_9_5_SIGN(fxp) ==           \
-             NV_TYPES_SFXP_INTEGER_SIGN_NEGATIVE ?      \
-             DRF_SHIFTMASK(31:17) : 0x0) | (fxp << 3))
+#define NV_TSENSE_FXP_9_5_TO_24_8(fxp)              \
+    (NvTemp) ((NV_TSENSE_FXP_9_5_SIGN(fxp) ==       \
+        NV_TYPES_SFXP_INTEGER_SIGN_NEGATIVE ?       \
+        DRF_SHIFTMASK(31:17) : 0x0) | (fxp << 3))
 
 /*!
  * Macros for NvType <-> Celsius temperature conversion.

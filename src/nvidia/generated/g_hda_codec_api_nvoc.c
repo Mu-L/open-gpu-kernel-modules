@@ -32,7 +32,7 @@ void __nvoc_init__Hdacodec(Hdacodec*);
 void __nvoc_init_funcTable_Hdacodec(Hdacodec*);
 NV_STATUS __nvoc_ctor_Hdacodec(Hdacodec*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_Hdacodec(Hdacodec*);
-void __nvoc_dtor_Hdacodec(Hdacodec*);
+void __nvoc_dtor_Hdacodec(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__Hdacodec;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_Hdacodec =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "Hdacodec",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_Hdacodec,
+    .objCreatefn =        &__nvoc_objCreateDynamic_Hdacodec,
     .pCastInfo =          &__nvoc_castinfo__Hdacodec,
     .pExportInfo =        &__nvoc_export_info__Hdacodec
 };
@@ -124,7 +124,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_Hdacodec =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__Hdacodec __nvoc_metadata__Hdacodec = {
     .rtti.pClassDef = &__nvoc_class_def_Hdacodec,    // (hdacodec) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_Hdacodec,
+    .rtti.dtor      = &__nvoc_dtor_Hdacodec,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -383,13 +383,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__Hdacodec =
 
 
 // Destruct Hdacodec object.
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_Hdacodec(Hdacodec* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_Hdacodec(Dynamic* pThis) {
+
+    Hdacodec *__nvoc_this = (Hdacodec *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_Hdacodec(Hdacodec *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -415,7 +417,7 @@ NV_STATUS __nvoc_ctor_Hdacodec(Hdacodec *pHdacodecApi, struct CALL_CONTEXT *pCal
 
     // Unwind on error.
 __nvoc_ctor_Hdacodec_fail__init:
-    __nvoc_dtor_GpuResource(&pHdacodecApi->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pHdacodecApi->__nvoc_base_GpuResource);
 __nvoc_ctor_Hdacodec_fail_GpuResource:
 __nvoc_ctor_Hdacodec_exit:
     return status;
@@ -527,13 +529,10 @@ __nvoc_objCreate_Hdacodec_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_Hdacodec(Hdacodec **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_Hdacodec(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_Hdacodec(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_Hdacodec((Hdacodec **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

@@ -190,9 +190,20 @@
 #define NV_DPCD14_DSC_BITS_PER_PIXEL_INCREMENT_SUPPORTED_1                          (0x00000004) /* R-XUV */
 
 #define NV_DPCD14_DSC_ENABLE                                                        (0x00000160) /* R-XUR */
-#define NV_DPCD14_DSC_ENABLE_DECOMPRESSION                                                   0:0 /* R-XUF */
+#define NV_DPCD14_DSC_ENABLE_DECOMPRESSION                                                  0:0  /* R-XUF */
 #define NV_DPCD14_DSC_ENABLE_DECOMPRESSION_NO                                       (0x00000000) /* R-XUV */
 #define NV_DPCD14_DSC_ENABLE_DECOMPRESSION_YES                                      (0x00000001) /* R-XUV */
+
+#define NV_DPCD14_DSC_STATUS                                                        (0x00002011) /* R-XUR */
+#define NV_DPCD14_DSC_STATUS_RC_BUFFER_UNDERRUN                                             0:0  /* R-XUF */
+#define NV_DPCD14_DSC_STATUS_RC_BUFFER_UNDERRUN_NO                                  (0x00000000) /* R-XUV */
+#define NV_DPCD14_DSC_STATUS_RC_BUFFER_UNDERRUN_YES                                 (0x00000001) /* R-XUV */
+#define NV_DPCD14_DSC_STATUS_RC_BUFFER_OVERFLOW                                             1:1  /* R-XUF */
+#define NV_DPCD14_DSC_STATUS_RC_BUFFER_OVERFLOW_NO                                  (0x00000000) /* R-XUV */
+#define NV_DPCD14_DSC_STATUS_RC_BUFFER_OVERFLOW_YES                                 (0x00000001) /* R-XUV */
+#define NV_DPCD14_DSC_STATUS_CHUNK_LENGTH_ERROR                                             2:2  /* R-XUF */
+#define NV_DPCD14_DSC_STATUS_CHUNK_LENGTH_ERROR_NO                                  (0x00000000) /* R-XUV */
+#define NV_DPCD14_DSC_STATUS_CHUNK_LENGTH_ERROR_YES                                 (0x00000001) /* R-XUV */
 
 #define NV_DPCD14_FEC_CAPABILITY                                                    (0x00000090) /* R-XUR */
 #define NV_DPCD14_FEC_CAPABILITY_FEC_CAPABLE                                                 0:0 /* R-XUF */

@@ -473,13 +473,12 @@ static void phys_mem_init(uvm_page_tree_t *tree, NvU64 page_size, uvm_page_direc
     // invalid.
     uvm_mmu_page_table_alloc_t *phys_allocs[2] = {NULL, NULL};
 
-    // Init with an invalid PTE or clean PDE. Only Maxwell PDEs can have more
-    // than 512 entries. In this case, we initialize them all with the same
-    // clean PDE. ATS systems may require clean PDEs with
+    // Init with an invalid PTE or clean PDE.
+    // ATS systems may require clean PDEs with
     // ATS_ALLOWED/ATS_NOT_ALLOWED bit settings based on the mapping VA.
     // We only clean_bits to 0 at the lowest page table level (PTE table), i.e.,
     // when depth is greater than the max_pde_depth.
-    if ((dir->depth > max_pde_depth) || (entries_count > 512 && !g_uvm_global.ats.enabled)) {
+    if (dir->depth > max_pde_depth) {
         NvU64 clear_bits[2];
 
         // If it is not a PTE, make a clean PDE.
@@ -2830,7 +2829,7 @@ static NV_STATUS create_dynamic_sysmem_mapping(uvm_gpu_t *gpu)
     UVM_ASSERT(gpu->parent->flat_sysmem_va_base != 0);
 
     // The DMA addressable window is the maximum system physical memory
-    // addressable by the GPU (this limit is 128TB in Pascal-Ada). The virtual
+    // addressable by the GPU (this limit is 128TB in Turing-Ada). The virtual
     // mapping to sysmem is linear, so its size matches that of the physical
     // address space.
     flat_sysmem_va_size = gpu->parent->dma_addressable_limit + 1 - gpu->parent->dma_addressable_start;

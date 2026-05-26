@@ -28,7 +28,7 @@ void __nvoc_init__RsShared(RsShared*);
 void __nvoc_init_funcTable_RsShared(RsShared*);
 NV_STATUS __nvoc_ctor_RsShared(RsShared*);
 void __nvoc_init_dataField_RsShared(RsShared*);
-void __nvoc_dtor_RsShared(RsShared*);
+void __nvoc_dtor_RsShared(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__RsShared;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RsShared =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "RsShared",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_RsShared,
+    .objCreatefn =        &__nvoc_objCreateDynamic_RsShared,
     .pCastInfo =          &__nvoc_castinfo__RsShared,
     .pExportInfo =        &__nvoc_export_info__RsShared
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RsShared =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__RsShared __nvoc_metadata__RsShared = {
     .rtti.pClassDef = &__nvoc_class_def_RsShared,    // (shr) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_RsShared,
+    .rtti.dtor      = &__nvoc_dtor_RsShared,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -82,16 +82,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__RsShared =
 
 // Destruct RsShared object.
 void __nvoc_shrDestruct(RsShared*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_RsShared(RsShared* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_RsShared(Dynamic* pThis) {
+
+    RsShared *__nvoc_this = (RsShared *) pThis;
 
 // Call destructor.
-    __nvoc_shrDestruct(pThis);
+    __nvoc_shrDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_RsShared(RsShared *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -117,7 +119,7 @@ NV_STATUS __nvoc_ctor_RsShared(RsShared *pShared) {
 
     // Unwind on error.
 __nvoc_ctor_RsShared_fail__init:
-    __nvoc_dtor_Object(&pShared->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&pShared->__nvoc_base_Object);
 __nvoc_ctor_RsShared_fail_Object:
 __nvoc_ctor_RsShared_exit:
     return status;
@@ -221,12 +223,9 @@ __nvoc_objCreate_RsShared_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_RsShared(RsShared **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_RsShared(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_RsShared(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_RsShared((RsShared **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 
 
@@ -244,7 +243,7 @@ void __nvoc_init__RsSession(RsSession*);
 void __nvoc_init_funcTable_RsSession(RsSession*);
 NV_STATUS __nvoc_ctor_RsSession(RsSession*);
 void __nvoc_init_dataField_RsSession(RsSession*);
-void __nvoc_dtor_RsSession(RsSession*);
+void __nvoc_dtor_RsSession(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__RsSession;
@@ -263,7 +262,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RsSession =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "RsSession",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_RsSession,
+    .objCreatefn =        &__nvoc_objCreateDynamic_RsSession,
     .pCastInfo =          &__nvoc_castinfo__RsSession,
     .pExportInfo =        &__nvoc_export_info__RsSession
 };
@@ -272,7 +271,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RsSession =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__RsSession __nvoc_metadata__RsSession = {
     .rtti.pClassDef = &__nvoc_class_def_RsSession,    // (session) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_RsSession,
+    .rtti.dtor      = &__nvoc_dtor_RsSession,
     .rtti.offset    = 0,
     .metadata__RsShared.rtti.pClassDef = &__nvoc_class_def_RsShared,    // (shr) super
     .metadata__RsShared.rtti.dtor      = &__nvoc_destructFromBase,
@@ -305,16 +304,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__RsSession =
 
 // Destruct RsSession object.
 void __nvoc_sessionDestruct(RsSession*);
-void __nvoc_dtor_RsShared(RsShared*);
-void __nvoc_dtor_RsSession(RsSession* pThis) {
+void __nvoc_dtor_RsShared(Dynamic*);
+void __nvoc_dtor_RsSession(Dynamic* pThis) {
+
+    RsSession *__nvoc_this = (RsSession *) pThis;
 
 // Call destructor.
-    __nvoc_sessionDestruct(pThis);
+    __nvoc_sessionDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RsShared(&pThis->__nvoc_base_RsShared);
+    __nvoc_dtor_RsShared((Dynamic *) &__nvoc_this->__nvoc_base_RsShared);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_RsSession(RsSession *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -340,7 +341,7 @@ NV_STATUS __nvoc_ctor_RsSession(RsSession *pSession) {
 
     // Unwind on error.
 __nvoc_ctor_RsSession_fail__init:
-    __nvoc_dtor_RsShared(&pSession->__nvoc_base_RsShared);
+    __nvoc_dtor_RsShared((Dynamic *)&pSession->__nvoc_base_RsShared);
 __nvoc_ctor_RsSession_fail_RsShared:
 __nvoc_ctor_RsSession_exit:
     return status;
@@ -446,11 +447,8 @@ __nvoc_objCreate_RsSession_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_RsSession(RsSession **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_RsSession(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_RsSession(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_RsSession((RsSession **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

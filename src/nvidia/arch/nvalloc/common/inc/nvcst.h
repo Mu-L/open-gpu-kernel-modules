@@ -99,6 +99,7 @@ CHIPSET_SETUP_FUNC(PLDA_XpressRichAXI_setupFunc)
 CHIPSET_SETUP_FUNC(Riscv_generic_setupFunc)
 CHIPSET_SETUP_FUNC(Intel_A70D_setupFunc)
 CHIPSET_SETUP_FUNC(AMD_14D8_setupFunc)
+CHIPSET_SETUP_FUNC(Nvidia_TB500_setupFunc)
 
 
 // Keep string length <=32 (including termination) to avoid string copy overflow
@@ -204,6 +205,7 @@ CSINFO chipsetInfo[] =
     {PCI_VENDOR_ID_INTEL,       0x7D1C, CS_INTEL_7D06,      "Intel-Arrowlake",      Intel_7D06_setupFunc},
     {PCI_VENDOR_ID_INTEL,       0x7D2A, CS_INTEL_7D06,      "Intel-Arrowlake",      Intel_7D06_setupFunc},
     {PCI_VENDOR_ID_INTEL,       0x7D2D, CS_INTEL_7D06,      "Intel-Arrowlake",      Intel_7D06_setupFunc},
+	{PCI_VENDOR_ID_INTEL,       0x7D2E, CS_INTEL_7D06,      "Intel-Arrowlake",      Intel_7D06_setupFunc},
     {PCI_VENDOR_ID_INTEL,       0x7D2F, CS_INTEL_7D06,      "Intel-Arrowlake",      Intel_7D06_setupFunc},
     {PCI_VENDOR_ID_INTEL,       0x7D35, CS_INTEL_7D06,      "Intel-Arrowlake",      Intel_7D06_setupFunc},
     {PCI_VENDOR_ID_INTEL,       0x7D67, CS_INTEL_7D06,      "Intel-Arrowlake",      Intel_7D06_setupFunc},
@@ -231,6 +233,11 @@ CSINFO chipsetInfo[] =
     {PCI_VENDOR_ID_NVIDIA,      0x22D8, CS_NVIDIA_T264,      "T264",      Nvidia_T194_setupFunc},
     {PCI_VENDOR_ID_NVIDIA,      0x22DA, CS_NVIDIA_T264,      "T264",      Nvidia_T194_setupFunc},
     {PCI_VENDOR_ID_NVIDIA,      0x2B00, CS_NVIDIA_T264,      "T264",      Nvidia_T194_setupFunc},
+    {PCI_VENDOR_ID_NVIDIA,      0x2F95, CS_NVIDIA_TB500,     "TB500",     Nvidia_TB500_setupFunc},
+    {PCI_VENDOR_ID_NVIDIA,      0x2F96, CS_NVIDIA_TB500,     "TB500",     Nvidia_TB500_setupFunc},
+    {PCI_VENDOR_ID_NVIDIA,      0x2F97, CS_NVIDIA_TB500,     "TB500",     Nvidia_TB500_setupFunc},
+    {PCI_VENDOR_ID_NVIDIA,      0x2F98, CS_NVIDIA_TB500,     "TB500",     Nvidia_TB500_setupFunc},
+    {PCI_VENDOR_ID_NVIDIA,      0x2F99, CS_NVIDIA_TB500,     "TB500",     Nvidia_TB500_setupFunc},
 
     {PCI_VENDOR_ID_SIS,         0x0649, CS_SIS_649,          "649",          SiS_656_setupFunc},
     {PCI_VENDOR_ID_SIS,         0x0656, CS_SIS_656,          "656",          SiS_656_setupFunc},
@@ -384,6 +391,11 @@ ARMCSALLOWLISTINFO armChipsetAllowListInfo[] =
     {PCI_VENDOR_ID_NVIDIA,      0x22DA, CS_NVIDIA_T264},        // NVIDIA Tegra RP x2
     {PCI_VENDOR_ID_NVIDIA,      0x22E6, CS_NVIDIA_T264},        // NVIDIA Tegra iGPU RP
     {PCI_VENDOR_ID_NVIDIA,      0x2B00, CS_NVIDIA_T264},        // NVIDIA Tegra iGPU
+    {PCI_VENDOR_ID_NVIDIA,      0x2F95, CS_NVIDIA_TB500},       // NVIDIA TB500 RP x16
+    {PCI_VENDOR_ID_NVIDIA,      0x2F96, CS_NVIDIA_TB500},       // NVIDIA TB500 RP x8
+    {PCI_VENDOR_ID_NVIDIA,      0x2F97, CS_NVIDIA_TB500},       // NVIDIA TB500 RP x4
+    {PCI_VENDOR_ID_NVIDIA,      0x2F98, CS_NVIDIA_TB500},       // NVIDIA TB500 RP x2
+    {PCI_VENDOR_ID_NVIDIA,      0x2F99, CS_NVIDIA_TB500},       // NVIDIA TB500 RP x1
 
     {PCI_VENDOR_ID_APM,         0xe004, CS_APM_STORM},          // Applied Micro X-Gene "Storm"
     {PCI_VENDOR_ID_MARVELL,     0xAF00, CS_MARVELL_THUNDERX2},  // Marvell ThunderX2

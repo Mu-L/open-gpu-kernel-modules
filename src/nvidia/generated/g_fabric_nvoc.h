@@ -173,7 +173,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_Fabric;
     ((Fabric*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(Fabric)))
 #endif //__nvoc_fabric_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_Fabric(Fabric**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_Fabric(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_Fabric(Fabric**, Dynamic*, NvU32);
 #define __objCreate_Fabric(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

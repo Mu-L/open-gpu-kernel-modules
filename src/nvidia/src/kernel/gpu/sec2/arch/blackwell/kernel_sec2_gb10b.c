@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -24,8 +24,8 @@
 #include "gpu/sec2/kernel_sec2.h"
 #include "core/core.h"
 
-#include "fsp/fsp_nvdm_format.h"
-#include "fsp/fsp_mctp_format.h"
+#include "mctp_format.h"
+#include "nvdm_format.h"
 #include "gpu/fsp/kern_fsp_cot_payload.h"
 #include "gpu/gsp/kernel_gsp.h"
 #include "published/blackwell/gb10b/dev_gsp.h"
@@ -376,28 +376,6 @@ ksec2WaitForGspTargetMaskReleased_GB10B
     status =  gpuTimeoutCondWait(pGpu, _ksec2IsGspTargetMaskReleased, NULL, NULL);
 
     return status;
-}
-
-/*!
- * @brief Create NVDM payload header
- *
- * @param[in] pGpu          OBJGPU pointer
- * @param[in] pKernelSec2   KernelSec2 pointer
- * @param[in] nvdmType      NVDM type to include in header
- *
- * @return Constructed NVDM payload header
- */
-NvU32
-ksec2CreateNvdmHeader_GB10B
-(
-    OBJGPU    *pGpu,
-    KernelSec2 *pKernelSec2,
-    NvU32      nvdmType
-)
-{
-    return REF_DEF(MCTP_MSG_HEADER_TYPE, _VENDOR_PCI) |
-           REF_DEF(MCTP_MSG_HEADER_VENDOR_ID, _NV)    |
-           REF_NUM(MCTP_MSG_HEADER_NVDM_TYPE, (nvdmType));
 }
 
 /*!

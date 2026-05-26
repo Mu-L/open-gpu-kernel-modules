@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -311,34 +311,12 @@ intrGetGmmuInterrupts_IMPL
     // Check if we have any Gmmu interrupt pending
     if (pKernelGmmu != NULL)
     {
-        //
-        // Read the hub interrupt register as we apply mask while grabbing RM lock at leaf levels and
-        // that would disable the top level PMC interrupt.
-        //
-        intrGetHubLeafIntrPending_HAL(pGpu, pIntr, pEngines, pThreadState);
-
         // Check if any fault was copied only if any other interrupt on GMMU is not pending.
-        if (!bitVectorTest(pEngines, MC_ENGINE_IDX_GMMU))
+        if (portAtomicOrS32(kgmmuGetFatalFaultIntrPendingState(pKernelGmmu, GPU_GFID_PF), 0))
         {
-            if (portAtomicOrS32(kgmmuGetFatalFaultIntrPendingState(pKernelGmmu, GPU_GFID_PF), 0))
-            {
-                bitVectorSet(pEngines, MC_ENGINE_IDX_GMMU);
-            }
+            bitVectorSet(pEngines, MC_ENGINE_IDX_GMMU);
         }
     }
-}
-
-void
-intrSetDefaultIntrEn_IMPL(Intr *pIntr, NvU32 intrEn0)
-{
-    NV_ASSERT(intrEn0 <= INTERRUPT_TYPE_MAX);
-    pIntr->intrEn0 = pIntr->intrEn0Orig = intrEn0;
-}
-
-NvU32
-intrGetDefaultIntrEn_IMPL(Intr *pIntr)
-{
-    return (pIntr->intrEn0Orig);
 }
 
 void
@@ -883,7 +861,7 @@ intrStateInitLocked_IMPL
     pIntr->halIntrEnabled = NV_TRUE;
 
     // Enable the interrupt mapping within the chip
-    intrSetDefaultIntrEn(pIntr, INTERRUPT_TYPE_HARDWARE);
+    pIntr->intrEn0 = INTERRUPT_TYPE_HARDWARE;
 
     // Initially mask will allow all interrupts.
     pIntr->intrMask.cached = INTERRUPT_MASK_ENABLED;

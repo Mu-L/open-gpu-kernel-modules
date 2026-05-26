@@ -1665,6 +1665,9 @@ static struct NvKmsKapiMemory* AllocateMemory
     memory->surfaceParams.layout = params->layout;
     memory->noDisplayCaching = params->noDisplayCaching;
     memory->isVidmem = params->useVideoMemory;
+    memory->isContiguous =
+        (params->useVideoMemory &&
+         (params->type == NVKMS_KAPI_ALLOCATION_TYPE_SCANOUT));
 
     if (params->layout == NvKmsSurfaceMemoryLayoutBlockLinear) {
         memory->surfaceParams.blockLinear.genericMemory = NV_TRUE;
@@ -1849,6 +1852,7 @@ static struct NvKmsKapiMemory* DupMemory
     memory->size = srcMemory->size;
     memory->surfaceParams = srcMemory->surfaceParams;
     memory->isVidmem = srcMemory->isVidmem;
+    memory->isContiguous = srcMemory->isContiguous;
 
     return memory;
 
@@ -2230,6 +2234,12 @@ static NvBool IsVidmem(
     const struct NvKmsKapiMemory *memory)
 {
     return memory->isVidmem;
+}
+
+static NvBool IsContiguous(
+    const struct NvKmsKapiMemory *memory)
+{
+    return memory->isContiguous;
 }
 
 static NvBool GetSurfaceParams(
@@ -2698,7 +2708,6 @@ static NvBool AssignSyncObjectConfig(
         pSyncObject->u.semaphores.release.surface.offsetInWords =
             pSyncObject->u.semaphores.acquire.surface.offsetInWords =
             nvKmsKapiGetDisplaySemaphoreOffset(
-                device,
                 pLayerConfig->syncParams.u.semaphore.index) >> 2;
         pSyncObject->u.semaphores.acquire.value =
             NVKMS_KAPI_SEMAPHORE_VALUE_READY;
@@ -2901,6 +2910,16 @@ static NvBool NvKmsKapiOverlayLayerConfigToKms(
                             params, bFromKmsSetMode);
 
     if (layerRequestedConfig->flags.matrixOverridesChanged || bFromKmsSetMode) {
+        // 'fmtCtm' explicitly provides a matrix to program FMT.
+        if (layerConfig->matrixOverrides.enabled.fmtCtm) {
+            params->layer[layer].fmtOverride.matrix =
+                layerConfig->matrixOverrides.fmtCtm;
+            params->layer[layer].fmtOverride.enabled = TRUE;
+        } else {
+            params->layer[layer].fmtOverride.enabled = FALSE;
+        }
+        params->layer[layer].fmtOverride.specified = TRUE;
+
         // 'lmsCtm' explicitly provides a matrix to program CSC00.
         if (layerConfig->matrixOverrides.enabled.lmsCtm) {
             params->layer[layer].csc00Override.matrix =
@@ -3087,6 +3106,16 @@ static NvBool NvKmsKapiPrimaryLayerConfigToKms(
     }
 
     if (layerRequestedConfig->flags.matrixOverridesChanged || bFromKmsSetMode) {
+        // 'fmtCtm' explicitly provides a matrix to program FMT.
+        if (layerConfig->matrixOverrides.enabled.fmtCtm) {
+            params->layer[NVKMS_MAIN_LAYER].fmtOverride.matrix =
+                layerConfig->matrixOverrides.fmtCtm;
+            params->layer[NVKMS_MAIN_LAYER].fmtOverride.enabled = TRUE;
+        } else {
+            params->layer[NVKMS_MAIN_LAYER].fmtOverride.enabled = FALSE;
+        }
+        params->layer[NVKMS_MAIN_LAYER].fmtOverride.specified = TRUE;
+
         // 'lmsCtm' explicitly provides a matrix to program CSC00.
         if (layerConfig->matrixOverrides.enabled.lmsCtm) {
             params->layer[NVKMS_MAIN_LAYER].csc00Override.matrix =
@@ -3418,6 +3447,12 @@ static NvBool NvKmsKapiRequestedModeSetConfigToKms(
 
         paramsHead->allowGsync = NV_TRUE;
         paramsHead->allowAdaptiveSync = NVKMS_ALLOW_ADAPTIVE_SYNC_ALL;
+
+        /* Apply dithering settings */
+        paramsHead->flip.dithering.state = headModeSetConfig->dithering.state;
+        paramsHead->flip.dithering.mode = headModeSetConfig->dithering.mode;
+        paramsHead->flip.dithering.specified =
+            headRequestedConfig->flags.ditheringChanged;
     }
 
     return NV_TRUE;
@@ -3619,6 +3654,13 @@ static NvBool KmsFlip(
             headRequestedConfig->flags.colorimetryChanged;
         if (flipParams->colorimetry.specified) {
             flipParams->colorimetry.val = headModeSetConfig->colorimetry;
+        }
+
+        flipParams->dithering.specified =
+            headRequestedConfig->flags.ditheringChanged;
+        if (flipParams->dithering.specified) {
+            flipParams->dithering.state = headModeSetConfig->dithering.state;
+            flipParams->dithering.mode = headModeSetConfig->dithering.mode;
         }
 
         if (headModeSetConfig->vrrEnabled) {
@@ -3993,6 +4035,88 @@ static void FramebufferConsoleDisabled
     }
 }
 
+static struct NvKmsKapiVblankIntrCallback*
+RegisterVblankIntrCallback(struct NvKmsKapiDevice *device,
+                           const NvU32 head,
+                           NVRgInterruptCallbackProc pCallbackProc,
+                           NvU64 param)
+{
+    struct NvKmsRegisterVblankIntrCallbackParams params = { };
+    NvBool status;
+
+    struct NvKmsKapiVblankIntrCallback *pCallback =
+        nvKmsKapiCalloc(1, sizeof(*pCallback));
+
+    if (pCallback == NULL) {
+        nvKmsKapiLogDebug("Failed to allocate memory for NVKMS vblank callback object on NvKmsKapiDevice 0x%p",
+                          device);
+        goto failed;
+    }
+
+    if (device->hKmsDevice == 0x0) {
+        goto done;
+    }
+
+    /* Create NVKMS surface */
+
+    params.request.deviceHandle = device->hKmsDevice;
+    params.request.dispHandle = device->hKmsDisp;
+    params.request.head = head;
+    params.request.pCallback = pCallbackProc;
+    params.request.param = param;
+
+    status = nvkms_ioctl_from_kapi(device->pKmsOpen,
+                                   NVKMS_IOCTL_REGISTER_VBLANK_INTR_CALLBACK,
+                                   &params, sizeof(params));
+    if (!status) {
+        nvKmsKapiLogDeviceDebug(device,
+                                "Failed to register NVKMS vblank callback");
+        goto failed;
+    }
+
+    pCallback->hKmsHandle = params.reply.callbackHandle;
+
+done:
+    return pCallback;
+
+failed:
+    nvKmsKapiFree(pCallback);
+
+    return NULL;
+}
+
+static void UnregisterVblankIntrCallback(
+    struct NvKmsKapiDevice *device,
+    const NvU32 head,
+    struct NvKmsKapiVblankIntrCallback *pCallback)
+{
+    struct NvKmsUnregisterVblankIntrCallbackParams params = { };
+    NvBool status;
+
+    if (device->hKmsDevice == 0x0) {
+        goto done;
+    }
+
+    params.request.deviceHandle  = device->hKmsDevice;
+    params.request.dispHandle = device->hKmsDisp;
+    params.request.head = head;
+    params.request.callbackHandle = pCallback->hKmsHandle;
+
+    status = nvkms_ioctl_from_kapi(device->pKmsOpen,
+                                   NVKMS_IOCTL_UNREGISTER_VBLANK_INTR_CALLBACK,
+                                   &params, sizeof(params));
+
+    if (!status) {
+        nvKmsKapiLogDeviceDebug(device,
+                                "Failed to unregister NVKMS vblank callback registered for NvKmsKapiVblankIntrCallback 0x%p",
+                                pCallback);
+    }
+
+done:
+    nvKmsKapiFree(pCallback);
+}
+
+
 NvBool nvKmsKapiGetFunctionsTableInternal
 (
     struct NvKmsKapiFunctionsTable *funcsTable
@@ -4044,6 +4168,7 @@ NvBool nvKmsKapiGetFunctionsTableInternal
     funcsTable->mapMemory   = MapMemory;
     funcsTable->unmapMemory = UnmapMemory;
     funcsTable->isVidmem    = IsVidmem;
+    funcsTable->isContiguous = IsContiguous;
     funcsTable->gc6BlockerRefCntInc = RmGc6BlockerRefCntInc;
     funcsTable->gc6BlockerRefCntDec = RmGc6BlockerRefCntDec;
 
@@ -4078,6 +4203,9 @@ NvBool nvKmsKapiGetFunctionsTableInternal
     funcsTable->signalDisplaySemaphore = nvKmsKapiSignalDisplaySemaphore;
     funcsTable->cancelDisplaySemaphore = nvKmsKapiCancelDisplaySemaphore;
     funcsTable->checkLutNotifier = CheckLutNotifier;
+
+    funcsTable->registerVblankIntrCallback = RegisterVblankIntrCallback;
+    funcsTable->unregisterVblankIntrCallback = UnregisterVblankIntrCallback;
 
     return NV_TRUE;
 }

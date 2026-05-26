@@ -83,7 +83,9 @@
 #define NV2080_CTRL_VOLT                          (0x32)
 #define NV2080_CTRL_VOLT_LEGACY_PRIVILEGED        (0xf2) /* finn: Evaluated from "(NV2080_CTRL_VOLT | NVxxxx_CTRL_LEGACY_PRIVILEGED)" */
 #define NV2080_CTRL_VOLT_LEGACY_NON_PRIVILEGED    (0xb2) /* finn: Evaluated from "(NV2080_CTRL_VOLT | NVxxxx_CTRL_LEGACY_NON_PRIVILEGED)" */
-#define NV2080_CTRL_FAS                           (0x33)
+#define NV2080_CTRL_RIST                          (0x33)
+#define NV2080_CTRL_RIST_LEGACY_PRIVILEGED        (0xf3) /* finn: Evaluated from "(NV2080_CTRL_RIST | NVxxxx_CTRL_LEGACY_PRIVILEGED)" */
+#define NV2080_CTRL_RIST_LEGACY_NON_PRIVILEGED    (0xb3) /* finn: Evaluated from "(NV2080_CTRL_RIST | NVxxxx_CTRL_LEGACY_NON_PRIVILEGED)" */
 #define NV2080_CTRL_ECC                           (0x34)
 #define NV2080_CTRL_ECC_NON_PRIVILEGED            (0xb4) /* finn: Evaluated from "(NV2080_CTRL_ECC | NVxxxx_CTRL_LEGACY_NON_PRIVILEGED)" */
 #define NV2080_CTRL_FLA                           (0x35)

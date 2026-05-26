@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2019-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -81,7 +81,7 @@
  *  nvOfaCount[IN/OUT]
  *      - Ofa engines in this partition
  *
- *  sharedEngFlags[IN/OUT]
+ *  sharedEngFlag[IN/OUT]
  *      - Flags determining whether above engines are shared with other execution partitions
  *
  *  veidStartOffset[OUT]
@@ -94,8 +94,10 @@
  *      - First slot in the span for an execution partition placement
  *
  *  computeSize[IN/OUT]
- *      - Flag corresponding to the compute profile used 
- *        
+ *      - Flag corresponding to the compute profile used
+ *
+ *  execPartFlags[IN/OUT]
+ *      - Bitmap of NVC637_CTRL_EXEC_PARTITIONS_FLAGS*
  */
 typedef struct NVC637_CTRL_EXEC_PARTITIONS_INFO {
     NvU32 gpcCount;
@@ -111,6 +113,7 @@ typedef struct NVC637_CTRL_EXEC_PARTITIONS_INFO {
     NvU32 smCount;
     NvU32 spanStart;
     NvU32 computeSize;
+    NvU32 execPartFlags;
 } NVC637_CTRL_EXEC_PARTITIONS_INFO;
 
 #define NVC637_CTRL_EXEC_PARTITIONS_SHARED_FLAG         31:0
@@ -120,6 +123,31 @@ typedef struct NVC637_CTRL_EXEC_PARTITIONS_INFO {
 #define NVC637_CTRL_EXEC_PARTITIONS_SHARED_FLAG_NVENC   NVBIT(2)
 #define NVC637_CTRL_EXEC_PARTITIONS_SHARED_FLAG_OFA     NVBIT(3)
 #define NVC637_CTRL_EXEC_PARTITIONS_SHARED_FLAG_NVJPG   NVBIT(4)
+
+#define NVC637_CTRL_EXEC_PARTITIONS_FLAGS               31:0
+//
+// NVC637_CTRL_EXEC_PARTITIONS_FLAGS_OPTIMIZE
+// If set, RM will try to select partition HW resources giving better performance for a
+// specified usecase.
+//     OPTIMIZE_FOR_MGPU:
+// optimize for an interface to communicate with other GPUs. This can give latency
+// reduction benefit to applications using multi-GPU communication.
+//     OPTIMIZE_FOR_HOSTIF:
+// optimal config for a better Host interface and memory access performance.
+//
+// The flag makes sense only on GPUs with multiple compute dielets because one of the
+// dielets can be closer to MGPU communication interface (e.g. NVLINK). While HW compute
+// work scheduler on any dielet is capable of driving a computation work, selecting the
+// one closer to NVLINK will decrease latencies for NVLINK communications.
+// Default behavior (if flag is not provided) is for RM to select dielet closer to host
+// interface and memory, to reduce new work scheduling latency.
+// On a single dielet GPUs this flag has no effect.
+// Currently this flag is used by RM for Full compute instances only.
+//
+#define NVC637_CTRL_EXEC_PARTITIONS_FLAGS_OPTIMIZE       1:0
+#define NVC637_CTRL_EXEC_PARTITIONS_FLAGS_OPTIMIZE_FOR_HOSTIF             (0x00000000)
+#define NVC637_CTRL_EXEC_PARTITIONS_FLAGS_OPTIMIZE_FOR_MGPU               (0x00000001)
+#define NVC637_CTRL_EXEC_PARTITIONS_FLAGS_OPTIMIZE_DEFAULT                NVC637_CTRL_EXEC_PARTITIONS_FLAGS_OPTIMIZE_FOR_HOSTIF
 
 #define NVC637_CTRL_MAX_EXEC_PARTITIONS                                   8
 #define NVC637_CTRL_EXEC_PARTITIONS_ID_INVALID                            0xFFFFFFFF
@@ -308,6 +336,7 @@ typedef struct NVC637_CTRL_EXEC_PARTITIONS_EXPORTED_INFO {
     NvU32 smCount;
     NvU32 spanStart;
     NvU32 computeSize;
+    NvU32 execPartFlags;
 } NVC637_CTRL_EXEC_PARTITIONS_EXPORTED_INFO;
 
 typedef struct NVC637_CTRL_EXEC_PARTITIONS_IMPORT_EXPORT_PARAMS {
@@ -339,7 +368,7 @@ typedef struct NVC637_CTRL_EXEC_PARTITION_PARTITION_SPAN {
 /*
  * NVC637_CTRL_EXEC_PARTITIONS_GET_PROFILE_CAPACITY
  *
- * This command returns the count of compute instances which can be created 
+ * This command returns the count of compute instances which can be created
  * of the given commpute profile size (represented by the computeSize field
  * within a profile) which can be requested via NV2080_CTRL_CMD_GPU_GET_COMPUTE_PROFILES
  * Note that this API does not "reserve" any partitions, and there is no

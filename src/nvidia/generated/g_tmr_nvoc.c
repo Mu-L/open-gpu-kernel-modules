@@ -35,7 +35,7 @@ void __nvoc_init__TimerApi(TimerApi*);
 void __nvoc_init_funcTable_TimerApi(TimerApi*);
 NV_STATUS __nvoc_ctor_TimerApi(TimerApi*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_TimerApi(TimerApi*);
-void __nvoc_dtor_TimerApi(TimerApi*);
+void __nvoc_dtor_TimerApi(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__TimerApi;
@@ -128,7 +128,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_TimerApi =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "TimerApi",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_TimerApi,
+    .objCreatefn =        &__nvoc_objCreateDynamic_TimerApi,
     .pCastInfo =          &__nvoc_castinfo__TimerApi,
     .pExportInfo =        &__nvoc_export_info__TimerApi
 };
@@ -138,6 +138,13 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_TimerApi =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS tmrapiCtrlCmdTmrSetAlarmNotify__EXPORT(void *pTimerApi, void *pParams) {
+    return tmrapiCtrlCmdTmrSetAlarmNotify_IMPL(pTimerApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_TimerApi[] = 
 {
@@ -145,7 +152,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_TimerApi
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &tmrapiCtrlCmdTmrSetAlarmNotify_IMPL,
+        /*pFunc=*/      (void (*)(void)) &tmrapiCtrlCmdTmrSetAlarmNotify__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -162,7 +169,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_TimerApi
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__TimerApi __nvoc_metadata__TimerApi = {
     .rtti.pClassDef = &__nvoc_class_def_TimerApi,    // (tmrapi) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_TimerApi,
+    .rtti.dtor      = &__nvoc_dtor_TimerApi,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -473,18 +480,20 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__TimerApi =
 
 // Destruct TimerApi object.
 void __nvoc_tmrapiDestruct(TimerApi*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_Notifier(Notifier*);
-void __nvoc_dtor_TimerApi(TimerApi* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_Notifier(Dynamic*);
+void __nvoc_dtor_TimerApi(Dynamic* pThis) {
+
+    TimerApi *__nvoc_this = (TimerApi *) pThis;
 
 // Call destructor.
-    __nvoc_tmrapiDestruct(pThis);
+    __nvoc_tmrapiDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
-    __nvoc_dtor_Notifier(&pThis->__nvoc_base_Notifier);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
+    __nvoc_dtor_Notifier((Dynamic *) &__nvoc_this->__nvoc_base_Notifier);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_TimerApi(TimerApi *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -513,9 +522,9 @@ NV_STATUS __nvoc_ctor_TimerApi(TimerApi *pTimerApi, struct CALL_CONTEXT *pCallCo
 
     // Unwind on error.
 __nvoc_ctor_TimerApi_fail__init:
-    __nvoc_dtor_Notifier(&pTimerApi->__nvoc_base_Notifier);
+    __nvoc_dtor_Notifier((Dynamic *)&pTimerApi->__nvoc_base_Notifier);
 __nvoc_ctor_TimerApi_fail_Notifier:
-    __nvoc_dtor_GpuResource(&pTimerApi->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pTimerApi->__nvoc_base_GpuResource);
 __nvoc_ctor_TimerApi_fail_GpuResource:
 __nvoc_ctor_TimerApi_exit:
     return status;
@@ -632,13 +641,10 @@ __nvoc_objCreate_TimerApi_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_TimerApi(TimerApi **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_TimerApi(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_TimerApi(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_TimerApi((TimerApi **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

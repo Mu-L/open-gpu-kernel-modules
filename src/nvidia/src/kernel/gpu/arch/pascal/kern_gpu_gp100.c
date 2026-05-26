@@ -264,7 +264,9 @@ gpuDetectNvlinkLinkFromGpus_GP100
                     pGpuChild = gpumgrGetNextGpu(gpuMask, &gpuIndexChild);
                     continue;
                 }
-                if (0 == knvlinkGetConnectedLinksMask_HAL(pGpuChild, pKernelNvlinkChild))
+
+                NVLINK_BIT_VECTOR *pBitVector = knvlinkGetConnectedLinksMask_HAL(pGpuChild, pKernelNvlinkChild);
+                if ((pBitVector == NULL) || bitVectorTestAllCleared(pBitVector))
                 {
                     pGpuChild = gpumgrGetNextGpu(gpuMask, &gpuIndexChild);
                     continue;

@@ -824,7 +824,7 @@ static NV_STATUS uvm_migrate_vma_copy_pages_from(struct vm_area_struct *vma,
                                      src_nid,
                                      0,
                                      uvm_migrate_args->cause,
-                                     UVM_API_RANGE_TYPE_ATS);
+                                     UVM_API_RANGE_TYPE_NUMA);
 
     if (!(src_has_dma_mappings || dst_has_dma_mappings))
         copy_pages_in_mask(va_space, &push, src, dst, page_mask, start, src_id, src_nid, state);
@@ -1478,8 +1478,13 @@ NV_STATUS uvm_migrate_pageable(uvm_migrate_args_t *uvm_migrate_args)
     NV_STATUS status;
     uvm_processor_id_t dst_id = uvm_migrate_args->dst_id;
 
+    // CDMM pageable migration path goes through the HMM migration path.
+    // This path is only enabled when the driver is in NUMA mode.
+    UVM_ASSERT(!uvm_migrate_args->va_space->pageable.cdmm_enabled);
+
     UVM_ASSERT(PAGE_ALIGNED(uvm_migrate_args->start));
     UVM_ASSERT(PAGE_ALIGNED(uvm_migrate_args->length));
+
     uvm_assert_mmap_lock_locked(uvm_migrate_args->mm);
 
     if (UVM_ID_IS_CPU(dst_id)) {

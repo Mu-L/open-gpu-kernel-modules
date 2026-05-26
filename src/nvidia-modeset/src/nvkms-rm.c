@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2013-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2013-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -60,6 +60,7 @@
 
 #include <class/cl2080_notification.h> /* NV2080_NOTIFIERS_* */
 
+#include <class/clc370.h> /* NVC370_NOTIFIERS_RG_SEM_NOTIFICATION */
 #include "class/clc57b.h" /* NVC57B_WINDOW_IMM_CHANNEL_DMA */
 #include "class/clc57e.h" /* NVC57E_WINDOW_CHANNEL_DMA */
 #include "class/clc67b.h" /* NVC67B_WINDOW_IMM_CHANNEL_DMA */
@@ -86,6 +87,7 @@
 #include <ctrl/ctrl2080/ctrl2080event.h> /* NV2080_CTRL_CMD_EVENT_SET_NOTIFICATION */
 #include <ctrl/ctrl2080/ctrl2080tmr.h> /* NV2080_CTRL_CMD_TIMER_GET_TIME */
 #include <ctrl/ctrl2080/ctrl2080unix.h> /* NV2080_CTRL_CMD_OS_UNIX_GC6_BLOCKER_REFCNT */
+#include <ctrl/ctrlc370/ctrlc370event.h> /* NVC370_CTRL_CMD_EVENT_SET_NOTIFICATION */
 #include <ctrl/ctrl5070/ctrl5070chnc.h> /* NV5070_CTRL_CMD_SET_RMFREE_FLAGS */
 #include <ctrl/ctrl0000/ctrl0000system.h> /* NV0000_CTRL_CMD_SYSTEM_GET_APPROVAL_COOKIE */
 
@@ -320,6 +322,12 @@ static inline NVDispEvoPtr AllocDisplay(NVDevEvoPtr pDevEvo)
     pDispEvo->framelock.clients = nvEmptyDpyIdList();
     pDispEvo->framelock.currentServerHead = NV_INVALID_HEAD;
 
+    for (NvU32 apiHead = 0;
+         apiHead < ARRAY_LEN(pDispEvo->rgInterruptCallbackList); apiHead++) {
+
+        nvListInit(&pDispEvo->rgInterruptCallbackList[apiHead]);
+    }
+
     pDispEvo->ref_ptr = nvkms_alloc_ref_ptr(pDispEvo);
     if (!pDispEvo->ref_ptr) {
         goto fail;
@@ -431,8 +439,6 @@ static NvBool ProbeValidDisplays(NVDispEvoPtr pDispEvo)
         return TRUE;
     }
 
-    getSupportedParams.subDeviceInstance = pDispEvo->displayOwner;
-
     ret = nvRmApiControl(nvEvoGlobal.clientHandle,
                          pDevEvo->displayCommonHandle,
                          NV0073_CTRL_CMD_SYSTEM_GET_SUPPORTED,
@@ -452,7 +458,6 @@ static NvBool ProbeValidDisplays(NVDispEvoPtr pDispEvo)
 
         FOR_ALL_DPY_IDS(dpyId, dpyIdList) {
             NV0073_CTRL_SPECIFIC_OR_GET_INFO_PARAMS getOrInfoParams = { 0 };
-            getOrInfoParams.subDeviceInstance = pDispEvo->displayOwner;
             getOrInfoParams.displayId = nvDpyIdToNvU32(dpyId);
 
             ret = nvRmApiControl(nvEvoGlobal.clientHandle,
@@ -569,7 +574,6 @@ static NvU32 GetDfpInfo(const NVConnectorEvoRec *pConnectorEvo)
         return 0x0;
     }
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = nvDpyIdToNvU32(pConnectorEvo->displayId);
 
     ret = nvRmApiControl(nvEvoGlobal.clientHandle,
@@ -669,7 +673,6 @@ static NvBool AllocConnector(
 
     /* Determine the connector type. */
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = nvDpyIdToNvU32(dpyId);
 
     ret = nvRmApiControl(nvEvoGlobal.clientHandle,
@@ -1016,7 +1019,6 @@ static NvBool ProbeHeadCountAndWindowAssignment(NVDevEvoPtr pDevEvo)
         NV0073_CTRL_SPECIFIC_GET_ALL_HEAD_MASK_PARAMS headMaskParams = { 0 };
         NV0073_CTRL_SPECIFIC_GET_VALID_HEAD_WINDOW_ASSIGNMENT_PARAMS winHeadAssignParams = { };
 
-        numHeadsParams.subDeviceInstance = sd;
         numHeadsParams.flags = 0;
 
         ret = nvRmApiControl(nvEvoGlobal.clientHandle,
@@ -1058,8 +1060,6 @@ static NvBool ProbeHeadCountAndWindowAssignment(NVDevEvoPtr pDevEvo)
             }
         }
 
-        headMaskParams.subDeviceInstance = sd;
-
         ret = nvRmApiControl(
                 nvEvoGlobal.clientHandle,
                 pDevEvo->displayCommonHandle,
@@ -1087,7 +1087,6 @@ static NvBool ProbeHeadCountAndWindowAssignment(NVDevEvoPtr pDevEvo)
             }
         }
 
-        winHeadAssignParams.subDeviceInstance = sd;
         ret = nvRmApiControl(nvEvoGlobal.clientHandle,
                              pDevEvo->displayCommonHandle,
                              NV0073_CTRL_CMD_SPECIFIC_GET_VALID_HEAD_WINDOW_ASSIGNMENT,
@@ -1243,7 +1242,6 @@ static void MarkConnectorBootHeadActive(NVDispEvoPtr pDispEvo, NvU32 head)
 
     // The displayId reported by RM could be a dynamic one.  Find the root port
     // for this ID.
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = nvDpyIdToNvU32(displayId);
 
     ret = nvRmApiControl(nvEvoGlobal.clientHandle,
@@ -1329,7 +1327,6 @@ static void GetVbiosHeadAssignmentOneDisp(NVDispEvoPtr pDispEvo)
     for (head = 0; head < pDevEvo->numHeads; head++) {
         NV0073_CTRL_SYSTEM_GET_ACTIVE_PARAMS activeDpysParams = { 0 };
 
-        activeDpysParams.subDeviceInstance = pDispEvo->displayOwner;
         activeDpysParams.head = head;
         /*
          * We want to check for active displays set by any low-level software
@@ -1380,8 +1377,6 @@ static void ProbeBootDisplays(NVDispEvoPtr pDispEvo)
     NVDevEvoPtr pDevEvo = pDispEvo->pDevEvo;
 
     pDispEvo->bootDisplays = nvEmptyDpyIdList();
-
-    bootParams.subDeviceInstance = pDispEvo->displayOwner;
 
     ret = nvRmApiControl(nvEvoGlobal.clientHandle,
                          pDevEvo->displayCommonHandle,
@@ -1472,7 +1467,6 @@ static NvBool ReadDPCDReg(NVConnectorEvoPtr pConnectorEvo,
     NV0073_CTRL_DP_AUXCH_CTRL_PARAMS params = { };
     NVDevEvoPtr pDevEvo = pConnectorEvo->pDispEvo->pDevEvo;
 
-    params.subDeviceInstance = pConnectorEvo->pDispEvo->displayOwner;
     params.displayId = nvDpyIdToNvU32(pConnectorEvo->displayId);
 
     params.cmd = DRF_DEF(0073_CTRL, _DP, _AUXCH_CMD_TYPE, _AUX);
@@ -1512,7 +1506,6 @@ NvBool nvWriteDPCDReg(NVConnectorEvoPtr pConnectorEvo,
     NV0073_CTRL_DP_AUXCH_CTRL_PARAMS params = { };
     NVDevEvoPtr pDevEvo = pConnectorEvo->pDispEvo->pDevEvo;
 
-    params.subDeviceInstance = pConnectorEvo->pDispEvo->displayOwner;
     params.displayId = nvDpyIdToNvU32(pConnectorEvo->displayId);
 
     params.cmd = DRF_DEF(0073_CTRL, _DP, _AUXCH_CMD_TYPE, _AUX);
@@ -2200,7 +2193,6 @@ NvU32 nvRmAllocDisplayId(const NVDispEvoRec *pDispEvo, const NVDpyIdList dpyList
         return nvDpyIdToNvU32(pConnectorEvo->displayId);
     }
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = nvDpyIdToNvU32(pConnectorEvo->displayId);
 
     ret = nvRmApiControl(nvEvoGlobal.clientHandle,
@@ -2233,7 +2225,6 @@ void nvRmBeginEndModeset(NVDispEvoPtr pDispEvo,
     NV0073_CTRL_SPECIFIC_DISPLAY_CHANGE_PARAMS bracketParams = { };
     NvU32 ret;
 
-    bracketParams.subDeviceInstance = pDispEvo->displayOwner;
     bracketParams.newDevices = mask;
     bracketParams.properties = 0; /* this is currently unused */
     switch (beginOrEnd) {
@@ -2282,7 +2273,6 @@ void nvRmFreeDisplayId(const NVDispEvoRec *pDispEvo, NvU32 displayId)
         return;
     }
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = displayId;
 
     ret = nvRmApiControl(nvEvoGlobal.clientHandle,
@@ -2306,7 +2296,6 @@ static NvU32 GetLegacyConnectorType(NVDispEvoPtr pDispEvo, NVDpyId dpyId)
     NV0073_CTRL_SPECIFIC_GET_TYPE_PARAMS params = { 0 };
     NvU32 ret;
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = nvDpyIdToNvU32(dpyId);
 
     ret = nvRmApiControl(nvEvoGlobal.clientHandle,
@@ -2340,7 +2329,6 @@ void nvRmGetConnectorORInfo(NVConnectorEvoPtr pConnectorEvo, NvBool assertOnly)
     NV0073_CTRL_SPECIFIC_OR_GET_INFO_PARAMS params = { 0 };
     NvU32 ret;
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = nvDpyIdToNvU32(pConnectorEvo->displayId);
 
     ret = nvRmApiControl(nvEvoGlobal.clientHandle,
@@ -2442,7 +2430,6 @@ NVDpyIdList nvRmGetConnectedDpys(const NVDispEvoRec *pDispEvo,
         return DisplaylessRmGetConnectedDpys(pDispEvo, dpyIdList);
     }
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayMask = nvDpyIdListToNvU32(dpyIdList);
     params.flags =
         (DRF_DEF(0073_CTRL_SYSTEM,_GET_CONNECT_STATE_FLAGS,_METHOD,_DEFAULT) |
@@ -2550,7 +2537,6 @@ NvBool nvRmSetDpmsEvo(NVDpyEvoPtr pDpyEvo, NvS64 value)
     } else {
         NV0073_CTRL_SPECIFIC_SET_MONITOR_POWER_PARAMS powerParams = { 0 };
 
-        powerParams.subDeviceInstance = pDispEvo->displayOwner;
         powerParams.displayId = nvDpyEvoGetConnectorId(pDpyEvo);
 
         powerParams.powerState = (value == NV_KMS_DPY_ATTRIBUTE_DPMS_ON) ?
@@ -2735,8 +2721,6 @@ NvBool nvRmAllocEvoDma(NVDevEvoPtr pDevEvo, NVEvoDmaPtr pDma,
 
     pDma->surfaceDesc = surfaceDesc;
 
-    pDma->limit = limit;
-
     pDma->cpuAddress = pBase;
 
     return TRUE;
@@ -2774,8 +2758,6 @@ void nvRmFreeEvoDma(NVDevEvoPtr pDevEvo, NVEvoDmaPtr pDma)
 
         nvFreeUnixRmHandle(&pDevEvo->handleAllocator, pDma->memoryHandle);
         pDma->memoryHandle = 0;
-
-        pDma->limit = 0;
     }
 }
 
@@ -2791,9 +2773,10 @@ RmAllocEvoChannel(NVDevEvoPtr pDevEvo,
                   NVEvoChannelMask channelMask,
                   NvV32 instance, NvU32 class)
 {
+    NV50VAIO_CHANNELDMA_ALLOCATION_PARAMETERS ChannelAllocParams = { 0 };
     NVEvoChannelPtr pChannel = NULL;
     NVDmaBufferEvoPtr buffer = NULL;
-    int sd;
+    void *pDmaDisplayChannel = NULL;
     NvU32 ret;
 
     /* One 4k page is enough to map PUT and GET */
@@ -2814,91 +2797,71 @@ RmAllocEvoChannel(NVDevEvoPtr pDevEvo,
     pChannel->instance = instance;
     pChannel->channelMask = channelMask;
 
-    pChannel->notifiersDma = nvCalloc(pDevEvo->numSubDevices, sizeof(NVEvoDma));
+    // Allocation of the notifiers
+    if (!nvRmAllocEvoDma(pDevEvo, &pChannel->notifierDma,
+                         NV_DMA_EVO_NOTIFIER_SIZE - 1,
+                         DRF_DEF(OS03, _FLAGS, _TYPE, _NOTIFIER))) {
+        nvEvoLogDev(pDevEvo, EVO_LOG_ERROR,
+                    "Notifier DMA allocation failed");
 
-    if (pChannel->notifiersDma == NULL) {
         goto fail;
     }
 
-    for (sd = 0; sd < pDevEvo->numSubDevices; sd++) {
-        NVEvoDmaPtr pNotifiersDma = &pChannel->notifiersDma[sd];
+    nvAssert(pChannel->notifierDma.cpuAddress != NULL);
 
-        void *pDmaDisplayChannel = NULL;
+    // Allocation of the push buffer
+    if (!nvRmAllocEvoDma(pDevEvo, &buffer->dma,
+                         NV_DMA_EVO_PUSH_BUFFER_SIZE - 1, 0)) {
+        nvEvoLogDev(pDevEvo, EVO_LOG_ERROR,
+                    "Display engine push buffer DMA allocation failed");
 
-        // Allocation of the notifiers
-        if (!nvRmAllocEvoDma(pDevEvo, pNotifiersDma,
-                             NV_DMA_EVO_NOTIFIER_SIZE - 1,
-                             DRF_DEF(OS03, _FLAGS, _TYPE, _NOTIFIER))) {
-            nvEvoLogDev(pDevEvo, EVO_LOG_ERROR,
-                        "Notifier DMA allocation failed");
-
-            goto fail;
-        }
-
-        nvAssert(pNotifiersDma->cpuAddress != NULL);
-
-        // Only allocate memory for one pushbuffer.
-        // All subdevices will share (via subdevice mask)
-        if (sd == 0) {
-            NV50VAIO_CHANNELDMA_ALLOCATION_PARAMETERS ChannelAllocParams = { 0 };
-
-            NvU64 limit = NV_DMA_EVO_PUSH_BUFFER_SIZE - 1;
-            NVEvoDmaPtr pDma = &buffer->dma;
-
-            // Allocation of the push buffer
-            if (!nvRmAllocEvoDma(pDevEvo, pDma, limit, 0)) {
-                nvEvoLogDev(pDevEvo, EVO_LOG_ERROR,
-                            "Display engine push buffer DMA allocation failed");
-
-                goto fail;
-            }
-
-            buffer->base = pDma->cpuAddress;
-
-            buffer->channel_handle =
-                nvGenerateUnixRmHandle(&pDevEvo->handleAllocator);
-
-            // Channel instance (always 0 for CORE - head number otherwise)
-            ChannelAllocParams.channelInstance = instance;
-            // PB CtxDMA Handle
-            ChannelAllocParams.hObjectBuffer   = buffer->dma.surfaceDesc.ctxDmaHandle;
-            // Initial offset within the PB
-            ChannelAllocParams.offset          = 0;
-
-            ret = nvRmApiAlloc(nvEvoGlobal.clientHandle,
-                               pDevEvo->displayHandle,
-                               buffer->channel_handle,
-                               class,
-                               &ChannelAllocParams);
-            if (ret != NVOS_STATUS_SUCCESS) {
-                nvEvoLogDev(pDevEvo, EVO_LOG_ERROR,
-                            "Display engine push buffer channel allocation failed: 0x%x (%s)",
-                            ret, nvstatusToString(ret));
-
-                nvFreeUnixRmHandle(&pDevEvo->handleAllocator,
-                                   buffer->channel_handle);
-                buffer->channel_handle = 0;
-
-                goto fail;
-            }
-        }
-
-        ret = nvRmApiMapMemory(nvEvoGlobal.clientHandle,
-                               pDevEvo->pSubDevices[sd]->handle,
-                               buffer->channel_handle,
-                               0,
-                               dmaControlLen,
-                               &pDmaDisplayChannel,
-                               0);
-        if (ret != NVOS_STATUS_SUCCESS) {
-            nvEvoLogDev(pDevEvo, EVO_LOG_ERROR,
-                        "Display engine push buffer DMA mapping failed: 0x%x (%s)",
-                        ret, nvstatusToString(ret));
-            goto fail;
-        }
-
-        buffer->control[sd] = pDmaDisplayChannel;
+        goto fail;
     }
+
+    buffer->base = buffer->dma.cpuAddress;
+
+    buffer->channel_handle =
+        nvGenerateUnixRmHandle(&pDevEvo->handleAllocator);
+
+    // Channel instance (always 0 for CORE - head number otherwise)
+    ChannelAllocParams.channelInstance = instance;
+    // PB CtxDMA Handle
+    ChannelAllocParams.hObjectBuffer   = buffer->dma.surfaceDesc.ctxDmaHandle;
+    // Initial offset within the PB
+    ChannelAllocParams.offset          = 0;
+
+    ret = nvRmApiAlloc(nvEvoGlobal.clientHandle,
+                       pDevEvo->displayHandle,
+                       buffer->channel_handle,
+                       class,
+                       &ChannelAllocParams);
+    if (ret != NVOS_STATUS_SUCCESS) {
+        nvEvoLogDev(pDevEvo, EVO_LOG_ERROR,
+                    "Display engine push buffer channel allocation failed: 0x%x (%s)",
+                    ret, nvstatusToString(ret));
+
+        nvFreeUnixRmHandle(&pDevEvo->handleAllocator,
+                           buffer->channel_handle);
+        buffer->channel_handle = 0;
+
+        goto fail;
+    }
+
+    ret = nvRmApiMapMemory(nvEvoGlobal.clientHandle,
+                           pDevEvo->pSubDevices[0]->handle,
+                           buffer->channel_handle,
+                           0,
+                           dmaControlLen,
+                           &pDmaDisplayChannel,
+                           0);
+    if (ret != NVOS_STATUS_SUCCESS) {
+        nvEvoLogDev(pDevEvo, EVO_LOG_ERROR,
+                    "Display engine push buffer DMA mapping failed: 0x%x (%s)",
+                    ret, nvstatusToString(ret));
+        goto fail;
+    }
+
+    buffer->control = pDmaDisplayChannel;
 
     /* Initialize the rest of the required push buffer information */
     buffer->buffer          = buffer->base;
@@ -2916,9 +2879,7 @@ RmAllocEvoChannel(NVDevEvoPtr pDevEvo,
                            NV_DMA_EVO_PUSH_BUFFER_PAD_SIZE;
     buffer->fifo_free_count = (buffer->offset_max >> 2) - 2;
     buffer->put_offset   = 0;
-    buffer->num_channels = pDevEvo->numSubDevices;
     buffer->pDevEvo      = pDevEvo;
-    buffer->currentSubDevMask = SUBDEVICE_MASK_ALL;
 
     pDevEvo->hal->InitChannel(pDevEvo, pChannel);
 
@@ -2943,8 +2904,6 @@ static void FreeImmediateChannel(NVDevEvoPtr pDevEvo, NVEvoChannelPtr pChannel)
 /*****************************************************************************/
 static void RmFreeEvoChannel(NVDevEvoPtr pDevEvo, NVEvoChannelPtr pChannel)
 {
-    int sd;
-
     if (pChannel == NULL) {
         return;
     }
@@ -2963,18 +2922,16 @@ static void RmFreeEvoChannel(NVDevEvoPtr pDevEvo, NVEvoChannelPtr pChannel)
         pChannel->completionNotifierEventHandle = 0;
     }
 
-    for (sd = 0; sd < pDevEvo->numSubDevices; sd++) {
-        if (pChannel->pb.control[sd]) {
-            if (nvRmApiUnmapMemory(nvEvoGlobal.clientHandle,
-                                   pDevEvo->pSubDevices[sd]->handle,
-                                   pChannel->pb.channel_handle,
-                                   pChannel->pb.control[sd],
-                                   0) != NVOS_STATUS_SUCCESS) {
-                nvEvoLogDevDebug(pDevEvo, EVO_LOG_ERROR,
-                                 "Failed to unmap display engine channel memory");
-            }
-            pChannel->pb.control[sd] = NULL;
+    if (pChannel->pb.control) {
+        if (nvRmApiUnmapMemory(nvEvoGlobal.clientHandle,
+                               pDevEvo->pSubDevices[0]->handle,
+                               pChannel->pb.channel_handle,
+                               pChannel->pb.control,
+                               0) != NVOS_STATUS_SUCCESS) {
+            nvEvoLogDevDebug(pDevEvo, EVO_LOG_ERROR,
+                             "Failed to unmap display engine channel memory");
         }
+        pChannel->pb.control = NULL;
     }
 
     if (pChannel->pb.channel_handle != 0) {
@@ -2996,7 +2953,6 @@ static void RmFreeEvoChannel(NVDevEvoPtr pDevEvo, NVEvoChannelPtr pChannel)
         if ((isCore || isWindow) && pDevEvo->skipConsoleRestore) {
             NV5070_CTRL_SET_RMFREE_FLAGS_PARAMS params = { };
 
-            params.base.subdeviceIndex = pDevEvo->vtFbInfo.subDeviceInstance;
             params.flags = NV5070_CTRL_SET_RMFREE_FLAGS_PRESERVE_HW;
 
             if (nvRmApiControl(nvEvoGlobal.clientHandle,
@@ -3022,15 +2978,7 @@ static void RmFreeEvoChannel(NVDevEvoPtr pDevEvo, NVEvoChannelPtr pChannel)
     }
 
     nvRmFreeEvoDma(pDevEvo, &pChannel->pb.dma);
-
-    if (pChannel->notifiersDma) {
-        for (sd = 0; sd < pDevEvo->numSubDevices; sd++) {
-            nvRmFreeEvoDma(pDevEvo, &pChannel->notifiersDma[sd]);
-        }
-    }
-
-    nvFree(pChannel->notifiersDma);
-    pChannel->notifiersDma = NULL;
+    nvRmFreeEvoDma(pDevEvo, &pChannel->notifierDma);
 
     nvFree(pChannel);
 }
@@ -3342,29 +3290,24 @@ void nvRmAllocCoreRGSyncpts(NVDevEvoPtr pDevEvo)
 
 NvBool nvRMSetupEvoCoreChannel(NVDevEvoPtr pDevEvo)
 {
-    NvU32 sd;
+    NvU32 ret;
 
     pDevEvo->core = EvoAllocateCoreChannel(pDevEvo);
     if (!pDevEvo->core) {
         return FALSE;
     }
 
-    for (sd = 0; sd < pDevEvo->numSubDevices; sd++) {
-        // Bind the core notifier surface descriptor
-        NvU32 ret =
-            pDevEvo->hal->BindSurfaceDescriptor(
-                pDevEvo, pDevEvo->core,
-                &pDevEvo->core->notifiersDma[sd].surfaceDesc);
-        if (ret != NVOS_STATUS_SUCCESS) {
-            nvEvoLogDev(pDevEvo, EVO_LOG_ERROR,
-                        "Failed to bind display engine notify surface descriptor: 0x%x (%s)",
-                        ret, nvstatusToString(ret));
-            nvRMFreeEvoCoreChannel(pDevEvo);
-            return FALSE;
-        }
+    // Bind the core notifier surface descriptor
+    ret = pDevEvo->hal->BindSurfaceDescriptor(
+            pDevEvo, pDevEvo->core,
+            &pDevEvo->core->notifierDma.surfaceDesc);
+    if (ret != NVOS_STATUS_SUCCESS) {
+        nvEvoLogDev(pDevEvo, EVO_LOG_ERROR,
+                    "Failed to bind display engine notify surface descriptor: 0x%x (%s)",
+                    ret, nvstatusToString(ret));
+        nvRMFreeEvoCoreChannel(pDevEvo);
+        return FALSE;
     }
-
-    nvInitEvoSubDevMask(pDevEvo);
 
     /*
      * XXX NVKMS TODO: Enable core channel event generation; see bug
@@ -3499,7 +3442,7 @@ NvBool nvRMSyncEvoChannel(
  * stoppedBase will be TRUE if calling STOP_BASE was necessary and
  * successful.
  */
-NvBool nvRMIdleBaseChannel(NVDevEvoPtr pDevEvo, NvU32 head, NvU32 sd,
+NvBool nvRMIdleBaseChannel(NVDevEvoPtr pDevEvo, NvU32 head,
                            NvBool *stoppedBase)
 {
     NVEvoChannelPtr pMainLayerChannel =
@@ -3515,7 +3458,7 @@ NvBool nvRMIdleBaseChannel(NVDevEvoPtr pDevEvo, NvU32 head, NvU32 sd,
     do {
         if (!pDevEvo->hal->IsChannelMethodPending(pDevEvo,
                                                   pMainLayerChannel,
-                                                  sd,
+                                                  0,
                                                   &isMethodPending)) {
             break;
         }
@@ -3534,9 +3477,10 @@ NvBool nvRMIdleBaseChannel(NVDevEvoPtr pDevEvo, NvU32 head, NvU32 sd,
     } while (TRUE);
 
     if (idleTimedOut) {
-        NVEvoIdleChannelState idleChannelState = { };
+        NVEvoIdleChannelState idleChannelState = {
+            .channelMask = pMainLayerChannel->channelMask,
+        };
 
-        idleChannelState.subdev[sd].channelMask |= pMainLayerChannel->channelMask;
         ret = pDevEvo->hal->ForceIdleSatelliteChannel(pDevEvo, &idleChannelState);
 
         *stoppedBase = ret;
@@ -3723,65 +3667,23 @@ void nvRmEvoFreeSyncpt(
     nvRmFreeSyncptHandle(pDevEvo, pEvoSyncpt);
 }
 
-void nvRmEvoUnMapVideoMemory(NVDevEvoPtr pDevEvo, NvU32 memoryHandle,
-                             void *subDeviceAddress[NVKMS_MAX_SUBDEVICES])
-{
-    unsigned int sd;
-    NvU32 ret;
-
-    if (memoryHandle == 0) {
-        return;
-    }
-
-    for (sd = 0; sd < pDevEvo->numSubDevices; sd++) {
-        if (subDeviceAddress[sd] != NULL) {
-            ret = nvRmApiUnmapMemory(nvEvoGlobal.clientHandle,
-                                     pDevEvo->pSubDevices[sd]->handle,
-                                     memoryHandle,
-                                     subDeviceAddress[sd],
-                                     0);
-
-            if (ret != NVOS_STATUS_SUCCESS) {
-                nvAssert(!"UnmapMemory() failed");
-            }
-        }
-
-        subDeviceAddress[sd] = NULL;
-    }
-}
-
 NvBool nvRmEvoMapVideoMemory(NVDevEvoPtr pDevEvo,
                              NvU32 memoryHandle, NvU64 size,
-                             void *subDeviceAddress[NVKMS_MAX_SUBDEVICES],
-                             NvU32 subDeviceMask)
+                             void **ptr)
 {
-    NvU32 ret;
+    NvU32 ret = nvRmApiMapMemory(nvEvoGlobal.clientHandle,
+                                 pDevEvo->pSubDevices[0]->handle,
+                                 memoryHandle,
+                                 0,
+                                 size,
+                                 ptr,
+                                 0);
 
-    unsigned int sd;
-
-    nvkms_memset(subDeviceAddress, 0, sizeof(void*) * NVKMS_MAX_SUBDEVICES);
-
-    for (sd = 0; sd < pDevEvo->numSubDevices; sd++) {
-        void *address = NULL;
-
-        if (((1 << sd) & subDeviceMask) == 0) {
-            continue;
-        }
-
-        ret = nvRmApiMapMemory(nvEvoGlobal.clientHandle,
-                               pDevEvo->pSubDevices[sd]->handle,
-                               memoryHandle,
-                               0,
-                               size,
-                               &address,
-                               0);
-
-        if (ret != NVOS_STATUS_SUCCESS) {
-            nvRmEvoUnMapVideoMemory(pDevEvo, memoryHandle, subDeviceAddress);
-            return FALSE;
-        }
-        subDeviceAddress[sd] = address;
+    if (ret != NVOS_STATUS_SUCCESS) {
+        *ptr = NULL;
+        return FALSE;
     }
+
     return TRUE;
 }
 
@@ -4624,8 +4526,6 @@ NvBool nvRmIsPossibleToActivateDpyIdList(NVDispEvoPtr pDispEvo,
 
     /* build a mask of all the displays to use */
 
-    mapParams.subDeviceInstance = pDispEvo->displayOwner;
-
     mapParams.displayMask = nvDpyIdListToNvU32(dpyIdList);
 
     /* ask RM for the head routing */
@@ -4956,7 +4856,6 @@ NvBool nvRmQueryDpAuxLog(NVDispEvoRec *pDispEvo, NvS64 *pValue)
         return FALSE;
     }
 
-    pParams->subDeviceInstance = pDispEvo->displayOwner;
     pParams->dpAuxBufferReadSize = MAX_LOGS_PER_POLL;
 
     status = nvRmApiControl(nvEvoGlobal.clientHandle,
@@ -5159,7 +5058,6 @@ nvRmAddRgLine1Callback(NVDispEvoRec *pDispEvo,
     pRmCallback->pDispEvo = pDispEvo;
     pRmCallback->head = head;
 
-    rgLineParams.subDeviceInstance = pDispEvo->displayOwner;
     rgLineParams.head = head;
     rgLineParams.rgLineNum = 1;
     rgLineParams.pCallbkFn = RGLine1InterruptCallback;
@@ -5308,6 +5206,235 @@ void nvRmRemoveVBlankCallback(const NVDispEvoRec *pDispEvo,
     nvFreeUnixRmHandle(&pDevEvo->handleAllocator, callbackObjectHandle);
 }
 
+
+static NvU64 GetVblankTimestamp(NVDispEvoPtr pDispEvo, NvU32 apiHead)
+{
+    NVDispApiHeadStateEvoRec *pApiHeadState = &pDispEvo->apiHeadState[apiHead];
+    NVDevEvoPtr pDevEvo = pDispEvo->pDevEvo;
+    const NvU32 head = nvGetPrimaryHwHead(pDispEvo, apiHead);
+    NVEvoDmaPtr pDma;
+    volatile const NvGpuSemaphore *pSema;
+    NvU64 rgHwTimestamp = 0;
+    NvU64 rgCpuTimestamp = 0;
+    NvU64 adjustedTimestamp = 0;
+
+    if (head == NV_INVALID_HEAD) {
+        return 0;
+    }
+
+    pDma = &pDevEvo->rgSemaDma[head].dma;
+    if (pDma->memoryHandle == 0 ||
+        (!pDma->surfaceDesc.bValid && pDma->surfaceDesc.ctxDmaHandle == 0)) {
+        return 0;
+    }
+
+    pSema = (volatile const NvGpuSemaphore *)(pDma->cpuAddress);
+    if (pSema == NULL) {
+        return 0;
+    }
+
+    /*
+     * RG timestamp cannot be converted with invalid gpuCpuTimeDiff value '0'.
+     * In this case, return 0 to indicate an invalid timestamp to client. (DRM
+     * can fall back to use best estimate by ktime_get())
+     */
+    if (pDevEvo->gpuCpuTimeDiff == 0) {
+        return 0;
+    }
+
+    /*
+     * Convert RG timestamp to CPU timestamp:
+     * - Read the RG semaphore timestamp (gpu timer domain)
+     * - Subtract the gpu to cpu time diff to convert to CPU time domain
+     */
+    rgHwTimestamp = ((NvU64)pSema->timeStamp.nanoseconds[1] << 32) |
+                    (NvU64)pSema->timeStamp.nanoseconds[0];
+    rgCpuTimestamp = rgHwTimestamp - pDevEvo->gpuCpuTimeDiff;
+
+    /*
+     * Adjust timestamp from RG trigger line to first active line (top of display).
+     * DRM core expects vblank timestamps to correspond to the "physical top of display"
+     * which is the first active/visible line, not the RG semaphore trigger line.
+     */
+    adjustedTimestamp = rgCpuTimestamp + pApiHeadState->rgSemaInfo.triggerToActiveOffsetNs;
+
+    return adjustedTimestamp;
+}
+
+static void RgVBlankDeferredWork(void *dataPtr, NvU32 dataU32)
+{
+    NVDispEvoPtr pDispEvo = dataPtr;
+    NvU32 notifiedHead = ((dataU32 >> 8) & 0xff);
+    NvU32 notifiedRgSem = (dataU32 & 0xff);
+    NvU32 apiHead;
+    NvU64 vblankTimestamp;
+    NVRgInterruptCallbackRec *pCallbackRec;
+
+    if (notifiedRgSem != NVKMS_VBLANK_INTR_SEMAPHORE_INDEX) {
+        return;
+    }
+
+    // Find the apiHead that uses this hwHead
+    for (apiHead = 0; apiHead < NVKMS_MAX_HEADS_PER_DISP; apiHead++) {
+        if (nvGetPrimaryHwHead(pDispEvo, apiHead) == notifiedHead) {
+            // Check if there are any callbacks registered for this apiHead
+            if (!nvListIsEmpty(&pDispEvo->rgInterruptCallbackList[apiHead])) {
+                break;
+            }
+        }
+    }
+
+    if (apiHead >= NVKMS_MAX_HEADS_PER_DISP) {
+        return;
+    }
+
+    // Call ALL registered callbacks for this apiHead
+    vblankTimestamp = GetVblankTimestamp(pDispEvo, apiHead);
+    nvListForEachEntry(pCallbackRec, &pDispEvo->rgInterruptCallbackList[apiHead],
+                       rgInterruptCallbackListEntry) {
+        pCallbackRec->pCallback(pCallbackRec->param, vblankTimestamp);
+    }
+}
+
+static void RgVBlankCallback(void *arg, void *pEventDataVoid,
+                             NvU32 hEvent, NvU32 Data, NV_STATUS Status)
+{
+    NVC370_RG_SEM_NOTIFICATION_PARAMS *params =
+        (NVC370_RG_SEM_NOTIFICATION_PARAMS *) pEventDataVoid;
+    NvU32 rgSemData = (((params->headId & 0xff) << 8) | (params->rgSemId & 0xff));
+
+    (void) nvkms_alloc_timer_with_ref_ptr(
+        RgVBlankDeferredWork, /* callback */
+        arg,                  /* argument (ref_ptr to a NVVBlankIntrCallbackRec) */
+        rgSemData,            /* dataU32 */
+        0);                   /* timeout: schedule the work immediately */
+}
+
+/*!
+ * Register RG VBlank callback (cross-head event notification).
+ *
+ * C370 event notification is cross-head: one registration covers all heads.
+ * This is called unconditionally when the display is allocated and kept
+ * registered until the display is freed. RgVBlankDeferredWork routes events
+ * from hwHeads to the correct apiHead.
+ */
+NvBool nvRmRegisterRgInterruptCallback(NVDispEvoPtr pDispEvo)
+{
+    NVDevEvoRec *pDevEvo = pDispEvo->pDevEvo;
+    NvU32 handle;
+    NvU32 ret;
+    NVC370_CTRL_EVENT_SET_NOTIFICATION_PARAMS params = {0};
+
+    /* Allocate handle */
+    handle = nvGenerateUnixRmHandle(&pDevEvo->handleAllocator);
+
+    /*
+     * Register one callback for all heads
+     * Use pDispEvo->ref_ptr (all apiHeads share the same ref_ptr to pDispEvo)
+     */
+    if (!nvRmRegisterCallback(pDevEvo,
+                              &pDispEvo->rgInterruptEventCallback,
+                              pDispEvo->ref_ptr,
+                              pDevEvo->displayHandle,
+                              handle,
+                              RgVBlankCallback,
+                              NVC370_NOTIFIERS_RG_SEM_NOTIFICATION)) {
+        nvEvoLogDisp(pDispEvo, EVO_LOG_ERROR,
+                     "Failed to register RM callback");
+        nvFreeUnixRmHandle(&pDevEvo->handleAllocator, handle);
+        return FALSE;
+    }
+
+    /* Enable event notification for all heads */
+    params.hEvent = handle;
+    params.event = NVC370_NOTIFIERS_RG_SEM_NOTIFICATION;
+    params.action = NVC370_CTRL_EVENT_SET_NOTIFICATION_ACTION_REPEAT;
+
+    ret = nvRmApiControl(nvEvoGlobal.clientHandle,
+                         pDevEvo->displayHandle,
+                         NVC370_CTRL_CMD_EVENT_SET_NOTIFICATION,
+                         &params,
+                         sizeof(params));
+
+    if (ret != NVOS_STATUS_SUCCESS) {
+        nvEvoLogDisp(pDispEvo, EVO_LOG_ERROR,
+                     "Failed to enable notification, error: 0x%x", ret);
+        nvFreeUnixRmHandle(&pDevEvo->handleAllocator, handle);
+        return FALSE;
+    }
+
+    pDispEvo->rmRgInterruptCallbackHandle = handle;
+    return TRUE;
+}
+
+/*!
+ * Unregister RG VBlank callback (cross-head event notification).
+ *
+ * This is called unconditionally when the display is freed.
+ */
+void nvRmUnregisterRgInterruptCallback(NVDispEvoPtr pDispEvo)
+{
+    NVDevEvoRec *pDevEvo = pDispEvo->pDevEvo;
+    NvU32 ret;
+    NvU32 handle;
+    NVC370_CTRL_EVENT_SET_NOTIFICATION_PARAMS params = { 0 };
+
+    /* Check if already unregistered */
+    if (pDispEvo->rmRgInterruptCallbackHandle == 0) {
+        return;
+    }
+
+    handle = pDispEvo->rmRgInterruptCallbackHandle;
+
+    /* Disable the event notification for all heads */
+    params.hEvent = handle;
+    params.event = NVC370_NOTIFIERS_RG_SEM_NOTIFICATION;
+    params.action = NVC370_CTRL_EVENT_SET_NOTIFICATION_ACTION_DISABLE;
+
+    ret = nvRmApiControl(nvEvoGlobal.clientHandle,
+                         pDevEvo->displayHandle,
+                         NVC370_CTRL_CMD_EVENT_SET_NOTIFICATION,
+                         &params,
+                         sizeof(params));
+
+    if (ret != NVOS_STATUS_SUCCESS) {
+        /*
+         * NV_ERR_INVALID_STATE indicating the event notification list was freed
+         * for disabling notificaiton. rmRgInterruptCallbackHandle != 0 check above
+         * shows that the error is not due to unsuccessful registration.
+         * This happens during driver unload when heads are shut down via modeset
+         * after the notifier has been cleaned up.
+         * Log at INFO level since this is expected during cleanup.
+         */
+        if (ret == NV_ERR_INVALID_STATE) {
+            nvEvoLogDisp(pDispEvo, EVO_LOG_INFO,
+                         "RG VBlank event notification already disabled, "
+                         "handle 0x%x (expected during cleanup)",
+                         handle);
+        } else {
+            nvEvoLogDisp(pDispEvo, EVO_LOG_WARN,
+                         "Failed to disable RG VBlank event notification, "
+                         "handle 0x%x, error: 0x%x (%s)",
+                         handle, ret, nvstatusToString(ret));
+        }
+    }
+
+    /* Free the RM callback object */
+    ret = nvRmApiFree(nvEvoGlobal.clientHandle,
+                      pDevEvo->displayHandle,
+                      handle);
+
+    if (ret != NVOS_STATUS_SUCCESS) {
+        nvEvoLogDisp(pDispEvo, EVO_LOG_WARN,
+                     "Failed to free RG VBlank callback handle 0x%x, "
+                     "error: 0x%x (%s)",
+                     handle, ret, nvstatusToString(ret));
+    }
+
+    nvFreeUnixRmHandle(&pDevEvo->handleAllocator, handle);
+    pDispEvo->rmRgInterruptCallbackHandle = 0;
+}
+
 /*!
  * Initialize the dynamic display mux on supported systems.
  *
@@ -5321,7 +5448,6 @@ static void MuxInit(const NVDpyEvoRec *pDpyEvo)
 
     NvU32 ret;
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = nvDpyEvoGetConnectorId(pDpyEvo);
 
     if (pDpyEvo->internal) {
@@ -5402,8 +5528,6 @@ static NVDpyIdList GetValidMuxDpys(NVDispEvoPtr pDispEvo)
 {
     NV0073_CTRL_CMD_SYSTEM_QUERY_DISPLAY_IDS_WITH_MUX_PARAMS params = { 0 };
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
-
     nvRmApiControl(nvEvoGlobal.clientHandle,
                    pDispEvo->pDevEvo->displayCommonHandle,
                    NV0073_CTRL_CMD_SYSTEM_QUERY_DISPLAY_IDS_WITH_MUX,
@@ -5449,7 +5573,6 @@ NvBool nvRmMuxPre(const NVDpyEvoRec *pDpyEvo, NvMuxState state)
         return FALSE;
     }
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = nvDpyIdToNvU32(pDpyEvo->pConnectorEvo->displayId);
     params.flags = DRF_DEF(0073_CTRL_DFP, _DISP_MUX_FLAGS, _SR_ENTER_SKIP, _NO);
 
@@ -5493,7 +5616,6 @@ NvBool nvRmMuxSwitch(const NVDpyEvoRec *pDpyEvo, NvMuxState state)
         return FALSE;
     }
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = nvDpyIdToNvU32(pDpyEvo->pConnectorEvo->displayId);
 
     if (state == MUX_STATE_DISCRETE) {
@@ -5549,7 +5671,6 @@ NvBool nvRmMuxPost(const NVDpyEvoRec *pDpyEvo, NvMuxState state)
         return FALSE;
     }
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = nvDpyIdToNvU32(pDpyEvo->pConnectorEvo->displayId);
     params.flags = DRF_DEF(0073_CTRL_DFP, _DISP_MUX_FLAGS, _SR_ENTER_SKIP, _NO);
 
@@ -5592,7 +5713,6 @@ NvMuxState nvRmMuxState(const NVDpyEvoRec *pDpyEvo)
         return MUX_STATE_UNKNOWN;
     }
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = nvDpyIdToNvU32(pDpyEvo->pConnectorEvo->displayId);
 
     if (NVOS_STATUS_SUCCESS == nvRmApiControl(nvEvoGlobal.clientHandle,
@@ -5621,8 +5741,6 @@ void nvRmRegisterBacklight(NVDispEvoRec *pDispEvo)
 
     nvAssert(pDispEvo->backlightDevice == NULL);
 
-    dispParams.subDeviceInstance = pDispEvo->displayOwner;
-
     if (nvRmApiControl(nvEvoGlobal.clientHandle,
                        pDevEvo->displayCommonHandle,
                        NV0073_CTRL_CMD_SYSTEM_GET_INTERNAL_DISPLAYS,
@@ -5639,7 +5757,6 @@ void nvRmRegisterBacklight(NVDispEvoRec *pDispEvo)
 
         displayId = LOWESTBIT(displayMask);
 
-        params.subDeviceInstance = pDispEvo->displayOwner;
         params.displayId         = displayId;
         params.brightnessType = NV0073_CTRL_SPECIFIC_BACKLIGHT_BRIGHTNESS_TYPE_PERCENT100;
 

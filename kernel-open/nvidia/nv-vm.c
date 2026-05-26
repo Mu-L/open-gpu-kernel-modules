@@ -231,10 +231,11 @@ static NvU64 nv_get_max_sysmem_address(void)
 
     for_each_online_node(node_id)
     {
+        // node_end_pfn() returns the next PFN after the last PFN in the node.
         global_max_pfn = max(global_max_pfn, (NvU64)node_end_pfn(node_id));
     }
 
-    return ((global_max_pfn + 1) << PAGE_SHIFT) - 1;
+    return (global_max_pfn << PAGE_SHIFT) - 1;
 }
 
 static unsigned int nv_compute_gfp_mask(
@@ -581,7 +582,7 @@ nv_mem_pool_clear_page(unsigned long virt_addr, unsigned int order)
     }
 }
 
-unsigned int
+static unsigned int
 nv_mem_pool_alloc_pages
 (
     nv_page_pool_t *mem_pool,
@@ -687,7 +688,7 @@ nv_mem_pool_worker(void *arg)
     }
 }
 
-void
+static void
 nv_mem_pool_destroy(nv_page_pool_t *mem_pool)
 {
     NV_STATUS status;
@@ -713,7 +714,7 @@ nv_mem_pool_destroy(nv_page_pool_t *mem_pool)
     NV_KFREE(mem_pool, sizeof(*mem_pool));
 }
 
-nv_page_pool_t* nv_mem_pool_init(int node_id, unsigned int order)
+static nv_page_pool_t* nv_mem_pool_init(int node_id, unsigned int order)
 {
     struct shrinker *shrinker;
     nv_page_pool_t *mem_pool;
@@ -766,7 +767,7 @@ failed:
     return NULL;
 }
 
-NV_STATUS
+static NV_STATUS
 nv_mem_pool_free_pages
 (
     nv_page_pool_t *mem_pool,
@@ -843,7 +844,7 @@ nv_mem_pool_free_pages
     return NV_OK;
 }
 
-NV_STATUS nv_init_page_pools(void)
+int nv_init_page_pools(void)
 {
     int node_id;
     unsigned int order;
@@ -861,12 +862,12 @@ NV_STATUS nv_init_page_pools(void)
 
             if (sysmem_page_pools[node_id][order] == NULL)
             {
-                return NV_ERR_NO_MEMORY;
+                return -ENOMEM;
             }
         }
     }
 
-    return NV_OK;
+    return 0;
 }
 
 void nv_destroy_page_pools(void)

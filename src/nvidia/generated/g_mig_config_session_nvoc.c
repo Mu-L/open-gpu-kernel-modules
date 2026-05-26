@@ -31,7 +31,7 @@ void __nvoc_init__MIGConfigSession(MIGConfigSession*);
 void __nvoc_init_funcTable_MIGConfigSession(MIGConfigSession*);
 NV_STATUS __nvoc_ctor_MIGConfigSession(MIGConfigSession*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_MIGConfigSession(MIGConfigSession*);
-void __nvoc_dtor_MIGConfigSession(MIGConfigSession*);
+void __nvoc_dtor_MIGConfigSession(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__MIGConfigSession;
@@ -89,7 +89,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_MIGConfigSession =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "MIGConfigSession",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_MIGConfigSession,
+    .objCreatefn =        &__nvoc_objCreateDynamic_MIGConfigSession,
     .pCastInfo =          &__nvoc_castinfo__MIGConfigSession,
     .pExportInfo =        &__nvoc_export_info__MIGConfigSession
 };
@@ -98,7 +98,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_MIGConfigSession =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__MIGConfigSession __nvoc_metadata__MIGConfigSession = {
     .rtti.pClassDef = &__nvoc_class_def_MIGConfigSession,    // (migconfigsession) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_MIGConfigSession,
+    .rtti.dtor      = &__nvoc_dtor_MIGConfigSession,
     .rtti.offset    = 0,
     .metadata__RmResource.rtti.pClassDef = &__nvoc_class_def_RmResource,    // (rmres) super
     .metadata__RmResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -305,16 +305,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__MIGConfigSession =
 
 // Destruct MIGConfigSession object.
 void __nvoc_migconfigsessionDestruct(MIGConfigSession*);
-void __nvoc_dtor_RmResource(RmResource*);
-void __nvoc_dtor_MIGConfigSession(MIGConfigSession* pThis) {
+void __nvoc_dtor_RmResource(Dynamic*);
+void __nvoc_dtor_MIGConfigSession(Dynamic* pThis) {
+
+    MIGConfigSession *__nvoc_this = (MIGConfigSession *) pThis;
 
 // Call destructor.
-    __nvoc_migconfigsessionDestruct(pThis);
+    __nvoc_migconfigsessionDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RmResource(&pThis->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *) &__nvoc_this->__nvoc_base_RmResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_MIGConfigSession(MIGConfigSession *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -340,7 +342,7 @@ NV_STATUS __nvoc_ctor_MIGConfigSession(MIGConfigSession *pMIGConfigSession, stru
 
     // Unwind on error.
 __nvoc_ctor_MIGConfigSession_fail__init:
-    __nvoc_dtor_RmResource(&pMIGConfigSession->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *)&pMIGConfigSession->__nvoc_base_RmResource);
 __nvoc_ctor_MIGConfigSession_fail_RmResource:
 __nvoc_ctor_MIGConfigSession_exit:
     return status;
@@ -450,13 +452,10 @@ __nvoc_objCreate_MIGConfigSession_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_MIGConfigSession(MIGConfigSession **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_MIGConfigSession(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_MIGConfigSession(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_MIGConfigSession((MIGConfigSession **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

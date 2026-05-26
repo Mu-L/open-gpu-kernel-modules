@@ -1122,21 +1122,20 @@ static NV_STATUS notify_tools_and_process_flags(uvm_va_space_t *va_space,
     return status;
 }
 
-static NV_STATUS service_va_block_locked(uvm_processor_id_t processor,
+static NV_STATUS service_va_block_locked(uvm_gpu_t *gpu,
                                          uvm_va_block_t *va_block,
                                          uvm_va_block_retry_t *va_block_retry,
                                          uvm_service_block_context_t *service_context,
                                          uvm_page_mask_t *accessed_pages)
 {
     NV_STATUS status = NV_OK;
-    uvm_va_space_t *va_space = uvm_va_block_get_va_space(va_block);
-    uvm_range_group_range_iter_t iter;
     uvm_page_index_t page_index;
     uvm_page_index_t first_page_index;
     uvm_page_index_t last_page_index;
     NvU32 page_count = 0;
     const uvm_page_mask_t *residency_mask;
     const bool hmm_migratable = true;
+    uvm_processor_id_t processor = gpu ? gpu->id : UVM_ID_CPU;
 
     uvm_assert_mutex_locked(&va_block->lock);
 
@@ -1170,24 +1169,12 @@ static NV_STATUS service_va_block_locked(uvm_processor_id_t processor,
     if (residency_mask)
         uvm_page_mask_andnot(accessed_pages, accessed_pages, residency_mask);
 
-    uvm_range_group_range_migratability_iter_first(va_space, va_block->start, va_block->end, &iter);
-
     for_each_va_block_page_in_mask(page_index, accessed_pages, va_block) {
         uvm_perf_thrashing_hint_t thrashing_hint;
         NvU64 address = uvm_va_block_cpu_page_address(va_block, page_index);
         bool read_duplicate = false;
         uvm_processor_id_t new_residency;
         const uvm_va_policy_t *policy;
-
-        // Ensure that the migratability iterator covers the current address
-        while (iter.end < address)
-            uvm_range_group_range_migratability_iter_next(va_space, &iter, va_block->end);
-
-        UVM_ASSERT(iter.start <= address && iter.end >= address);
-
-        // If the range is not migratable, skip the page
-        if (!iter.migratable)
-            continue;
 
         thrashing_hint = uvm_perf_thrashing_get_hint(va_block, service_context->block_context, address, processor);
         if (thrashing_hint.type == UVM_PERF_THRASHING_HINT_TYPE_THROTTLE) {
@@ -1284,7 +1271,7 @@ static NV_STATUS service_va_block_locked(uvm_processor_id_t processor,
                 service_context->region = uvm_va_block_region(first_page_index, outer);
                 first_page_index = outer;
 
-                status = uvm_va_block_service_locked(processor, va_block, va_block_retry, service_context);
+                status = uvm_va_block_service_locked(gpu, va_block, va_block_retry, service_context);
                 if (status != NV_OK)
                     break;
             }
@@ -1306,7 +1293,7 @@ static NV_STATUS service_va_block_locked(uvm_processor_id_t processor,
 
 static NV_STATUS service_notification_va_block_helper(struct mm_struct *mm,
                                                       uvm_va_block_t *va_block,
-                                                      uvm_processor_id_t processor,
+                                                      uvm_gpu_t *gpu,
                                                       uvm_access_counter_service_batch_context_t *batch_context)
 {
     uvm_va_block_retry_t va_block_retry;
@@ -1323,7 +1310,7 @@ static NV_STATUS service_notification_va_block_helper(struct mm_struct *mm,
 
     return UVM_VA_BLOCK_RETRY_LOCKED(va_block,
                                      &va_block_retry,
-                                     service_va_block_locked(processor,
+                                     service_va_block_locked(gpu,
                                                              va_block,
                                                              &va_block_retry,
                                                              service_context,
@@ -1450,7 +1437,7 @@ static NV_STATUS service_notifications_in_block(uvm_gpu_va_space_t *gpu_va_space
 
     batch_context->block_service_context.access_counters_buffer_index = access_counters->index;
 
-    status = service_notification_va_block_helper(mm, va_block, gpu->id, batch_context);
+    status = service_notification_va_block_helper(mm, va_block, gpu, batch_context);
 
     uvm_mutex_unlock(&va_block->lock);
 
@@ -2193,6 +2180,76 @@ NV_STATUS uvm_test_reset_access_counters(UVM_TEST_RESET_ACCESS_COUNTERS_PARAMS *
 
 exit_isr_unlock:
     uvm_access_counters_isr_unlock(access_counters);
+
+exit_release_gpu:
+    uvm_gpu_release(gpu);
+
+    return status;
+}
+
+static bool access_counters_any_pending(uvm_parent_gpu_t *parent_gpu)
+{
+    NvU32 notif_buf_index;
+    uvm_access_counter_buffer_t *access_counters;
+    bool pending = false;
+
+    for (notif_buf_index = 0; notif_buf_index < parent_gpu->rm_info.accessCntrBufferCount; notif_buf_index++) {
+        access_counters = parent_gpu_access_counter_buffer_get(parent_gpu, notif_buf_index);
+
+        uvm_access_counters_isr_lock(access_counters);
+
+        if (parent_gpu->isr.access_counters[notif_buf_index].handling_ref_count > 0 &&
+            uvm_parent_gpu_access_counters_pending(parent_gpu, notif_buf_index)) {
+            pending = true;
+        }
+
+        uvm_access_counters_isr_unlock(access_counters);
+
+        if (pending)
+            break;
+    }
+
+    return pending;
+}
+
+NV_STATUS uvm_test_drain_access_counters(UVM_TEST_DRAIN_ACCESS_COUNTERS_PARAMS *params, struct file *filp)
+{
+    NV_STATUS status = NV_OK;
+    uvm_gpu_t *gpu = NULL;
+    uvm_parent_gpu_t *parent_gpu = NULL;
+    uvm_va_space_t *va_space = uvm_va_space_get(filp);
+    uvm_spin_loop_t spin;
+    bool pending = true;
+
+    gpu = uvm_va_space_retain_gpu_by_uuid(va_space, &params->gpu_uuid);
+    if (!gpu)
+        return NV_ERR_INVALID_DEVICE;
+
+    parent_gpu = gpu->parent;
+
+    if (!parent_gpu->access_counters_supported) {
+        status = NV_ERR_NOT_SUPPORTED;
+        goto exit_release_gpu;
+    }
+
+    uvm_spin_loop_init(&spin);
+
+    do {
+        pending = access_counters_any_pending(parent_gpu);
+
+        if (!pending)
+            break;
+
+        if (fatal_signal_pending(current)) {
+            status = NV_ERR_SIGNAL_PENDING;
+            break;
+        }
+
+        UVM_SPIN_LOOP(&spin);
+    } while (uvm_spin_loop_elapsed(&spin) < params->timeout_ns);
+
+    if (pending && status == NV_OK)
+        status = NV_ERR_TIMEOUT;
 
 exit_release_gpu:
     uvm_gpu_release(gpu);

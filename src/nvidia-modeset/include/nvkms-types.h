@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2010-2020 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2010-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -85,8 +85,6 @@ extern "C" {
  * (which are 8 bytes each).
  */
 #define NV_LUT_VSS_HEADER_SIZE              4
-
-#define NV_EVO_SUBDEV_STACK_SIZE            10
 
 #define NV_DP_READ_EDID_RETRIES             18
 #define NV_DP_REREAD_EDID_DELAY_USEC        500 /* in microseconds */
@@ -197,8 +195,6 @@ typedef struct _NVEvoDma
     NvU32 memoryHandle;
     NVSurfaceDescriptor surfaceDesc;
 
-    NvU64 limit;
-
     void *cpuAddress;
 } NVEvoDma, *NVEvoDmaPtr;
 
@@ -207,15 +203,13 @@ typedef struct _NVDmaBufferEvoRec
     NVEvoDma        dma;
 
     NvU32           channel_handle;  // handles
-    NvU32           num_channels;
-    void           *control[NVKMS_MAX_SUBDEVICES];
+    void           *control;
     NvU32          *base;  // Push buffer start pointer
     NvU32          *buffer;// Push buffer current pointer
     NvU32          *end;   // Push buffer end pointer
     NvU32           offset_max; // Push buffer max offset (in bytes)
     NvU32           put_offset; // Push buffer last kicked off offset
     NvU32           fifo_free_count; // fifo free space (in words)
-    NvU32           currentSubDevMask;
     NVDevEvoPtr     pDevEvo;
 } NVDmaBufferEvoRec;
 
@@ -422,9 +416,7 @@ struct _NVEvoModesetUpdateState {
 };
 
 typedef struct {
-    struct {
-        NVEvoChannelMask channelMask;
-    } subdev[NVKMS_MAX_SUBDEVICES];
+    NVEvoChannelMask channelMask;
 } NVEvoIdleChannelState;
 
 typedef struct {
@@ -471,10 +463,9 @@ typedef struct _NVVblankSyncObjectRec {
     NVEvoSyncpt evoSyncpt;
 } NVVblankSyncObjectRec;
 
-/* EVO channel, encompassing multiple subdevices and a single pushbuf */
+/* EVO channel */
 typedef struct _NVEvoChannel {
-    /* Pointer to array of per subdev notifier dma structs */
-    NVEvoDmaPtr                 notifiersDma;
+    NVEvoDma                    notifierDma;
 
     NvU32                       hwclass;
     NvU32                       instance;
@@ -676,6 +667,11 @@ typedef struct {
     struct {
         struct NvKmsCscMatrix matrix;
         NvBool enabled;
+    } fmtOverride;
+
+    struct {
+        struct NvKmsCscMatrix matrix;
+        NvBool enabled;
     } csc00Override;
 
     struct {
@@ -802,12 +798,9 @@ typedef struct _NVEvoSubDevRec {
 
     NVDispEvoPtr                pDispEvo;
 
-    NvU32                       setSwSpareA[NVKMS_MAX_HEADS_PER_DISP];
-
     NVEvoSubDevHeadStateRec     headState[NVKMS_MAX_HEADS_PER_DISP];
     NVEvoHeadControl            headControl[NVKMS_MAX_HEADS_PER_DISP];
     NVEvoHeadControl            headControlAssy[NVKMS_MAX_HEADS_PER_DISP];
-    void                       *cursorPio[NVKMS_MAX_HEADS_PER_DISP];
     NvBool                      (*scanLockState)(NVDispEvoPtr pDispEvo,
                                                  NVEvoSubDevPtr pEvoSubDev,
                                                  NvU32 action,
@@ -886,7 +879,7 @@ typedef struct {
 
 typedef struct {
     NvBool rasterLockAcrossProtocolsAllowed :1;
-    NvU8   validNIsoFormatMask;
+    NvBool adaptiveSyncSdpSupported         :1;
     NvU32  maxPitchValue;
     int    maxWidthInBytes;
     int    maxWidthInPixels;
@@ -897,7 +890,6 @@ typedef struct {
     NvU16  validLayerRRTransforms;
     struct NvKmsLayerCapabilities layerCaps[NVKMS_MAX_LAYERS_PER_HEAD];
     struct NvKmsLUTCaps olut;
-    NvU8 legacyNotifierFormatSizeBytes[NVKMS_MAX_LAYERS_PER_HEAD];
     NvU16 hdmiTmds10BpcMaxPClkMHz;
 } NVEvoCapsRec;
 
@@ -1084,10 +1076,8 @@ typedef struct _NVEvoDevRec {
     /* Pointer to array of subdev structs */
     NVEvoSubDevPtr      gpus;
 
-    NvU32               subDevMaskStack[NV_EVO_SUBDEV_STACK_SIZE];
-    NvU32               subDevMaskStackDepth;
-
     NvU32               cursorHandle[NVKMS_MAX_HEADS_PER_DISP];
+    void               *cursorPio[NVKMS_MAX_HEADS_PER_DISP];
 
     NVDPLibTimerPtr     dpTimer;
 
@@ -1113,6 +1103,13 @@ typedef struct _NVEvoDevRec {
      * hardware during core channel allocation are still pending.
      */
     NvBool              coreInitMethodsPending   : 1;
+
+    /*
+     * Indicates that RG semaphore DMA allocation failed for at least one head.
+     * If TRUE, vblank interrupt callback registration will fail.
+     */
+    NvBool              rgSemaDmaAvailable       : 1;
+
     /*
      * Indicates that NVKMS restored the console and freeing the core channel
      * should leave the display configuration alone.
@@ -1229,6 +1226,8 @@ typedef struct _NVEvoDevRec {
     /* The current headSurface configuration. */
     NVHsStateOneHeadAllDisps apiHeadSurfaceAllDisps[NVKMS_MAX_HEADS_PER_DISP];
 
+    NvU32 setSwSpareA[NVKMS_MAX_HEADS_PER_DISP];
+
     struct NVDevPreallocRec prealloc;
 
     struct {
@@ -1303,6 +1302,20 @@ typedef struct _NVEvoDevRec {
     struct {
         NvU32 numLayers;
     } apiHead[NVKMS_MAX_HEADS_PER_DISP];
+
+    /* GPU-CPU timer difference (gpuTime - cpuTime) */
+    NvS64 gpuCpuTimeDiff;
+
+    /* Timer to periodically refresh gpuCpuTimeDiff to handle timer drift */
+    nvkms_timer_handle_t *gpuCpuTimeDiffRefreshTimer;
+
+    /*
+     * Per-head DMA for RG semaphore vblank interrupts.
+     * Indexed by hwHead.
+     */
+    struct {
+        NVEvoDma dma;
+    } rgSemaDma[NV_MAX_HEADS];
 } NVDevEvoRec;
 
 /*
@@ -1677,7 +1690,7 @@ typedef struct _NVDpLibIsModePossibleParamsRec {
     struct {
         NvU32 displayId;
         NVDpyIdList dpyIdList;
-        enum NvKmsDpyAttributeCurrentColorSpaceValue colorSpace;
+        enum NvKmsDpyAttributeCurrentColorFormatValue colorFormat;
         enum NvKmsDpyAttributeColorBpcValue colorBpc;
         const struct NvKmsModeValidationParams *pModeValidationParams;
         const NVHwModeTimingsEvo *pTimings;
@@ -1694,26 +1707,24 @@ typedef struct _NVDpyAttributeCurrentDitheringConfigRec {
 
 typedef struct __NVDpyAttributeColorRec {
     /*
-     * For both colorSpace and colorRange, the value for
-     * NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_{SPACE,RANGE} sent by the client is
-     * stored in NVDpyEvoRec::requestedColor(Space, Range}. The structure stores
-     * the actual color space and color range in use.
+     * For both colorFormat and colorRange, the value for
+     * NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT sent by the client is
+     * stored in NVDpyEvoRec::requestedColorFormat. The structure stores
+     * the actual color format and color range in use.
      *
-     * nvChooseCurrentColorSpaceAndRangeEvo() chooses the actual color
-     * space, color bpc, and color range, for a dpy.  It sets colorBpc
+     * nvChooseCurrentColorFormatAndRangeEvo() chooses the actual color
+     * format, color bpc, and color range, for a dpy.  It sets colorBpc
      * to the max bpc supported by the given dpy.
      *
      * Since YUV444 mode only allows limited color range, changes to the
-     * current color space may trigger changes to the current color
-     * range (see nvChooseCurrentColorSpaceAndRangeEvo()).
+     * current color format may trigger changes to the current color
+     * range (see nvChooseCurrentColorFormatAndRangeEvo()).
      *
      * For SW YUV420 mode, these values are ignored in
      * HEAD_SET_PROCAMP and applied in the headSurface composite shader.
      *
-     * XXX Rename NvKmsDpyAttributeCurrentColorSpaceValue to
-     * NvKmsDpyAttributeCurrentFormatValue.
      */
-    enum NvKmsDpyAttributeCurrentColorSpaceValue format;
+    enum NvKmsDpyAttributeCurrentColorFormatValue format;
     enum NvKmsDpyAttributeColorBpcValue bpc;
     enum NvKmsDpyAttributeColorRangeValue range;
 
@@ -1741,7 +1752,7 @@ typedef struct __NVAttributesSetEvoRec {
     (NVAttributesSetEvoRec) {                                             \
         .dvc =        NV_EVO_DVC_DEFAULT,                                 \
         .color = {                                                        \
-            .format = NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_RGB,       \
+            .format = NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_RGB,      \
             .range = NV_KMS_DPY_ATTRIBUTE_COLOR_RANGE_FULL,               \
         },                                                                \
         .dithering = {                                                    \
@@ -1810,9 +1821,6 @@ typedef struct _NVHwHeadMultiTileConfigRec {
 typedef struct _NVDispHeadStateEvoRec {
 
     NvU32 displayRate;
-
-    /*! Cached, to preserve across modesets. */
-    struct NvKmsModeValidationParams modeValidationParams;
 
     /*
      * For Turing and newer, enable display composition bypass mode.
@@ -1899,6 +1907,10 @@ typedef struct _NVDispApiHeadStateEvoRec {
      */
     NvU32 hwHeadsMask;
 
+    /*! Cached, to preserve across modesets. */
+    struct NvKmsModeValidationParams modeValidationParams;
+
+
     NVDpyIdList activeDpys; /* Empty if the head is not active */
     NVAttributesSetEvoRec attributes;
 
@@ -1928,12 +1940,13 @@ typedef struct _NVDispApiHeadStateEvoRec {
     NVDispHeadInfoFrameStateEvoRec infoFrame;
 
     /*
-     * Each head can have up to NVKMS_MAX_VBLANK_SYNC_OBJECTS_PER_HEAD
-     * programmable Core semaphores.
+     * Each head has NVKMS_MAX_RG_SEMAPHORES_PER_HEAD (6) programmable
+     * RG semaphores. We use 5 for vblank sync objects (syncpoints) and
+     * reserve 1 for vblank interrupt (see rgSemaInfo below).
      *
      * The numVblankSyncObjectsCreated will ideally always be equal to
      * NVKMS_MAX_VBLANK_SYNC_OBJECTS_PER_HEAD, but could be lower if errors
-     * occured during syncpt allocation in nvRMSetupEvoCoreChannel().
+     * occurred during syncpt allocation in nvRMSetupEvoCoreChannel().
      */
     NvU8 numVblankSyncObjectsCreated;
     NVVblankSyncObjectRec vblankSyncObjects[NVKMS_MAX_VBLANK_SYNC_OBJECTS_PER_HEAD];
@@ -1946,6 +1959,23 @@ typedef struct _NVDispApiHeadStateEvoRec {
     NvU32 rmVBlankCallbackHandle;
 
     NvBool hs10bpcHint : 1;
+
+    /*
+     * Hardware provides NVKMS_MAX_RG_SEMAPHORES_PER_HEAD (6) programmable
+     * RG semaphores per head. We allocate them as follows:
+     *  - 5 semaphores for vblank sync objects (defined as
+     *    NVKMS_MAX_VBLANK_SYNC_OBJECTS_PER_HEAD in nvkms-api.h)
+     *  - 1 semaphore reserved for vblank interrupt (timestamp + interrupt)
+     *
+     * Reserve last RG semaphore per head for vblank interrupt purpose.
+     */
+#define NVKMS_MAX_RG_SEMAPHORES_PER_HEAD  6
+#define NVKMS_VBLANK_INTR_SEMAPHORE_INDEX (NVKMS_MAX_RG_SEMAPHORES_PER_HEAD - 1)
+
+    struct {
+        NvU64 triggerToActiveOffsetNs; /* Offset from RG trigger to first active line (nanoseconds) */
+        NvBool configured : 1;
+    } rgSemaInfo;
 } NVDispApiHeadStateEvoRec;
 
 typedef struct _NVDispVblankApiHeadState {
@@ -1953,8 +1983,15 @@ typedef struct _NVDispVblankApiHeadState {
     NvU64 vblankCount;
 
     /*
+     * The vblank callback lists for NV9010_VBLANK_CALLBACK, backed by
+     * LAST_DATA interrupt.
+     *
      * All entries in vblankCallbackList[0] get called before any entries in
      * vblankCallbackList[1].
+     *
+     * NOTE: This is separate from NVDispEvoRec::rgInterruptCallbackList and
+     * cannot currently be unified. See rgInterruptCallbackList documentation
+     * for details.
      */
     NVListRec vblankCallbackList[2];
 
@@ -2076,6 +2113,35 @@ typedef struct _NVDispEvoRec {
     NvBool dpAuxLoggingEnabled;
 
     struct nvkms_backlight_device *backlightDevice;
+
+    /*
+     * Per-API-head RG semaphore callback lists for vblank interrupts with
+     * precise timestamp tracking. This uses RG (Raster Generator) semaphore
+     * which provides deterministic, regular interrupt positioning within each
+     * frame, making it suitable for vblank timestamp use cases on Ampere+.
+     *
+     * For pre-Ampere dGPU platforms that require vblank timestamp support,
+     * RG_LINE_CALLBACK may be used in limited cases. Note that:
+     * - RG_LINE_CALLBACK is NOT planned for use on all dGPU platforms
+     * - It does not provide hardware timestamps
+     *
+     * NOTE: This is separate from NVDispVblankApiHeadState::vblankCallbackList
+     * (which uses LAST_DATA interrupt via NV9010_VBLANK_CALLBACK) and cannot
+     * currently be unified because:
+     * - rgInterruptCallbackList uses RG semaphore for precise positioning but
+     *   requires Ampere+ (RG semaphore not available on pre-Ampere)
+     * - Existing clients rely on vblankCallbackList behavior and cannot be
+     *   easily migrated
+     *
+     * TODO: Investigate unifying these callback mechanisms once all platforms
+     * can support a common solution.
+     *
+     * Indexed by apiHead.
+     */
+    NVListRec rgInterruptCallbackList[NVKMS_MAX_HEADS_PER_DISP];
+    /* Cross-head RG semaphore event notification (shared by all API heads) */
+    NvU32 rmRgInterruptCallbackHandle;
+    NVOS10_EVENT_KERNEL_CALLBACK_EX rgInterruptEventCallback;
 } NVDispEvoRec;
 
 static inline NvU32 GetNextHwHead(NvU32 hwHeadsMask, const NvU32 prevHwHead)
@@ -2142,6 +2208,18 @@ typedef struct _NVVBlankCallbackRec {
     NvU32 apiHead;
 } NVVBlankCallbackRec;
 
+typedef void (*NVRgInterruptCallbackProc)(NvU64 clientData,
+                                          NvU64 timestamp);
+
+typedef struct _NVRgInterruptCallbackRec {
+    NVListRec rgInterruptCallbackListEntry;
+    NVRgInterruptCallbackProc pCallback;
+    NvU32 apiHead;
+    NvU64 param;
+    NVDispEvoPtr pDispEvo;
+} NVRgInterruptCallbackRec;
+
+
 typedef void (*NVRgLine1CallbackProc)(NVDispEvoRec *pDispEvo,
                                       const NvU32 head,
                                       NVRgLine1CallbackPtr pCallbackData);
@@ -2196,7 +2274,7 @@ typedef struct _NVDpyEvoRec {
 
     NVDpyAttributeRequestedDitheringConfig requestedDithering;
 
-    enum NvKmsDpyAttributeRequestedColorSpaceValue requestedColorSpace;
+    enum NvKmsDpyAttributeRequestedColorFormatValue requestedColorFormat;
     enum NvKmsDpyAttributeColorRangeValue requestedColorRange;
 
     NVAttributesSetEvoRec currentAttributes;
@@ -3100,7 +3178,6 @@ typedef const struct _nv_evo_hal {
                                  const enum nvKmsPixelDepth pixelDepth);
 
     void (*EnableMidFrameAndDWCFWatermark)(NVDevEvoPtr pDevEvo,
-                                           NvU32 sd,
                                            NvU32 head,
                                            NvBool enable,
                                            NVEvoUpdateState *pUpdateState);
@@ -3133,6 +3210,8 @@ typedef const struct _nv_evo_hal {
                                const NvU32 head,
                                const NvEvoInfoFrameTransmitControl transmitCtrl,
                                const DPSDP_DESCRIPTOR *sdp);
+    void (*DisableAdaptiveSyncSdp)(const NVDispEvoRec *pDispEvo,
+                                   const NvU32 head);
     void (*SetDpVscSdp)(const NVDispEvoRec *pDispEvo,
                         const NvU32 head,
                         const DPSDP_DP_VSC_SDP_DESCRIPTOR *sdp,
@@ -3201,6 +3280,11 @@ typedef const struct _nv_evo_hal {
                                                      NvU32 semaphoreOffset,
                                                      NvU32 ctrlVal);
 
+    void (*SetupVBlankRgSemaphoreInterrupt) (NVDispEvoPtr pDispEvo,
+                                               NvU32 head,
+                                               NvU16 rasterLine,
+                                               NVSurfaceDescriptor *pSurfaceDesc,
+                                               NVEvoUpdateState *pUpdateState);
     struct {
         NvU32 supportsHDMIFRL                           :1;
         NvU32 supportsSetStorageMemoryLayout            :1;
@@ -3218,9 +3302,9 @@ typedef const struct _nv_evo_hal {
 typedef const struct _nv_evo_cursor_hal {
     NvU32 klass;
 
-    void (*MoveCursor)          (NVDevEvoPtr, NvU32 sd, NvU32 head,
+    void (*MoveCursor)          (NVDevEvoPtr, NvU32 head,
                                  NvS16 x, NvS16 y);
-    void (*ReleaseElv)          (NVDevEvoPtr, NvU32 sd, NvU32 head);
+    void (*ReleaseElv)          (NVDevEvoPtr, NvU32 head);
 
     struct {
         NvU16 maxSize;

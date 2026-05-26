@@ -39,7 +39,8 @@
 #include "mem_mgr/mem.h"
 #include "gpu/mem_mgr/virt_mem_allocator_common.h"
 #include "gpu/gsp/gsp_trace_rats_macro.h"
-
+#include "ctrl/ctrl2080/ctrl2080event.h"
+#include "rmapi/event_buffer.h"
 //
 // EVENT RM SubDevice Controls
 //
@@ -297,6 +298,18 @@ subdeviceCtrlCmdEventVideoBindEvtbuf_IMPL
     return status;
 }
 
+
+NV_STATUS
+subdeviceCtrlCmdEventNocatBindEvtbuf_IMPL
+(
+    Subdevice *pSubdevice,
+    NV2080_CTRL_EVENT_NOCAT_BIND_EVTBUF_PARAMS *pParams
+)
+{
+    NV_STATUS status = NV_OK;
+
+    return status;
+}
 
 NV_STATUS
 subdeviceCtrlCmdEventGspTraceRatsBindEvtbuf_IMPL

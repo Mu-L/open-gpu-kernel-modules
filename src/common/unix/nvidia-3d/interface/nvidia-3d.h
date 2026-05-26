@@ -260,7 +260,6 @@ void nv3dLoadTextures(
 
 void nv3dBindTextures(
     Nv3dChannelPtr p3dChannel,
-    int programIndex,
     const int *textureBindingIndices);
 
 void nv3dSetBlendColorCoefficients(

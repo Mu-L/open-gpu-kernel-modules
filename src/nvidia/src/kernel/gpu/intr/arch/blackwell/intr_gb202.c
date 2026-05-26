@@ -28,7 +28,60 @@
 #include "gpu/disp/kern_disp.h"
 
 /*!
- * @brief Returns a bitfield with only MC_ENGINE_IDX_DISP set if it's pending in hardware
+ * @brief Gets list of engines with pending stalling interrupts as per the interrupt trees
+ *
+ * @param[in]  pGpu
+ * @param[in]  pIntr
+ * @param[out] pStaticRegVal cached value of the main static interrupt register. For Turing+, it's leaf 4
+ * @param[out] pEngines      List of engines that have pending stall interrupts
+ * @param[in]  pThreadState
+ *
+ * @return NV_OK if the list of engines that have pending stall interrupts was retrieved
+ */
+NV_STATUS
+intrGetPendingDispLowLatencyAndStaticReg_GB202
+(
+    OBJGPU              *pGpu,
+    Intr                *pIntr,
+    NvU32               *pStaticRegVal,
+    MC_ENGINE_BITVECTOR *pEngines,
+    THREAD_STATE_NODE   *pThreadState
+)
+{
+    NvU32 bit;
+    NvU32 val;
+
+    *pStaticRegVal = 0;
+    bitVectorClrAll(pEngines);
+
+    if (IS_GPU_GC6_STATE_ENTERED(pGpu))
+    {
+        return NV_ERR_GPU_NOT_FULL_POWER;
+    }
+
+    if (!API_GPU_ATTACHED_SANITY_CHECK(pGpu))
+    {
+        return NV_ERR_GPU_IS_LOST;
+    }
+
+    val = intrReadRegLeaf_HAL(pGpu, pIntr, 4, pThreadState);
+    *pStaticRegVal = val;
+
+    if (pIntr->displayLowLatencyIntrVector == NV_INTR_VECTOR_INVALID)
+    {
+        return NV_OK;
+    }
+
+    bit = NV_CTRL_INTR_GPU_VECTOR_TO_LEAF_BIT(pIntr->displayLowLatencyIntrVector);
+
+    if (val & NVBIT(bit))
+        bitVectorSet(pEngines, MC_ENGINE_IDX_DISP_LOW);
+
+    return NV_OK;
+}
+
+/*!
+ * @brief Returns a bitfield with only MC_ENGINE_IDX_DISP_LOW set if it's pending in hardware
  *        On Turing+, there are multiple stall interrupt registers, and reading them
  *        all in the top half would be expensive.
  *        GB20X+, we we report a separate low latency DISP bit that is only pending if the

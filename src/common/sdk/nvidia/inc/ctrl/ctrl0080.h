@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2004-2020 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2004-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -42,8 +42,8 @@
 
 
 #include "ctrl0080/ctrl0080perf.h"
-#include "ctrl0080/ctrl0080msenc.h"
-#include "ctrl0080/ctrl0080bsp.h"
+#include "ctrl0080/ctrl0080nvenc.h"
+#include "ctrl0080/ctrl0080nvdec.h"
 #include "ctrl0080/ctrl0080nvjpg.h"
 #include "ctrl0080/ctrl0080unix.h"
 #include "ctrl0080/ctrl0080internal.h"

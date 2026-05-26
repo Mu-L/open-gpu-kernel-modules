@@ -101,7 +101,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_RmHalspecOwner;
     ((RmHalspecOwner*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(RmHalspecOwner)))
 #endif //__nvoc_gpu_halspec_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_RmHalspecOwner(RmHalspecOwner**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_RmHalspecOwner(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_RmHalspecOwner(RmHalspecOwner**, Dynamic*, NvU32,
         RM_RUNTIME_VARIANT RmVariantHal_rmVariant,
@@ -173,7 +173,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_GpuHalspecOwner;
     ((GpuHalspecOwner*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(GpuHalspecOwner)))
 #endif //__nvoc_gpu_halspec_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_GpuHalspecOwner(GpuHalspecOwner**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_GpuHalspecOwner(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_GpuHalspecOwner(GpuHalspecOwner**, Dynamic*, NvU32,
         NvU32 ChipHal_arch, NvU32 ChipHal_impl, NvU32 ChipHal_hidrev,

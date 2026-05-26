@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -51,7 +51,7 @@ extern "C" {
 #include "kernel/gpu/gr/kernel_graphics_context.h"
 
 #define KGRMGR_MAX_GR                  8
-#define KGRMGR_MAX_GPC                 32
+#define KGRMGR_MAX_GPC                 64
 #define GR_INDEX_INVALID               0xFFFFFFFF
 #define KGRMGR_MAX_GPCGRP              4
 
@@ -200,7 +200,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelGraphicsManager;
 #define PDB_PROP_KGRMGR_IS_MISSING_BASE_NAME PDB_PROP_ENGSTATE_IS_MISSING
 
 
-NV_STATUS __nvoc_objCreateDynamic_KernelGraphicsManager(KernelGraphicsManager**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelGraphicsManager(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelGraphicsManager(KernelGraphicsManager**, Dynamic*, NvU32);
 #define __objCreate_KernelGraphicsManager(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

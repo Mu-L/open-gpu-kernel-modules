@@ -31,6 +31,7 @@
 #include "platform/sli/sli.h"
 #include "containers/eheap_old.h"
 
+#include "alloc/alloc_channel.h" // NVOS04_*
 #include "class/cl906f.h"
 
 #include "published/maxwell/gm107/dev_ram.h"

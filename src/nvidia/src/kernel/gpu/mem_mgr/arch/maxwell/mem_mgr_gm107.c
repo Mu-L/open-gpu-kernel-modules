@@ -278,7 +278,6 @@ memmgrSetZbcReferenced
         return;
 
     params.bZbcSurfacesExist = bZbcSurfacesExist;
-    params.subdevInstance = gpumgrGetSubDeviceInstanceFromGpu(pGpu);
 
     NV_ASSERT_OK(
         pRmApi->Control(
@@ -1100,6 +1099,9 @@ memmgrInitReservedMemory_GM107
         rsvdFbRegion.rsvdSize = pMemoryManager->rsvdMemorySize;
         rsvdFbRegion.bProtected = bMemoryProtectionEnabled;
         rsvdFbRegion.bInternalHeap = NV_TRUE;
+        rsvdFbRegion.regionTag = (RMCFG_FEATURE_PLATFORM_GSP)?
+                                  NV2080_FB_REGION_TAG_GSP_RM_RESERVED :
+                                  NV2080_FB_REGION_TAG_CPU_RM_RESERVED;
 
         if (RMCFG_FEATURE_PLATFORM_GSP)
         {
@@ -1923,12 +1925,16 @@ memmgrCalcReservedFbSpaceHal_GM107
         *rsvdFastSize += 30 * 1024 * 1024;
     }
 
-    attribBufferSize = memmgrGetGrHeapReservationSize_HAL(pGpu, pMemoryManager);
-
-    // Fast: Attribute buffer
-    NV_FB_RSVD_BLOCK_LOG_ENTRY_ADD(status, pMemoryManager, NV_FB_ALLOC_RM_INTERNAL_OWNER_ATTR_BUFFER,
-                         attribBufferSize);
-    *rsvdFastSize += attribBufferSize;
+    // Skip reservation for attribute buffer on GSP in non-vGPU cases.
+    // Attribute buffer is usually allocated in Kernel RM. It's allocated in GSP only in vGPU case.
+    if (!RMCFG_FEATURE_PLATFORM_GSP || IS_VGPU_GSP_PLUGIN_OFFLOAD_ENABLED(pGpu))
+    {
+        attribBufferSize = memmgrGetGrHeapReservationSize_HAL(pGpu, pMemoryManager);
+        // Fast: Attribute buffer
+        NV_FB_RSVD_BLOCK_LOG_ENTRY_ADD(status, pMemoryManager, NV_FB_ALLOC_RM_INTERNAL_OWNER_ATTR_BUFFER,
+            attribBufferSize);
+        *rsvdFastSize += attribBufferSize;
+    }
 
     // Fast: Circular buffer & fudge
     NV_FB_RSVD_BLOCK_LOG_ENTRY_ADD(status, pMemoryManager, NV_FB_ALLOC_RM_INTERNAL_OWNER_CIRCULAR_BUFFER,

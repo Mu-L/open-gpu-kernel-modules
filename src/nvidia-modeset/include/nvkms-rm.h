@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2013-2020 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2013-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -74,7 +74,7 @@ NvBool nvRMSyncEvoChannel(
     NVDevEvoPtr pDevEvo,
     NVEvoChannelPtr pChannel,
     NvU32 errorToken);
-NvBool nvRMIdleBaseChannel(NVDevEvoPtr pDevEvo, NvU32 head, NvU32 sd,
+NvBool nvRMIdleBaseChannel(NVDevEvoPtr pDevEvo, NvU32 head,
                            NvBool *stoppedBase);
 NvBool nvRmEvoClassListCheck(const NVDevEvoRec *pDevEvo, NvU32 classID);
 NvBool nvRmEvoAllocAndBindSyncpt(
@@ -91,13 +91,9 @@ void nvRmEvoFreeSyncpt(NVDevEvoRec *pDevEvo,
                        NVEvoSyncpt *pEvoSyncpt);
 void nvRmEvoFreeDispContextDMA(NVDevEvoPtr pDevEvo,
                                NvU32 *hDispCtxDma);
-void nvRmEvoUnMapVideoMemory(NVDevEvoPtr pDevEvo,
-                             NvU32 memoryHandle,
-                             void *subDeviceAddress[NVKMS_MAX_SUBDEVICES]);
 NvBool nvRmEvoMapVideoMemory(NVDevEvoPtr pDevEvo,
                              NvU32 memoryHandle, NvU64 size,
-                             void *subDeviceAddress[NVKMS_MAX_SUBDEVICES],
-                             NvU32 subDeviceMask);
+                             void **ptr);
 NvBool nvRmAllocDeviceEvo(NVDevEvoPtr pDevEvo,
                           const struct NvKmsAllocDeviceRequest *pRequest);
 void nvRmFreeDeviceEvo(NVDevEvoPtr pDevEvo);
@@ -132,6 +128,10 @@ NvU32 nvRmAddVBlankCallback(
     void *pParam2);
 void nvRmRemoveVBlankCallback(const NVDispEvoRec *pDispEvo,
                               NvU32 callbackObjectHandle);
+
+NvBool nvRmRegisterRgInterruptCallback(NVDispEvoPtr pDispEvo);
+void nvRmUnregisterRgInterruptCallback(NVDispEvoPtr pDispEvo);
+
 void nvRmMuxInit(NVDevEvoPtr pDevEvo);
 NvBool nvRmMuxPre(const NVDpyEvoRec *pDpyEvo, NvMuxState state);
 NvBool nvRmMuxSwitch(const NVDpyEvoRec *pDpyEvo, NvMuxState state);

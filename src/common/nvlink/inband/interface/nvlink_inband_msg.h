@@ -65,7 +65,10 @@
 #define NVLINK_INBAND_MSG_TYPE_GPU_PROBE_REPLAY_RSP      NVLINK_INBAND_MSG_TYPE_GPU_PROBE_RSP
 #define NVLINK_INBAND_MSG_TYPE_MC_TEAM_SETUP_REPLAY_REQ  8
 #define NVLINK_INBAND_MSG_TYPE_MC_TEAM_SETUP_REPLAY_RSP  NVLINK_INBAND_MSG_TYPE_MC_TEAM_SETUP_RSP
-#define NVLINK_INBAND_MSG_TYPE_MAX                       9
+#define NVLINK_INBAND_MSG_TYPE_GPU_PROBE_REQ_V2          9
+#define NVLINK_INBAND_MSG_TYPE_GPU_PROBE_RSP_V2          10
+#define NVLINK_INBAND_MSG_TYPE_GPU_PROBE_UPDATE_REQ_V2   11
+#define NVLINK_INBAND_MSG_TYPE_MAX                       12
 
 /* Nvlink Inband message packet header */
 typedef struct
@@ -78,15 +81,16 @@ typedef struct
     NvU8      reserved[8];       /* For future use. Must be initialized to zero */
 } nvlink_inband_msg_header_t;
 
-#define NVLINK_INBAND_GPU_PROBE_CAPS_SRIOV_ENABLED NVBIT(0)
-#define NVLINK_INBAND_GPU_PROBE_CAPS_PROBE_UPDATE  NVBIT(1)
-#define NVLINK_INBAND_GPU_PROBE_CAPS_EGM_SUPPORT   NVBIT(2)
-#define NVLINK_INBAND_GPU_PROBE_CAPS_ATS_SUPPORT   NVBIT(3)
-#define NVLINK_INBAND_GPU_PROBE_CAPS_LINK_RETRAIN_SUPPORT NVBIT(4)
+#define NVLINK_INBAND_GPU_PROBE_CAPS_SRIOV_ENABLED              NVBIT(0)
+#define NVLINK_INBAND_GPU_PROBE_CAPS_PROBE_UPDATE               NVBIT(1)
+#define NVLINK_INBAND_GPU_PROBE_CAPS_EGM_SUPPORT                NVBIT(2)
+#define NVLINK_INBAND_GPU_PROBE_CAPS_ATS_SUPPORT                NVBIT(3)
+#define NVLINK_INBAND_GPU_PROBE_CAPS_LINK_RETRAIN_SUPPORT       NVBIT(4)
 #define NVLINK_INBAND_GPU_PROBE_CAPS_ADAPTIVE_BANDWIDTH_SUPPORT NVBIT(5)
-#define NVLINK_INBAND_GPU_PROBE_CAPS_HEALTH_SUMMARY NVBIT(6)
-#define NVLINK_INBAND_GPU_PROBE_CAPS_GPU_PROBE_REQUEST_ACTION NVBIT(7)
-#define NVLINK_INBAND_GPU_PROBE_CAPS_MC_RETRY      NVBIT(8)
+#define NVLINK_INBAND_GPU_PROBE_CAPS_HEALTH_SUMMARY             NVBIT(6)
+#define NVLINK_INBAND_GPU_PROBE_CAPS_GPU_PROBE_REQUEST_ACTION   NVBIT(7)
+#define NVLINK_INBAND_GPU_PROBE_CAPS_MC_RETRY                   NVBIT(8)
+#define NVLINK_INBAND_GPU_PROBE_CAPS_PROBE_UPDATE_V2            NVBIT(9)
 
 /* Add more caps as need in the future */
 
@@ -128,6 +132,7 @@ typedef struct
 #define NVLINK_INBAND_FM_CAPS_ATS_ENABLED                       NVBIT64(7)
 #define NVLINK_INBAND_FM_CAPS_ADAPTIVE_BANDWIDTH_MODE_ENABLED   NVBIT64(8)
 #define NVLINK_INBAND_FM_CAPS_UC_LOOPBACK_ENABLED               NVBIT64(9)
+#define NVLINK_INBAND_FM_CAPS_PROBE_REQ_RSP_V2                  NVBIT64(10)
 
 #define NVLINK_INBAND_FABRIC_HEALTH_MASK_DEGRADED_BW                    1:0
 #define NVLINK_INBAND_FABRIC_HEALTH_MASK_DEGRADED_BW_NOT_SUPPORTED      0
@@ -170,6 +175,28 @@ typedef struct
 #define NVLINK_INBAND_FABRIC_HEALTH_SUMMARY_UNHEALTHY                      2U
 #define NVLINK_INBAND_FABRIC_HEALTH_SUMMARY_LIMITED_CAPACITY               3U
 
+typedef struct
+{
+    NvU64  pciInfo;                 /* Encoded as Domain(63:32):Bus(15:8):Device(0:7). (debug only) */
+    NvU64  discoveredLinkMask0;     /* GPU's discovered NVLink mask info. links [0, 64) (debug only) */
+    NvU64  discoveredLinkMask64;    /* GPU's discovered NVLink mask info. links [64, 128) (debug onl) */
+    NvU64  enabledLinkMask0;        /* GPU's currently enabled NvLink mask info. links [0, 64)(debug only) */
+    NvU64  enabledLinkMask64;       /* GPU's currently enabled NvLink mask info. links [64, 128) (debug only) */
+    NvU64  gpuCapMask0;             /* Additional GPU Capabilities [0, 64) */
+    NvU64  gpuCapMask64;            /* Additional GPU Capabilities [64, 128) */
+    NvUuid gpuUuid;                 /* UUID of the GPU. (debug only) */
+    NvU8   moduleId;                /* GPIO based physical/module ID of the GPU. (debug only) */
+    NvU8   bwMode;                  /* NVLink bandwidth mode, one of NVLINK_INBAND_BW_MODE */
+    NvU8   rbmRequested;            /* Flag to request a specific RBM Mode */
+    NvU16  rbmLinkCount;            /* Number of links to be used for Reduced Bandwidth mode */
+    NvU8   reserved[107];            /* For future use. Must be initialized to zero */
+} nvlink_inband_gpu_probe_req_v2_t;
+
+typedef struct
+{
+    nvlink_inband_msg_header_t           msgHdr;
+    nvlink_inband_gpu_probe_req_v2_t     probeReq;
+} nvlink_inband_gpu_probe_req_v2_msg_t;
 
 typedef struct
 {
@@ -196,6 +223,37 @@ typedef struct
     nvlink_inband_msg_header_t           msgHdr;
     nvlink_inband_gpu_probe_rsp_t        probeRsp;
 } nvlink_inband_gpu_probe_rsp_msg_t;
+
+typedef struct
+{
+    NvU64  gpuHandle;                       /* Unique handle assigned by initialization entity for this GPU */
+    NvU64  fmCaps0;                         /* Capability of FM e.g. what features FM support. [0,64) */
+    NvU64  fmCaps64;                        /* Capability of FM e.g. what features FM support. [64,128) */
+    NvU64  linkMaskToBeReduced0;            /* Mask containing bits indicating links to be put to SLEEP by RM: [0,64) */
+    NvU64  linkMaskToBeReduced64;           /* Mask containing bits indicating links to be put to SLEEP by RM: [64,128) */
+    NvU64  rbmSupportedLinkCount0;          /* Mask containing bits indicating supported RBM Modes(where the i-th bit represents the predicate is_rbm_mode_i_supported): [0,64) */
+    NvU64  rbmSupportedLinkCount64;         /* Mask containing bits indicating supported RBM Modes(where the i-th bit represents the predicate is_rbm_mode_i_supported): [64,128) */
+    NvU32  cliqueId;                        /* Identifies the communication clique this GPU belongs to */
+    NvU32  gfId;                            /* Global function identifier for this vGPU */
+    NvU32  gpaAddressHi;                    /* GPA Address for VGM, mapslot aligned. Lower 32 bits are 0 */
+    NvU32  gpaAddressRangeHi;               /* GPA Address Range(VGM). mapslot aligned. Lower 32 bits are 0 */
+    NvU32  flaAddressHi;                    /* FLA Address. mapslot aligned. Lower 32 bits are 0 */
+    NvU32  remapTableIdx;                   /* remap table index for the GPU */
+    NvU32  flaAddressRangeHi;               /* FLA Address Range. mapslot aligned. Lower 32 bits are 0 */
+    NvU32  epoch;                           /* Epoch to be matched by RM when allowing P2P between GPUs */
+    NvU32  fabricHealthMask;                /* Mask containing bits indicating various fabric health parameters */
+    NvU32  degradedCliqueId;                /* Identifies the communication degraded clique this GPU belongs to */
+    NvUuid clusterUuid;                     /* Cluster UUID to which this node belongs */
+    NvU16  fabricPartitionId;               /* Partition ID if the GPU belongs to a fabric partition */
+    NvU8   reserved[70];                    /* For future use. Must be initialized to zero */
+} nvlink_inband_gpu_probe_rsp_v2_t;
+
+typedef struct
+{
+    nvlink_inband_msg_header_t           msgHdr;
+    nvlink_inband_gpu_probe_rsp_v2_t     probeRsp;
+} nvlink_inband_gpu_probe_rsp_v2_msg_t;
+
 /*
  * Probe update action field values
  */
@@ -220,6 +278,26 @@ typedef struct
     nvlink_inband_msg_header_t               msgHdr;
     nvlink_inband_gpu_probe_update_req_t     probeUpdate;
 } nvlink_inband_gpu_probe_update_req_msg_t;
+
+typedef struct
+{
+    NvU64  gpuHandle;                   /* Unique handle assigned by initialization entity for this GPU */
+    NvU64  enabledLinkMask0;            /* Mask containing bits indicating updated enabled link mask: [0,64) */
+    NvU64  enabledLinkMask64;           /* Mask containing bits indicating updated enabled link mask: [64,128) */
+    NvU64  rbmSupportedLinkCount0;      /* Mask containing bits indicating supported RBM Modes(where the i-th bit represents the predicate is_rbm_mode_i_supported): [0,64) */
+    NvU64  rbmSupportedLinkCount64;     /* Mask containing bits indicating supported RBM Modes(where the i-th bit represents the predicate is_rbm_mode_i_supported): [64,128) */
+    NvU32  cliqueId;                    /* Identifies the communication clique this GPU belongs to */
+    NvU32  fabricHealthMask;            /* Mask containing bits indicating various fabric health parameters */
+    NvU32  epoch;                       /* Epoch to be matched by RM when allowing P2P between GPUs */
+    NvU8   action;                      /* Action request from FM */
+    NvU8   reserved[131];               /* For future use. Must be initialized to zero */
+} nvlink_inband_gpu_probe_update_req_v2_t;
+
+typedef struct
+{
+    nvlink_inband_msg_header_t               msgHdr;
+    nvlink_inband_gpu_probe_update_req_v2_t  probeUpdate;
+} nvlink_inband_gpu_probe_update_req_v2_msg_t;
 
 typedef struct
 {

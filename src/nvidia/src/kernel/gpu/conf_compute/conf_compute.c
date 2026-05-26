@@ -135,7 +135,8 @@ confComputeConstructEngine_IMPL(OBJGPU                  *pGpu,
     }
 
     if ((sysGetStaticConfig(pSys)->bOsCCEnabled) && !gpuIsCCEnabledInHw_HAL(pGpu) &&
-        !gpuIsProtectedPcieEnabledInHw_HAL(pGpu))
+        !gpuIsProtectedPcieEnabledInHw_HAL(pGpu)
+        )
     {
         if (pGpu->getProperty(pGpu, PDB_PROP_GPU_CC_FEATURE_CAPABLE))
         {
@@ -225,7 +226,7 @@ _confComputeInitRegistryOverrides
 {
     NvU32  data           = 0;
     Spdm  *pSpdm          = GPU_GET_SPDM(pGpu);
-    NvBool bSpdmSupported = confComputeIsSpdmEnabled(pGpu, pConfCompute);
+    NvBool bSpdmSupported = confComputeIsSpdmSupported(pGpu, pConfCompute);
 
     if (bSpdmSupported && (pSpdm == NULL))
     {
@@ -700,7 +701,7 @@ confComputeSetErrorState_KERNEL
         NV_PRINTF(LEVEL_ERROR, "ConfCompute: Failed setting GPU state to not ready!\n");
     }
 
-    if (confComputeIsSpdmEnabled(pGpu, pConfCompute))
+    if (confComputeIsSpdmSupported(pGpu, pConfCompute))
     {
         Spdm *pSpdm = GPU_GET_SPDM(pGpu);
 
@@ -808,4 +809,20 @@ _confComputeGetKeyspaceSize
             NV_ASSERT_OR_RETURN(NV_FALSE, 0);
     }
 }
+
+NvBool
+confComputeForceUnprotAlloc
+(
+    OBJGPU *pGpu
+)
+{
+    //
+    // Force unprotected in all other cases
+    // (BB CC or TDISP not enabled/not trusted)
+    //
+    return NV_TRUE;
+}
+
+
+
 

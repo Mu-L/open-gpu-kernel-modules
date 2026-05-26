@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2015-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2015-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -31,31 +31,11 @@
 
 #if !defined(NV_VMWARE)
 #if defined(NVCPU_X86_64)
-/* mark memory UC-, rather than UC (don't use _PAGE_PWT) */
-static inline pgprot_t pgprot_noncached_weak(pgprot_t old_prot)
-    {
-        pgprot_t new_prot = old_prot;
-        if (boot_cpu_data.x86 > 3)
-            new_prot = __pgprot(pgprot_val(old_prot) | _PAGE_PCD);
-        return new_prot;
-    }
-
-#if !defined (pgprot_noncached)
-static inline pgprot_t pgprot_noncached(pgprot_t old_prot)
-    {
-        pgprot_t new_prot = old_prot;
-        if (boot_cpu_data.x86 > 3)
-            new_prot = __pgprot(pgprot_val(old_prot) | _PAGE_PCD | _PAGE_PWT);
-        return new_prot;
-    }
-#endif
 static inline pgprot_t pgprot_modify_writecombine(pgprot_t old_prot)
-    {
-        pgprot_t new_prot = old_prot;
-        pgprot_val(new_prot) &= ~(_PAGE_PSE | _PAGE_PCD | _PAGE_PWT);
-        new_prot = __pgprot(pgprot_val(new_prot) | _PAGE_PWT);
-        return new_prot;
-    }
+{
+    return __pgprot((pgprot_val(old_prot) & ~_PAGE_CACHE_MASK) |
+                    cachemode2protval(_PAGE_CACHE_MODE_WC));
+}
 #endif /* defined(NVCPU_X86_64) */
 #endif /* !defined(NV_VMWARE) */
 
@@ -68,6 +48,10 @@ extern NvBool nvos_is_chipset_io_coherent(void);
 #define NV_PGPROT_UNCACHED(old_prot)   \
      __pgprot_modify((old_prot), PTE_ATTRINDX_MASK, PTE_ATTRINDX(MT_NORMAL_NC))
 #else
+/*
+ * Note: the kernel's implementation of pgprot_noncached() on x86-64 evaluates to
+ *       UC- (noncached weak ordering) instead of strict UC.
+ */
 #define NV_PGPROT_UNCACHED(old_prot)          pgprot_noncached(old_prot)
 #endif
 
@@ -77,7 +61,7 @@ extern NvBool nvos_is_chipset_io_coherent(void);
 #define NV_PGPROT_READ_ONLY(old_prot)                                         \
             __pgprot_modify(old_prot, 0, PTE_RDONLY)
 #elif defined(NVCPU_X86_64)
-#define NV_PGPROT_UNCACHED_WEAK(old_prot)       pgprot_noncached_weak(old_prot)
+#define NV_PGPROT_UNCACHED_WEAK(old_prot)       pgprot_noncached(old_prot)
 #define NV_PGPROT_WRITE_COMBINED(old_prot)                                    \
     pgprot_modify_writecombine(old_prot)
 #define NV_PGPROT_READ_ONLY(old_prot)                                         \

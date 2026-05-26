@@ -128,6 +128,8 @@ typedef enum
 // BAR_IFB                    Used for IFB
 // PERFMON                    Used for Perfmon
 // PMU                        Used for PMU
+// SPARSIFIED                 Used to denote that the VASpace is initialized to sparse from its creation.
+//                            VA Spaces created in this mode will have their free range configured to sparse.
 // SET_MIRRORED               <DEPRECATED.........>
 //                            This flag will create a privileged PDB as part of this vaspace
 //                            This new PDB will mirror all of the allocations made in the
@@ -188,6 +190,7 @@ typedef enum
 #define VASPACE_FLAGS_BAR_IFB                                     NVBIT(9)
 #define VASPACE_FLAGS_PERFMON                                     NVBIT(10)
 #define VASPACE_FLAGS_PMU                                         NVBIT(11)
+#define VASPACE_FLAGS_SPARSIFIED                                  NVBIT(12)
 #define VASPACE_FLAGS_PTETABLE_PMA_MANAGED                        NVBIT(14)
 #define VASPACE_FLAGS_INVALIDATE_SCOPE_NVLINK_TLB                 NVBIT(15)
 #define VASPACE_FLAGS_DISABLE_SPLIT_VAS                           NVBIT(16)
@@ -308,7 +311,7 @@ struct NVOC_VTABLE__OBJVASPACE {
     PMEMORY_DESCRIPTOR (*__vaspaceGetPageDirBase__)(struct OBJVASPACE * /*this*/, struct OBJGPU *);  // inline virtual body
     NV_STATUS (*__vaspacePinRootPageDir__)(struct OBJVASPACE * /*this*/, struct OBJGPU *);  // inline virtual body
     void (*__vaspaceUnpinRootPageDir__)(struct OBJVASPACE * /*this*/, struct OBJGPU *);  // inline virtual body
-    void (*__vaspaceInvalidateTlb__)(struct OBJVASPACE * /*this*/, struct OBJGPU *, VAS_PTE_UPDATE_TYPE);  // virtual
+    NV_STATUS (*__vaspaceInvalidateTlb__)(struct OBJVASPACE * /*this*/, struct OBJGPU *, VAS_PTE_UPDATE_TYPE);  // virtual
     NV_STATUS (*__vaspaceGetPageTableInfo__)(struct OBJVASPACE * /*this*/, NV0080_CTRL_DMA_GET_PDE_INFO_PARAMS *);  // inline virtual body
     NV_STATUS (*__vaspaceGetPteInfo__)(struct OBJVASPACE * /*this*/, struct OBJGPU *, NV0080_CTRL_DMA_GET_PTE_INFO_PARAMS *, RmPhysAddr *);  // inline virtual body
     NV_STATUS (*__vaspaceSetPteInfo__)(struct OBJVASPACE * /*this*/, struct OBJGPU *, NV0080_CTRL_DMA_SET_PTE_INFO_PARAMS *);  // inline virtual body
@@ -340,7 +343,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJVASPACE;
     ((OBJVASPACE*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(OBJVASPACE)))
 #endif //__nvoc_vaspace_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_OBJVASPACE(OBJVASPACE**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJVASPACE(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJVASPACE(OBJVASPACE**, Dynamic*, NvU32);
 #define __objCreate_OBJVASPACE(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -525,8 +528,8 @@ static inline void vaspaceUnpinRootPageDir_DISPATCH(struct OBJVASPACE *pVAS, str
     pVAS->__nvoc_metadata_ptr->vtable.__vaspaceUnpinRootPageDir__(pVAS, pGpu);
 }
 
-static inline void vaspaceInvalidateTlb_DISPATCH(struct OBJVASPACE *pVAS, struct OBJGPU *pGpu, VAS_PTE_UPDATE_TYPE type) {
-    pVAS->__nvoc_metadata_ptr->vtable.__vaspaceInvalidateTlb__(pVAS, pGpu, type);
+static inline NV_STATUS vaspaceInvalidateTlb_DISPATCH(struct OBJVASPACE *pVAS, struct OBJGPU *pGpu, VAS_PTE_UPDATE_TYPE type) {
+    return pVAS->__nvoc_metadata_ptr->vtable.__vaspaceInvalidateTlb__(pVAS, pGpu, type);
 }
 
 static inline NV_STATUS vaspaceGetPageTableInfo_DISPATCH(struct OBJVASPACE *pVAS, NV0080_CTRL_DMA_GET_PDE_INFO_PARAMS *pParams) {
@@ -621,7 +624,7 @@ static inline void vaspaceUnpinRootPageDir_af5be7(struct OBJVASPACE *pVAS, struc
     NV_ASSERT_PRECOMP(NV_FALSE);
 }
 
-void vaspaceInvalidateTlb_IMPL(struct OBJVASPACE *pVAS, struct OBJGPU *pGpu, VAS_PTE_UPDATE_TYPE type);
+NV_STATUS vaspaceInvalidateTlb_IMPL(struct OBJVASPACE *pVAS, struct OBJGPU *pGpu, VAS_PTE_UPDATE_TYPE type);
 
 static inline NV_STATUS vaspaceGetPageTableInfo_14ee5e(struct OBJVASPACE *pVAS, NV0080_CTRL_DMA_GET_PDE_INFO_PARAMS *pParams){
     NV_ASSERT_PRECOMP(NV_FALSE);

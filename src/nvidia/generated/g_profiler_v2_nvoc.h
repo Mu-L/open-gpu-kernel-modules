@@ -185,7 +185,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_ProfilerBase;
     ((ProfilerBase*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(ProfilerBase)))
 #endif //__nvoc_profiler_v2_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_ProfilerBase(ProfilerBase**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_ProfilerBase(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_ProfilerBase(ProfilerBase**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_ProfilerBase(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \
@@ -928,7 +928,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_ProfilerCtx;
     ((ProfilerCtx*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(ProfilerCtx)))
 #endif //__nvoc_profiler_v2_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_ProfilerCtx(ProfilerCtx**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_ProfilerCtx(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_ProfilerCtx(ProfilerCtx**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_ProfilerCtx(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \
@@ -1268,7 +1268,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_ProfilerDev;
     ((ProfilerDev*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(ProfilerDev)))
 #endif //__nvoc_profiler_v2_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_ProfilerDev(ProfilerDev**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_ProfilerDev(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_ProfilerDev(ProfilerDev**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_ProfilerDev(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

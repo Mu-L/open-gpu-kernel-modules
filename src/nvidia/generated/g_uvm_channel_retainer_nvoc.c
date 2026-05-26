@@ -32,7 +32,7 @@ void __nvoc_init__UvmChannelRetainer(UvmChannelRetainer*, RmHalspecOwner *pRmhal
 void __nvoc_init_funcTable_UvmChannelRetainer(UvmChannelRetainer*, RmHalspecOwner *pRmhalspecowner);
 NV_STATUS __nvoc_ctor_UvmChannelRetainer(UvmChannelRetainer*, RmHalspecOwner *pRmhalspecowner, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_UvmChannelRetainer(UvmChannelRetainer*, RmHalspecOwner *pRmhalspecowner);
-void __nvoc_dtor_UvmChannelRetainer(UvmChannelRetainer*);
+void __nvoc_dtor_UvmChannelRetainer(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__UvmChannelRetainer;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_UvmChannelRetainer =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "UvmChannelRetainer",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_UvmChannelRetainer,
+    .objCreatefn =        &__nvoc_objCreateDynamic_UvmChannelRetainer,
     .pCastInfo =          &__nvoc_castinfo__UvmChannelRetainer,
     .pExportInfo =        &__nvoc_export_info__UvmChannelRetainer
 };
@@ -124,7 +124,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_UvmChannelRetainer =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__UvmChannelRetainer __nvoc_metadata__UvmChannelRetainer = {
     .rtti.pClassDef = &__nvoc_class_def_UvmChannelRetainer,    // (uvmchanrtnr) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_UvmChannelRetainer,
+    .rtti.dtor      = &__nvoc_dtor_UvmChannelRetainer,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -384,16 +384,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__UvmChannelRetainer =
 
 // Destruct UvmChannelRetainer object.
 void __nvoc_uvmchanrtnrDestruct(UvmChannelRetainer*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_UvmChannelRetainer(UvmChannelRetainer* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_UvmChannelRetainer(Dynamic* pThis) {
+
+    UvmChannelRetainer *__nvoc_this = (UvmChannelRetainer *) pThis;
 
 // Call destructor.
-    __nvoc_uvmchanrtnrDestruct(pThis);
+    __nvoc_uvmchanrtnrDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_UvmChannelRetainer(UvmChannelRetainer *pThis, RmHalspecOwner *pRmhalspecowner) {
     RmVariantHal *rmVariantHal = &pRmhalspecowner->rmVariantHal;
@@ -424,7 +426,7 @@ NV_STATUS __nvoc_ctor_UvmChannelRetainer(UvmChannelRetainer *pUvmChannelRetainer
 
     // Unwind on error.
 __nvoc_ctor_UvmChannelRetainer_fail__init:
-    __nvoc_dtor_GpuResource(&pUvmChannelRetainer->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pUvmChannelRetainer->__nvoc_base_GpuResource);
 __nvoc_ctor_UvmChannelRetainer_fail_GpuResource:
 __nvoc_ctor_UvmChannelRetainer_exit:
     return status;
@@ -550,13 +552,10 @@ __nvoc_objCreate_UvmChannelRetainer_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_UvmChannelRetainer(UvmChannelRetainer **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_UvmChannelRetainer(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_UvmChannelRetainer(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_UvmChannelRetainer((UvmChannelRetainer **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

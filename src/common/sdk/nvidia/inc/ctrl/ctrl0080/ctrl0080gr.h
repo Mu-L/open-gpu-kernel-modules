@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2004-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2004-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -153,7 +153,7 @@ typedef NVXXXX_CTRL_XXX_INFO NV0080_CTRL_GR_INFO;
 #define NV0080_CTRL_GR_INFO_INDEX_LITTER_NUM_GFXC_SMC_ENGINES           (0x00000033)
 
 
-#define NV0080_CTRL_GR_INFO_INDEX_DUMMY                                 (0x00000033)
+#define NV0080_CTRL_GR_INFO_INDEX_RESERVED                              (0x00000033)
 #define NV0080_CTRL_GR_INFO_INDEX_GFX_CAPABILITIES                      (0x00000034)
 #define NV0080_CTRL_GR_INFO_INDEX_MAX_MIG_ENGINES                       (0x00000035)
 #define NV0080_CTRL_GR_INFO_INDEX_MAX_PARTITIONABLE_GPCS                (0x00000036)
@@ -165,12 +165,15 @@ typedef NVXXXX_CTRL_XXX_INFO NV0080_CTRL_GR_INFO;
 #define NV0080_CTRL_GR_INFO_INDEX_LITTER_HSHUB_C2C_MASK                 (0x0000003C)
 #define NV0080_CTRL_GR_INFO_INDEX_LITTER_HSHUB_PCIE_MASK                (0x0000003D)
 
+
+#define NV0080_CTRL_GR_INFO_INDEX_RESERVED1                             (0x0000003E)
+
 /* When adding a new INDEX, please update MAX_SIZE accordingly
  * NOTE: 0080 functionality is merged with 2080 functionality, so this max size
  * reflects that.
  */
-#define NV0080_CTRL_GR_INFO_INDEX_MAX                                   (0x0000003A)
-#define NV0080_CTRL_GR_INFO_MAX_SIZE                                    (0x3b) /* finn: Evaluated from "(NV0080_CTRL_GR_INFO_INDEX_MAX + 1)" */
+#define NV0080_CTRL_GR_INFO_INDEX_MAX                                   (0x0000003E)
+#define NV0080_CTRL_GR_INFO_MAX_SIZE                                    (0x3f) /* finn: Evaluated from "(NV0080_CTRL_GR_INFO_INDEX_MAX + 1)" */
 
 /*
  * NV0080_CTRL_CMD_GR_GET_INFO

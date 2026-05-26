@@ -255,7 +255,7 @@ namespace DisplayPort
            : topologyAddress(topologyAddress), manager(manager), edidReaderManager(&edid), ddcIndex(0),
              retries(0), timer(timer), sink(sink)
         {
-            startReadingEdid();
+            timer->queueCallback(this, "EDID", MST_EDID_COOLDOWN);
         }
 
         Edid edid;

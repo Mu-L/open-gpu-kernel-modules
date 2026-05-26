@@ -42,7 +42,7 @@ NvBool nvGetDpyAttributeValidValuesEvo(
     const NVDpyEvoRec *pDpyEvo,
     struct NvKmsGetDpyAttributeValidValuesParams *pParams);
 
-NvBool nvDpyValidateColorSpace(const NVDpyEvoRec *pDpyEvo, NvS64 value);
+NvBool nvDpyValidateColorFormat(const NVDpyEvoRec *pDpyEvo, NvS64 value);
 
 #ifdef __cplusplus
 };

@@ -40,10 +40,14 @@
 #include "uvm_gpu_access_counters.h"
 #include "uvm_va_space_mm.h"
 #include "nv_uvm_interface.h"
+#include "uvm_devmem.h"
 
 uvm_global_t g_uvm_global;
 static struct UvmEventsLinux g_exported_uvm_events;
 static bool g_ops_registered = false;
+
+unsigned uvm_force_conf_computing = 0;
+module_param(uvm_force_conf_computing, uint, S_IRUGO);
 
 static NV_STATUS uvm_register_callbacks(void)
 {
@@ -117,12 +121,24 @@ NV_STATUS uvm_global_init(void)
     }
 
     uvm_ats_init(&platform_info);
+
+    g_uvm_global.cdmm_enabled = platform_info.cdmmEnabled;
+
     g_uvm_global.num_simulated_devices = 0;
-    g_uvm_global.conf_computing_enabled = platform_info.confComputingEnabled;
+
+    g_uvm_global.hw_conf_computing_enabled = platform_info.confComputingEnabled;
+    g_uvm_global.conf_computing_enabled = g_uvm_global.hw_conf_computing_enabled ||
+                                          uvm_force_conf_computing;
 
     status = uvm_processor_mask_cache_init();
     if (status != NV_OK) {
         UVM_ERR_PRINT("uvm_processor_mask_cache_init() failed: %s\n", nvstatusToString(status));
+        goto error;
+    }
+
+    status = uvm_devmem_global_init();
+    if (status != NV_OK) {
+        UVM_ERR_PRINT("uvm_devmem_global_init() failed: %s\n", nvstatusToString(status));
         goto error;
     }
 
@@ -159,12 +175,6 @@ NV_STATUS uvm_global_init(void)
     status = uvm_va_range_init();
     if (status != NV_OK) {
         UVM_ERR_PRINT("uvm_va_range_init() failed: %s\n", nvstatusToString(status));
-        goto error;
-    }
-
-    status = uvm_range_group_init();
-    if (status != NV_OK) {
-        UVM_ERR_PRINT("uvm_range_group_init() failed: %s\n", nvstatusToString(status));
         goto error;
     }
 
@@ -233,14 +243,14 @@ void uvm_global_exit(void)
     uvm_perf_heuristics_exit();
     uvm_perf_events_exit();
     uvm_migrate_exit();
-    uvm_range_group_exit();
     uvm_va_range_exit();
     uvm_va_policy_exit();
     uvm_mem_global_exit();
     uvm_pmm_sysmem_exit();
-    uvm_pmm_devmem_exit();
-    uvm_pmm_pci_p2pdma_cache_exit();
+    uvm_devmem_exit();
+    uvm_devmem_pci_p2pdma_cache_exit();
     uvm_gpu_exit();
+    uvm_devmem_global_deinit();
     uvm_processor_mask_cache_exit();
 
     if (g_uvm_global.rm_session_handle != 0)

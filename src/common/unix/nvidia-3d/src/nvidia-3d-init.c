@@ -28,9 +28,6 @@
 #include "nvidia-3d-types-priv.h"
 
 #include "nvidia-3d-fermi.h"
-#include "nvidia-3d-kepler.h"
-#include "nvidia-3d-pascal.h"
-#include "nvidia-3d-volta.h"
 #include "nvidia-3d-turing.h"
 #include "nvidia-3d-hopper.h"
 
@@ -292,28 +289,13 @@ static NvBool GetSpaVersion(
 }
 
 static const Nv3dHal _nv3dHalTuring = {
-    _nv3dSetSpaVersionKepler,                       /* setSpaVersion */
     _nv3dInitChannelTuring,                         /* initChannel */
-    _nv3dUploadDataInlineKepler,                    /* uploadDataInline */
-    _nv3dSetProgramOffsetVolta,                     /* setProgramOffset */
-    _nv3dAssignNv3dTexturePascal,                   /* assignNv3dTexture */
-    _nv3dSetVertexStreamEndTuring,                  /* setVertexStreamEnd */
-};
-
-static const Nv3dHal _nv3dHalAmpere = {
-    _nv3dSetSpaVersionKepler,                       /* setSpaVersion */
-    _nv3dInitChannelTuring,                         /* initChannel */
-    _nv3dUploadDataInlineKepler,                    /* uploadDataInline */
-    _nv3dSetProgramOffsetVolta,                     /* setProgramOffset */
-    _nv3dAssignNv3dTexturePascal,                   /* assignNv3dTexture */
+    _nv3dAssignNv3dTextureTuring,                   /* assignNv3dTexture */
     _nv3dSetVertexStreamEndTuring,                  /* setVertexStreamEnd */
 };
 
 static const Nv3dHal _nv3dHalHopper = {
-    _nv3dSetSpaVersionKepler,                       /* setSpaVersion */
     _nv3dInitChannelHopper,                         /* initChannel */
-    _nv3dUploadDataInlineKepler,                    /* uploadDataInline */
-    _nv3dSetProgramOffsetVolta,                     /* setProgramOffset */
     _nv3dAssignNv3dTextureHopper,                   /* assignNv3dTexture */
     _nv3dSetVertexStreamEndTuring,                  /* setVertexStreamEnd */
 };
@@ -324,7 +306,6 @@ NvBool nv3dAllocDevice(
 {
     static const struct {
         NvPushSupportedClass base;
-        const Nv3dDeviceCapsRec caps;
         const Nv3dHal *hal;
         enum Nv3dShaderArch shaderArch;
     } table[] = {
@@ -332,31 +313,28 @@ NvBool nv3dAllocDevice(
 #define ENTRY(_classNumber,                                          \
               _arch,                                                 \
               _amodelArch,                                           \
-              _maxDim,                                               \
               _hal)                                                  \
         {                                                            \
             .base.classNumber           = _classNumber,              \
             .base.amodelConfig          = NV_AMODEL_ ## _amodelArch, \
-            .caps.maxDim                = _maxDim,                   \
             .hal                        = &_nv3dHal ## _hal,         \
             .shaderArch                 = NV3D_SHADER_ARCH_ ## _arch,\
         }
 
         /*
-         * hal------------------------------------------+
-         * maxDim--------------------------------+      |
-         * amodel arch----------------+          |      |
-         * shader arch-----+          |          |      |
-         * classNumber     |          |          |      |
-         *    |            |          |          |      |
+         * hal-----------------------------------+
+         * amodel arch----------------+          |
+         * shader arch-----+          |          |
+         * classNumber     |          |          |
+         *    |            |          |          |
          */
-        ENTRY(BLACKWELL_B, GB20X,     GB20X,     32768, Hopper),
-        ENTRY(BLACKWELL_A, BLACKWELL, BLACKWELL, 32768, Hopper),
-        ENTRY(HOPPER_A,    HOPPER,    HOPPER,    32768, Hopper),
-        ENTRY(ADA_A,       AMPERE,    ADA,       32768, Ampere),
-        ENTRY(AMPERE_B,    AMPERE,    AMPERE,    32768, Ampere),
-        ENTRY(AMPERE_A,    AMPERE,    AMPERE,    32768, Ampere),
-        ENTRY(TURING_A,    TURING,    TURING,    32768, Turing),
+        ENTRY(BLACKWELL_B, GB20X,     GB20X,     Hopper),
+        ENTRY(BLACKWELL_A, BLACKWELL, BLACKWELL, Hopper),
+        ENTRY(HOPPER_A,    HOPPER,    HOPPER,    Hopper),
+        ENTRY(ADA_A,       AMPERE,    ADA,       Turing),
+        ENTRY(AMPERE_B,    AMPERE,    AMPERE,    Turing),
+        ENTRY(AMPERE_A,    AMPERE,    AMPERE,    Turing),
+        ENTRY(TURING_A,    TURING,    TURING,    Turing),
     };
 
     int i;
@@ -378,7 +356,6 @@ NvBool nv3dAllocDevice(
     }
 
     p3dDevice->pPushDevice = pParams->pPushDevice;
-    p3dDevice->caps = table[i].caps;
     p3dDevice->classNumber = table[i].base.classNumber;
     p3dDevice->hal = table[i].hal;
     p3dDevice->shaderArch = table[i].shaderArch;

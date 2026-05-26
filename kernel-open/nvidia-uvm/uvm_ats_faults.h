@@ -72,6 +72,13 @@ NV_STATUS uvm_ats_service_access_counters(uvm_gpu_va_space_t *gpu_va_space,
 // UVM_GMMU_ATS_GRANULARITY-aligned region containing address.
 bool uvm_ats_check_in_gmmu_region(uvm_va_space_t *va_space, NvU64 address, uvm_va_range_t *next);
 
+// Issue TLB invalidations for ATS for a range of virtual addresses to be and
+// signal the need for batch invalidation for this fault buffer on this gpu.
+void uvm_flush_tlb_va_region(uvm_gpu_va_space_t *gpu_va_space,
+                             NvU64 addr,
+                             size_t size,
+                             uvm_fault_client_type_t client_type);
+
 // This function performs pending TLB invalidations for ATS and clears the
 // ats_invalidate->tlb_batch_pending flag
 NV_STATUS uvm_ats_invalidate_tlbs(uvm_gpu_va_space_t *gpu_va_space,
@@ -84,6 +91,12 @@ static bool uvm_ats_can_service_faults(uvm_gpu_va_space_t *gpu_va_space, struct 
         uvm_assert_mmap_lock_locked(mm);
     if (gpu_va_space->ats.enabled)
         UVM_ASSERT(g_uvm_global.ats.enabled);
+
+    if (!gpu_va_space->va_space->pageable.access_enabled)
+        return false;
+
+    if (gpu_va_space->va_space->pageable.cdmm_enabled)
+        return false;
 
     return gpu_va_space->ats.enabled && mm;
 }

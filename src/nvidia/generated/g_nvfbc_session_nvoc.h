@@ -178,7 +178,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_NvfbcSession;
     ((NvfbcSession*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(NvfbcSession)))
 #endif //__nvoc_nvfbc_session_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_NvfbcSession(NvfbcSession**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_NvfbcSession(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_NvfbcSession(NvfbcSession**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_NvfbcSession(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

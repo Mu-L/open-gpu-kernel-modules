@@ -58,7 +58,8 @@
 #define NV208F_CTRL_PMU_ECC_INJECT_ERROR_PARAMS_MESSAGE_ID (0x1U)
 
 typedef struct NV208F_CTRL_PMU_ECC_INJECT_ERROR_PARAMS {
-    NvU8 errorType;
+    NvU8  errorType;
+    NvU32 errorIdx;
 } NV208F_CTRL_PMU_ECC_INJECT_ERROR_PARAMS;
 
 #define NV208F_CTRL_PMU_ECC_INJECT_ERROR_TYPE                 0:0
@@ -91,5 +92,24 @@ typedef struct NV208F_CTRL_PMU_ECC_INJECTION_SUPPORTED_PARAMS {
     NvBool bCorrectableSupported;
     NvBool bUncorrectableSupported;
 } NV208F_CTRL_PMU_ECC_INJECTION_SUPPORTED_PARAMS;
+
+/*
+ * NV208F_CTRL_PMU_ECC_GET_NUM_ERROR_INDEXES
+ *
+ * Returns the number of error indexes.
+ *
+ * numErrors [out]
+ *   Number of error indexes
+ *
+ * Return values:
+ *   NV_OK
+ */
+#define NV208F_CTRL_CMD_PMU_ECC_GET_NUM_ERROR_INDEXES (0x208f0c03) /* finn: Evaluated from "(FINN_NV20_SUBDEVICE_DIAG_PMU_INTERFACE_ID << 8) | NV208F_CTRL_PMU_ECC_GET_NUM_ERROR_INDEXES_PARAMS_MESSAGE_ID" */
+
+#define NV208F_CTRL_PMU_ECC_GET_NUM_ERROR_INDEXES_PARAMS_MESSAGE_ID (0x3U)
+
+typedef struct NV208F_CTRL_PMU_ECC_GET_NUM_ERROR_INDEXES_PARAMS {
+    NvU32 numErrors;
+} NV208F_CTRL_PMU_ECC_GET_NUM_ERROR_INDEXES_PARAMS;
 
 /* _ctrl208fpmu_h_ */

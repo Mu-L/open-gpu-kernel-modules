@@ -187,6 +187,15 @@ _gpumgrDetermineConfComputeCapabilities
             gpuIsCCMultiGpuProtectedPcieModeEnabled(pGpu) || pGpuMgr->ccCaps.bMultiGpuNvleModeEnabled ==
             gpuIsCCMultiGpuNvleModeEnabled(pGpu)),
             NV_ERR_INVALID_STATE);
+
+        /*
+         * MPT NVLE + devtools mode requires additional setup before running worloads.
+         * Since it is not truly ready, not setting GPU ready state until then.
+         */
+        if (pGpuMgr->ccCaps.bDevToolsModeEnabled && pGpuMgr->ccCaps.bMultiGpuNvleModeEnabled)
+        {
+            pGpuMgr->ccCaps.bAcceptClientRequest = NV_FALSE;
+        }
     }
 
     return NV_OK;
@@ -1542,6 +1551,8 @@ gpumgrAttachGpu(NvU32 gpuInstance, GPUATTACHARG *pAttachArg)
     pGpu->busInfo.oorArch = OOR_ARCH_ARM;
 #elif defined(NVCPU_AARCH64)
     pGpu->busInfo.oorArch = OOR_ARCH_AARCH64;
+#elif defined(NVCPU_RISCV64)
+    pGpu->busInfo.oorArch = OOR_ARCH_RISCV64;
 #else
     pGpu->busInfo.oorArch = OOR_ARCH_NONE;
 #endif
@@ -3935,7 +3946,8 @@ NV_STATUS
 gpumgrSetGpuNvlinkBwModePerGpu_IMPL
 (
     OBJGPU *pGpu,
-    NvU16 mode
+    NvU16 mode,
+    NvBool bSync
 )
 {
     OBJSYS     *pSys = SYS_GET_INSTANCE();
@@ -3962,7 +3974,7 @@ gpumgrSetGpuNvlinkBwModePerGpu_IMPL
     }
 
     // Set requested rbm link count for gpu
-    NV_ASSERT_OK_OR_RETURN(gpuFabricProbeSetBwModePerGpu(pGpu, mode));
+    NV_ASSERT_OK_OR_RETURN(gpuFabricProbeSetBwModePerGpu(pGpu, mode, bSync));
 
     //
     // TODO: Need to check if all GPU BW modes are _FULL when requested mode
@@ -3983,7 +3995,8 @@ gpumgrSetGpuNvlinkBwModePerGpu_IMPL
 NV_STATUS
 gpumgrSetGpuNvlinkBwMode_IMPL
 (
-    NvU16 mode
+    NvU16 mode,
+    NvBool bSync
 )
 {
     OBJSYS     *pSys = SYS_GET_INSTANCE();
@@ -4013,7 +4026,7 @@ gpumgrSetGpuNvlinkBwMode_IMPL
         return NV_ERR_INVALID_ARGUMENT;
     }
 
-    status = gpuFabricProbeSetBwMode(mode);
+    status = gpuFabricProbeSetBwMode(mode, bSync);
     if (status != NV_OK)
     {
         return status;
@@ -4992,6 +5005,7 @@ NvBool gpumgrWaitForBarFirewall
  *
  * @param[in]   pGpuMgr  OBJGPUMGR pointer
  * @param[in]   alid     NVLE ALID
+ * @param[out]  clid     NVLE CLID pointer
  *
  * return NV_TRUE if mapping exists, else return NV_FALSE
  */
@@ -4999,9 +5013,12 @@ NvBool
 gpuMgrIsNvleAlidPresent
 (
     OBJGPUMGR *pGpuMgr,
-    NvU32      alid
+    NvU32      alid,
+    NvU32     *pClid
 )
 {
+    NV_ASSERT(pClid != NULL);
+
     NvU32 idx;
 
     if (pGpuMgr->alidClidTable.numEntries == 0)
@@ -5013,7 +5030,8 @@ gpuMgrIsNvleAlidPresent
     {
         if (pGpuMgr->alidClidTable.alidClidMap[idx].alid == alid)
         {
-             return NV_TRUE;
+            *pClid = pGpuMgr->alidClidTable.alidClidMap[idx].clid;
+            return NV_TRUE;
         }
     }
 
@@ -5057,7 +5075,7 @@ gpuMgrCacheNvleAlidClid
         }
     }
 
-    if (idx != NVLINK_NVLE_MAX_REMAP_TABLE_ENTRIES)
+    if (idx != NVLINK_NVLE_MAX_ALID_CLID_TABLE_ENTRIES)
     {
         // ALID-CLID mapping does not exist, add a new entry
         pGpuMgr->alidClidTable.alidClidMap[idx].alid = alid;

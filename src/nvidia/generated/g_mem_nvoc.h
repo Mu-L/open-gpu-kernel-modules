@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -45,6 +45,7 @@ extern "C" {
 #define _MEMORY_API_H_
 
 #include "core/core.h"
+#include "mem_mgr/memacct.h"
 #include "resserv/rs_resource.h"
 #include "rmapi/rmapi.h"
 #include "rmapi/resource.h"
@@ -187,6 +188,7 @@ struct Memory {
     HWRESOURCE_INFO *pHwResource;
     NvBool bRpcAlloc;
     NvBool bRegisteredWithGsp;
+    MemoryCharge *pCharge;
     VGPU_NS_INTR vgpuNsIntr;
 };
 
@@ -246,7 +248,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_Memory;
     ((Memory*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(Memory)))
 #endif //__nvoc_mem_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_Memory(Memory**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_Memory(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_Memory(Memory**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_Memory(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

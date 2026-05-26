@@ -424,6 +424,7 @@ nv_dma_buf_dup_mem_handles(
                                            params->handles[i],
                                            params->offsets[i],
                                            params->sizes[i],
+                                           priv->mapping_type,
                                            &h_memory_duped,
                                            &mem_info,
                                            &can_mmap,
@@ -433,6 +434,12 @@ nv_dma_buf_dup_mem_handles(
         if (status != NV_OK)
         {
             goto failed;
+        }
+
+        // Reset can_mmap if user doesn't allow mmap
+        if (!priv->map_attrs.allow_mmap)
+        {
+            can_mmap = NV_FALSE;
         }
 
         if (priv->map_attrs.cached)
@@ -805,7 +812,7 @@ nv_dma_buf_map_pages (
     NV_KZALLOC(sgt, sizeof(struct sg_table));
     if (sgt == NULL)
     {
-        return NULL;
+        return ERR_PTR(-ENOMEM);
     }
 
     rc = sg_alloc_table(sgt, nents, GFP_KERNEL);
@@ -828,6 +835,7 @@ nv_dma_buf_map_pages (
         {
             nv_printf(NV_DBG_ERRORS,
                       "NVRM: Failed to get a reference on dev_pagemap in CDMM(driver) mode\n");
+            rc = -EOPNOTSUPP;
             goto free_table;
         }
         pagemap_ref = NV_TRUE;
@@ -852,6 +860,7 @@ nv_dma_buf_map_pages (
 
                 if ((page == NULL) || (sg == NULL))
                 {
+                    rc = -ENOMEM;
                     goto put_pgmap;
                 }
 
@@ -869,6 +878,8 @@ nv_dma_buf_map_pages (
     rc = dma_map_sg_attrs(dev, sgt->sgl, sgt->orig_nents, DMA_BIDIRECTIONAL, DMA_ATTR_SKIP_CPU_SYNC);
     if (rc <= 0)
     {
+        nv_printf(NV_DBG_ERRORS, "NVRM: Failed to map pages for dma-buf\n");
+        rc = -EIO;
         goto put_pgmap;
     }
     sgt->nents = rc;
@@ -898,7 +909,7 @@ free_table:
 free_sgt:
     NV_KFREE(sgt, sizeof(struct sg_table));
 
-    return NULL;
+    return ERR_PTR(rc);
 }
 
 static struct sg_table*
@@ -925,7 +936,7 @@ nv_dma_buf_map_pfns (
     NV_KZALLOC(sgt, sizeof(struct sg_table));
     if (sgt == NULL)
     {
-        return NULL;
+        return ERR_PTR(-ENOMEM);
     }
 
     rc = sg_alloc_table(sgt, nents, GFP_KERNEL);
@@ -953,6 +964,7 @@ nv_dma_buf_map_pfns (
 
                 if (sg == NULL)
                 {
+                    rc = -ENOMEM;
                     goto unmap_pfns;
                 }
 
@@ -962,6 +974,9 @@ nv_dma_buf_map_pfns (
                                              (sg_len >> PAGE_SHIFT), &dma_addr);
                     if (status != NV_OK)
                     {
+                        nv_printf(NV_DBG_ERRORS, "NVRM: Failed to map PFNs for dma-buf,"
+                                                 "status: 0x%x\n", status);
+                        rc = -EIO;
                         goto unmap_pfns;
                     }
                 }
@@ -995,7 +1010,7 @@ unmap_pfns:
 free_sgt:
     NV_KFREE(sgt, sizeof(struct sg_table));
 
-    return NULL;
+    return ERR_PTR(rc);
 }
 
 static int
@@ -1085,6 +1100,9 @@ nv_dma_buf_map(
         status = nv_dma_buf_get_phys_addresses(priv, 0, priv->num_objects);
         if (status != NV_OK)
         {
+            nv_printf(NV_DBG_ERRORS, "NVRM: Failed to get phys addresses for dma-buf, "
+                                     "status: 0x%x\n", status);
+            sgt = ERR_PTR(-EIO);
             goto unlock_priv;
         }
     }
@@ -1108,7 +1126,7 @@ nv_dma_buf_map(
     {
         sgt = nv_dma_buf_map_pfns(attachment->dev, priv);
     }
-    if (sgt == NULL)
+    if (IS_ERR(sgt))
     {
         goto unmap_handles;
     }
@@ -1126,7 +1144,7 @@ unmap_handles:
 unlock_priv:
     mutex_unlock(&priv->lock);
 
-    return NULL;
+    return sgt;
 }
 
 static void
@@ -1220,6 +1238,47 @@ nv_dma_buf_release(
     return;
 }
 
+static void
+nv_dma_buf_vma_open(struct vm_area_struct *vma)
+{
+    nv_dma_buf_file_private_t *priv = NV_VMA_PRIVATE(vma);
+    NV_STATUS status;
+
+    if (priv == NULL)
+    {
+        return;
+    }
+
+    mutex_lock(&priv->lock);
+
+    status = nv_dma_buf_get_phys_addresses(priv, 0, priv->num_objects);
+    WARN_ON(status != NV_OK);
+
+    mutex_unlock(&priv->lock);
+}
+
+static void
+nv_dma_buf_vma_release(struct vm_area_struct *vma)
+{
+    nv_dma_buf_file_private_t *priv = NV_VMA_PRIVATE(vma);
+
+    if (priv == NULL)
+    {
+        return;
+    }
+
+    mutex_lock(&priv->lock);
+
+    nv_dma_buf_put_phys_addresses(priv, 0, priv->num_objects);
+
+    mutex_unlock(&priv->lock);
+}
+
+static struct vm_operations_struct nv_dma_buf_vma_ops = {
+    .open   = nv_dma_buf_vma_open,
+    .close  = nv_dma_buf_vma_release,
+};
+
 static int
 nv_dma_buf_mmap(
     struct dma_buf *buf,
@@ -1228,6 +1287,7 @@ nv_dma_buf_mmap(
 {
     int ret = 0;
     NvU32 i = 0;
+    NV_STATUS status;
     nv_dma_buf_file_private_t *priv = buf->priv;
     unsigned long addr = vma->vm_start;
     NvU32 total_skip_size = 0;
@@ -1249,6 +1309,15 @@ nv_dma_buf_mmap(
                   "NVRM: nv_dma_buf_mmap: mmap is not allowed can_mmap[%d] \n",
                   priv->map_attrs.can_mmap);
         ret = -ENOTSUPP;
+        goto unlock_priv;
+    }
+
+    if ((priv->num_objects != priv->total_objects) ||
+        (priv->attached_size != priv->total_size))
+    {
+        nv_printf(NV_DBG_ERRORS,
+                  "NVRM: nv_dma_buf_mmap: mmap of partially attached dma-buf is not supported\n");
+        ret = -EINVAL;
         goto unlock_priv;
     }
 
@@ -1279,6 +1348,21 @@ nv_dma_buf_mmap(
               vma->vm_start, vma->vm_end, PAGE_SIZE, NV_VMA_PGOFF(vma),
               NV_VMA_OFFSET(vma), pgprot_val(vma->vm_page_prot), priv->total_size,
               total_map_len);
+
+    //
+    // If the GPU has BAR1 < FB, it is possible that the allocation
+    // is not yet mapped to BAR1, if not already mapped for IO.
+    // So this needs to be done prior to mmap.
+    // Even if user requests mmap at an offset/size, we still map the whole
+    // buffer to BAR1 since the buffer can't be bigger than BAR1 space.
+    // That is because dma-buf map callback doesn't allow partial mapping.
+    //
+    status = nv_dma_buf_get_phys_addresses(priv, 0, priv->num_objects);
+    if (status != NV_OK)
+    {
+        ret = -EIO;
+        goto unlock_priv;
+    }
 
     // Find the first range from which map should start.
     for (i = 0; i < priv->num_objects; i++)
@@ -1315,20 +1399,20 @@ nv_dma_buf_mmap(
     nv_printf(NV_DBG_ERRORS,
               "NVRM: [nv_dma_buf_mmap-failed] Could not find first map page \n");
     ret = -EINVAL;
-    goto unlock_priv;
+    goto put_phys_addrs;
 
 found_start_page:
 
     // RO and cache type settings
     if (nv_encode_caching(&vma->vm_page_prot,
-                          priv->map_attrs.cache_type,
+                          rm_disable_iomap_wc() ? NV_MEMORY_UNCACHED : priv->map_attrs.cache_type,
                           priv->map_attrs.memory_type))
     {
         nv_printf(NV_DBG_ERRORS,
                   "NVRM: [nv_dma_buf_mmap-failed] i[%u] cache_type[%llx] memory_type[%d] page_prot[%x] \n",
                   i, priv->map_attrs.cache_type, priv->map_attrs.memory_type, pgprot_val(vma->vm_page_prot));
         ret = -ENXIO;
-        goto unlock_priv;
+        goto put_phys_addrs;
     }
 
     if (priv->map_attrs.read_only_mem)
@@ -1341,7 +1425,7 @@ found_start_page:
     nv_vm_flags_set(vma, VM_SHARED | VM_DONTEXPAND | VM_DONTDUMP);
 
     // Create user mapping
-    for (; i < (priv->num_objects && (addr < vma->vm_end)); i++)
+    for (; (i < priv->num_objects) && (addr < vma->vm_end); i++)
     {
         NvU32 range_count = priv->handles[i].memArea.numRanges;
 
@@ -1378,8 +1462,10 @@ found_start_page:
                 nv_printf(NV_DBG_ERRORS,
                           "NVRM: nv_dma_buf_mmap: remap_pfn_range - failed\n", ret);
                 // Partial mapping is going to be freed by kernel if nv_dma_buf_mmap() fails.
-                goto unlock_priv;
+                goto put_phys_addrs;
             }
+
+            BUG_ON(!(vma->vm_flags & VM_PFNMAP));
 
             nv_printf(NV_DBG_INFO,
                       "NVRM: nv_dma_buf_mmap: index[%u] range_count[%u] Vaddr[%llx] "
@@ -1391,11 +1477,18 @@ found_start_page:
             total_map_len -= map_len;
             addr          += map_len;
         }
+        index = 0;
     }
+
+    NV_VMA_PRIVATE(vma) = priv;
+    vma->vm_ops = &nv_dma_buf_vma_ops;
 
     mutex_unlock(&priv->lock);
 
     return 0;
+
+put_phys_addrs:
+    nv_dma_buf_put_phys_addresses(priv, 0, priv->num_objects);
 
 unlock_priv:
     mutex_unlock(&priv->lock);
@@ -1545,12 +1638,6 @@ nv_dma_buf_create(
         nv_printf(NV_DBG_ERRORS, "NVRM: mmap is not allowed for the specific handles\n");
         status = NV_ERR_NOT_SUPPORTED;
         goto cleanup_handles;
-    }
-
-    // User can enable mmap for testing/specific use cases and not for any all handles.
-    if (!priv->map_attrs.allow_mmap)
-    {
-        priv->map_attrs.can_mmap = NV_FALSE;
     }
 
     // Get CPU static phys addresses if possible to do so at this time.

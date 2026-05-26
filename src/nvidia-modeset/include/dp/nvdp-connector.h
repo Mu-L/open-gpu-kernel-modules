@@ -44,7 +44,7 @@ NVDPLibModesetStatePtr nvDPLibCreateModesetState(
     const NvU32 head,
     const NvU32 displayId,
     const NVDpyIdList dpyIdList,
-    const enum NvKmsDpyAttributeCurrentColorSpaceValue colorSpace,
+    const enum NvKmsDpyAttributeCurrentColorFormatValue colorFormat,
     const enum NvKmsDpyAttributeColorBpcValue colorBpc,
     const NVHwModeTimingsEvo *pTimings,
     const NVDscInfoEvoRec *pDscInfo);

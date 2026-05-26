@@ -33,7 +33,7 @@ void __nvoc_init__SystemMemory(SystemMemory*, GpuHalspecOwner *pGpuhalspecowner)
 void __nvoc_init_funcTable_SystemMemory(SystemMemory*, GpuHalspecOwner *pGpuhalspecowner);
 NV_STATUS __nvoc_ctor_SystemMemory(SystemMemory*, GpuHalspecOwner *pGpuhalspecowner, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_SystemMemory(SystemMemory*, GpuHalspecOwner *pGpuhalspecowner);
-void __nvoc_dtor_SystemMemory(SystemMemory*);
+void __nvoc_dtor_SystemMemory(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__SystemMemory;
@@ -143,7 +143,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_SystemMemory =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "SystemMemory",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_SystemMemory,
+    .objCreatefn =        &__nvoc_objCreateDynamic_SystemMemory,
     .pCastInfo =          &__nvoc_castinfo__SystemMemory,
     .pExportInfo =        &__nvoc_export_info__SystemMemory
 };
@@ -153,6 +153,19 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_SystemMemory =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000101u)
+static NV_STATUS sysmemCtrlCmdGetSurfaceNumPhysPages__EXPORT(void *pStandardMemory, void *pParams) {
+    return sysmemCtrlCmdGetSurfaceNumPhysPages_IMPL(pStandardMemory, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000101u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000101u)
+static NV_STATUS sysmemCtrlCmdGetSurfacePhysPages__EXPORT(void *pStandardMemory, void *pParams) {
+    return sysmemCtrlCmdGetSurfacePhysPages_IMPL(pStandardMemory, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000101u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_SystemMemory[] = 
 {
@@ -160,7 +173,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_SystemMe
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x101u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &sysmemCtrlCmdGetSurfaceNumPhysPages_IMPL,
+        /*pFunc=*/      (void (*)(void)) &sysmemCtrlCmdGetSurfaceNumPhysPages__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x101u)
         /*flags=*/      0x101u,
         /*accessRight=*/0x0u,
@@ -175,7 +188,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_SystemMe
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x101u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &sysmemCtrlCmdGetSurfacePhysPages_IMPL,
+        /*pFunc=*/      (void (*)(void)) &sysmemCtrlCmdGetSurfacePhysPages__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x101u)
         /*flags=*/      0x101u,
         /*accessRight=*/0x0u,
@@ -192,7 +205,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_SystemMe
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__SystemMemory __nvoc_metadata__SystemMemory = {
     .rtti.pClassDef = &__nvoc_class_def_SystemMemory,    // (sysmem) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_SystemMemory,
+    .rtti.dtor      = &__nvoc_dtor_SystemMemory,
     .rtti.offset    = 0,
     .metadata__StandardMemory.rtti.pClassDef = &__nvoc_class_def_StandardMemory,    // (stdmem) super
     .metadata__StandardMemory.rtti.dtor      = &__nvoc_destructFromBase,
@@ -489,16 +502,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__SystemMemory =
 
 // Destruct SystemMemory object.
 void __nvoc_sysmemDestruct(SystemMemory*);
-void __nvoc_dtor_StandardMemory(StandardMemory*);
-void __nvoc_dtor_SystemMemory(SystemMemory* pThis) {
+void __nvoc_dtor_StandardMemory(Dynamic*);
+void __nvoc_dtor_SystemMemory(Dynamic* pThis) {
+
+    SystemMemory *__nvoc_this = (SystemMemory *) pThis;
 
 // Call destructor.
-    __nvoc_sysmemDestruct(pThis);
+    __nvoc_sysmemDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_StandardMemory(&pThis->__nvoc_base_StandardMemory);
+    __nvoc_dtor_StandardMemory((Dynamic *) &__nvoc_this->__nvoc_base_StandardMemory);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_SystemMemory(SystemMemory *pThis, GpuHalspecOwner *pGpuhalspecowner) {
     ChipHal *chipHal = &pGpuhalspecowner->chipHal;
@@ -529,7 +544,7 @@ NV_STATUS __nvoc_ctor_SystemMemory(SystemMemory *pStandardMemory, GpuHalspecOwne
 
     // Unwind on error.
 __nvoc_ctor_SystemMemory_fail__init:
-    __nvoc_dtor_StandardMemory(&pStandardMemory->__nvoc_base_StandardMemory);
+    __nvoc_dtor_StandardMemory((Dynamic *)&pStandardMemory->__nvoc_base_StandardMemory);
 __nvoc_ctor_SystemMemory_fail_StandardMemory:
 __nvoc_ctor_SystemMemory_exit:
     return status;
@@ -545,7 +560,7 @@ static void __nvoc_init_funcTable_SystemMemory_1(SystemMemory *pThis, GpuHalspec
     PORT_UNREFERENCED_VARIABLE(chipHal_HalVarIdx);
 
     // sysmemInitAllocRequest -- halified (2 hals)
-    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000a000UL) )) /* ChipHal: T234D | T264D */ 
+    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000e000UL) )) /* ChipHal: T234D | T239D | T264D */ 
     {
         pThis->__sysmemInitAllocRequest__ = &sysmemInitAllocRequest_SOC;
     }
@@ -670,13 +685,10 @@ __nvoc_objCreate_SystemMemory_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_SystemMemory(SystemMemory **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_SystemMemory(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_SystemMemory(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_SystemMemory((SystemMemory **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

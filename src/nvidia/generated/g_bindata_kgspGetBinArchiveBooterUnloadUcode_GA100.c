@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2016-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2016-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -36,6 +36,7 @@
 // COMPLEX_STRUCT: NO
 // DATA SIZE (bytes): 39936
 // COMPRESSED SIZE (bytes): 19446
+// EXTERNAL: NO
 //
 static BINDATA_CONST NV_DECLARE_ALIGNED(NvU8, 8) kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_IMAGE_DBG_data[] = 
 {
@@ -1267,9 +1268,8 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_IMAGE_DB
     39936,                                                             // uncompressed data size (bytes)
     19446,                                                             // compressed data size (bytes)
     kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_IMAGE_DBG_data, // compressed data pointer
-    NV_TRUE,                                                           // is pData compressed?
-    NV_TRUE,                                                           // contain information for file overriding?
-    NV_FALSE,                                                          // is the data referenced during load? (Only valid when BINDATA_IS_MUTABLE is true)
+    BINDATA_FLAG_COMPRESSED | BINDATA_FLAG_EXTERNAL_VMWARE,            // u32 flags (see bin_data_pvt.h)
+    0,                                                                 // Unused
 },
 #endif // defined(BINDATA_INCLUDE_STORAGE_PVT_DEFN)
 
@@ -1284,6 +1284,7 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_IMAGE_DB
 // COMPLEX_STRUCT: NO
 // DATA SIZE (bytes): 36
 // COMPRESSED SIZE (bytes): 27
+// EXTERNAL: NO
 //
 static BINDATA_CONST NV_DECLARE_ALIGNED(NvU8, 8) kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_HEADER_DBG_data[] = 
 {
@@ -1301,9 +1302,8 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_HEADER_D
     36,                                                                // uncompressed data size (bytes)
     27,                                                                // compressed data size (bytes)
     kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_HEADER_DBG_data, // compressed data pointer
-    NV_TRUE,                                                           // is pData compressed?
-    NV_TRUE,                                                           // contain information for file overriding?
-    NV_FALSE,                                                          // is the data referenced during load? (Only valid when BINDATA_IS_MUTABLE is true)
+    BINDATA_FLAG_COMPRESSED | BINDATA_FLAG_EXTERNAL_VMWARE,            // u32 flags (see bin_data_pvt.h)
+    0,                                                                 // Unused
 },
 #endif // defined(BINDATA_INCLUDE_STORAGE_PVT_DEFN)
 
@@ -1318,6 +1318,7 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_HEADER_D
 // COMPLEX_STRUCT: NO
 // DATA SIZE (bytes): 39936
 // COMPRESSED SIZE (bytes): 19444
+// EXTERNAL: NO
 //
 static BINDATA_CONST NV_DECLARE_ALIGNED(NvU8, 8) kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_IMAGE_PROD_data[] = 
 {
@@ -2549,9 +2550,8 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_IMAGE_PR
     39936,                                                             // uncompressed data size (bytes)
     19444,                                                             // compressed data size (bytes)
     kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_IMAGE_PROD_data, // compressed data pointer
-    NV_TRUE,                                                           // is pData compressed?
-    NV_TRUE,                                                           // contain information for file overriding?
-    NV_FALSE,                                                          // is the data referenced during load? (Only valid when BINDATA_IS_MUTABLE is true)
+    BINDATA_FLAG_COMPRESSED | BINDATA_FLAG_EXTERNAL_VMWARE,            // u32 flags (see bin_data_pvt.h)
+    0,                                                                 // Unused
 },
 #endif // defined(BINDATA_INCLUDE_STORAGE_PVT_DEFN)
 
@@ -2566,6 +2566,7 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_IMAGE_PR
 // COMPLEX_STRUCT: NO
 // DATA SIZE (bytes): 36
 // COMPRESSED SIZE (bytes): 27
+// EXTERNAL: NO
 //
 static BINDATA_CONST NV_DECLARE_ALIGNED(NvU8, 8) kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_HEADER_PROD_data[] = 
 {
@@ -2583,9 +2584,8 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_HEADER_P
     36,                                                                // uncompressed data size (bytes)
     27,                                                                // compressed data size (bytes)
     kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_HEADER_PROD_data, // compressed data pointer
-    NV_TRUE,                                                           // is pData compressed?
-    NV_TRUE,                                                           // contain information for file overriding?
-    NV_FALSE,                                                          // is the data referenced during load? (Only valid when BINDATA_IS_MUTABLE is true)
+    BINDATA_FLAG_COMPRESSED | BINDATA_FLAG_EXTERNAL_VMWARE,            // u32 flags (see bin_data_pvt.h)
+    0,                                                                 // Unused
 },
 #endif // defined(BINDATA_INCLUDE_STORAGE_PVT_DEFN)
 
@@ -2600,6 +2600,7 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_HEADER_P
 // COMPLEX_STRUCT: NO
 // DATA SIZE (bytes): 384
 // COMPRESSED SIZE (bytes): N/A
+// EXTERNAL: NO
 //
 static BINDATA_CONST NV_DECLARE_ALIGNED(NvU8, 8) kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_SIG_DBG_data[] = 
 {
@@ -2639,9 +2640,8 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_SIG_DBG_
     384,                                                               // uncompressed data size (bytes)
     384,                                                               // compressed data size (bytes)
     kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_SIG_DBG_data,  // compressed data pointer
-    NV_FALSE,                                                          // is pData compressed?
-    NV_TRUE,                                                           // contain information for file overriding?
-    NV_FALSE,                                                          // is the data referenced during load? (Only valid when BINDATA_IS_MUTABLE is true)
+    BINDATA_FLAG_EXTERNAL_VMWARE,                                      // u32 flags (see bin_data_pvt.h)
+    0,                                                                 // Unused
 },
 #endif // defined(BINDATA_INCLUDE_STORAGE_PVT_DEFN)
 
@@ -2656,6 +2656,7 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_SIG_DBG_
 // COMPLEX_STRUCT: NO
 // DATA SIZE (bytes): 384
 // COMPRESSED SIZE (bytes): N/A
+// EXTERNAL: NO
 //
 static BINDATA_CONST NV_DECLARE_ALIGNED(NvU8, 8) kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_SIG_PROD_data[] = 
 {
@@ -2695,9 +2696,8 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_SIG_PROD
     384,                                                               // uncompressed data size (bytes)
     384,                                                               // compressed data size (bytes)
     kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_SIG_PROD_data, // compressed data pointer
-    NV_FALSE,                                                          // is pData compressed?
-    NV_TRUE,                                                           // contain information for file overriding?
-    NV_FALSE,                                                          // is the data referenced during load? (Only valid when BINDATA_IS_MUTABLE is true)
+    BINDATA_FLAG_EXTERNAL_VMWARE,                                      // u32 flags (see bin_data_pvt.h)
+    0,                                                                 // Unused
 },
 #endif // defined(BINDATA_INCLUDE_STORAGE_PVT_DEFN)
 
@@ -2712,6 +2712,7 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_SIG_PROD
 // COMPLEX_STRUCT: NO
 // DATA SIZE (bytes): 4
 // COMPRESSED SIZE (bytes): N/A
+// EXTERNAL: NO
 //
 static BINDATA_CONST NV_DECLARE_ALIGNED(NvU8, 8) kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_PATCH_LOC_data[] = 
 {
@@ -2728,9 +2729,8 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_PATCH_LO
     4,                                                                 // uncompressed data size (bytes)
     4,                                                                 // compressed data size (bytes)
     kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_PATCH_LOC_data, // compressed data pointer
-    NV_FALSE,                                                          // is pData compressed?
-    NV_TRUE,                                                           // contain information for file overriding?
-    NV_FALSE,                                                          // is the data referenced during load? (Only valid when BINDATA_IS_MUTABLE is true)
+    BINDATA_FLAG_EXTERNAL_VMWARE,                                      // u32 flags (see bin_data_pvt.h)
+    0,                                                                 // Unused
 },
 #endif // defined(BINDATA_INCLUDE_STORAGE_PVT_DEFN)
 
@@ -2745,6 +2745,7 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_PATCH_LO
 // COMPLEX_STRUCT: NO
 // DATA SIZE (bytes): 4
 // COMPRESSED SIZE (bytes): N/A
+// EXTERNAL: NO
 //
 static BINDATA_CONST NV_DECLARE_ALIGNED(NvU8, 8) kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_PATCH_SIG_data[] = 
 {
@@ -2761,9 +2762,8 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_PATCH_SI
     4,                                                                 // uncompressed data size (bytes)
     4,                                                                 // compressed data size (bytes)
     kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_PATCH_SIG_data, // compressed data pointer
-    NV_FALSE,                                                          // is pData compressed?
-    NV_TRUE,                                                           // contain information for file overriding?
-    NV_FALSE,                                                          // is the data referenced during load? (Only valid when BINDATA_IS_MUTABLE is true)
+    BINDATA_FLAG_EXTERNAL_VMWARE,                                      // u32 flags (see bin_data_pvt.h)
+    0,                                                                 // Unused
 },
 #endif // defined(BINDATA_INCLUDE_STORAGE_PVT_DEFN)
 
@@ -2778,6 +2778,7 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_PATCH_SI
 // COMPLEX_STRUCT: NO
 // DATA SIZE (bytes): 12
 // COMPRESSED SIZE (bytes): N/A
+// EXTERNAL: NO
 //
 static BINDATA_CONST NV_DECLARE_ALIGNED(NvU8, 8) kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_PATCH_META_data[] = 
 {
@@ -2794,9 +2795,8 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_PATCH_ME
     12,                                                                // uncompressed data size (bytes)
     12,                                                                // compressed data size (bytes)
     kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_PATCH_META_data, // compressed data pointer
-    NV_FALSE,                                                          // is pData compressed?
-    NV_TRUE,                                                           // contain information for file overriding?
-    NV_FALSE,                                                          // is the data referenced during load? (Only valid when BINDATA_IS_MUTABLE is true)
+    BINDATA_FLAG_EXTERNAL_VMWARE,                                      // u32 flags (see bin_data_pvt.h)
+    0,                                                                 // Unused
 },
 #endif // defined(BINDATA_INCLUDE_STORAGE_PVT_DEFN)
 
@@ -2811,6 +2811,7 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_PATCH_ME
 // COMPLEX_STRUCT: NO
 // DATA SIZE (bytes): 4
 // COMPRESSED SIZE (bytes): N/A
+// EXTERNAL: NO
 //
 static BINDATA_CONST NV_DECLARE_ALIGNED(NvU8, 8) kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_NUM_SIGS_data[] = 
 {
@@ -2827,9 +2828,8 @@ BINDATA_STORAGE_PVT kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_NUM_SIGS
     4,                                                                 // uncompressed data size (bytes)
     4,                                                                 // compressed data size (bytes)
     kgspBinArchiveBooterUnloadUcode_GA100_BINDATA_LABEL_NUM_SIGS_data, // compressed data pointer
-    NV_FALSE,                                                          // is pData compressed?
-    NV_TRUE,                                                           // contain information for file overriding?
-    NV_FALSE,                                                          // is the data referenced during load? (Only valid when BINDATA_IS_MUTABLE is true)
+    BINDATA_FLAG_EXTERNAL_VMWARE,                                      // u32 flags (see bin_data_pvt.h)
+    0,                                                                 // Unused
 },
 #endif // defined(BINDATA_INCLUDE_STORAGE_PVT_DEFN)
 

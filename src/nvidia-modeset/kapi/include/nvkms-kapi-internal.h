@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2014-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2014-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -165,12 +165,17 @@ struct NvKmsKapiMemory {
     struct NvKmsKapiPrivSurfaceParams surfaceParams;
 
     NvBool isVidmem;
+    NvBool isContiguous;
     /* Whether memory can be updated directly on the screen */
     NvBool noDisplayCaching;
 };
 
 struct NvKmsKapiSurface {
     NvKmsSurfaceHandle hKmsHandle;
+};
+
+struct NvKmsKapiVblankIntrCallback {
+    NvKmsVblankIntrCallbackHandle hKmsHandle;
 };
 
 static inline void *nvKmsKapiCalloc(size_t nmem, size_t size)

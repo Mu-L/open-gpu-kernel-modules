@@ -63,7 +63,7 @@ intrGetPendingStall_GM107
         return NV_ERR_GPU_NOT_FULL_POWER;
     }
 
-    NV_ASSERT_OK_OR_RETURN(intrGetPendingStallEngines_HAL(pGpu, pIntr, pEngines, pThreadState));
+    NV_ASSERT_OK_OR_RETURN(intrGetPendingStallEngines_HAL(pGpu, pIntr, NV_FALSE, 0, pEngines, pThreadState));
 
     if (!API_GPU_ATTACHED_SANITY_CHECK(pGpu))
     {
@@ -127,6 +127,31 @@ void intrGetAuxiliaryPendingStall_GM107
 }
 
 /*!
+ *
+ * @param[in]  pGpu
+ * @param[in]  pIntr
+ * @param[out] pStaticRegVal unused on pre-Turing
+ * @param[out] pEngines      List of engines that have pending stall interrupts
+ * @param[in]  pThreadState
+ *
+ * @return NV_OK if the list of engines that have pending stall interrupts was retrieved
+ */
+NV_STATUS
+intrGetPendingDispLowLatencyAndStaticReg_GM107
+(
+    OBJGPU              *pGpu,
+    Intr                *pIntr,
+    NvU32               *pStaticRegVal,
+    MC_ENGINE_BITVECTOR *pEngines,
+    THREAD_STATE_NODE   *pThreadState
+)
+{
+    // Just get all the interrupts, there's not much to optimize for pre-Turing
+    return intrGetPendingStall_HAL(pGpu, pIntr, pEngines, pThreadState);
+}
+
+
+/*!
  * @brief Returns a bitfield with only MC_ENGINE_IDX_DISP set if it's pending in hardware
  *        The MC_ENGINE_IDX_DISP that this function reports conflates both the low latency display
  *        interrupts and other display interrupts in architectures supported by this HAL.
@@ -166,7 +191,7 @@ intrGetPendingLowLatencyHwDisplayIntr_GM107
     // Use lower level intrGetPendingStallEngines_HAL to get only the
     // actual HW value of the registers
     //
-    intrGetPendingStallEngines_HAL(pGpu, pIntr, &intr0Pending, pThreadState);
+    intrGetPendingStallEngines_HAL(pGpu, pIntr, NV_FALSE, 0, &intr0Pending, pThreadState);
 
     if (bitVectorTest(&intr0Pending, MC_ENGINE_IDX_DISP))
     {

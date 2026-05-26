@@ -137,10 +137,9 @@ NV_STATUS UvmSetDriverVersion(NvU32 major, NvU32 changelist);
 //     flags: (INPUT)
 //         Must be a combination of 0 or more of following flags:
 //
-//         - UVM_INIT_FLAGS_DISABLE_HMM
+//         - UVM_INIT_FLAGS_DISABLE_PAGEABLE_ACCESS
 //             Specifying this flag will only have an effect if the system
 //             allows GPUs to read/write system (CPU) pageable memory and the
-//             GPUs do not have hardware support to do it transparently, and the
 //             UVM_INIT_FLAGS_MULTI_PROCESS_SHARING_MODE flag is not specified.
 //             In such cases pageable access from the GPU will be disabled.
 //
@@ -149,14 +148,23 @@ NV_STATUS UvmSetDriverVersion(NvU32 major, NvU32 changelist);
 //             allocations, etc. that has not been registered for CUDA access
 //             using cudaHostRegister.
 //
+//          - UVM_INIT_FLAGS_DISABLE_PAGEABLE_MIGRATIONS
+//             Specifying this flag will only have an effect if the system
+//             allows GPUs to read/write system (CPU) pageable memory and the
+//             UVM_INIT_FLAGS_DISABLE_PAGEABLE_ACCESS and
+//             UVM_INIT_FLAGS_MULTI_PROCESS_SHARING_MODE flags are not
+//             specified. In such cases pageable migrations to the GPU will be
+//             disabled. Any migration attempts to the GPU will cause migrations
+//             to the CPU NUMA node closest to the GPU.
+//
 //         - UVM_INIT_FLAGS_MULTI_PROCESS_SHARING_MODE
 //             Specifying this flag will prevent UVM from creating any
 //             association between this process and the UVM file descriptor.
 //             Pageable memory access of any kind will be disabled (regardless
-//             of whether UVM_INIT_FLAGS_DISABLE_HMM was specified) and the GPU
-//             resources used by the UVM file descriptor will be freed when the
-//             last reference to the file is dropped rather than when this
-//             process exits.
+//             of whether UVM_INIT_FLAGS_DISABLE_PAGEABLE_ACCESS was specified)
+//             and the GPU resources used by the UVM file descriptor will be
+//             freed when the last reference to the file is dropped rather than
+//             when this process exits.
 //
 //             If this flag is not specified, calling UvmMemMap or
 //             UvmAllocSemaphorePool on the same file from a different process
@@ -336,10 +344,10 @@ NV_STATUS UvmIsPageableMemoryAccessSupportedOnGpu(const NvProcessorUuid *gpuUuid
 // capable or SMC enabled, the physical GPU UUID must be used.
 //
 // GPU registration may fail if certain features, such as those required to
-// support pageable memory on systems without hardware support, could not be
-// initialised. Registration may succeed if callers retry after explicitly
-// requesting these features be disabled when calling UvmInitialize(), for
-// example by passing UVM_INIT_FLAGS_DISABLE_HMM.
+// support pageable memory, could not be initialised. Registration may succeed
+// if callers retry after explicitly requesting these features be disabled when
+// calling UvmInitialize(), for example by passing
+// UVM_INIT_FLAGS_DISABLE_PAGEABLE_ACCESS.
 //
 // Arguments:
 //     gpuUuid: (INPUT)
@@ -421,10 +429,7 @@ NV_STATUS UvmRegisterGpu(const NvProcessorUuid *gpuUuid,
 // Any GPU VA spaces or channels that were registered on this GPU using
 // UvmRegisterGpuVaSpace or UvmRegisterChannel respectively, will be
 // unregistered. Any state that was set by calling UvmSetPreferredLocation or
-// UvmSetAccessedBy for this GPU will be cleared. Any pages that were associated
-// with a non-migratable range group and had this GPU as their preferred
-// location will have their range group association changed to
-// UVM_RANGE_GROUP_ID_NONE.
+// UvmSetAccessedBy for this GPU will be cleared.
 //
 // If the Confidential Computing feature is enabled in the system, any VA
 // ranges allocated using UvmAllocSemaphorePool and owned by this GPU will be
@@ -917,210 +922,6 @@ NV_STATUS UvmReleaseVa(void     *base,
                        NvLength  length);
 
 //------------------------------------------------------------------------------
-// UvmCreateRangeGroup
-//
-// Creates a new range group. Virtual address ranges can be associated with
-// this range group as outlined in UvmSetRangeGroup.
-//
-// Arguments:
-//     rangeGroupId: (OUTPUT)
-//         Id of the newly created range group.
-//
-// Error codes:
-//     NV_ERR_NO_MEMORY:
-//         Internal memory allocation failed.
-//
-//     NV_ERR_INVALID_ARGUMENT:
-//         A NULL pointer was passed in the rangeGroupId argument.
-//
-//     NV_ERR_GENERIC:
-//         Unexpected error. We try hard to avoid returning this error code,
-//         because it is not very informative.
-//
-//------------------------------------------------------------------------------
-NV_STATUS UvmCreateRangeGroup(NvU64 *rangeGroupId);
-
-//------------------------------------------------------------------------------
-// UvmDestroyRangeGroup
-//
-// Destroys a previously created range group. If there are any pages associated
-// with this range group, that association is cleared. i.e. the behavior is the
-// same as associating those pages with UVM_RANGE_GROUP_ID_NONE via a call to
-// UvmSetRangeGroup.
-//
-// Arguments:
-//     rangeGroupId: (INPUT)
-//         Id of the range group to be destroyed.
-//
-// Error codes:
-//     NV_ERR_OBJECT_NOT_FOUND:
-//         rangeGroupId was not created by a previous call to
-//         UvmCreateRangeGroup.
-//
-//     NV_ERR_GENERIC:
-//         Unexpected error. We try hard to avoid returning this error code,
-//         because it is not very informative.
-//
-//------------------------------------------------------------------------------
-NV_STATUS UvmDestroyRangeGroup(NvU64 rangeGroupId);
-
-//------------------------------------------------------------------------------
-// UvmSetRangeGroup
-//
-// Associates the pages in a virtual address (VA) range with the specified
-// range group. The base address and length of the VA range must be aligned to
-// the smallest page size supported by the CPU. If any pages in that VA range
-// were associated with another range group, that association is changed to
-// this range group. The VA range must have been allocated via either UvmAlloc
-// or UvmMemMap.
-//
-// If the range group was made non-migratable by a previous call to
-// UvmPreventMigrationRangeGroups, then all pages in the VA range are migrated
-// to their preferred location if they are not already located there. If any
-// page does not have a preferred location or if the preferred location is a
-// fault-capable GPU, an error is returned.
-//
-// If rangeGroupId is UVM_RANGE_GROUP_ID_NONE, then all pages in the VA range
-// will have their range group association removed.
-//
-// Arguments:
-//     base: (INPUT)
-//         Base address of the virtual address range.
-//
-//     length: (INPUT)
-//         Length, in bytes, of the range.
-//
-//     rangeGroupId: (INPUT)
-//         Id of the range group to associate the VA range with.
-//
-// Errors:
-//     NV_ERR_NO_MEMORY:
-//         Internal memory allocation failed.
-//
-//     NV_ERR_INVALID_ADDRESS:
-//         base and length are not properly aligned or don't represent a valid
-//         address range.
-//
-//     NV_ERR_INVALID_DEVICE:
-//         The range group is non-migratable and at least one page in the VA
-//         range either does not have a preferred location or its preferred
-//         location is a fault-capable GPU.
-//
-//     NV_ERR_OBJECT_NOT_FOUND:
-//         rangeGroupId was not created by a previous call to
-//         UvmCreateRangeGroup.
-//
-//     NV_ERR_GENERIC:
-//         Unexpected error. We try hard to avoid returning this error code,
-//         because it is not very informative.
-//
-//------------------------------------------------------------------------------
-NV_STATUS UvmSetRangeGroup(void     *base,
-                           NvLength  length,
-                           NvU64     rangeGroupId);
-
-//------------------------------------------------------------------------------
-// UvmPreventMigrationRangeGroups
-//
-// Migrates all pages associated with the specified range groups to their
-// preferred location and prevents them from being migrated on faults from
-// either the CPU or the GPU. Any unpopulated pages are populated at the
-// preferred location. If any page does not have a preferred location or if the
-// preferred location is a fault-capable GPU, an error is returned. All the
-// specified range groups must be valid range groups allocated using
-// UvmCreateRangeGroup.
-//
-// All pages associated with the specified range groups are mapped at the
-// preferred location and from all the GPUs present in the accessed-by list of
-// those pages, provided establishing a mapping is possible. If any page
-// associated with any of the specified range groups has a preferred location
-// set to a non-fault-capable GPU, and another non-fault-capable GPU is in the
-// accessed-by list of the page but P2P support between both GPUs is not
-// enabled, an error is returned.
-//
-// GPUs are allowed to map any pages belonging to these range groups on faults.
-// If establishing such a mapping is not possible, the fault is fatal.
-//
-// Existing CPU mappings to any pages belonging to these range groups are
-// revoked, even if the pages are in system memory and even if the CPU is in
-// the accessed-by list of those pages. The CPU is not allowed to map these
-// pages on faults even if they are located in system memory and so, CPU faults
-// to these pages are always fatal.
-//
-// Multiple calls to UvmPreventMigrationRangeGroups are not refcounted. i.e.
-// calling UvmPreventMigrationRangeGroups on a range group on which
-// UvmPreventMigrationRangeGroups has already been called results in a no-op.
-//
-// Arguments:
-//     rangeGroupIds: (INPUT)
-//         An array of range group IDs.
-//
-//     numGroupIds: (INPUT)
-//         Number of items in the rangeGroupIds array.
-//
-// Errors:
-//     NV_ERR_NO_MEMORY:
-//         Internal memory allocation failed.
-//
-//     NV_ERR_OBJECT_NOT_FOUND:
-//         One or more rangeGroupIds was not found.
-//
-//     NV_ERR_INVALID_ARGUMENT:
-//         A NULL pointer was passed in for rangeGroupIds or numGroupIds was
-//         zero.
-//
-//     NV_ERR_INVALID_DEVICE:
-//         At least one page in one of the VA ranges associated with these range
-//         groups does not have a preferred location or its preferred location
-//         is a fault-capable GPU. Or the preferred location has been set to a
-//         non-fault-capable GPU, and another non-fault-capable GPU is present
-//         in the accessed-by list of a page but P2P support between both GPUs
-//         has not been enabled.
-//
-//     NV_ERR_GENERIC:
-//         Unexpected error. We try hard to avoid returning this error code,
-//         because it is not very informative.
-//
-//------------------------------------------------------------------------------
-NV_STATUS UvmPreventMigrationRangeGroups(const NvU64 *rangeGroupIds,
-                                         NvLength     numGroupIds);
-
-//------------------------------------------------------------------------------
-// UvmAllowMigrationRangeGroups
-//
-// Undoes the effect of UvmPreventMigrationRangeGroups. Pages associated with
-// these range groups are now allowed to migrate at any time, and CPU or GPU
-// faults to these pages are no longer fatal. All the specified range groups
-// must be valid range groups allocated using UvmCreateRangeGroup.
-//
-// Multiple calls to UvmAllowMigrationRangeGroups are not refcounted. i.e.
-// calling UvmAllowMigrationRangeGroups on a range group on which
-// UvmAllowMigrationRangeGroups has already been called results in a no-op.
-//
-// Arguments:
-//     rangeGroupIds: (INPUT)
-//         An array of range group IDs.
-//
-//     numGroupIds: (INPUT)
-//         Number of items in the rangeGroupIds array.
-//
-// Errors:
-//     NV_ERR_OBJECT_NOT_FOUND:
-//         One or more rangeGroupIds was not found.
-//
-//     NV_ERR_INVALID_ARGUMENT:
-//         A NULL pointer was passed in for rangeGroupIds or numGroupIds was
-//         zero.
-//
-//     NV_ERR_GENERIC:
-//         Unexpected error. We try hard to avoid returning this error code,
-//         because it is not very informative.
-//
-//------------------------------------------------------------------------------
-NV_STATUS UvmAllowMigrationRangeGroups(const NvU64 *rangeGroupIds,
-                                       NvLength     numGroupIds);
-
-//------------------------------------------------------------------------------
 // UvmAlloc
 //
 // Creates a new mapping in the virtual address space of the process, populates
@@ -1480,14 +1281,6 @@ NV_STATUS UvmAllocDeviceP2P(NvProcessorUuid gpuUuid,
 // case, software managed pageable memory does not support migration of
 // MAP_SHARED, file-backed, or PROT_NONE mappings.
 //
-// If any pages in the given VA range are associated with a range group which
-// has been made non-migratable via UvmPreventMigrationRangeGroups, then those
-// pages are not migrated and the mappings on the destination processor for
-// those pages are left unmodified. If the VA range is associated with a
-// migratable range group and the destination processor is a non-fault-capable
-// GPU, then an error is returned if that GPU is in the accessed-by list of the
-// VA range but that GPU is not the preferred location.
-//
 // If read duplication is enabled on any pages in the VA range, then those pages
 // are read duplicated at the destination processor, leaving the source copy, if
 // present, intact with only its mapping changed to read-only if it wasn't
@@ -1504,9 +1297,7 @@ NV_STATUS UvmAllocDeviceP2P(NvProcessorUuid gpuUuid,
 // Otherwise, those mappings are cleared.
 //
 // If fewer than the number of requested pages were migrated,
-// NV_WARN_MORE_PROCESSING_REQUIRED is returned. An example scenario where this
-// could happen is when UvmPreventMigrationRangeGroups has been called on a
-// range group associated with some pages in this range. If fewer than the
+// NV_WARN_MORE_PROCESSING_REQUIRED is returned. If fewer than the
 // number of requested pages were migrated due to insufficient memory to
 // allocate physical pages or page tables, then NV_ERR_NO_MEMORY is returned.
 //
@@ -1666,56 +1457,97 @@ NV_STATUS UvmMigrateAsync(void                  *base,
                           NvU32                  semaphorePayload);
 
 //------------------------------------------------------------------------------
-// UvmMigrateRangeGroup
+// UvmQueryResidency
 //
-// Migrates the backing of all virtual address ranges associated with the given
-// range group to the specified destination processor. The behavior of this API
-// is equivalent to calling UvmMigrate with preferredCpuMemoryNode = -1 on each
-// VA range associated with this range group.
+// Queries the residency information for a virtual address range. This function
+// determines which processor (CPU or GPU) has the majority of pages resident
+// in the specified range.
 //
-// Any errors encountered during migration are returned immediately. No attempt
-// is made to migrate the remaining unmigrated ranges and the ranges that are
-// already migrated are not rolled back to their previous location.
+// This implementation uses move_pages() first to query page residency for
+// non-managed memory, with a fallback to UVM kernel tracking for pages not
+// found by move_pages(). The fallback is used for all UVM-managed memory and
+// for HMM pages that are GPU-resident (which move_pages() cannot locate).
 //
-// The range group id specified must have been allocated via
-// UvmCreateRangeGroup.
+// The NUMA node information is always tracked and reported. For CPU residency,
+// it reports the specific NUMA node where the majority of CPU pages are
+// resident. For GPU residency, it reports the GPU's NUMA node ID if the GPU
+// has NUMA support (coherent systems), or NUMA_NO_NODE (-1) for non-coherent
+// systems where the pages reside in GPU memory.
+//
+// Behavioral notes:
+// - Reserved but unpopulated ranges return NV_OK with zero UUID.
+// - Integrated GPUs share system RAM with the CPU. For these
+//   GPUs, residency always reports CPU UUID.
+// - The function samples pages at the specified stride interval. Larger
+//   strides provide faster queries but with reduced accuracy.
+// - In a tie (equal page counts), GPU wins over CPU. This prioritizes
+//   GPU-optimal code paths.
 //
 // Arguments:
-//     rangeGroupId: (INPUT)
-//         Id of the range group whose associated VA ranges have to be migrated.
+//     base: (INPUT)
+//         Base virtual address for querying residency. Must be aligned to the
+//         OS page size. The queried range must be homogeneous, it should
+//         consist entirely of Managed Memory or entirely of non-managed memory
+//         (system malloc, HMM, ATS, etc.). Querying a range that mixes managed
+//         and non-managed memory types will return NV_ERR_INVALID_ADDRESS.
 //
-//     destinationUuid: (INPUT)
-//         UUID of the physical GPU if the GPU is not SMC capable or SMC
-//         enabled, the GPU instance UUID of the partition, or the CPU UUID to
-//         migrate pages to.
+//     length: (INPUT)
+//         Length in bytes of the virtual address range to query. Must be a
+//         positive multiple of the OS page size.
+//
+//     sampling_stride: (INPUT)
+//         The stride (distance) between sampled addresses in the residency
+//         query. Must be a positive multiple of the OS page size. Larger
+//         values provide faster queries but with reduced accuracy.
+//
+//     resident_uuid_out: (OUTPUT)
+//         UUID of the processor where the majority of pages are resident. This
+//         will be the CPU UUID, a GPU UUID, or a zero UUID if no pages are
+//         resident.
+//
+//     resident_nid_out: (OUTPUT)
+//         NUMA node ID providing locality information based on resident_uuid_out:
+//         - If resident_uuid_out is CPU: The NUMA node where the majority of
+//           CPU pages reside
+//         - If resident_uuid_out is a coherent GPU: The GPU's NUMA node ID
+//         - If resident_uuid_out is a non-coherent GPU: NUMA_NO_NODE (-1)
+//         - If resident_uuid_out is zero UUID: NUMA_NO_NODE (-1)
+//         - If NUMA unavailable: NUMA_NO_NODE (-1)
+//
+//         Note: Integrated GPUs report CPU UUID (see behavioral notes above),
+//         so the NUMA node will follow CPU rules and report the actual CPU
+//         NUMA node where the memory resides.
 //
 // Error codes:
-//     NV_ERR_OBJECT_NOT_FOUND:
-//         Either UVM_RANGE_GROUP_ID_NONE was specified or the rangeGroupId was
-//         not found.
+//     NV_OK:
+//         Success. The residency information has been populated.
 //
-//     NV_ERR_INVALID_DEVICE:
-//         destinationUuid does not represent a valid processor such as a CPU or
-//         a GPU with a GPU VA space registered for it.
+//     NV_ERR_INVALID_ARGUMENT:
+//         base, resident_uuid_out, or resident_nid_out is NULL, or length is 0,
+//         or sampling_stride is 0, or sampling_stride is not a multiple of the
+//         OS page size, or the range is not properly aligned.
+//
+//     NV_ERR_INVALID_ADDRESS:
+//         The specified virtual address range is invalid or not accessible, or
+//         the range mixes UVM-managed and non-managed memory types.
+//
+//     NV_ERR_INVALID_STATE:
+//         UVM has not been initialized via UvmInitialize().
 //
 //     NV_ERR_NO_MEMORY:
 //         Internal memory allocation failed.
 //
-//     NV_ERR_OUT_OF_RANGE:
-//         One or more of the VA ranges exceeds the largest virtual address
-//         supported by the destination processor.
-//
 //     NV_ERR_GENERIC:
 //         Unexpected error. We try hard to avoid returning this error code,
-//         because it is not very informative.
-//
-//     NV_WARN_MORE_PROCESSING_REQUIRED:
-//         Fewer than requested pages were migrated because for example, the
-//         range group was non-migratable.
+//         because it is not very informative. This is typically returned when
+//         an unmapped errno value is encountered.
 //
 //------------------------------------------------------------------------------
-NV_STATUS UvmMigrateRangeGroup(NvU64                  rangeGroupId,
-                               const NvProcessorUuid *destinationUuid);
+NV_STATUS UvmQueryResidency(void *base,
+                            NvLength length,
+                            NvLength sampling_stride,
+                            NvProcessorUuid *resident_uuid_out,
+                            NvS32 *resident_nid_out);
 
 //------------------------------------------------------------------------------
 // UvmPopulatePageable
@@ -2229,7 +2061,7 @@ NV_STATUS UvmMapDynamicParallelismRegion(void                  *base,
 // that a write to this page from any processor will collapse the duplicated
 // copies.
 //
-// If UvmMigrate, UvmMigrateAsync or UvmMigrateRangeGroup is called on any pages
+// If UvmMigrate or UvmMigrateAsync is called on any pages
 // in this VA range, then those pages will also be read duplicated on the
 // destination processor for the migration unless the migration is between CPU
 // NUMA nodes, in which case the pages are migrated to the destination NUMA
@@ -2242,11 +2074,6 @@ NV_STATUS UvmMapDynamicParallelismRegion(void                  *base,
 // non-fault-capable GPU is registered after a page has already been
 // read-duplicated, then the copies of that page will be collapsed into a single
 // page.
-//
-// If UvmPreventMigrationRangeGroups has been called on the range group that
-// this VA range is associated with, then the migration and mapping policies
-// outlined above don't take effect until UvmAllowMigrationRangeGroups is called
-// for that range group.
 //
 // If any page in the VA range has a preferred location, then the migration and
 // mapping policies associated with this API take precedence over those related
@@ -2372,8 +2199,7 @@ NV_STATUS UvmDisableReadDuplication(void     *base,
 // VA range is only created if a GPU VA space has been registered for that GPU
 // and the page is in its preferred location.
 //
-// If read duplication has been enabled for any pages in this VA range and
-// UvmPreventMigrationRangeGroups has not been called on the range group that
+// If read duplication has been enabled for any pages in this VA range
 // those pages are associated with, then the migration and mapping policies
 // associated with UvmEnableReadDuplication override the policies outlined
 // above. Note that enabling read duplication on any pages in this VA range
@@ -2475,10 +2301,6 @@ NV_STATUS UvmSetPreferredLocation(void                  *base,
 // system-allocated pageable memory. If the input range corresponds to a file
 // backed shared mapping and least one GPU in the system supports transparent
 // access to pageable memory, the behavior below is not guaranteed.
-//
-// If the VA range is associated with a non-migratable range group, then that
-// association is cleared. i.e. the pages in this VA range have their range
-// group association changed to UVM_RANGE_GROUP_ID_NONE.
 //
 // It is ok to call this API only on a subset of the VA range on which
 // UvmSetPreferredLocation was called or for a VA range on which
@@ -2723,10 +2545,9 @@ NV_STATUS UvmUnsetAccessedBy(void                  *base,
 // caller is responsible for serializing page accesses and/or migrations and
 // discard operations.
 //
-// Calls to UvmMigrate, UvmMigrateAsync, UvmPreventMigrationRangeGroups, or
-// UvmMigrateRangeGroup, on a discarded virtual address range will cause the
-// collapsing of any discarded read-duplicated pages and will clear the discard
-// status of all discarded pages in the migrated VA range.
+// Calls to UvmMigrate or UvmMigrateAsync on a discarded virtual address range
+// will cause the collapsing of any discarded read-duplicated pages and will
+// clear the discard status of all discarded pages in the migrated VA range.
 //
 // If discarded memory is evicted, the data in the pages backing the evicted
 // virtual range is not copied to the eviction destination and the discard
@@ -2745,11 +2566,6 @@ NV_STATUS UvmUnsetAccessedBy(void                  *base,
 // If UvmSetPreferredLocation is called on a discarded virtual address range,
 // data from the pages backing the range will not be copied if those pages
 // require migration as a result of setting the preferred location.
-//
-// Calling this API while a non-fault-capable GPU is registered, will result in
-// the API returning an error. If a non-fault-capable GPU is registered after
-// pages have been discarded, UvmPreventMigrationRangeGroup will clear the
-// discard status of the range.
 //
 // Arguments:
 //     base: (INPUT)

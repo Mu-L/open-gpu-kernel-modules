@@ -28,7 +28,7 @@ void __nvoc_init__OBJGPUBOOSTMGR(OBJGPUBOOSTMGR*);
 void __nvoc_init_funcTable_OBJGPUBOOSTMGR(OBJGPUBOOSTMGR*);
 NV_STATUS __nvoc_ctor_OBJGPUBOOSTMGR(OBJGPUBOOSTMGR*);
 void __nvoc_init_dataField_OBJGPUBOOSTMGR(OBJGPUBOOSTMGR*);
-void __nvoc_dtor_OBJGPUBOOSTMGR(OBJGPUBOOSTMGR*);
+void __nvoc_dtor_OBJGPUBOOSTMGR(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJGPUBOOSTMGR;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJGPUBOOSTMGR =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJGPUBOOSTMGR",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_OBJGPUBOOSTMGR,
+    .objCreatefn =        &__nvoc_objCreateDynamic_OBJGPUBOOSTMGR,
     .pCastInfo =          &__nvoc_castinfo__OBJGPUBOOSTMGR,
     .pExportInfo =        &__nvoc_export_info__OBJGPUBOOSTMGR
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJGPUBOOSTMGR =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__OBJGPUBOOSTMGR __nvoc_metadata__OBJGPUBOOSTMGR = {
     .rtti.pClassDef = &__nvoc_class_def_OBJGPUBOOSTMGR,    // (gpuboostmgr) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJGPUBOOSTMGR,
+    .rtti.dtor      = &__nvoc_dtor_OBJGPUBOOSTMGR,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -82,16 +82,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJGPUBOOSTMGR =
 
 // Destruct OBJGPUBOOSTMGR object.
 void __nvoc_gpuboostmgrDestruct(OBJGPUBOOSTMGR*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_OBJGPUBOOSTMGR(OBJGPUBOOSTMGR* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_OBJGPUBOOSTMGR(Dynamic* pThis) {
+
+    OBJGPUBOOSTMGR *__nvoc_this = (OBJGPUBOOSTMGR *) pThis;
 
 // Call destructor.
-    __nvoc_gpuboostmgrDestruct(pThis);
+    __nvoc_gpuboostmgrDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJGPUBOOSTMGR(OBJGPUBOOSTMGR *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -117,7 +119,7 @@ NV_STATUS __nvoc_ctor_OBJGPUBOOSTMGR(OBJGPUBOOSTMGR *pBoostMgr) {
 
     // Unwind on error.
 __nvoc_ctor_OBJGPUBOOSTMGR_fail__init:
-    __nvoc_dtor_Object(&pBoostMgr->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&pBoostMgr->__nvoc_base_Object);
 __nvoc_ctor_OBJGPUBOOSTMGR_fail_Object:
 __nvoc_ctor_OBJGPUBOOSTMGR_exit:
     return status;
@@ -221,11 +223,8 @@ __nvoc_objCreate_OBJGPUBOOSTMGR_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_OBJGPUBOOSTMGR(OBJGPUBOOSTMGR **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_OBJGPUBOOSTMGR(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_OBJGPUBOOSTMGR(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_OBJGPUBOOSTMGR((OBJGPUBOOSTMGR **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

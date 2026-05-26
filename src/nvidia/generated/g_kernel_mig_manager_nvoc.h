@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -195,6 +195,12 @@ typedef struct MIG_COMPUTE_INSTANCE
     NvU32 sharedEngFlag;
 
     /*!
+     * Various flags describing the compute instance.
+     * Bit positions in this flag correspond to NVC637_CTRL_EXEC_PARTITIONS_FLAGS_*
+     */
+    NvU32 execPartFlags;
+
+    /*!
      * Compute instance ID
      */
     NvU32 id;
@@ -233,6 +239,11 @@ typedef struct MIG_COMPUTE_INSTANCE
      * ID may not have been assigned.
      */
     NvU32 computeSize;
+
+    /*!
+     * Compute mode rules and reservation for this compute instance.
+     */
+    ComputeModeState computeModeState;
 
     /*!
      * Kernel watchdog for this compute instance
@@ -538,8 +549,8 @@ struct KernelMIGManager {
     NvBool (*__kmigmgrIsDevinitMIGBitSet__)(OBJGPU *, struct KernelMIGManager * /*this*/);  // halified (3 hals) body
     NV_STATUS (*__kmigmgrConfigurePMSettings__)(OBJGPU *, struct KernelMIGManager * /*this*/);  // halified (2 hals) body
     void (*__kmigmgrDetectReducedConfig__)(OBJGPU *, struct KernelMIGManager * /*this*/);  // halified (2 hals) body
-    NvBool (*__kmigmgrIsGPUInstanceCombinationValid__)(OBJGPU *, struct KernelMIGManager * /*this*/, NvU32);  // halified (5 hals) body
-    NvBool (*__kmigmgrIsGPUInstanceFlagValid__)(OBJGPU *, struct KernelMIGManager * /*this*/, NvU32);  // halified (6 hals) body
+    NvBool (*__kmigmgrIsGPUInstanceCombinationValid__)(OBJGPU *, struct KernelMIGManager * /*this*/, NvU32);  // halified (6 hals) body
+    NvBool (*__kmigmgrIsGPUInstanceFlagValid__)(OBJGPU *, struct KernelMIGManager * /*this*/, NvU32);  // halified (7 hals) body
     NvBool (*__kmigmgrGpuInstanceSupportVgpuTimeslice__)(struct KernelMIGManager * /*this*/, NvU32);  // halified (2 hals) body
     NV_STATUS (*__kmigmgrGenerateComputeInstanceUuid__)(OBJGPU *, struct KernelMIGManager * /*this*/, NvU32, NvU32, NvUuid *);  // halified (2 hals) body
     NV_STATUS (*__kmigmgrGenerateGPUInstanceUuid__)(OBJGPU *, struct KernelMIGManager * /*this*/, NvU32, NvUuid *);  // halified (2 hals) body
@@ -555,8 +566,9 @@ struct KernelMIGManager {
     NvBool (*__kmigmgrIsCTSAlignmentRequired__)(OBJGPU *, struct KernelMIGManager * /*this*/);  // halified (3 hals) body
     NV_STATUS (*__kmigmgrRestoreFromBootConfig__)(OBJGPU *, struct KernelMIGManager * /*this*/);  // halified (2 hals) body
 
-    // 1 PDB property
+    // 2 PDB properties
 //  NvBool PDB_PROP_KMIGMGR_IS_MISSING inherited from OBJENGSTATE
+    NvBool PDB_PROP_KMIGMGR_IS_HALF_REDUCED_CONFIG_GPC_INTERNAL_PARTITION_SUPPORTED;
 
     // Data members
     NvBool PRIVATE_FIELD(bIsA100ReducedConfig);
@@ -567,6 +579,7 @@ struct KernelMIGManager {
     NvBool PRIVATE_FIELD(bRestoreWatchdog);
     NvBool PRIVATE_FIELD(bReenableWatchdog);
     union ENGTYPE_BIT_VECTOR PRIVATE_FIELD(partitionableEnginesInUse);
+    NvBool PRIVATE_FIELD(bIsHalfReducedConfigGpcEnabled);
     NvBool PRIVATE_FIELD(bDeviceProfilingInUse);
     NvBool PRIVATE_FIELD(bMIGAutoOnlineEnabled);
     NvBool PRIVATE_FIELD(bBootConfigSupported);
@@ -613,8 +626,8 @@ struct KernelMIGManager_PRIVATE {
     NvBool (*__kmigmgrIsDevinitMIGBitSet__)(OBJGPU *, struct KernelMIGManager * /*this*/);  // halified (3 hals) body
     NV_STATUS (*__kmigmgrConfigurePMSettings__)(OBJGPU *, struct KernelMIGManager * /*this*/);  // halified (2 hals) body
     void (*__kmigmgrDetectReducedConfig__)(OBJGPU *, struct KernelMIGManager * /*this*/);  // halified (2 hals) body
-    NvBool (*__kmigmgrIsGPUInstanceCombinationValid__)(OBJGPU *, struct KernelMIGManager * /*this*/, NvU32);  // halified (5 hals) body
-    NvBool (*__kmigmgrIsGPUInstanceFlagValid__)(OBJGPU *, struct KernelMIGManager * /*this*/, NvU32);  // halified (6 hals) body
+    NvBool (*__kmigmgrIsGPUInstanceCombinationValid__)(OBJGPU *, struct KernelMIGManager * /*this*/, NvU32);  // halified (6 hals) body
+    NvBool (*__kmigmgrIsGPUInstanceFlagValid__)(OBJGPU *, struct KernelMIGManager * /*this*/, NvU32);  // halified (7 hals) body
     NvBool (*__kmigmgrGpuInstanceSupportVgpuTimeslice__)(struct KernelMIGManager * /*this*/, NvU32);  // halified (2 hals) body
     NV_STATUS (*__kmigmgrGenerateComputeInstanceUuid__)(OBJGPU *, struct KernelMIGManager * /*this*/, NvU32, NvU32, NvUuid *);  // halified (2 hals) body
     NV_STATUS (*__kmigmgrGenerateGPUInstanceUuid__)(OBJGPU *, struct KernelMIGManager * /*this*/, NvU32, NvUuid *);  // halified (2 hals) body
@@ -630,8 +643,9 @@ struct KernelMIGManager_PRIVATE {
     NvBool (*__kmigmgrIsCTSAlignmentRequired__)(OBJGPU *, struct KernelMIGManager * /*this*/);  // halified (3 hals) body
     NV_STATUS (*__kmigmgrRestoreFromBootConfig__)(OBJGPU *, struct KernelMIGManager * /*this*/);  // halified (2 hals) body
 
-    // 1 PDB property
+    // 2 PDB properties
 //  NvBool PDB_PROP_KMIGMGR_IS_MISSING inherited from OBJENGSTATE
+    NvBool PDB_PROP_KMIGMGR_IS_HALF_REDUCED_CONFIG_GPC_INTERNAL_PARTITION_SUPPORTED;
 
     // Data members
     NvBool bIsA100ReducedConfig;
@@ -642,6 +656,7 @@ struct KernelMIGManager_PRIVATE {
     NvBool bRestoreWatchdog;
     NvBool bReenableWatchdog;
     union ENGTYPE_BIT_VECTOR partitionableEnginesInUse;
+    NvBool bIsHalfReducedConfigGpcEnabled;
     NvBool bDeviceProfilingInUse;
     NvBool bMIGAutoOnlineEnabled;
     NvBool bBootConfigSupported;
@@ -700,9 +715,11 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelMIGManager;
 // Property macros
 #define PDB_PROP_KMIGMGR_IS_MISSING_BASE_CAST __nvoc_base_OBJENGSTATE.
 #define PDB_PROP_KMIGMGR_IS_MISSING_BASE_NAME PDB_PROP_ENGSTATE_IS_MISSING
+#define PDB_PROP_KMIGMGR_IS_HALF_REDUCED_CONFIG_GPC_INTERNAL_PARTITION_SUPPORTED_BASE_CAST
+#define PDB_PROP_KMIGMGR_IS_HALF_REDUCED_CONFIG_GPC_INTERNAL_PARTITION_SUPPORTED_BASE_NAME PDB_PROP_KMIGMGR_IS_HALF_REDUCED_CONFIG_GPC_INTERNAL_PARTITION_SUPPORTED
 
 
-NV_STATUS __nvoc_objCreateDynamic_KernelMIGManager(KernelMIGManager**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelMIGManager(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelMIGManager(KernelMIGManager**, Dynamic*, NvU32);
 #define __objCreate_KernelMIGManager(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -1520,14 +1537,14 @@ static inline struct NV_RANGE kmigmgrCtsIdToSpan(OBJGPU *arg1, struct KernelMIGM
 #define kmigmgrCtsIdToSpan(arg1, arg_this, ctsId) kmigmgrCtsIdToSpan_IMPL(arg1, arg_this, ctsId)
 #endif // __nvoc_kernel_mig_manager_h_disabled
 
-NV_STATUS kmigmgrGetFreeCTSId_IMPL(OBJGPU *arg1, struct KernelMIGManager *arg_this, NvU32 *pCtsId, NvU64 globalValidCtsMask, NvU64 globalValidGfxCtsMask, NvU64 ctsIdsInUseMask, NvU32 profileSize, NvBool bRestrictWithGfx, NvBool bGfxRequested);
+NV_STATUS kmigmgrGetFreeCTSId_IMPL(OBJGPU *arg1, struct KernelMIGManager *arg_this, NvU32 *pCtsId, NvU64 globalValidCtsMask, NvU64 globalValidGfxCtsMask, NvU64 ctsIdsInUseMask, NvU32 profileSize, NvBool bRestrictWithGfx, NvBool bGfxRequested, NvBool bInitProfile);
 #ifdef __nvoc_kernel_mig_manager_h_disabled
-static inline NV_STATUS kmigmgrGetFreeCTSId(OBJGPU *arg1, struct KernelMIGManager *arg_this, NvU32 *pCtsId, NvU64 globalValidCtsMask, NvU64 globalValidGfxCtsMask, NvU64 ctsIdsInUseMask, NvU32 profileSize, NvBool bRestrictWithGfx, NvBool bGfxRequested) {
+static inline NV_STATUS kmigmgrGetFreeCTSId(OBJGPU *arg1, struct KernelMIGManager *arg_this, NvU32 *pCtsId, NvU64 globalValidCtsMask, NvU64 globalValidGfxCtsMask, NvU64 ctsIdsInUseMask, NvU32 profileSize, NvBool bRestrictWithGfx, NvBool bGfxRequested, NvBool bInitProfile) {
     NV_ASSERT_FAILED_PRECOMP("KernelMIGManager was disabled!");
     return NV_ERR_NOT_SUPPORTED;
 }
 #else // __nvoc_kernel_mig_manager_h_disabled
-#define kmigmgrGetFreeCTSId(arg1, arg_this, pCtsId, globalValidCtsMask, globalValidGfxCtsMask, ctsIdsInUseMask, profileSize, bRestrictWithGfx, bGfxRequested) kmigmgrGetFreeCTSId_IMPL(arg1, arg_this, pCtsId, globalValidCtsMask, globalValidGfxCtsMask, ctsIdsInUseMask, profileSize, bRestrictWithGfx, bGfxRequested)
+#define kmigmgrGetFreeCTSId(arg1, arg_this, pCtsId, globalValidCtsMask, globalValidGfxCtsMask, ctsIdsInUseMask, profileSize, bRestrictWithGfx, bGfxRequested, bInitProfile) kmigmgrGetFreeCTSId_IMPL(arg1, arg_this, pCtsId, globalValidCtsMask, globalValidGfxCtsMask, ctsIdsInUseMask, profileSize, bRestrictWithGfx, bGfxRequested, bInitProfile)
 #endif // __nvoc_kernel_mig_manager_h_disabled
 
 NvU32 kmigmgrGetComputeSizeFromCTSId_IMPL(OBJGPU *arg1, NvU32 ctsId);
@@ -1994,6 +2011,8 @@ NvBool kmigmgrIsGPUInstanceCombinationValid_GA100(OBJGPU *arg1, struct KernelMIG
 
 NvBool kmigmgrIsGPUInstanceCombinationValid_GB10B(OBJGPU *arg1, struct KernelMIGManager *arg_this, NvU32 gpuInstanceFlag);
 
+NvBool kmigmgrIsGPUInstanceCombinationValid_GR100(OBJGPU *arg1, struct KernelMIGManager *arg_this, NvU32 gpuInstanceFlag);
+
 NvBool kmigmgrIsGPUInstanceCombinationValid_GB202(OBJGPU *arg1, struct KernelMIGManager *arg_this, NvU32 gpuInstanceFlag);
 
 NvBool kmigmgrIsGPUInstanceCombinationValid_GH100(OBJGPU *arg1, struct KernelMIGManager *arg_this, NvU32 gpuInstanceFlag);
@@ -2003,6 +2022,8 @@ NvBool kmigmgrIsGPUInstanceFlagValid_GA100(OBJGPU *arg1, struct KernelMIGManager
 NvBool kmigmgrIsGPUInstanceFlagValid_GH100(OBJGPU *arg1, struct KernelMIGManager *arg_this, NvU32 gpuInstanceFlag);
 
 NvBool kmigmgrIsGPUInstanceFlagValid_GB10B(OBJGPU *arg1, struct KernelMIGManager *arg_this, NvU32 gpuInstanceFlag);
+
+NvBool kmigmgrIsGPUInstanceFlagValid_GR100(OBJGPU *arg1, struct KernelMIGManager *arg_this, NvU32 gpuInstanceFlag);
 
 NvBool kmigmgrIsGPUInstanceFlagValid_GB202(OBJGPU *arg1, struct KernelMIGManager *arg_this, NvU32 gpuInstanceFlag);
 
@@ -2161,6 +2182,11 @@ static inline NvBool kmigmgrUseLegacyVgpuPolicy(OBJGPU *pGpu, struct KernelMIGMa
 
 static inline NvBool kmigmgrIsMIGNvlinkP2PSupportOverridden(OBJGPU *pGpu, struct KernelMIGManager *pKernelMIGManager){
     return NV_FALSE;
+}
+
+static inline NvBool kmigmgrIsHalfReducedConfigGpcEnabled(OBJGPU *pGpu, struct KernelMIGManager *pKernelMIGManager){
+    struct KernelMIGManager_PRIVATE *pKernelMIGManager_PRIVATE = (struct KernelMIGManager_PRIVATE *)pKernelMIGManager;
+    return pKernelMIGManager_PRIVATE->bIsHalfReducedConfigGpcEnabled;
 }
 
 static inline void kmigmgrSetMIGEnabled(OBJGPU *pGpu, struct KernelMIGManager *pKernelMIGManager, NvBool bEnabled){

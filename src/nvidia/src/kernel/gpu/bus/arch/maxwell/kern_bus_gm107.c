@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2004-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2004-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -58,7 +58,9 @@
 //
 static NV_STATUS _kbusInitP2P_GM107(OBJGPU *, KernelBus *);
 static NV_STATUS _kbusDestroyP2P_GM107(OBJGPU *, KernelBus *);
-static void _kbusLinkP2P_GM107(OBJGPU *, KernelBus *);
+static void _kbusLinkP2P_GM107(OBJGPU *, KernelBus *, NvU32);
+static void _kbusUnlinkPcieP2P_GM107(OBJGPU *pGpu, KernelBus *pKernelBus);
+static void _kbusUnlinkNvlinkP2P_GM107(OBJGPU *pGpu, KernelBus *pKernelBus);
 
 // Reuse Mapping callbacks
 static NV_STATUS _kbusInternalBar1Map(void *, void *, MemoryRange, NvU64,
@@ -100,7 +102,7 @@ NV_STATUS
 kbusConstructHal_GM107(OBJGPU *pGpu, KernelBus *pKernelBus)
 {
 
-    NV_PRINTF(LEVEL_INFO, "Entered \n");
+    NV_PRINTF(LEVEL_INFO, "Entered\n");
 
     pKernelBus->p2pPcie.writeMailboxBar1Addr = PCIE_P2P_INVALID_WRITE_MAILBOX_ADDR;
 
@@ -698,16 +700,12 @@ kbusStatePostLoad_GM107
     // Call _kbusLinkP2P_GM107 only in case of Linked SLI and Unlinked SLI. Bug 4182245
     if ((pKernelBif != NULL)
         &&
-        // RM managed P2P or restoring the HW state for OS resume
-        (!kbusIsP2pMailboxClientAllocated(pKernelBus) ||
-         (flags & GPU_STATE_FLAGS_PM_TRANSITION))
-        &&
         (!pKernelBif->getProperty(pKernelBif, PDB_PROP_KBIF_P2P_READS_DISABLED) ||
          !pKernelBif->getProperty(pKernelBif, PDB_PROP_KBIF_P2P_WRITES_DISABLED))
         &&
         (IsSLIEnabled(pGpu) || IsUnlinkedSLIEnabled(pGpu)))
     {
-        _kbusLinkP2P_GM107(pGpu, pKernelBus);
+        _kbusLinkP2P_GM107(pGpu, pKernelBus, flags);
     }
 
     // Cache BAR1 SPA for GPUDirect RDMA use-cases
@@ -802,24 +800,29 @@ kbusStateUnload_GM107
     NvU32      flags
 )
 {
-    NV_STATUS          status     = NV_OK;
-    KernelBif         *pKernelBif = GPU_GET_KERNEL_BIF(pGpu);
+    NV_STATUS  status     = NV_OK;
+    KernelBif *pKernelBif = GPU_GET_KERNEL_BIF(pGpu);
 
     if (IS_VIRTUAL(pGpu) && !(flags & GPU_STATE_FLAGS_PRESERVING))
         return NV_OK;
 
-    // Call kbusUnlinkP2P_HAL only in case of Linked SLI and Unliked SLI. Bug 4182245
+    //
+    // Call _kbusUnlinkPcieP2P_GM107 and _kbusUnlinkNvlinkP2P_GM107 only in case of Linked SLI and
+    // Unlinked SLI. Bug 4182245
+    //
     if ((pKernelBif != NULL)
         &&
         (!pKernelBif->getProperty(pKernelBif, PDB_PROP_KBIF_P2P_READS_DISABLED) ||
          !pKernelBif->getProperty(pKernelBif, PDB_PROP_KBIF_P2P_WRITES_DISABLED))
-        &&
-        // RM managed P2P or unconfiguring HW P2P for OS suspend/hibernate
-        (!kbusIsP2pMailboxClientAllocated(pKernelBus) ||
-         (flags & GPU_STATE_FLAGS_PM_TRANSITION))
         && (IsSLIEnabled(pGpu) || IsUnlinkedSLIEnabled(pGpu)))
     {
-        kbusUnlinkP2P_HAL(pGpu, pKernelBus);
+        // RM managed P2P or unconfiguring HW P2P for OS suspend/hibernate
+        if (!kbusIsP2pMailboxClientAllocated(pKernelBus) || (flags & GPU_STATE_FLAGS_PM_TRANSITION))
+        {
+            _kbusUnlinkPcieP2P_GM107(pGpu, pKernelBus);
+        }
+
+        _kbusUnlinkNvlinkP2P_GM107(pGpu, pKernelBus);
     }
 
     if (!(flags & GPU_STATE_FLAGS_PRESERVING))
@@ -920,6 +923,7 @@ kbusInitBar1_GM107(OBJGPU *pGpu, KernelBus *pKernelBus, NvU32 gfid)
     vaflags = VASPACE_FLAGS_BAR | VASPACE_FLAGS_BAR_BAR1;
     vaflags |= VASPACE_FLAGS_ALLOW_ZERO_ADDRESS; // BAR1 requires a zero VAS base.
     vaflags |= VASPACE_FLAGS_ENABLE_VMM;
+    vaflags |= VASPACE_FLAGS_SPARSIFIED;
 
 #if defined(DEVELOP) || defined(DEBUG) || RMCFG_FEATURE_MODS_FEATURES
     {
@@ -2707,6 +2711,7 @@ kbusUpdateRmAperture_GM107
         //
         mapIter.pAddrField =
             gmmuFmtPtePhysAddrFld(pFmt->pPte,
+                                  mapTarget.pLevelFmt,
                                   gmmuFieldGetAperture(
                                       &pFmt->pPte->fldAperture,
                                       mapIter.pteTemplate.v8),
@@ -2765,12 +2770,16 @@ kbusUpdateRmAperture_GM107
         SLI_LOOP_START(SLI_LOOP_FLAGS_BC_ONLY | SLI_LOOP_FLAGS_IGNORE_REENTRANCY)
         pKernelGmmu = GPU_GET_KERNEL_GMMU(pGpu);
         pKernelBus  = GPU_GET_KERNEL_BUS(pGpu);
-        kgmmuInvalidateTlb_HAL(pGpu, pKernelGmmu,
-                              pKernelBus->virtualBar2[gfid].pPDB,
-                              pKernelBus->virtualBar2[gfid].flags,
-                              PTE_DOWNGRADE, 0,
-                              NV_GMMU_INVAL_SCOPE_NON_LINK_TLBS,
-                              NV_FALSE);
+        {
+            NV_STATUS tlbStatus = kgmmuInvalidateTlb_HAL(pGpu, pKernelGmmu,
+                                      pKernelBus->virtualBar2[gfid].pPDB,
+                                      pKernelBus->virtualBar2[gfid].flags,
+                                      PTE_DOWNGRADE, 0,
+                                      NV_GMMU_INVAL_SCOPE_NON_LINK_TLBS,
+                                      NV_FALSE);
+            if (status == NV_OK)
+                status = tlbStatus;
+        }
         SLI_LOOP_END
         pKernelBus  = GPU_GET_KERNEL_BUS(pGpu);
     }
@@ -3485,32 +3494,29 @@ _kbusDestroyP2P_GM107
     KernelBus *pKernelBus
 )
 {
-    NV_STATUS status = NV_OK;
-
-    OBJGPU *pRemoteGpu;
+    NV_STATUS  status = NV_OK;
+    OBJGPU    *pRemoteGpu;
     KernelBus *pRemoteKernelBus;
-    NvU32 i;
-
+    NvU32      i;
 
     // Clear all peer numbers.
     for (i = 0; i < NV_MAX_DEVICES; i++)
     {
-        if (pKernelBus->p2pPcie.peerNumberMask[i] != 0)
+        if (kbusIsP2pInitialized(pKernelBus) && pKernelBus->p2pPcie.peerNumberMask[i] != 0)
         {
             NvU32 locPeerId, remPeerId, gpuInst;
 
             pRemoteGpu = gpumgrGetGpu(i);
             NV_ASSERT_OR_RETURN(pRemoteGpu != NULL, NV_ERR_INVALID_STATE);
             pRemoteKernelBus = GPU_GET_KERNEL_BUS(pRemoteGpu);
+
             locPeerId = kbusGetPeerId_HAL(pGpu, pKernelBus, pRemoteGpu);
             remPeerId = kbusGetPeerId_HAL(pRemoteGpu, pRemoteKernelBus, pGpu);
 
-            NV_ASSERT_OR_RETURN(locPeerId < P2P_MAX_NUM_PEERS,
-                              NV_ERR_INVALID_STATE);
-            NV_ASSERT_OR_RETURN(remPeerId < P2P_MAX_NUM_PEERS,
-                              NV_ERR_INVALID_STATE);
+            NV_ASSERT_OR_RETURN(locPeerId < P2P_MAX_NUM_PEERS, NV_ERR_INVALID_STATE);
+            NV_ASSERT_OR_RETURN(remPeerId < P2P_MAX_NUM_PEERS, NV_ERR_INVALID_STATE);
             NV_ASSERT_OR_RETURN(pRemoteKernelBus->p2pPcie.busPeer[remPeerId].remotePeerId == locPeerId,
-                              NV_ERR_INVALID_STATE);
+                                NV_ERR_INVALID_STATE);
 
             pKernelBus->p2pPcie.busPeer[locPeerId].refCount--;
             pRemoteKernelBus->p2pPcie.busPeer[remPeerId].refCount--;
@@ -3532,19 +3538,20 @@ _kbusDestroyP2P_GM107
             pRemoteGpu = gpumgrGetGpu(i);
             NV_ASSERT_OR_RETURN(pRemoteGpu != NULL, NV_ERR_INVALID_STATE);
             pRemoteKernelBus = GPU_GET_KERNEL_BUS(pRemoteGpu);
+
             locPeerId = kbusGetPeerId_HAL(pGpu, pKernelBus, pRemoteGpu);
             remPeerId = kbusGetPeerId_HAL(pRemoteGpu, pRemoteKernelBus, pGpu);
-            gpuInst = gpuGetInstance(pGpu);
+            gpuInst   = gpuGetInstance(pGpu);
 
-            NV_ASSERT_OR_RETURN(locPeerId < P2P_MAX_NUM_PEERS,
-                              NV_ERR_INVALID_STATE);
-            NV_ASSERT_OR_RETURN(remPeerId < P2P_MAX_NUM_PEERS,
-                              NV_ERR_INVALID_STATE);
+            NV_ASSERT_OR_RETURN(locPeerId < P2P_MAX_NUM_PEERS, NV_ERR_INVALID_STATE);
+            NV_ASSERT_OR_RETURN(remPeerId < P2P_MAX_NUM_PEERS, NV_ERR_INVALID_STATE);
 
             pKernelBus->p2p.busNvlinkMappingRefcountPerGpu[i]--;
             pRemoteKernelBus->p2p.busNvlinkMappingRefcountPerGpu[gpuInst]--;
+
             pKernelBus->p2p.busNvlinkPeerNumberMask[i] &= ~NVBIT(locPeerId);
             pRemoteKernelBus->p2p.busNvlinkPeerNumberMask[gpuInst] &= ~NVBIT(remPeerId);
+
             pKernelBus->p2p.busNvlinkMappingRefcountPerPeerId[locPeerId]--;
             pRemoteKernelBus->p2p.busNvlinkMappingRefcountPerPeerId[remPeerId]--;
         }
@@ -3574,114 +3581,134 @@ void
 _kbusLinkP2P_GM107
 (
     OBJGPU    *pGpu,
-    KernelBus *pKernelBus
+    KernelBus *pKernelBus,
+    NvU32      flags
 )
 {
-    OBJGPU     *pRemoteGpu;
-    NV_STATUS   status;
-    NvU32       i;
+    NV_STATUS status = NV_OK;
+    NvU32     i;
 
-    for ( i = 0; i < NV_MAX_DEVICES; ++i)
+    for (i = 0; i < NV_MAX_DEVICES; ++i)
     {
-        if ((pKernelBus->p2pPcie.peerNumberMask[i] != 0) ||
-            (kbusGetNvlinkPeerNumberMask_HAL(pGpu, pKernelBus, i) != 0))
+        OBJGPU *pRemoteGpu = gpumgrGetGpu(i);
+        if (pRemoteGpu != NULL)
         {
-            pRemoteGpu = gpumgrGetGpu(i);
-            NV_ASSERT(pRemoteGpu != NULL);
+            KernelBus *pRemoteKernelBus = GPU_GET_KERNEL_BUS(pRemoteGpu);
 
             //
             // If there is a loopback mapping pRemoteGpu will return !fullPower
             // since we are currently in the process of resuming it.
             // Therefore, we special case it and restore the mapping anyways.
             //
-            if (gpuIsGpuFullPower(pRemoteGpu) ||
-                    pRemoteGpu == pGpu)
+            if (gpuIsGpuFullPower(pRemoteGpu) || pRemoteGpu == pGpu)
             {
-                KernelNvlink *pKernelNvlink = GPU_GET_KERNEL_NVLINK(pGpu);
+                KernelNvlink *pKernelNvlink       = GPU_GET_KERNEL_NVLINK(pGpu);
                 KernelNvlink *pRemoteKernelNvlink = GPU_GET_KERNEL_NVLINK(pRemoteGpu);
-                NvU32 locPeerId = kbusGetPeerId_HAL(pGpu, pKernelBus, pRemoteGpu);
-                NvU32 remPeerId = kbusGetPeerId_HAL(pRemoteGpu, GPU_GET_KERNEL_BUS(pRemoteGpu), pGpu);
 
-                NV_ASSERT(locPeerId < P2P_MAX_NUM_PEERS);
-                NV_ASSERT(remPeerId < P2P_MAX_NUM_PEERS);
-                NV_ASSERT(pKernelBus->p2pPcie.busPeer[locPeerId].remotePeerId == remPeerId);
-
+                // Trigger Nvlink Topology detection
                 if ((pKernelNvlink != NULL) && (pRemoteKernelNvlink != NULL) &&
                     (knvlinkGetP2pConnectionStatus(pGpu, pKernelNvlink, pRemoteGpu) == NV_OK))
                 {
-                    //
-                    // These variables should only be updated for RM Managed P2P.
-                    // And only once during RmInit, not during resume as while
-                    // going to S3/S4, these variables are not cleared.
-                    //
-                    if (!kbusIsP2pMailboxClientAllocated(pKernelBus) &&
-                        !pGpu->getProperty(pGpu, PDB_PROP_GPU_IN_PM_CODEPATH))
-                    {
-                        KernelBus *pRemoteKernelBus = GPU_GET_KERNEL_BUS(pRemoteGpu);
-
-                        pKernelBus->p2p.busNvlinkPeerNumberMask[pRemoteGpu->gpuInstance] |=
-                            NVBIT(locPeerId);
-                        pRemoteKernelBus->p2p.busNvlinkPeerNumberMask[pGpu->gpuInstance] |=
-                            NVBIT(remPeerId);
-                        pKernelBus->p2p.busNvlinkMappingRefcountPerGpu[pRemoteGpu->gpuInstance]++;
-                        pRemoteKernelBus->p2p.busNvlinkMappingRefcountPerGpu[pGpu->gpuInstance]++;
-                        pKernelBus->p2p.busNvlinkMappingRefcountPerPeerId[locPeerId]++;
-                        pRemoteKernelBus->p2p.busNvlinkMappingRefcountPerPeerId[remPeerId]++;
-                    }
-
                     // Train the links to ACTIVE
                     if ((knvlinkTrainP2pLinksToActive(pGpu, pRemoteGpu, pKernelNvlink)) != NV_OK)
                     {
+                        NV_PRINTF(LEVEL_ERROR, "Failed to train Nvlink p2p links to active!\n");
                         NV_ASSERT(0);
+                        return;
                     }
 
-                    // Use NVLINK if available
-                    knvlinkSetupPeerMapping_HAL(pGpu, pKernelNvlink, pRemoteGpu, locPeerId);
-                    knvlinkSetupPeerMapping_HAL(pRemoteGpu, pRemoteKernelNvlink, pGpu, remPeerId);
+                    // Check if a peer ID has been reserved for P2P from pGpu to pRemoteGpu
+                    if (kbusGetNvlinkPeerNumberMask_HAL(pGpu, pKernelBus, i) != 0)
+                    {
+                        NvU32 locPeerId = BUS_INVALID_PEER;
+                        NvU32 remPeerId = BUS_INVALID_PEER;
+
+                        locPeerId = kbusGetPeerId_HAL(pGpu, pKernelBus, pRemoteGpu);
+                        remPeerId = kbusGetPeerId_HAL(pRemoteGpu, pRemoteKernelBus, pGpu);
+
+                        if (!((locPeerId < P2P_MAX_NUM_PEERS) && (remPeerId < P2P_MAX_NUM_PEERS)))
+                        {
+	                        NV_PRINTF(LEVEL_ERROR, "Incorrect Nvlink peer ID allocated!\n");
+                            NV_ASSERT(0);
+                            return;
+                        }
+
+                        if (!pGpu->getProperty(pGpu, PDB_PROP_GPU_IN_PM_CODEPATH))
+                        {
+                            pKernelBus->p2p.busNvlinkPeerNumberMask[pRemoteGpu->gpuInstance] |= NVBIT(locPeerId);
+                            pRemoteKernelBus->p2p.busNvlinkPeerNumberMask[pGpu->gpuInstance] |= NVBIT(remPeerId);
+
+                            pKernelBus->p2p.busNvlinkMappingRefcountPerGpu[pRemoteGpu->gpuInstance]++;
+                            pRemoteKernelBus->p2p.busNvlinkMappingRefcountPerGpu[pGpu->gpuInstance]++;
+
+                            pKernelBus->p2p.busNvlinkMappingRefcountPerPeerId[locPeerId]++;
+                            pRemoteKernelBus->p2p.busNvlinkMappingRefcountPerPeerId[remPeerId]++;
+                        }
+
+                        // Use NVLINK if available
+                        knvlinkSetupPeerMapping_HAL(pGpu, pKernelNvlink, pRemoteGpu, locPeerId);
+                        knvlinkSetupPeerMapping_HAL(pRemoteGpu, pRemoteKernelNvlink, pGpu, remPeerId);
+                    }
                 }
                 else
                 {
-                    RM_API *pRmApi;
-                    NV2080_CTRL_INTERNAL_HSHUB_PEER_CONN_CONFIG_PARAMS params;
-
-                    //
-                    // Fall back to PCIe otherwise
-                    // We only expect one PCIE peer ID per remote GPU for SLI
-                    //
-                    NV_ASSERT(nvPopCount32(pKernelBus->p2pPcie.peerNumberMask[i]) == 1);
-
-                    kbusSetupMailboxes_HAL(pGpu, pKernelBus,
-                                           pRemoteGpu, GPU_GET_KERNEL_BUS(pRemoteGpu),
-                                           locPeerId, remPeerId);
-                    kbusSetupMailboxes_HAL(pRemoteGpu, GPU_GET_KERNEL_BUS(pRemoteGpu),
-                                           pGpu, pKernelBus,
-                                           remPeerId, locPeerId);
-                    // Program the registers
-                    pRmApi = GPU_GET_PHYSICAL_RMAPI(pGpu);
-                    portMemSet(&params, 0, sizeof(params));
-                    params.programPciePeerMask = NVBIT32(locPeerId);
-                    status = pRmApi->Control(pRmApi,
-                                             pGpu->hInternalClient,
-                                             pGpu->hInternalSubdevice,
-                                             NV2080_CTRL_CMD_INTERNAL_HSHUB_PEER_CONN_CONFIG,
-                                             &params,
-                                             sizeof(params));
-                    if (status != NV_OK)
+                    // This is a PCIe peer
+                    if (!kbusIsP2pMailboxClientAllocated(pKernelBus) || (flags & GPU_STATE_FLAGS_PM_TRANSITION))
                     {
-                        NV_PRINTF(LEVEL_ERROR, "Error in programming the local PEER_CONNECTION_CFG registers\n");
-                    }
-                    pRmApi = GPU_GET_PHYSICAL_RMAPI(pRemoteGpu);
-                    portMemSet(&params, 0, sizeof(params));
-                    params.programPciePeerMask = NVBIT32(remPeerId);
-                    status = pRmApi->Control(pRmApi,
-                                             pRemoteGpu->hInternalClient,
-                                             pRemoteGpu->hInternalSubdevice,
-                                             NV2080_CTRL_CMD_INTERNAL_HSHUB_PEER_CONN_CONFIG,
-                                             &params,
-                                             sizeof(params));
-                    if (status != NV_OK)
-                    {
-                        NV_PRINTF(LEVEL_ERROR, "Error in programming the remote PEER_CONNECTION_CFG registers\n");
+                        if (pKernelBus->p2pPcie.peerNumberMask[i] != 0)
+                        {
+                            RM_API *pRmApi;
+                            NV2080_CTRL_INTERNAL_HSHUB_PEER_CONN_CONFIG_PARAMS params;
+
+                            NvU32 locPeerId = kbusGetPeerId_HAL(pGpu, pKernelBus, pRemoteGpu);
+                            NvU32 remPeerId = kbusGetPeerId_HAL(pRemoteGpu, pRemoteKernelBus, pGpu);
+
+                            NV_ASSERT(locPeerId < P2P_MAX_NUM_PEERS);
+                            NV_ASSERT(remPeerId < P2P_MAX_NUM_PEERS);
+                            NV_ASSERT(pKernelBus->p2pPcie.busPeer[locPeerId].remotePeerId == remPeerId);
+
+                            //
+                            // Fall back to PCIe otherwise
+                            // We only expect one PCIE peer ID per remote GPU for SLI
+                            //
+                            NV_ASSERT(nvPopCount32(pKernelBus->p2pPcie.peerNumberMask[i]) == 1);
+
+                            kbusSetupMailboxes_HAL(pGpu, pKernelBus,
+                                                   pRemoteGpu, GPU_GET_KERNEL_BUS(pRemoteGpu),
+                                                   locPeerId, remPeerId);
+                            kbusSetupMailboxes_HAL(pRemoteGpu, GPU_GET_KERNEL_BUS(pRemoteGpu),
+                                                   pGpu, pKernelBus,
+                                                   remPeerId, locPeerId);
+
+                            // Program the registers
+                            pRmApi = GPU_GET_PHYSICAL_RMAPI(pGpu);
+                            portMemSet(&params, 0, sizeof(params));
+                            params.programPciePeerMask = NVBIT32(locPeerId);
+                            status = pRmApi->Control(pRmApi,
+                                                     pGpu->hInternalClient,
+                                                     pGpu->hInternalSubdevice,
+                                                     NV2080_CTRL_CMD_INTERNAL_HSHUB_PEER_CONN_CONFIG,
+                                                     &params,
+                                                     sizeof(params));
+                            if (status != NV_OK)
+                            {
+                                NV_PRINTF(LEVEL_ERROR, "Error in programming the local PEER_CONNECTION_CFG registers\n");
+                            }
+
+                            pRmApi = GPU_GET_PHYSICAL_RMAPI(pRemoteGpu);
+                            portMemSet(&params, 0, sizeof(params));
+                            params.programPciePeerMask = NVBIT32(remPeerId);
+                            status = pRmApi->Control(pRmApi,
+                                                     pRemoteGpu->hInternalClient,
+                                                     pRemoteGpu->hInternalSubdevice,
+                                                     NV2080_CTRL_CMD_INTERNAL_HSHUB_PEER_CONN_CONFIG,
+                                                     &params,
+                                                     sizeof(params));
+                            if (status != NV_OK)
+                            {
+                                NV_PRINTF(LEVEL_ERROR, "Error in programming the remote PEER_CONNECTION_CFG registers\n");
+                            }
+                        }
                     }
                 }
             }
@@ -3706,23 +3733,22 @@ kbusSendMemsysDisableNvlinkPeers
 }
 
 //
-// Unlink P2P for all GPUs
+// Unlink PCIe P2P for all GPUs
 //
 void
-kbusUnlinkP2P_GM107
+_kbusUnlinkPcieP2P_GM107
 (
     OBJGPU    *pGpu,
     KernelBus *pKernelBus
 )
 {
     KernelBus *pRemoteKernelBus;
-    OBJGPU *pRemoteGpu;
-    NvU32 i;
+    OBJGPU    *pRemoteGpu;
+    NvU32      i;
 
-    for ( i = 0; i < NV_MAX_DEVICES; ++i)
+    for (i = 0; i < NV_MAX_DEVICES; ++i)
     {
-        if ((pKernelBus->p2pPcie.peerNumberMask[i] != 0) ||
-            (kbusGetNvlinkPeerNumberMask_HAL(pGpu, pKernelBus, i) != 0))
+        if (pKernelBus->p2pPcie.peerNumberMask[i] != 0)
         {
             pRemoteGpu = gpumgrGetGpu(i);
             if (pRemoteGpu == NULL)
@@ -3737,8 +3763,7 @@ kbusUnlinkP2P_GM107
 
             pRemoteKernelBus = GPU_GET_KERNEL_BUS(pRemoteGpu);
 
-            if (gpuIsGpuFullPower(pRemoteGpu) &&
-                kbusIsP2pInitialized(pRemoteKernelBus))
+            if (gpuIsGpuFullPower(pRemoteGpu) && kbusIsP2pInitialized(pRemoteKernelBus))
             {
                 //
                 // NVLINK mappings are static and cannot be torn down, but make
@@ -3759,8 +3784,43 @@ kbusUnlinkP2P_GM107
                     kbusDestroyMailbox(pGpu, pKernelBus, pRemoteGpu, locPeerId);
                     kbusDestroyMailbox(pRemoteGpu, pRemoteKernelBus, pGpu, remPeerId);
                 }
+            }
+        }
+    }
+}
 
+//
+// Unlink Nvlink P2P for all GPUs
+//
+void
+_kbusUnlinkNvlinkP2P_GM107
+(
+    OBJGPU    *pGpu,
+    KernelBus *pKernelBus
+)
+{
+    OBJGPU *pRemoteGpu;
+    NvU32   i;
+
+    for (i = 0; i < NV_MAX_DEVICES; ++i)
+    {
+        if (kbusGetNvlinkPeerNumberMask_HAL(pGpu, pKernelBus, i) != 0)
+        {
+            pRemoteGpu = gpumgrGetGpu(i);
+            if (pRemoteGpu == NULL)
+            {
                 //
+                // There is a P2P mapping involving an unloaded GPU
+                // Has NV50_P2P been properly freed ?
+                //
+                NV_PRINTF(LEVEL_ERROR, "There is a P2P mapping involving an unloaded GPU\n");
+                continue;
+            }
+
+            if (gpuIsGpuFullPower(pRemoteGpu))
+            {
+                //
+                // NVLINK mappings are static and cannot be torn down.
                 // Instead just disable the NVLINK peers
                 //
                 NV_ASSERT_OK(kbusSendMemsysDisableNvlinkPeers(pGpu));
@@ -3898,8 +3958,7 @@ kbusStateDestroy_GM107
 
     // Call _kbusDestroyP2P_GM107 only in case of Linked SLI and Unlinked SLI. Bug 4182245
     if ((pKernelBif != NULL) && ((!pKernelBif->getProperty(pKernelBif, PDB_PROP_KBIF_P2P_READS_DISABLED) ||
-                                  !pKernelBif->getProperty(pKernelBif, PDB_PROP_KBIF_P2P_WRITES_DISABLED)) &&
-                                 (kbusIsP2pInitialized(pKernelBus))) &&
+                                  !pKernelBif->getProperty(pKernelBif, PDB_PROP_KBIF_P2P_WRITES_DISABLED))) &&
                                  (IsSLIEnabled(pGpu) || IsUnlinkedSLIEnabled(pGpu)))
     {
         (void)_kbusDestroyP2P_GM107(pGpu, pKernelBus);
@@ -5773,10 +5832,14 @@ kbusCommitBar2_GM107
             // Kick out any entries associated w/ old PDB.
             osFlushCpuWriteCombineBuffer();
             kbusFlush_HAL(pGpu, pKernelBus, BUS_FLUSH_VIDEO_MEMORY);
-            kgmmuInvalidateTlb_HAL(pGpu, pKernelGmmu,
-                                   pKernelBus->virtualBar2[gfid].pPDB,
-                                   pKernelBus->virtualBar2[gfid].flags,
-                                   PTE_DOWNGRADE, 0, NV_GMMU_INVAL_SCOPE_NON_LINK_TLBS, NV_FALSE);
+            {
+                NV_STATUS tlbStatus = kgmmuInvalidateTlb_HAL(pGpu, pKernelGmmu,
+                                       pKernelBus->virtualBar2[gfid].pPDB,
+                                       pKernelBus->virtualBar2[gfid].flags,
+                                       PTE_DOWNGRADE, 0, NV_GMMU_INVAL_SCOPE_NON_LINK_TLBS, NV_FALSE);
+                if (tlbStatus != NV_OK)
+                    return tlbStatus;
+            }
             // Update the PDB pointer just before binding w/ the new page tables.
             pKernelBus->virtualBar2[gfid].pPDB = pKernelBus->bar2[gfid].pPDEMemDesc;
         }
@@ -6320,12 +6383,15 @@ kbusPrepareForXVEReset_GM107
     NV_STATUS  status     = NV_OK;
     KernelBif *pKernelBif = GPU_GET_KERNEL_BIF(pGpu);
 
-    if ((!pKernelBif->getProperty(pKernelBif, PDB_PROP_KBIF_P2P_READS_DISABLED) ||
+    if (!pKernelBif->getProperty(pKernelBif, PDB_PROP_KBIF_P2P_READS_DISABLED) ||
          !pKernelBif->getProperty(pKernelBif, PDB_PROP_KBIF_P2P_WRITES_DISABLED))
-        &&
-        !kbusIsP2pMailboxClientAllocated(pKernelBus))
     {
-        kbusUnlinkP2P_HAL(pGpu, pKernelBus);
+        if (!kbusIsP2pMailboxClientAllocated(pKernelBus))
+        {
+            _kbusUnlinkPcieP2P_GM107(pGpu, pKernelBus);
+        }
+
+        _kbusUnlinkNvlinkP2P_GM107(pGpu, pKernelBus);
     }
 
     return status;

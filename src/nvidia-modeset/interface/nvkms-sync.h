@@ -29,7 +29,6 @@ extern "C" {
 #endif
 
 #include "nvtypes.h"
-#include "nvkms-api-types.h"
 
 /* These functions are implemented in nvkms-lib. */
 
@@ -46,51 +45,31 @@ struct nvKmsParsedNotifier {
     NvU8 presentCount;
 };
 
-static inline NvU32 nvKmsSizeOfNotifier(enum NvKmsNIsoFormat format,
-                                        NvBool overlay) {
-    switch (format) {
-    default:
-    case NVKMS_NISO_FORMAT_LEGACY:
-        return overlay ? 16 : 4;
-    case NVKMS_NISO_FORMAT_FOUR_WORD:
-    case NVKMS_NISO_FORMAT_FOUR_WORD_NVDISPLAY:
-        return 16;
-    }
+static inline NvU32 nvKmsSizeOfNotifier(void) {
+    return 16;
 }
 
-void nvKmsSetNotifier(enum NvKmsNIsoFormat format, NvBool overlay,
-                      NvU32 index, void *base, NvU64 timeStamp);
+void nvKmsSetNotifier(NvU32 index, void *base, NvU64 timeStamp);
 
-void nvKmsResetNotifier(enum NvKmsNIsoFormat format, NvBool overlay,
-                        NvU32 index, void *base);
+void nvKmsResetNotifier(NvU32 index, void *base);
 
-void nvKmsParseNotifier(enum NvKmsNIsoFormat format, NvBool overlay,
-                        NvU32 index, const void *base,
+void nvKmsParseNotifier(NvU32 index, const void *base,
                         struct nvKmsParsedNotifier *out);
 
 struct nvKmsParsedSemaphore {
     NvU32 payload;
 };
 
-static inline NvU32 nvKmsSizeOfSemaphore(enum NvKmsNIsoFormat format) {
-    switch (format) {
-    default:
-    case NVKMS_NISO_FORMAT_LEGACY:
-        return 4;
-    case NVKMS_NISO_FORMAT_FOUR_WORD:
-    case NVKMS_NISO_FORMAT_FOUR_WORD_NVDISPLAY:
-        return 16;
-    }
+static inline NvU32 nvKmsSizeOfSemaphore(void) {
+    return 16;
 }
 
-NvU32 nvKmsSemaphorePayloadOffset(enum NvKmsNIsoFormat format);
+NvU32 nvKmsSemaphorePayloadOffset(void);
 
-void nvKmsResetSemaphore(enum NvKmsNIsoFormat format,
-                         NvU32 index, void *base,
+void nvKmsResetSemaphore(NvU32 index, void *base,
                          NvU32 payload);
 
-void nvKmsParseSemaphore(enum NvKmsNIsoFormat format,
-                         NvU32 index, const void *base,
+void nvKmsParseSemaphore(NvU32 index, const void *base,
                          struct nvKmsParsedSemaphore *out);
 
 #ifdef __cplusplus

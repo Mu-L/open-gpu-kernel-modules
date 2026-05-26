@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1997-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1997-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -629,6 +629,15 @@
 #define NV_REG_STR_RM_EXTERNAL_FABRIC_MGMT_MODE_ENABLE   (0x00000001)
 #define NV_REG_STR_RM_EXTERNAL_FABRIC_MGMT_MODE_DISABLE  (0x00000000)
 
+//
+// Type DWORD
+// This regkey controls whether the default behavior is to allocate fabric memory as sparse.
+// 0 - Fabric VA is set to invalid on allocation
+// 1 - Fabric VA is set to sparse on allocation
+//
+#define NV_REG_STR_RM_ALLOC_FABRIC_AS_SPARSE                "RMAllocFabricAsSparse"
+#define NV_REG_STR_RM_ALLOC_FABRIC_AS_SPARSE_ENABLE         (0x00000001)
+#define NV_REG_STR_RM_ALLOC_FABRIC_AS_SPARSE_DISABLE        (0x00000000)
 
 //
 // Type DWORD
@@ -1229,9 +1238,18 @@
 #define NV_REG_STR_RM_LPWR_C2C_PPS_OVERRIDE          "RmLpwrC2cPpsOverride"
 #define NV_REG_STR_RM_LPWR_C2C_PPS_OVERRIDE_DECOPULE_MODE             0:0
 #define NV_REG_STR_RM_LPWR_C2C_PPS_OVERRIDE_DECOPULE_MODE_ENABLE      0x1
-#define NV_REG_STR_RM_LPWR_C2C_PPS_OVERRIDE_DECOPULE_MOD_DISABLE      0x0
+#define NV_REG_STR_RM_LPWR_C2C_PPS_OVERRIDE_DECOPULE_MODE_DISABLE     0x0
 #define NV_REG_STR_RM_LPWR_C2C_PPS_OVERRIDE_CL3_PPSINDEX              7:1
 #define NV_REG_STR_RM_LPWR_C2C_PPS_OVERRIDE_CL4_PPSINDEX              15:8
+//
+// Coupling support of PPS with PMU LowPower.
+// if SUPPORT == DISABLED, PMU will not vote for PPS.
+// if SUPPORT == ENABLE, PMU will follow the VBIOS Settings
+//
+#define NV_REG_STR_RM_LPWR_C2C_PPS_OVERRIDE_PMU_COUPLED_SUPPORT          17:16
+#define NV_REG_STR_RM_LPWR_C2C_PPS_OVERRIDE_PMU_COUPLED_SUPPORT_ENABLE   0x3
+#define NV_REG_STR_RM_LPWR_C2C_PPS_OVERRIDE_PMU_COUPLED_SUPPORT_DISABLE  0x1
+#define NV_REG_STR_RM_LPWR_C2C_PPS_OVERRIDE_PMU_COUPLED_SUPPORT_DEFAULT  0x0
 //
 // Coupling support of PPS with C2C LowPower.
 // if SUPPORT == DISABLED, C2C CL3/CL4 will not vote for PPS.
@@ -1532,22 +1550,6 @@
 // "stuck."
 // Default - See INTR_STUCK_THRESHOLD
 
-
-#define NV_REG_PROCESS_NONSTALL_INTR_IN_LOCKLESS_ISR  "RMProcessNonStallIntrInLocklessIsr"
-
-// Type: DWORD
-// Enables/Disables processing of non-stall interrupts in lockless ISR for
-// Linux only.
-// Non-stall interrupts are processed by the function
-// intrServiceNonStall_HAL(pIntr,pGpu, TRUE /* bProcess*/); where bProcess is TRUE which
-// means that event list will be traversed to notify clients registered for it.
-// Disabled by default
-//
-
-#define NV_REG_PROCESS_NONSTALL_INTR_IN_LOCKLESS_ISR_DISABLE      0x00000000
-#define NV_REG_PROCESS_NONSTALL_INTR_IN_LOCKLESS_ISR_ENABLE       0x00000001
-
-
 //
 // Type: DWORD
 // Sets the Initial runlist Context switch timeout value in base 2 microseconds
@@ -1684,6 +1686,10 @@
 //
 // FORCE_AUTOCONFIG : Force autoconfig training regardless of chiplib forced config links
 //
+// ASYNC_DISABLE: Disable asynchronous MSETP commands
+//
+// MSE_PERIODIC_LOGS_DISABLE: Disable processing MSE periodic logs
+//
 // FORCE_ENABLE: Force enable NVLINK when the current default is OFF (bringup etc.)
 //
 // PARALLEL_TRAINING: Have the GPU endpoint parallelize link training
@@ -1708,6 +1714,14 @@
 #define NV_REG_STR_RM_NVLINK_CONTROL_FORCE_AUTOCONFIG_NO            (0x00000000)
 #define NV_REG_STR_RM_NVLINK_CONTROL_FORCE_AUTOCONFIG_YES           (0x00000001)
 #define NV_REG_STR_RM_NVLINK_CONTROL_FORCE_AUTOCONFIG_DEFAULT       (NV_REG_STR_RM_NVLINK_CONTROL_FORCE_AUTOCONFIG_NO)
+#define NV_REG_STR_RM_NVLINK_CONTROL_ASYNC_DISABLE                   9:9
+#define NV_REG_STR_RM_NVLINK_CONTROL_ASYNC_DISABLE_NO               (0x00000000)
+#define NV_REG_STR_RM_NVLINK_CONTROL_ASYNC_DISABLE_YES              (0x00000001)
+#define NV_REG_STR_RM_NVLINK_CONTROL_ASYNC_DISABLE_DEFAULT          (NV_REG_STR_RM_NVLINK_CONTROL_ASYNC_DISABLE_NO)
+#define NV_REG_STR_RM_NVLINK_CONTROL_MSE_PERIODIC_LOGS_DISABLE      10:10
+#define NV_REG_STR_RM_NVLINK_CONTROL_MSE_PERIODIC_LOGS_DISABLE_NO   (0x00000000)
+#define NV_REG_STR_RM_NVLINK_CONTROL_MSE_PERIODIC_LOGS_DISABLE_YES  (0x00000001)
+#define NV_REG_STR_RM_NVLINK_CONTROL_MSE_PERIODIC_LOGS_DISABLE_DEFAULT (NV_REG_STR_RM_NVLINK_CONTROL_MSE_PERIODIC_LOGS_DISABLE_NO)
 #define NV_REG_STR_RM_NVLINK_CONTROL_FORCE_ENABLE                   31:31
 #define NV_REG_STR_RM_NVLINK_CONTROL_FORCE_ENABLE_NO                (0x00000000)
 #define NV_REG_STR_RM_NVLINK_CONTROL_FORCE_ENABLE_YES               (0x00000001)
@@ -2215,6 +2229,17 @@
 #define NV_REG_STR_BUG_3007008_EMULATE_VF_MMU_TLB_INVALIDATE_ENABLE     0x00000001
 #define NV_REG_STR_BUG_3007008_EMULATE_VF_MMU_TLB_INVALIDATE_DISABLE    0x00000000
 #define NV_REG_STR_BUG_3007008_EMULATE_VF_MMU_TLB_INVALIDATE_DEFAULT    NV_REG_STR_BUG_3007008_EMULATE_VF_MMU_TLB_INVALIDATE_ENABLE
+
+//
+// TYPE Dword
+// Determines whether or not to enable N:1 vGPU with 64K pagesize
+// Encoding : 0 - Do not enable N:1 vGPU (Default)
+//          : 1 - Enable N:1 vGPU
+//
+#define NV_REG_STR_ENABLE_VGPU_64K_PAGE_SIZE                "RmEnableVgpu64kPageSize"
+#define NV_REG_STR_ENABLE_VGPU_64K_PAGE_SIZE_NO             0x00000000
+#define NV_REG_STR_ENABLE_VGPU_64K_PAGE_SIZE_YES            0x00000001
+#define NV_REG_STR_ENABLE_VGPU_64K_PAGE_SIZE_DEFAULT        NV_REG_STR_ENABLE_VGPU_64K_PAGE_SIZE_NO
 
 #define NV_REG_STR_RM_POWER_FEATURES                        "RMPowerFeature"
 
@@ -2911,12 +2936,29 @@
 //
 // Type: Dword
 // This regkey is used to enable/disable Nvlink Encryption
+// BIT 0 - NVLE force enable/disable bit
+//         1. If regkey force enabled on MODS
+//             a. Uses hardcoded NVLE keys for verification on Nvlink loopback
+//             b. Not tied to CC, so CC need not be enabled
+//         2. If regkey force enabled on non-MODS
+//             a. Further checks whether NVLE should be enabled with or without CC
+//             b. No hardcoded NVLE keys, complete production flow is enabled
+//             c. Tracks all Nvlink configurations, not just Nvlink loopback
+// BIT 1 - NVLE Qual mode force enable/disable bit
+//         a. Cannot be enabled together with NVLE mode, either one can be enabled
+//         b. Tracks NVLE verification with hardcoded NVLE keys
+//         c. Qual mode can be enabled with/without CC
+//         d. Qual mode can be enabled on all Nvlink configs, not just loopback
 //
-#define NV_REG_STR_RM_NVLINK_ENCRYPTION                   "RmNvlinkEncryption"
-#define NV_REG_STR_RM_NVLINK_ENCRYPTION_MODE              0:0
-#define NV_REG_STR_RM_NVLINK_ENCRYPTION_MODE_DEFAULT      0x00000000
-#define NV_REG_STR_RM_NVLINK_ENCRYPTION_MODE_ENABLE       0x00000001
-#define NV_REG_STR_RM_NVLINK_ENCRYPTION_MODE_DISABLE      0x00000000
+#define NV_REG_STR_RM_NVLINK_ENCRYPTION                     "RmNvlinkEncryption"
+#define NV_REG_STR_RM_NVLINK_ENCRYPTION_MODE                0:0
+#define NV_REG_STR_RM_NVLINK_ENCRYPTION_MODE_DEFAULT        0x00000000
+#define NV_REG_STR_RM_NVLINK_ENCRYPTION_MODE_ENABLE         0x00000001
+#define NV_REG_STR_RM_NVLINK_ENCRYPTION_MODE_DISABLE        0x00000000
+#define NV_REG_STR_RM_NVLINK_ENCRYPTION_QUAL_MODE           1:1
+#define NV_REG_STR_RM_NVLINK_ENCRYPTION_QUAL_MODE_DEFAULT   0x00000000
+#define NV_REG_STR_RM_NVLINK_ENCRYPTION_QUAL_MODE_ENABLE    0x00000001
+#define NV_REG_STR_RM_NVLINK_ENCRYPTION_QUAL_MODE_DISABLE   0x00000000
 
 //
 // Type: Dword
@@ -2957,9 +2999,19 @@
 //
 #define NV_REG_STR_RM_NVLINK_ADAPTIVE_BW_MODE                   "RmNvlinkAdaptiveBwMode"
 #define NV_REG_STR_RM_NVLINK_ADAPTIVE_BW_MODE_ENABLE            0:0
-#define NV_REG_STR_RM_NVLINK_ADAPTIVE_BW_MODE_ENABLE_DEFAULT    0x00000000
+#define NV_REG_STR_RM_NVLINK_ADAPTIVE_BW_MODE_ENABLE_DEFAULT    0x00000001
 #define NV_REG_STR_RM_NVLINK_ADAPTIVE_BW_MODE_ENABLE_YES        0x00000001
 #define NV_REG_STR_RM_NVLINK_ADAPTIVE_BW_MODE_ENABLE_NO         0x00000000
+
+//
+// Type: Dword
+// This regkey is used to enable/disable Async RBM
+//
+#define NV_REG_STR_RM_NVLINK_ASYNC_RBM                          "RmNvlinkAsyncRbm"
+#define NV_REG_STR_RM_NVLINK_ASYNC_RBM_ENABLE                  0:0
+#define NV_REG_STR_RM_NVLINK_ASYNC_RBM_ENABLE_DEFAULT          0x00000000
+#define NV_REG_STR_RM_NVLINK_ASYNC_RBM_ENABLE_YES              0x00000001
+#define NV_REG_STR_RM_NVLINK_ASYNC_RBM_ENABLE_NO               0x00000000
 
 //
 // Type: Dword
@@ -3149,6 +3201,17 @@
 
 //
 // Type: DWORD
+// Regkey to enable LTC probe filter clean on coherent CPU link teardown.
+// Encoding -- 1 - Enable LTC probe filter clean during teardown.
+//          -- 0 - Disable LTC probe filter clean during teardown (default).
+//
+#define NV_REG_STR_RM_ENABLE_LTC_PROBE_FILTER_CLEAN_ON_TEARDOWN           "RmEnableLtcProbeFilterCleanOnTeardown"
+#define NV_REG_STR_RM_ENABLE_LTC_PROBE_FILTER_CLEAN_ON_TEARDOWN_TRUE      (0x00000001)
+#define NV_REG_STR_RM_ENABLE_LTC_PROBE_FILTER_CLEAN_ON_TEARDOWN_FALSE     (0x00000000)
+#define NV_REG_STR_RM_ENABLE_LTC_PROBE_FILTER_CLEAN_ON_TEARDOWN_DEFAULT   NV_REG_STR_RM_ENABLE_LTC_PROBE_FILTER_CLEAN_ON_TEARDOWN_FALSE
+
+//
+// Type: DWORD
 // Regkey to validate BasicVRR and Pulsar cookies SSID and SVID against hardcoded values.
 // These cookies are used on platforms with unknown 4-part IDs and need to be validated.
 // To be removed for bug#5196490 validation.
@@ -3196,6 +3259,20 @@
 
 #define NV_REG_STR_RM_GSP_RPC_TIMEOUT_GPU_RESET_THRESHOLD         "RmGspRpcTimeoutGpuResetThreshold"
 #define NV_REG_STR_RM_GSP_RPC_TIMEOUT_GPU_RESET_THRESHOLD_DEFAULT 3
+
+//
+// Type: DWORD
+// Enable/disable CPER (Common Platform Error Record) emission support.
+//
+// Values:
+//   1 - Enabled
+//   0 - Disabled (default)
+//
+#define NV_REG_STR_RM_CPER_EMIT_TO_SYSTEM_LOG                          "RmCperEmitToSystemLog"
+#define NV_REG_STR_RM_CPER_EMIT_TO_SYSTEM_LOG_ENABLED                  0:0
+#define NV_REG_STR_RM_CPER_EMIT_TO_SYSTEM_LOG_ENABLED_TRUE             0x1
+#define NV_REG_STR_RM_CPER_EMIT_TO_SYSTEM_LOG_ENABLED_FALSE            0x0
+#define NV_REG_STR_RM_CPER_EMIT_TO_SYSTEM_LOG_DEFAULT                  NV_REG_STR_RM_CPER_EMIT_TO_SYSTEM_LOG_ENABLED_FALSE
 
 //
 // Type: DWORD
@@ -3259,6 +3336,26 @@
 #define NV_REG_STR_RM_GSP_TRACE_CRASH_LOGGING_BUFFER_SIZE_MAX     10000
 
 //
+// Type: DWORD
+// Regkey to enable the ISR event notification spinlock optimization
+// (bug 6037246). When enabled, only the ISR notification path calls
+// postEvent without the per-notification osReferenceObjectCount/
+// osDereferenceObjectCount pair, and the permanent reference is dropped
+// after the engine notification list removal in
+// unregisterEventNotificationWithData. All other postEvent paths keep
+// the legacy spinlock-protected refcount. When disabled (default), the
+// legacy behavior is used for all paths.
+//
+//   0 - Disable/Default - Legacy behavior (per-ISR refcount under spinlock).
+//   1 - Enable          - ISR fast path skips refcount; deref moved out
+//                         of _removeEventNotification to its callers.
+//
+#define NV_REG_STR_RM_EVENT_NOTIFY_ISR_OPT_BUG_6037246            "RmEventNotifyIsrOpt"
+#define NV_REG_STR_RM_EVENT_NOTIFY_ISR_OPT_BUG_6037246_DISABLE    0x00000000
+#define NV_REG_STR_RM_EVENT_NOTIFY_ISR_OPT_BUG_6037246_ENABLE     0x00000001
+#define NV_REG_STR_RM_EVENT_NOTIFY_ISR_OPT_BUG_6037246_DEFAULT    NV_REG_STR_RM_EVENT_NOTIFY_ISR_OPT_BUG_6037246_DISABLE
+
+//
 // Enable WAR for bug 4686457 which will flush CPU cache of page tables
 // after update to ensure cache coherency
 //
@@ -3290,6 +3387,24 @@
 #define NV_REG_STR_RM_ENABLE_STATE_MONITOR_DEFAULT              (0x00000001)
 #define NV_REG_STR_RM_ENABLE_STATE_MONITOR_DISABLE              (0x00000000)
 #define NV_REG_STR_RM_ENABLE_STATE_MONITOR_ENABLE               (0x00000001)
+
+
+//
+// This regkey allows users to configure a non-preemptable debugger session on Linux only. 
+// If the non-preemptable debugger session is active, the ctxsw timeout interrupt will be ignored
+// and RC recovery will be disabled only for the context associated with the debugger session.
+//
+// Default value is 0, which means do not ignore the timeout interrupt.
+//
+// Type: DWORD
+//
+// 0 - Do not ignore the timeout interrupt
+// 1 - Ignore the timeout interrupt
+//
+#define NV_REG_STR_RM_NON_PREEMTABLE_DEBUGGER_SESSION_ACTIVE                          "EnableDebuggerInterface"
+#define NV_REG_STR_RM_NON_PREEMTABLE_DEBUGGER_SESSION_ACTIVE_ENABLE                    (0x00000001)
+#define NV_REG_STR_RM_NON_PREEMTABLE_DEBUGGER_SESSION_ACTIVE_DISABLE                   (0x00000000)
+#define NV_REG_STR_RM_NON_PREEMTABLE_DEBUGGER_SESSION_ACTIVE_DEFAULT                   NV_REG_STR_RM_NON_PREEMTABLE_DEBUGGER_SESSION_ACTIVE_DISABLE
 
 //
 // Enable WAR for bug 5564443 which will enable PMU SW I2C

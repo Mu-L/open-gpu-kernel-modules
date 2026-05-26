@@ -29,7 +29,7 @@ void __nvoc_init__KernelChannelGroup(KernelChannelGroup*, RmHalspecOwner *pRmhal
 void __nvoc_init_funcTable_KernelChannelGroup(KernelChannelGroup*, RmHalspecOwner *pRmhalspecowner, GpuHalspecOwner *pGpuhalspecowner);
 NV_STATUS __nvoc_ctor_KernelChannelGroup(KernelChannelGroup*, RmHalspecOwner *pRmhalspecowner, GpuHalspecOwner *pGpuhalspecowner);
 void __nvoc_init_dataField_KernelChannelGroup(KernelChannelGroup*, RmHalspecOwner *pRmhalspecowner, GpuHalspecOwner *pGpuhalspecowner);
-void __nvoc_dtor_KernelChannelGroup(KernelChannelGroup*);
+void __nvoc_dtor_KernelChannelGroup(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__KernelChannelGroup;
@@ -48,7 +48,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelChannelGroup =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "KernelChannelGroup",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_KernelChannelGroup,
+    .objCreatefn =        &__nvoc_objCreateDynamic_KernelChannelGroup,
     .pCastInfo =          &__nvoc_castinfo__KernelChannelGroup,
     .pExportInfo =        &__nvoc_export_info__KernelChannelGroup
 };
@@ -57,7 +57,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelChannelGroup =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__KernelChannelGroup __nvoc_metadata__KernelChannelGroup = {
     .rtti.pClassDef = &__nvoc_class_def_KernelChannelGroup,    // (kchangrp) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_KernelChannelGroup,
+    .rtti.dtor      = &__nvoc_dtor_KernelChannelGroup,
     .rtti.offset    = 0,
     .metadata__RsShared.rtti.pClassDef = &__nvoc_class_def_RsShared,    // (shr) super
     .metadata__RsShared.rtti.dtor      = &__nvoc_destructFromBase,
@@ -87,16 +87,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__KernelChannelGroup =
 
 // Destruct KernelChannelGroup object.
 void __nvoc_kchangrpDestruct(KernelChannelGroup*);
-void __nvoc_dtor_RsShared(RsShared*);
-void __nvoc_dtor_KernelChannelGroup(KernelChannelGroup* pThis) {
+void __nvoc_dtor_RsShared(Dynamic*);
+void __nvoc_dtor_KernelChannelGroup(Dynamic* pThis) {
+
+    KernelChannelGroup *__nvoc_this = (KernelChannelGroup *) pThis;
 
 // Call destructor.
-    __nvoc_kchangrpDestruct(pThis);
+    __nvoc_kchangrpDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RsShared(&pThis->__nvoc_base_RsShared);
+    __nvoc_dtor_RsShared((Dynamic *) &__nvoc_this->__nvoc_base_RsShared);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_KernelChannelGroup(KernelChannelGroup *pThis, RmHalspecOwner *pRmhalspecowner, GpuHalspecOwner *pGpuhalspecowner) {
     RmVariantHal *rmVariantHal = &pRmhalspecowner->rmVariantHal;
@@ -110,6 +112,10 @@ void __nvoc_init_dataField_KernelChannelGroup(KernelChannelGroup *pThis, RmHalsp
     PORT_UNREFERENCED_VARIABLE(rmVariantHal_HalVarIdx);
     PORT_UNREFERENCED_VARIABLE(chipHal);
     PORT_UNREFERENCED_VARIABLE(chipHal_HalVarIdx);
+
+    pThis->bNonPreemptableDebuggerSessionActive = NV_FALSE;
+
+    pThis->recoverySuppressionExpirationTime = 0;
 }
 
 
@@ -132,7 +138,7 @@ NV_STATUS __nvoc_ctor_KernelChannelGroup(KernelChannelGroup *pKernelChannelGroup
 
     // Unwind on error.
 __nvoc_ctor_KernelChannelGroup_fail__init:
-    __nvoc_dtor_RsShared(&pKernelChannelGroup->__nvoc_base_RsShared);
+    __nvoc_dtor_RsShared((Dynamic *)&pKernelChannelGroup->__nvoc_base_RsShared);
 __nvoc_ctor_KernelChannelGroup_fail_RsShared:
 __nvoc_ctor_KernelChannelGroup_exit:
     return status;
@@ -153,7 +159,7 @@ static void __nvoc_init_funcTable_KernelChannelGroup_1(KernelChannelGroup *pThis
     PORT_UNREFERENCED_VARIABLE(chipHal_HalVarIdx);
 
     // kchangrpAllocFaultMethodBuffers -- halified (2 hals) body
-    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000a000UL) )) /* ChipHal: T234D | T264D */ 
+    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000e000UL) )) /* ChipHal: T234D | T239D | T264D */ 
     {
         pThis->__kchangrpAllocFaultMethodBuffers__ = &kchangrpAllocFaultMethodBuffers_ac1694;
     }
@@ -163,7 +169,7 @@ static void __nvoc_init_funcTable_KernelChannelGroup_1(KernelChannelGroup *pThis
     }
 
     // kchangrpFreeFaultMethodBuffers -- halified (2 hals) body
-    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000a000UL) )) /* ChipHal: T234D | T264D */ 
+    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000e000UL) )) /* ChipHal: T234D | T239D | T264D */ 
     {
         pThis->__kchangrpFreeFaultMethodBuffers__ = &kchangrpFreeFaultMethodBuffers_ac1694;
     }
@@ -173,7 +179,7 @@ static void __nvoc_init_funcTable_KernelChannelGroup_1(KernelChannelGroup *pThis
     }
 
     // kchangrpMapFaultMethodBuffers -- halified (2 hals) body
-    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000a000UL) )) /* ChipHal: T234D | T264D */ 
+    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000e000UL) )) /* ChipHal: T234D | T239D | T264D */ 
     {
         pThis->__kchangrpMapFaultMethodBuffers__ = &kchangrpMapFaultMethodBuffers_ac1694;
     }
@@ -183,7 +189,7 @@ static void __nvoc_init_funcTable_KernelChannelGroup_1(KernelChannelGroup *pThis
     }
 
     // kchangrpUnmapFaultMethodBuffers -- halified (2 hals) body
-    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000a000UL) )) /* ChipHal: T234D | T264D */ 
+    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000e000UL) )) /* ChipHal: T234D | T239D | T264D */ 
     {
         pThis->__kchangrpUnmapFaultMethodBuffers__ = &kchangrpUnmapFaultMethodBuffers_ac1694;
     }
@@ -303,11 +309,8 @@ __nvoc_objCreate_KernelChannelGroup_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_KernelChannelGroup(KernelChannelGroup **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_KernelChannelGroup(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_KernelChannelGroup(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_KernelChannelGroup((KernelChannelGroup **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

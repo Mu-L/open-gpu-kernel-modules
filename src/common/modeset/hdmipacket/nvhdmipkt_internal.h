@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2012-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2012-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -39,9 +39,6 @@
 
 extern void initializeHdmiPktInterface0073(NVHDMIPKT_CLASS*);
 extern void initializeHdmiPktInterface9171(NVHDMIPKT_CLASS*);
-extern void initializeHdmiPktInterface9271(NVHDMIPKT_CLASS*);
-extern void initializeHdmiPktInterface9471(NVHDMIPKT_CLASS*);
-extern void initializeHdmiPktInterface9571(NVHDMIPKT_CLASS*);
 extern void initializeHdmiPktInterfaceC371(NVHDMIPKT_CLASS*);
 extern void initializeHdmiPktInterfaceC671(NVHDMIPKT_CLASS*);
 extern void initializeHdmiPktInterfaceC771(NVHDMIPKT_CLASS*);
@@ -55,12 +52,6 @@ extern NvBool hdmiConstructor0073(NVHDMIPKT_CLASS*);
 extern void   hdmiDestructor0073 (NVHDMIPKT_CLASS*);
 extern NvBool hdmiConstructor9171(NVHDMIPKT_CLASS*);
 extern void   hdmiDestructor9171 (NVHDMIPKT_CLASS*);
-extern NvBool hdmiConstructor9271(NVHDMIPKT_CLASS*);
-extern void   hdmiDestructor9271 (NVHDMIPKT_CLASS*);
-extern NvBool hdmiConstructor9471(NVHDMIPKT_CLASS*);
-extern void   hdmiDestructor9471 (NVHDMIPKT_CLASS*);
-extern NvBool hdmiConstructor9571(NVHDMIPKT_CLASS*);
-extern void   hdmiDestructor9571 (NVHDMIPKT_CLASS*);
 extern NvBool hdmiConstructorC371(NVHDMIPKT_CLASS*);
 extern void   hdmiDestructorC371 (NVHDMIPKT_CLASS*);
 extern NvBool hdmiConstructorC671(NVHDMIPKT_CLASS*);
@@ -71,11 +62,19 @@ extern NvBool hdmiConstructorC871(NVHDMIPKT_CLASS*);
 extern void   hdmiDestructorC871 (NVHDMIPKT_CLASS*);
 extern NvBool isInfoframeOffsetAvailable(NvU32*     pBaseReg,
                                          NvU32      head,
-                                         NvU32      requestedInfoframe);
+                                         NvU32      requestedInfoframeIndex,
+                                         NvU32      requestedSize,
+                                         NvU32*     pCollisionIndex,
+                                         NvU32*     pCollisionSize);
 extern NVHDMIPKT_RESULT disableInfoframeC871(NVHDMIPKT_CLASS*  pThis,
                                              NvU32*            pBaseReg,
                                              NvU32             head,
                                              NvU32             ifIndex);
+extern NVHDMIPKT_RESULT hdmiAdvancedPacketCtrlC871(NVHDMIPKT_CLASS*                 pThis,
+                                                   NvU32                            subDevice,
+                                                   NvU32                            head,
+                                                   NVHDMIPKT_TYPE                   packetReg,
+                                                   const ADVANCED_INFOFRAME_CTRL  *pInfoframeCtrl);
 extern NvBool hdmiConstructorC971(NVHDMIPKT_CLASS*);
 extern void   hdmiDestructorC971 (NVHDMIPKT_CLASS*);
 extern NvBool hdmiConstructorCA71(NVHDMIPKT_CLASS*);

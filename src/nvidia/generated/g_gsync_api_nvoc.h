@@ -160,7 +160,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_GSyncApi;
     ((GSyncApi*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(GSyncApi)))
 #endif //__nvoc_gsync_api_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_GSyncApi(GSyncApi**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_GSyncApi(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_GSyncApi(GSyncApi**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_GSyncApi(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

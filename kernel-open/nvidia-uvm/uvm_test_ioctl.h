@@ -1,5 +1,5 @@
 /*******************************************************************************
-    Copyright (c) 2015-2025 NVidia Corporation
+    Copyright (c) 2015-2026 NVidia Corporation
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
@@ -838,33 +838,6 @@ typedef struct
     NV_STATUS rmStatus; // Out
 } UVM_TEST_SET_PAGE_PREFETCH_POLICY_PARAMS;
 
-#define UVM_TEST_RANGE_GROUP_TREE                        UVM_TEST_IOCTL_BASE(47)
-typedef struct
-{
-    NvU64 rangeGroupIds[4]                                           NV_ALIGN_BYTES(8); // In
-    NV_STATUS rmStatus;                                                                 // Out
-} UVM_TEST_RANGE_GROUP_TREE_PARAMS;
-
-#define UVM_TEST_RANGE_GROUP_RANGE_INFO                  UVM_TEST_IOCTL_BASE(48)
-typedef struct
-{
-    NvU64                           lookup_address                   NV_ALIGN_BYTES(8); // In
-
-    NvU64                           range_group_range_start          NV_ALIGN_BYTES(8); // Out
-    NvU64                           range_group_range_end            NV_ALIGN_BYTES(8); // Out, inclusive
-    NvU64                           range_group_id                   NV_ALIGN_BYTES(8); // Out
-    NvU32                           range_group_present;                                // Out
-    NV_STATUS                       rmStatus;                                           // Out
-} UVM_TEST_RANGE_GROUP_RANGE_INFO_PARAMS;
-
-#define UVM_TEST_RANGE_GROUP_RANGE_COUNT                 UVM_TEST_IOCTL_BASE(49)
-typedef struct
-{
-    NvU64                           rangeGroupId                     NV_ALIGN_BYTES(8); // In
-    NvU64                           count                            NV_ALIGN_BYTES(8); // Out
-    NV_STATUS                       rmStatus;                                           // Out
-} UVM_TEST_RANGE_GROUP_RANGE_COUNT_PARAMS;
-
 #define UVM_TEST_GET_PREFETCH_FAULTS_REENABLE_LAPSE      UVM_TEST_IOCTL_BASE(50)
 typedef struct
 {
@@ -1275,26 +1248,26 @@ typedef struct
 
 typedef enum
 {
-    UVM_TEST_PAGEABLE_MEM_ACCESS_TYPE_NONE = 0,
+    UVM_TEST_PAGEABLE_MEM_TYPE_NONE = 0,
 
     // Pageable memory cannot be accessed, but there is an association between
     // this VA space and its owning process. For example, this enables the GPU
     // fault handler to establish CPU mappings.
-    UVM_TEST_PAGEABLE_MEM_ACCESS_TYPE_MMU_NOTIFIER,
+    UVM_TEST_PAGEABLE_MEM_TYPE_MMU_NOTIFIER,
 
-    UVM_TEST_PAGEABLE_MEM_ACCESS_TYPE_HMM,
-    UVM_TEST_PAGEABLE_MEM_ACCESS_TYPE_ATS,
-    UVM_TEST_PAGEABLE_MEM_ACCESS_TYPE_COUNT
-} UVM_TEST_PAGEABLE_MEM_ACCESS_TYPE;
+    UVM_TEST_PAGEABLE_MEM_TYPE_ACCESS,
+    UVM_TEST_PAGEABLE_MEM_TYPE_MIGRATION,
+    UVM_TEST_PAGEABLE_MEM_TYPE_COUNT
+} UVM_TEST_PAGEABLE_MEM_TYPE;
 
-#define UVM_TEST_GET_PAGEABLE_MEM_ACCESS_TYPE            UVM_TEST_IOCTL_BASE(83)
+#define UVM_TEST_GET_PAGEABLE_MEM_TYPE                   UVM_TEST_IOCTL_BASE(83)
 typedef struct
 {
-    // UVM_TEST_PAGEABLE_MEM_ACCESS_TYPE
+    // UVM_TEST_PAGEABLE_MEM_TYPE
     NvU32                           type;                                               // Out
 
     NV_STATUS                       rmStatus;                                           // Out
-} UVM_TEST_GET_PAGEABLE_MEM_ACCESS_TYPE_PARAMS;
+} UVM_TEST_GET_PAGEABLE_MEM_TYPE_PARAMS;
 
 // Some events, like fault replays, may not immediately show up in the events
 // queue despite calling UVM_TOOLS_FLUSH_EVENTS since that will only flush
@@ -1628,6 +1601,28 @@ typedef struct
     // NV_ERR_IN_USE            Another VA space currently owns the setting.
     NV_STATUS                       rmStatus;                   // Out
 } UVM_TEST_SET_NON_REPLAYABLE_DELAY_PARAMS;
+
+// Wait until all pending access counter notifications have been processed. If
+// there are still pending notifications when timeout_ns is reached, the ioctl
+// returns NV_ERR_TIMEOUT.
+#define UVM_TEST_DRAIN_ACCESS_COUNTERS                   UVM_TEST_IOCTL_BASE(115)
+typedef struct
+{
+    NvProcessorUuid                 gpu_uuid;                   // In
+    NvU64                           timeout_ns;                 // In
+
+    NV_STATUS                       rmStatus;                   // Out
+} UVM_TEST_DRAIN_ACCESS_COUNTERS_PARAMS;
+
+// Query if GPU supports CDMM mode with devmem (device coherent pages)
+#define UVM_TEST_QUERY_CDMM_DEVMEM                       UVM_TEST_IOCTL_BASE(116)
+typedef struct
+{
+    NvProcessorUuid                 gpu_uuid;                   // In
+
+    NvBool                          cdmmDevmemEnabled;          // Out
+    NV_STATUS                       rmStatus;                   // Out
+} UVM_TEST_QUERY_CDMM_DEVMEM_PARAMS;
 
 #ifdef __cplusplus
 }

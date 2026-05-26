@@ -97,6 +97,11 @@
 
 #define NV_DP_REGKEY_DISABLE_AVOID_HBR3_WAR         "DP_DISABLE_AVOID_HBR3_WAR"
 
+// Bug 5880515 : Avoid writing to DPCD 600h if panel target and current state is same
+#define NV_DP_REGKEY_SKIP_PANEL_POWER_WRITE         "DP_SKIP_PANEL_POWER_WRITE"
+
+#define NV_DP_REGKEY_DISABLE_POLLING_FOR_DP_MST_DETECTION    "DP_DISABLE_POLLING_FOR_DP_MST_DETECTION"
+
 // Bug 4793112 : On eDP panel, do not cache source OUI if it reads zero
 #define NV_DP_REGKEY_SKIP_ZERO_OUI_CACHE            "DP_SKIP_ZERO_OUI_CACHE"
 
@@ -117,10 +122,13 @@
 #define NV_DP_REGKEY_ENABLE_128b132b_DSC_LNK_CFG_REDUCTION   "ENABLE_128b132b_DSC_LNK_CFG_REDUCTION"
 
 #define NV_DP_REGKEY_DISABLE_NATIVE_DISPLAYID2X_SUPPORT    "DISABLE_NATIVE_DISPLAYID2X_SUPPORT"
-#define NV_DP_REGKEY_FORCE_NLPIGNORE_DDS                   "DP_FORCE_NLPIGNORE_DDS"
 
 #define NV_DP_REGKEY_ENABLE_CLEAR_MSA_WHEN_NOT_USED          "DP_ENABLE_CLEAR_MSA_WHEN_NOT_USED"
 
+#define NV_DP_REGKEY_FORCE_NLPIGNORE_DDS                     "DP_FORCE_NLPIGNORE_DDS"
+
+// Sets connector as HDMI for Dongle on DP++ port
+#define NV_DP_REGKEY_SET_CONNECTOR_HDMI_FOR_DONGLE           "DP_SET_CONNECTOR_HDMI_FOR_DONGLE"
 //
 // Data Base used to store all the regkey values.
 // The actual data base is declared statically in dp_evoadapter.cpp.
@@ -159,9 +167,11 @@ struct DP_REGKEY_DATABASE
     bool  bDisableEffBppSST8b10b;
     bool  bDisableWatermarkCaching;
     bool  bMSTPCONCapsReadDisabled;
+    bool  bSkipPanelPowerWrite;
     bool  bForceDisableTunnelBwAllocation;
     bool  bDownspreadDisabled;
     bool  bDisableAvoidHBR3War;
+    bool  bDisablePollingForDpMstDetection;
     bool  bCableVconnSourceUnknownWar;
     bool  bSkipZeroOuiCache;
     bool  bForceHeadShutdown;
@@ -171,8 +181,9 @@ struct DP_REGKEY_DATABASE
     bool  bEnable128b132bDSCLnkCfgReduction;
     bool  bDisableNativeDisplayId2xSupport;
     bool  bUseMaxDSCCompressionMST;
-    bool  bIgnoreUnplugUnlessRequested;
     bool  bEnableClearMSAWhenNotUsed;
+    bool  bIgnoreUnplugUnlessRequested;
+    bool  bSetConnectorHdmiForDongle;
 };
 
 extern struct DP_REGKEY_DATABASE dpRegkeyDatabase;

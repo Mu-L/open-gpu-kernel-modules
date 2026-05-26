@@ -193,7 +193,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_GpuAccounting;
     ((GpuAccounting*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(GpuAccounting)))
 #endif //__nvoc_gpu_acct_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_GpuAccounting(GpuAccounting**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_GpuAccounting(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_GpuAccounting(GpuAccounting**, Dynamic*, NvU32);
 #define __objCreate_GpuAccounting(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -285,6 +285,16 @@ static inline NV_STATUS gpuacctGetProcAcctInfo(struct GpuAccounting *arg_this, N
 }
 #else // __nvoc_gpu_acct_h_disabled
 #define gpuacctGetProcAcctInfo(arg_this, arg2) gpuacctGetProcAcctInfo_IMPL(arg_this, arg2)
+#endif // __nvoc_gpu_acct_h_disabled
+
+NV_STATUS gpuacctGetProcAcctInfo_v2_IMPL(struct GpuAccounting *arg_this, NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_V2_PARAMS *arg2);
+#ifdef __nvoc_gpu_acct_h_disabled
+static inline NV_STATUS gpuacctGetProcAcctInfo_v2(struct GpuAccounting *arg_this, NV0000_CTRL_GPUACCT_GET_PROC_ACCOUNTING_INFO_V2_PARAMS *arg2) {
+    NV_ASSERT_FAILED_PRECOMP("GpuAccounting was disabled!");
+    return NV_ERR_NOT_SUPPORTED;
+}
+#else // __nvoc_gpu_acct_h_disabled
+#define gpuacctGetProcAcctInfo_v2(arg_this, arg2) gpuacctGetProcAcctInfo_v2_IMPL(arg_this, arg2)
 #endif // __nvoc_gpu_acct_h_disabled
 
 NV_STATUS gpuacctGetAcctPids_IMPL(struct GpuAccounting *arg_this, NV0000_CTRL_GPUACCT_GET_ACCOUNTING_PIDS_PARAMS *arg2);

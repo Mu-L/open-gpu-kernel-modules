@@ -197,13 +197,12 @@ confComputeApiCtrlCmdSystemSetGpusState_IMPL
 
     while ((pGpu = gpumgrGetNextGpu(gpuMask, &gpuInstance)) != NULL)
     {
-
-    KernelNvlink *pKernelNvlink = GPU_GET_KERNEL_NVLINK(pGpu);
-    if (pKernelNvlink && pKernelNvlink->getProperty(pGpu, PDB_PROP_KNVLINK_ENCRYPTION_ENABLED))
-    {
-        // Update NVLE related topology infomation for all the GPUs 
-        NV_CHECK_OK_OR_RETURN(LEVEL_ERROR, knvlinkSetupNvleRemapTables(pGpu, pKernelNvlink));
-    }
+        KernelNvlink *pKernelNvlink = GPU_GET_KERNEL_NVLINK(pGpu);
+        if (pKernelNvlink && pKernelNvlink->getProperty(pGpu, PDB_PROP_KNVLINK_ENCRYPTION_ENABLED))
+        {
+            // Update NVLE related topology infomation for all the GPUs 
+            NV_CHECK_OK_OR_RETURN(LEVEL_ERROR, knvlinkSetupNvleRemapTables(pGpu, pKernelNvlink));
+        }
 
         if (IS_VIRTUAL(pGpu))
             return NV_ERR_NOT_SUPPORTED;
@@ -310,7 +309,7 @@ confComputeApiCtrlCmdGetGpuCertificate_IMPL
     pConfCompute = GPU_GET_CONF_COMPUTE(pGpu);
     pSpdm        = GPU_GET_SPDM(pGpu);
 
-    if (pConfCompute != NULL && confComputeIsSpdmEnabled(pGpu, pConfCompute))
+    if (pConfCompute != NULL && confComputeIsSpdmSupported(pGpu, pConfCompute))
     {
         if (pSpdm->getProperty(pSpdm, PDB_PROP_SPDM_ENABLED))
         {
@@ -360,7 +359,7 @@ confComputeApiCtrlCmdGetGpuAttestationReport_IMPL
     pConfCompute = GPU_GET_CONF_COMPUTE(pGpu);
 
     if (pConfCompute != NULL &&
-        confComputeIsSpdmEnabled(pGpu, pConfCompute) &&
+        confComputeIsSpdmSupported(pGpu, pConfCompute) &&
         pSpdm->getProperty(pSpdm, PDB_PROP_SPDM_ENABLED))
     {
         // Set max size of report buffers before calling SPDM.

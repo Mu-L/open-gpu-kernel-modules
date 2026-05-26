@@ -179,6 +179,9 @@ NV_STATUS kdispDetectSliLink_v04_00(KernelDisplay *pKernelDisplay, OBJGPU *pPare
     NvU32 childGpioPin  = GPIO_INVALID_PIN;
     NvU32 value         = 0;
 
+    NvU32 gpuMask = 0;
+    NvU32 checkMask = 0;
+
     NV_STATUS rmStatus;
 
     // Check the  pinset info, needs to have only one bit set
@@ -187,20 +190,30 @@ NV_STATUS kdispDetectSliLink_v04_00(KernelDisplay *pKernelDisplay, OBJGPU *pPare
         return NV_ERR_INVALID_ARGUMENT;
     }
 
-    NvU32 parentGpuLockMask = 0, childGpuLockMask = 0;
-    if (IS_GSP_CLIENT(pParentGpu) && !rmDeviceGpuLockIsOwner(pParentGpu->gpuInstance))
-        NV_ASSERT_OK_OR_GOTO(rmStatus, rmGpuGroupLockAcquire(pParentGpu->gpuInstance,
-                                                       GPU_LOCK_GRP_SUBDEVICE,
-                                                       GPUS_LOCK_FLAGS_NONE,
-                                                       RM_LOCK_MODULES_RPC,
-                                                       &parentGpuLockMask), done);
+    // Build GPU mask for GPUs whose locks we don't already own
+    if (IS_GSP_CLIENT(pParentGpu))
+    {
+        if (!rmGpuGroupLockIsOwner(pParentGpu->gpuInstance, GPU_LOCK_GRP_SUBDEVICE, &checkMask))
+            gpuMask |= checkMask;
+    }
 
-    if (IS_GSP_CLIENT(pChildGpu) && !rmDeviceGpuLockIsOwner(pChildGpu->gpuInstance))
-        NV_ASSERT_OK_OR_GOTO(rmStatus, rmGpuGroupLockAcquire(pChildGpu->gpuInstance,
-                                                       GPU_LOCK_GRP_SUBDEVICE,
-                                                       GPUS_LOCK_FLAGS_NONE,
-                                                       RM_LOCK_MODULES_RPC,
-                                                       &childGpuLockMask), done);
+    if (IS_GSP_CLIENT(pChildGpu))
+    {
+        if (!rmGpuGroupLockIsOwner(pChildGpu->gpuInstance, GPU_LOCK_GRP_SUBDEVICE, &checkMask))
+            gpuMask |= checkMask;
+    }
+
+    // Acquire locks for both GPUs at once to avoid locking order violations
+    if (gpuMask != 0)
+    {
+        NV_ASSERT_FAILED("GPU lock not taken");
+        NV_ASSERT_OK_OR_GOTO(rmStatus,
+            rmGpuGroupLockAcquire(0,
+                                  GPU_LOCK_GRP_MASK,
+                                  GPU_LOCK_FLAGS_SAFE_LOCK_UPGRADE,
+                                  RM_LOCK_MODULES_RPC,
+                                  &gpuMask), done);
+    }
 
     // Set the gpio on parent gpu to sw control mode(aka normal) for twiddling
     NV_CHECK_OK_OR_GOTO(rmStatus, LEVEL_INFO,
@@ -258,11 +271,8 @@ done:
         NV_ASSERT_OK(activateHwFunction(pChildGpu, childGpioPin, childGpioFunction));
     }
 
-    if (parentGpuLockMask != 0)
-        rmGpuGroupLockRelease(parentGpuLockMask, GPUS_LOCK_FLAGS_NONE);
-
-    if (childGpuLockMask != 0)
-        rmGpuGroupLockRelease(childGpuLockMask, GPUS_LOCK_FLAGS_NONE);
+    if (gpuMask != 0)
+        rmGpuGroupLockRelease(gpuMask, GPUS_LOCK_FLAGS_NONE);
 
     return rmStatus;
 }

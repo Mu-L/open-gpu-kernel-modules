@@ -40,7 +40,6 @@
 #include "rmapi/rs_utils.h"
 #include "rmapi/rmapi.h"
 #include "gpu/disp/head/kernel_head.h"
-#include "mem_mgr/mem.h"
 #include "platform/sli/sli.h"
 #include "diagnostics/journal.h"
 #include "displayport/displayport.h"
@@ -325,56 +324,6 @@ dispcmnCtrlCmdDpGenerateFakeInterrupt_IMPL
     }
 
     return NV_OK;
-}
-
-NV_STATUS dispcmnCtrlCmdVRRSetRgLineActive_IMPL
-(
-    DispCommon *pDispCommon,
-    NV0073_CTRL_CMD_SYSTEM_VRR_SET_RGLINE_ACTIVE_PARAMS *pParams
-)
-{
-    OBJGPU   *pGpu   = DISPAPI_GET_GPU(pDispCommon);
-    RsClient *pClient = RES_GET_CLIENT(pDispCommon);
-    NvHandle  hParent = RES_GET_PARENT_HANDLE(pDispCommon);
-    RM_API   *pRmApi = GPU_GET_PHYSICAL_RMAPI(DISPAPI_GET_GPU(pDispCommon));
-    NV_STATUS status = NV_OK;
-
-    // Get the right pGpu from subdevice instance given by client
-    status = dispapiSetUnicastAndSynchronize_HAL(
-                               staticCast(pDispCommon, DisplayApi),
-                               DISPAPI_GET_GPUGRP(pDispCommon),
-                               &pGpu,
-                               NULL,
-                               pParams->subDeviceInstance);
-
-    if (status != NV_OK)
-    {
-        return status;
-    }
-
-    if (pParams->bEnable)
-    {
-        //
-        // Note: memRegisterWithGsp() is a noop when either (a) we're not
-        // operating as a GSP client, or (b) the hMemory is already registered
-        // with GSP.
-        //
-        // Also, note that we don't explicitly unregister here in the
-        // !pParams->bEnable case: that could unregister the memory out from
-        // under other uses of this hMemory on GSP.
-        // Instead, we rely on the hMemory getting unregistered when the
-        // 'struct Memory' is freed.
-        //
-        NV_CHECK_OK_OR_RETURN(LEVEL_ERROR,
-                              memRegisterWithGsp(pGpu, pClient, hParent, pParams->hMemory));
-    }
-
-    return pRmApi->Control(pRmApi,
-                           pClient->hClient,
-                           RES_GET_HANDLE(pDispCommon),
-                           NV0073_CTRL_CMD_INTERNAL_VRR_SET_RGLINE_ACTIVE,
-                           pParams,
-                           sizeof(*pParams));
 }
 
 static NV_STATUS _kheadCheckVblankCountCallback

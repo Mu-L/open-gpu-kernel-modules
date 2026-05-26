@@ -35,7 +35,7 @@ void __nvoc_init__DeferredApiObject(DeferredApiObject*, RmHalspecOwner *pRmhalsp
 void __nvoc_init_funcTable_DeferredApiObject(DeferredApiObject*);
 NV_STATUS __nvoc_ctor_DeferredApiObject(DeferredApiObject*, RmHalspecOwner *pRmhalspecowner, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_DeferredApiObject(DeferredApiObject*);
-void __nvoc_dtor_DeferredApiObject(DeferredApiObject*);
+void __nvoc_dtor_DeferredApiObject(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__DeferredApiObject;
@@ -160,7 +160,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_DeferredApiObject =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "DeferredApiObject",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_DeferredApiObject,
+    .objCreatefn =        &__nvoc_objCreateDynamic_DeferredApiObject,
     .pCastInfo =          &__nvoc_castinfo__DeferredApiObject,
     .pExportInfo =        &__nvoc_export_info__DeferredApiObject
 };
@@ -170,6 +170,31 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_DeferredApiObject =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00050048u)
+static NV_STATUS defapiCtrlCmdDeferredApi__EXPORT(void *pDeferredApiObj, void *pDeferredApi) {
+    return defapiCtrlCmdDeferredApi_IMPL(pDeferredApiObj, pDeferredApi);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00050048u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010008u)
+static NV_STATUS defapiCtrlCmdDeferredApiV2__EXPORT(void *pDeferredApiObj, void *pDeferredApi) {
+    return defapiCtrlCmdDeferredApiV2_IMPL(pDeferredApiObj, pDeferredApi);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x000500c8u)
+static NV_STATUS defapiCtrlCmdDeferredApiInternal__EXPORT(void *pDeferredApiObj, void *pDeferredApi) {
+    return defapiCtrlCmdDeferredApiInternal_IMPL(pDeferredApiObj, pDeferredApi);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x000500c8u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00050048u)
+static NV_STATUS defapiCtrlCmdRemoveApi__EXPORT(void *pDeferredApiObj, void *pRemoveApi) {
+    return defapiCtrlCmdRemoveApi_IMPL(pDeferredApiObj, pRemoveApi);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00050048u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_DeferredApiObject[] = 
 {
@@ -177,7 +202,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Deferred
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x50048u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &defapiCtrlCmdDeferredApi_IMPL,
+        /*pFunc=*/      (void (*)(void)) &defapiCtrlCmdDeferredApi__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x50048u)
         /*flags=*/      0x50048u,
         /*accessRight=*/0x0u,
@@ -192,7 +217,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Deferred
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x50048u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &defapiCtrlCmdRemoveApi_IMPL,
+        /*pFunc=*/      (void (*)(void)) &defapiCtrlCmdRemoveApi__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x50048u)
         /*flags=*/      0x50048u,
         /*accessRight=*/0x0u,
@@ -207,7 +232,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Deferred
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &defapiCtrlCmdDeferredApiV2_IMPL,
+        /*pFunc=*/      (void (*)(void)) &defapiCtrlCmdDeferredApiV2__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
         /*flags=*/      0x10008u,
         /*accessRight=*/0x0u,
@@ -222,7 +247,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Deferred
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x500c8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &defapiCtrlCmdDeferredApiInternal_IMPL,
+        /*pFunc=*/      (void (*)(void)) &defapiCtrlCmdDeferredApiInternal__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x500c8u)
         /*flags=*/      0x500c8u,
         /*accessRight=*/0x0u,
@@ -239,7 +264,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Deferred
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__DeferredApiObject __nvoc_metadata__DeferredApiObject = {
     .rtti.pClassDef = &__nvoc_class_def_DeferredApiObject,    // (defapi) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_DeferredApiObject,
+    .rtti.dtor      = &__nvoc_dtor_DeferredApiObject,
     .rtti.offset    = 0,
     .metadata__ChannelDescendant.rtti.pClassDef = &__nvoc_class_def_ChannelDescendant,    // (chandes) super
     .metadata__ChannelDescendant.rtti.dtor      = &__nvoc_destructFromBase,
@@ -598,16 +623,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__DeferredApiObject =
 
 // Destruct DeferredApiObject object.
 void __nvoc_defapiDestruct(DeferredApiObject*);
-void __nvoc_dtor_ChannelDescendant(ChannelDescendant*);
-void __nvoc_dtor_DeferredApiObject(DeferredApiObject* pThis) {
+void __nvoc_dtor_ChannelDescendant(Dynamic*);
+void __nvoc_dtor_DeferredApiObject(Dynamic* pThis) {
+
+    DeferredApiObject *__nvoc_this = (DeferredApiObject *) pThis;
 
 // Call destructor.
-    __nvoc_defapiDestruct(pThis);
+    __nvoc_defapiDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_ChannelDescendant(&pThis->__nvoc_base_ChannelDescendant);
+    __nvoc_dtor_ChannelDescendant((Dynamic *) &__nvoc_this->__nvoc_base_ChannelDescendant);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_DeferredApiObject(DeferredApiObject *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -633,7 +660,7 @@ NV_STATUS __nvoc_ctor_DeferredApiObject(DeferredApiObject *pDeferredApi, RmHalsp
 
     // Unwind on error.
 __nvoc_ctor_DeferredApiObject_fail__init:
-    __nvoc_dtor_ChannelDescendant(&pDeferredApi->__nvoc_base_ChannelDescendant);
+    __nvoc_dtor_ChannelDescendant((Dynamic *)&pDeferredApi->__nvoc_base_ChannelDescendant);
 __nvoc_ctor_DeferredApiObject_fail_ChannelDescendant:
 __nvoc_ctor_DeferredApiObject_exit:
     return status;
@@ -760,13 +787,10 @@ __nvoc_objCreate_DeferredApiObject_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_DeferredApiObject(DeferredApiObject **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_DeferredApiObject(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_DeferredApiObject(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_DeferredApiObject((DeferredApiObject **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

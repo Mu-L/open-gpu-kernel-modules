@@ -144,6 +144,8 @@ namespace DisplayPort
         void validateIlrInFallbackMap(LinkRate ilr, bool bUseDP2xChannelCoding);
 
         virtual NvU32 maxLinkRateSupported();
+        using EvoMainLink::setFlushMode;
+        using EvoMainLink::clearFlushMode;
         virtual bool setFlushMode(FlushModePhase phase);
         virtual bool clearFlushMode(FlushModePhase phase, NvU32 attachFailedHeadMask = 0, NvU32 headIndex = 0);
         virtual bool isRgFlushSequenceUsed() {return bUseRgFlushSequence;}

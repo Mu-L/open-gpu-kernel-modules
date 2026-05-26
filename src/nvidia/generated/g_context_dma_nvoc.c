@@ -34,7 +34,7 @@ void __nvoc_init__ContextDma(ContextDma*);
 void __nvoc_init_funcTable_ContextDma(ContextDma*);
 NV_STATUS __nvoc_ctor_ContextDma(ContextDma*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_ContextDma(ContextDma*);
-void __nvoc_dtor_ContextDma(ContextDma*);
+void __nvoc_dtor_ContextDma(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__ContextDma;
@@ -102,7 +102,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ContextDma =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "ContextDma",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_ContextDma,
+    .objCreatefn =        &__nvoc_objCreateDynamic_ContextDma,
     .pCastInfo =          &__nvoc_castinfo__ContextDma,
     .pExportInfo =        &__nvoc_export_info__ContextDma
 };
@@ -112,6 +112,25 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ContextDma =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000000u)
+static NV_STATUS ctxdmaCtrlCmdUpdateContextdma__EXPORT(void *pContextDma, void *pUpdateCtxtDmaParams) {
+    return ctxdmaCtrlCmdUpdateContextdma_IMPL(pContextDma, pUpdateCtxtDmaParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000000u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS ctxdmaCtrlCmdBindContextdma__EXPORT(void *pContextDma, void *pBindCtxtDmaParams) {
+    return ctxdmaCtrlCmdBindContextdma_IMPL(pContextDma, pBindCtxtDmaParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS ctxdmaCtrlCmdUnbindContextdma__EXPORT(void *pContextDma, void *pUnbindCtxtDmaParams) {
+    return ctxdmaCtrlCmdUnbindContextdma_IMPL(pContextDma, pUnbindCtxtDmaParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ContextDma[] = 
 {
@@ -119,7 +138,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ContextD
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &ctxdmaCtrlCmdUpdateContextdma_IMPL,
+        /*pFunc=*/      (void (*)(void)) &ctxdmaCtrlCmdUpdateContextdma__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0u)
         /*flags=*/      0x0u,
         /*accessRight=*/0x0u,
@@ -134,7 +153,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ContextD
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &ctxdmaCtrlCmdBindContextdma_IMPL,
+        /*pFunc=*/      (void (*)(void)) &ctxdmaCtrlCmdBindContextdma__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -149,7 +168,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ContextD
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &ctxdmaCtrlCmdUnbindContextdma_IMPL,
+        /*pFunc=*/      (void (*)(void)) &ctxdmaCtrlCmdUnbindContextdma__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -166,7 +185,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ContextD
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__ContextDma __nvoc_metadata__ContextDma = {
     .rtti.pClassDef = &__nvoc_class_def_ContextDma,    // (ctxdma) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_ContextDma,
+    .rtti.dtor      = &__nvoc_dtor_ContextDma,
     .rtti.offset    = 0,
     .metadata__RmResource.rtti.pClassDef = &__nvoc_class_def_RmResource,    // (rmres) super
     .metadata__RmResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -424,18 +443,20 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__ContextDma =
 
 // Destruct ContextDma object.
 void __nvoc_ctxdmaDestruct(ContextDma*);
-void __nvoc_dtor_RmResource(RmResource*);
-void __nvoc_dtor_Notifier(Notifier*);
-void __nvoc_dtor_ContextDma(ContextDma* pThis) {
+void __nvoc_dtor_RmResource(Dynamic*);
+void __nvoc_dtor_Notifier(Dynamic*);
+void __nvoc_dtor_ContextDma(Dynamic* pThis) {
+
+    ContextDma *__nvoc_this = (ContextDma *) pThis;
 
 // Call destructor.
-    __nvoc_ctxdmaDestruct(pThis);
+    __nvoc_ctxdmaDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RmResource(&pThis->__nvoc_base_RmResource);
-    __nvoc_dtor_Notifier(&pThis->__nvoc_base_Notifier);
+    __nvoc_dtor_RmResource((Dynamic *) &__nvoc_this->__nvoc_base_RmResource);
+    __nvoc_dtor_Notifier((Dynamic *) &__nvoc_this->__nvoc_base_Notifier);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_ContextDma(ContextDma *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -464,9 +485,9 @@ NV_STATUS __nvoc_ctor_ContextDma(ContextDma *pCtxdma, struct CALL_CONTEXT *pCall
 
     // Unwind on error.
 __nvoc_ctor_ContextDma_fail__init:
-    __nvoc_dtor_Notifier(&pCtxdma->__nvoc_base_Notifier);
+    __nvoc_dtor_Notifier((Dynamic *)&pCtxdma->__nvoc_base_Notifier);
 __nvoc_ctor_ContextDma_fail_Notifier:
-    __nvoc_dtor_RmResource(&pCtxdma->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *)&pCtxdma->__nvoc_base_RmResource);
 __nvoc_ctor_ContextDma_fail_RmResource:
 __nvoc_ctor_ContextDma_exit:
     return status;
@@ -581,13 +602,10 @@ __nvoc_objCreate_ContextDma_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_ContextDma(ContextDma **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_ContextDma(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_ContextDma(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_ContextDma((ContextDma **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

@@ -39,6 +39,10 @@ void nvEvo1DisableHdmiInfoFrame(const NVDispEvoRec *pDispEvo,
                                 const NvU32 head,
                                 const NvU8 nvtInfoFrameType);
 
+void nvEvo1DisableAdaptiveSyncSdp(const NVDispEvoRec *pDispEvo,
+                                  const NvU32 head,
+                                  const NVHDMIPKT_TYPE type);
+
 void nvEvo1SendDpInfoFrameSdp(const NVDispEvoRec *pDispEvo,
                               const NvU32 head,
                               const NvEvoInfoFrameTransmitControl transmitCtrl,

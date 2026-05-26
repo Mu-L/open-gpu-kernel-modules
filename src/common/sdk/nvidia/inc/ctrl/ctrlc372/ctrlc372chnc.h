@@ -863,37 +863,6 @@ typedef struct NVC372_CTRL_IS_MODE_POSSIBLE_OR_SETTINGS_PARAMS {
 } NVC372_CTRL_IS_MODE_POSSIBLE_OR_SETTINGS_PARAMS;
 typedef struct NVC372_CTRL_IS_MODE_POSSIBLE_OR_SETTINGS_PARAMS *PNVC372_CTRL_IS_MODE_POSSIBLE_OR_SETTINGS_PARAMS;
 
-#define NVC372_CTRL_CMD_VIDEO_ADAPTIVE_REFRESH_RATE (0xc3720103) /* finn: Evaluated from "(FINN_NVC372_DISPLAY_SW_CHNCTL_INTERFACE_ID << 8) | NVC372_CTRL_CMD_VIDEO_ADAPTIVE_REFRESH_RATE_PARAMS_MESSAGE_ID" */
-
-/*
- * NVC372_CTRL_CMD_VIDEO_ADAPTIVE_REFRESH_RATE
- *
- * This control call is used by clients to inform RM about video adaptive refresh rate enable/disable.
- * Based on the state, RM will enable/disable supported low power features.
- *
- * Inputs:
- *   displayID
- *      displayId of panel on which video adaptive refresh rate is enabled/disabled.
- *
- *   bEnable
- *      NV_TRUE to enable video adaptive refresh rate mode.
- *      NV_FALSE to disable video adaptive refresh rate mode.
- *
- * Outputs:
- *   Possible status values returned are:
- *      NV_OK
- *      NV_ERR_NOT_SUPPORTED
- */
-
-#define NVC372_CTRL_CMD_VIDEO_ADAPTIVE_REFRESH_RATE_PARAMS_MESSAGE_ID (0x3U)
-
-typedef struct NVC372_CTRL_CMD_VIDEO_ADAPTIVE_REFRESH_RATE_PARAMS {
-    NvU32  displayID;
-    NvBool bEnable;
-} NVC372_CTRL_CMD_VIDEO_ADAPTIVE_REFRESH_RATE_PARAMS;
-typedef struct NVC372_CTRL_CMD_VIDEO_ADAPTIVE_REFRESH_RATE_PARAMS *PNVC372_CTRL_CMD_VIDEO_ADAPTIVE_REFRESH_RATE_PARAMS;
-
-
 #define NVC372_CTRL_CMD_GET_ACTIVE_VIEWPORT_POINT_IN (0xc3720104) /* finn: Evaluated from "(FINN_NVC372_DISPLAY_SW_CHNCTL_INTERFACE_ID << 8) | NVC372_CTRL_CMD_GET_ACTIVE_VIEWPORT_POINT_IN_PARAMS_MESSAGE_ID" */
 
 /*

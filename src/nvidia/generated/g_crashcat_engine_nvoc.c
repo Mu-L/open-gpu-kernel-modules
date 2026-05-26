@@ -26,7 +26,7 @@ void __nvoc_init__CrashCatEngine(CrashCatEngine*);
 void __nvoc_init_funcTable_CrashCatEngine(CrashCatEngine*);
 NV_STATUS __nvoc_ctor_CrashCatEngine(CrashCatEngine*);
 void __nvoc_init_dataField_CrashCatEngine(CrashCatEngine*);
-void __nvoc_dtor_CrashCatEngine(CrashCatEngine*);
+void __nvoc_dtor_CrashCatEngine(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__CrashCatEngine;
@@ -57,7 +57,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_CrashCatEngine =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "CrashCatEngine",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) NULL,
+    .objCreatefn =        NULL,
     .pCastInfo =          &__nvoc_castinfo__CrashCatEngine,
     .pExportInfo =        &__nvoc_export_info__CrashCatEngine
 };
@@ -66,7 +66,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_CrashCatEngine =
 // Metadata with per-class RTTI and vtable
 static const struct NVOC_METADATA__CrashCatEngine __nvoc_metadata__CrashCatEngine = {
     .rtti.pClassDef = &__nvoc_class_def_CrashCatEngine,    // (crashcatEngine) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_CrashCatEngine,
+    .rtti.dtor      = &__nvoc_dtor_CrashCatEngine,
     .rtti.offset    = 0,
 
     .vtable.__crashcatEngineUnload__ = &crashcatEngineUnload_IMPL,    // virtual
@@ -100,11 +100,13 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__CrashCatEngine =
 
 // Destruct CrashCatEngine object.
 void __nvoc_crashcatEngineDestruct(CrashCatEngine*);
-void __nvoc_dtor_CrashCatEngine(CrashCatEngine* pThis) {
+void __nvoc_dtor_CrashCatEngine(Dynamic* pThis) {
+
+    CrashCatEngine *__nvoc_this = (CrashCatEngine *) pThis;
 
 // Call destructor.
-    __nvoc_crashcatEngineDestruct(pThis);
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    __nvoc_crashcatEngineDestruct(__nvoc_this);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_CrashCatEngine(CrashCatEngine *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);

@@ -156,7 +156,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_RsShared;
     ((RsShared*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(RsShared)))
 #endif //__nvoc_rs_server_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_RsShared(RsShared**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_RsShared(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_RsShared(RsShared**, Dynamic*, NvU32);
 #define __objCreate_RsShared(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -262,7 +262,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_RsSession;
     ((RsSession*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(RsSession)))
 #endif //__nvoc_rs_server_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_RsSession(RsSession**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_RsSession(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_RsSession(RsSession**, Dynamic*, NvU32);
 #define __objCreate_RsSession(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -600,7 +600,7 @@ NvS32 serverGetShareRefCount(RsServer *pServer, struct RsShared *pShare);
  * @param[in] pServer
  * @param[in] pShare Resource share
  */
-NV_STATUS serverRefShare(RsServer *pServer, struct RsShared *pShare);
+void serverRefShare(RsServer *pServer, struct RsShared *pShare);
 
 /**
  * Decrement the ref-count of a resource share. If the ref-count
@@ -609,7 +609,7 @@ NV_STATUS serverRefShare(RsServer *pServer, struct RsShared *pShare);
  * @param[in] pServer
  * @param[in] pShare Resource share
  */
-NV_STATUS serverFreeShare(RsServer *pServer, struct RsShared *pShare);
+void serverFreeShare(RsServer *pServer, struct RsShared *pShare);
 
 /**
  * Get an iterator to the elements in the server's shared object map

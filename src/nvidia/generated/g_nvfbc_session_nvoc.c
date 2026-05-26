@@ -32,7 +32,7 @@ void __nvoc_init__NvfbcSession(NvfbcSession*);
 void __nvoc_init_funcTable_NvfbcSession(NvfbcSession*);
 NV_STATUS __nvoc_ctor_NvfbcSession(NvfbcSession*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_NvfbcSession(NvfbcSession*);
-void __nvoc_dtor_NvfbcSession(NvfbcSession*);
+void __nvoc_dtor_NvfbcSession(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__NvfbcSession;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_NvfbcSession =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "NvfbcSession",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_NvfbcSession,
+    .objCreatefn =        &__nvoc_objCreateDynamic_NvfbcSession,
     .pCastInfo =          &__nvoc_castinfo__NvfbcSession,
     .pExportInfo =        &__nvoc_export_info__NvfbcSession
 };
@@ -125,6 +125,13 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_NvfbcSession =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010008u)
+static NV_STATUS nvfbcsessionCtrlCmdNvFBCSwSessionUpdateInfo__EXPORT(void *pNvfbcSession, void *pParams) {
+    return nvfbcsessionCtrlCmdNvFBCSwSessionUpdateInfo_IMPL(pNvfbcSession, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010008u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_NvfbcSession[] = 
 {
@@ -132,7 +139,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_NvfbcSes
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &nvfbcsessionCtrlCmdNvFBCSwSessionUpdateInfo_IMPL,
+        /*pFunc=*/      (void (*)(void)) &nvfbcsessionCtrlCmdNvFBCSwSessionUpdateInfo__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
         /*flags=*/      0x10008u,
         /*accessRight=*/0x0u,
@@ -149,7 +156,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_NvfbcSes
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__NvfbcSession __nvoc_metadata__NvfbcSession = {
     .rtti.pClassDef = &__nvoc_class_def_NvfbcSession,    // (nvfbcsession) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_NvfbcSession,
+    .rtti.dtor      = &__nvoc_dtor_NvfbcSession,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -409,16 +416,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__NvfbcSession =
 
 // Destruct NvfbcSession object.
 void __nvoc_nvfbcsessionDestruct(NvfbcSession*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_NvfbcSession(NvfbcSession* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_NvfbcSession(Dynamic* pThis) {
+
+    NvfbcSession *__nvoc_this = (NvfbcSession *) pThis;
 
 // Call destructor.
-    __nvoc_nvfbcsessionDestruct(pThis);
+    __nvoc_nvfbcsessionDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_NvfbcSession(NvfbcSession *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -444,7 +453,7 @@ NV_STATUS __nvoc_ctor_NvfbcSession(NvfbcSession *pNvfbcSession, struct CALL_CONT
 
     // Unwind on error.
 __nvoc_ctor_NvfbcSession_fail__init:
-    __nvoc_dtor_GpuResource(&pNvfbcSession->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pNvfbcSession->__nvoc_base_GpuResource);
 __nvoc_ctor_NvfbcSession_fail_GpuResource:
 __nvoc_ctor_NvfbcSession_exit:
     return status;
@@ -556,13 +565,10 @@ __nvoc_objCreate_NvfbcSession_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_NvfbcSession(NvfbcSession **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_NvfbcSession(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_NvfbcSession(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_NvfbcSession((NvfbcSession **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

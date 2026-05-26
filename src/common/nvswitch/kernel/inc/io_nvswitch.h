@@ -388,9 +388,13 @@ typedef struct
             _physlinknum,                                               \
             #_eng, #_dev, #_reg, NV ## _dev ## _reg)                    \
         ,                                                               \
-        NVSWITCH_GET_ENG(_d, _eng, ,                                    \
-            NVSWITCH_GET_LINK_ENG_INST(_d, _physlinknum, _eng)) +       \
-            NV##_dev##_reg                                              \
+        (NVSWITCH_GET_LINK_ENG_INST(_d, _physlinknum, _eng) ==          \
+            NVSWITCH_ENGINE_INSTANCE_INVALID ?                          \
+            NVSWITCH_ENGINE_INSTANCE_INVALID :                          \
+            NVSWITCH_GET_ENG(_d, _eng, ,                                \
+                NVSWITCH_GET_LINK_ENG_INST(_d, _physlinknum, _eng)) +   \
+                NV##_dev##_reg                                          \
+        )                                                               \
     )
 
 #define NVSWITCH_LINK_WR32(_d, _physlinknum, _eng, _dev, _reg, _data)   \

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -116,14 +116,23 @@ typedef NV208F_CTRL_UCODE_INSTRUMENTATION_STATE_PARAMS NV208F_CTRL_UCODE_INSTRUM
 /*
  * NV208F_CTRL_CMD_UCODE_INSTRUMENTATION_GET_DATA
  *
- * Retrieves instrumentation data of the target ucode
+ * Retrieves instrumentation data of the target ucode in chunks.
+ * Call repeatedly with increasing offset until bComplete is NV_TRUE.
  *
- *   data                  buffer to retrieve data into
- *   ucode                 numeric id of the desired ucode to retrieve data from
- *   gfid                  specifies which partition to send the command to
- *                         (applies to ucode=NV208F_UCODE_FUZZER_GSP_TASK_VGPU only)
- *   offset                offset of internal buffer to copy from
- *   instrumentationType   determines if using SanitizerCoverage or BullseyeCoverage
+ * Inputs:
+ *   ucode                 [in]  Numeric ID of the desired ucode to retrieve data from
+ *   gfid                  [in]  Specifies which partition to send the command to
+ *                               (applies to ucode=NV208F_UCODE_INSTRUMENTATION_GSP_TASK_VGPU only)
+ *   offset                [in]  Byte offset from start of coverage data stream.
+ *                               Pass 0 on first call, then pass cumulative dataSize
+ *                               from previous calls.
+ *   instrumentationType   [in]  Determines if using SanitizerCoverage or BullseyeCoverage
+ *
+ * Outputs:
+ *   data                  [out] Buffer containing retrieved coverage data
+ *   dataSize              [out] Number of bytes written to data[] in this call
+ *   bComplete             [out] NV_TRUE when all data has been retrieved,
+ *                               NV_FALSE if more chunks remain
  *
  * Possible status values returned are
  *   NV_OK
@@ -135,11 +144,13 @@ typedef NV208F_CTRL_UCODE_INSTRUMENTATION_STATE_PARAMS NV208F_CTRL_UCODE_INSTRUM
 #define NV208F_CTRL_UCODE_INSTRUMENTATION_GET_DATA_PARAMS_MESSAGE_ID (0x3U)
 
 typedef struct NV208F_CTRL_UCODE_INSTRUMENTATION_GET_DATA_PARAMS {
-    NvU8  data[NV208F_UCODE_INSTRUMENTATION_RPC_MAX_BYTES_GSPRM];
-    NvU32 ucode;
-    NvU32 gfid;
-    NvU32 offset;
-    NvU32 instrumentationType;
+    NvU32  ucode;
+    NvU32  gfid;
+    NvU32  offset;
+    NvU32  instrumentationType;
+    NvU8   data[NV208F_UCODE_INSTRUMENTATION_RPC_MAX_BYTES_GSPRM];
+    NvU32  dataSize;
+    NvBool bComplete;
 } NV208F_CTRL_UCODE_INSTRUMENTATION_GET_DATA_PARAMS;
 
 /* _ctrl208fucodeinstrumentation_h_ */

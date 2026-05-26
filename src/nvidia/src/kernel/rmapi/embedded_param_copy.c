@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2018-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2018-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -34,7 +34,7 @@
 #include "ctrl/ctrl0080/ctrl0080gr.h"
 #include "ctrl/ctrl0080/ctrl0080gpu.h"
 #include "ctrl/ctrl0080/ctrl0080host.h"
-#include "ctrl/ctrl0080/ctrl0080msenc.h"
+#include "ctrl/ctrl0080/ctrl0080nvenc.h"
 #include "ctrl/ctrl0080/ctrl0080perf.h"
 #include "ctrl/ctrl2080/ctrl2080bus.h"
 #include "ctrl/ctrl2080/ctrl2080ce.h"
@@ -746,6 +746,33 @@ NV_STATUS embeddedParamCopyIn(RMAPI_PARAM_COPY *paramCopies, RmCtrlParams *pRmCt
                             sizeof(NvU32));
             break;
         }
+        case NV2080_CTRL_CMD_GSP_CRYPTO_CONTROL:
+        {
+            CHECK_PARAMS_OR_RETURN(pRmCtrlParams, NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS);
+            RMAPI_PARAM_COPY_INIT(paramCopies[0],
+                            ((NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS*)pParams)->inputMessage,
+                            ((NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS*)pParams)->inputMessage,
+                            ((NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS*)pParams)->inputMessageSize,
+                            sizeof(NvU8));
+            RMAPI_PARAM_COPY_INIT(paramCopies[1],
+                            ((NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS*)pParams)->outputMessage,
+                            ((NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS*)pParams)->outputMessage,
+                            ((NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS*)pParams)->outputMessageSize,
+                            sizeof(NvU8));
+            RMAPI_PARAM_COPY_INIT(paramCopies[2],
+                            ((NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS*)pParams)->key,
+                            ((NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS*)pParams)->key,
+                            ((NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS*)pParams)->keySize,
+                            sizeof(NvU8));
+            RMAPI_PARAM_COPY_INIT(paramCopies[3],
+                            ((NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS*)pParams)->modulus,
+                            ((NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS*)pParams)->modulus,
+                            ((NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS*)pParams)->modulusSize,
+                            sizeof(NvU8));
+            
+            paramsCnt+=3;
+            break;
+        }
 
 
         default:
@@ -1140,6 +1167,32 @@ NV_STATUS embeddedParamCopyOut(RMAPI_PARAM_COPY *paramCopies, RmCtrlParams *pRmC
             CHECK_PARAMS_OR_RETURN(pRmCtrlParams, NV2080_CTRL_GPU_RPC_GSP_TEST_PARAMS);
             status = rmapiParamsRelease(&paramCopies[0]);
             ((NV2080_CTRL_GPU_RPC_GSP_TEST_PARAMS*)pParams)->data = paramCopies[0].pUserParams;
+            break;
+        }
+        case NV2080_CTRL_CMD_GSP_CRYPTO_CONTROL:
+        {
+            CHECK_PARAMS_OR_RETURN(pRmCtrlParams, NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS);
+
+            NV_STATUS tempStatus = rmapiParamsRelease(&paramCopies[0]);
+            if (tempStatus != NV_OK)
+                status = tempStatus;
+            ((NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS*)pParams)->inputMessage = paramCopies[0].pUserParams;
+
+            tempStatus = rmapiParamsRelease(&paramCopies[1]);
+            if (tempStatus != NV_OK)
+                status = tempStatus;
+            ((NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS*)pParams)->outputMessage = paramCopies[1].pUserParams;
+
+            tempStatus = rmapiParamsRelease(&paramCopies[2]);
+            if (tempStatus != NV_OK)
+                status = tempStatus;
+            ((NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS*)pParams)->key = paramCopies[2].pUserParams;
+            
+            tempStatus = rmapiParamsRelease(&paramCopies[3]);
+            if (tempStatus != NV_OK)
+                status = tempStatus;
+            ((NV2080_CTRL_GSP_CRYPTO_CONTROL_PARAMS*)pParams)->modulus = paramCopies[3].pUserParams;
+
             break;
         }
 

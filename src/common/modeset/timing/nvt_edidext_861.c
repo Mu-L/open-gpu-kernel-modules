@@ -36,15 +36,15 @@ PUSH_SEGMENTS
 
 #define EIA_TIMING(hv,hfp,hsw,ht,hsp,vv,vfp,vsw,vt,vsp,rrx1k,ip,aspect,rep,format) \
     {hv,0,hfp,hsw,ht,(hsp)=='-',vv,0,vfp,vsw,vt,(vsp)=='-',(ip)=='i' ? NVT_INTERLACED:NVT_PROGRESSIVE,\
-    0,0,{0,((rrx1k)+500)/1000,rrx1k,((1?aspect)<<16)|(0?aspect),rep,{0},{0},{0},{0},NVT_STATUS_EDID_861STn(format),"CEA-861B:#"#format""}}
+    0,0,0,{0,((rrx1k)+500)/1000,rrx1k,((1?aspect)<<16)|(0?aspect),rep,{0},{0},{0},{0},NVT_STATUS_EDID_861STn(format),"CEA-861B:#"#format""}}
 
 #define NVT_TIMING(hv,hfp,hsw,ht,hsp,vv,vfp,vsw,vt,vsp,rrx1k,ip,aspect,rep,format,name) \
     {hv,0,hfp,hsw,ht,(hsp)=='-',vv,0,vfp,vsw,vt,(vsp)=='-',(ip)=='i' ? NVT_INTERLACED:NVT_PROGRESSIVE,\
-    0,0,{0,((rrx1k)+500)/1000,rrx1k,((1?aspect)<<16)|(0?aspect),rep,{0},{0},{0},{0},NVT_TYPE_NV_PREDEFINEDn(format),name}}
+    0,0,0,{0,((rrx1k)+500)/1000,rrx1k,((1?aspect)<<16)|(0?aspect),rep,{0},{0},{0},{0},NVT_TYPE_NV_PREDEFINEDn(format),name}}
 
 #define HDMI_EXT_TIMING(hv,hfp,hsw,ht,hsp,vv,vfp,vsw,vt,vsp,rrx1k,ip,aspect,rep,format,name) \
     {hv,0,hfp,hsw,ht,(hsp)=='-',vv,0,vfp,vsw,vt,(vsp)=='-',(ip)=='i' ? NVT_INTERLACED:NVT_PROGRESSIVE,\
-    0,0,{0,((rrx1k)+500)/1000,rrx1k,((1?aspect)<<16)|(0?aspect),rep,{0},{0},{0},{0},NVT_STATUS_HDMI_EXTn(format),name}}
+    0,0,0,{0,((rrx1k)+500)/1000,rrx1k,((1?aspect)<<16)|(0?aspect),rep,{0},{0},{0},{0},NVT_STATUS_HDMI_EXTn(format),name}}
 
 #define RID_MODE(hv, hsp, vv, vsp, ip, aspect, rid) \
     {hv, (hsp)=='-', vv, (vsp)=='-',(ip)=='i'? NVT_INTERLACED:NVT_PROGRESSIVE,((1?aspect)<<16)|(0?aspect), rid}
@@ -1128,6 +1128,7 @@ void parseCta861NativeOrPreferredTiming(NVT_EDID_CEA861_INFO *pExt861,
         {
             // Interpret as the video format indicated by the first VFD of the first VFDB with Frame Rates of Rate Index N
             // where N = SVR - 160 (for N = 1 to 15)
+
             kth = svr - 160;
             if (flag == FROM_CTA861_EXTENSION)
             {
@@ -2573,8 +2574,7 @@ NVT_STATUS NvTiming_ConstructVideoInfoframe(NVT_EDID_INFO *pEdidInfo, NVT_VIDEO_
                 pInfoFrame->version = NVT_VIDEO_INFOFRAME_VERSION_4; // just put the logic to get the correct version 4, but it shall not be used at currently stage.
                 pInfoFrame->length  = sizeof(NVT_VIDEO_INFOFRAME) - sizeof(NVT_INFOFRAME_HEADER); // Length == 15
             }
-            else
-            if ((nvt_get_bits(pInfoFrame->byte2, NVT_VIDEO_INFOFRAME_BYTE2_C1C0_MASK, NVT_VIDEO_INFOFRAME_BYTE2_C1C0_SHIFT) == NVT_VIDEO_INFOFRAME_BYTE2_C1C0_EXT_COLORIMETRY) &&
+            else if ((nvt_get_bits(pInfoFrame->byte2, NVT_VIDEO_INFOFRAME_BYTE2_C1C0_MASK, NVT_VIDEO_INFOFRAME_BYTE2_C1C0_SHIFT) == NVT_VIDEO_INFOFRAME_BYTE2_C1C0_EXT_COLORIMETRY) &&
                 //EC2-0 is based on the 7.5.5 at CTA861-G which DCI-P3 bit defined or notat byte4
                 (nvt_get_bits(pInfoFrame->byte3, NVT_VIDEO_INFOFRAME_BYTE3_EC_MASK, NVT_VIDEO_INFOFRAME_BYTE3_EC_SHIFT)     == NVT_VIDEO_INFOFRAME_BYTE3_EC_AdditionalColorExt))
             {

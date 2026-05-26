@@ -156,7 +156,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelVideoEngine;
     ((KernelVideoEngine*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(KernelVideoEngine)))
 #endif //__nvoc_kernel_video_engine_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_KernelVideoEngine(KernelVideoEngine**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelVideoEngine(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelVideoEngine(KernelVideoEngine**, Dynamic*, NvU32, struct OBJGPU *pGpu, ENGDESCRIPTOR physEngDesc);
 #define __objCreate_KernelVideoEngine(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pGpu, physEngDesc) \

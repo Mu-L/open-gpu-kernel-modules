@@ -30,7 +30,7 @@ void __nvoc_init__IoAperture(IoAperture*);
 void __nvoc_init_funcTable_IoAperture(IoAperture*);
 NV_STATUS __nvoc_ctor_IoAperture(IoAperture*, struct IoAperture *pParentAperture, OBJGPU *pGpu, NvU32 deviceIndex, NvU32 deviceInstance, DEVICE_MAPPING *pMapping, NvU32 mappingStartAddr, NvU32 offset, NvU64 length);
 void __nvoc_init_dataField_IoAperture(IoAperture*);
-void __nvoc_dtor_IoAperture(IoAperture*);
+void __nvoc_dtor_IoAperture(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__IoAperture;
@@ -57,7 +57,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_IoAperture =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "IoAperture",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_IoAperture,
+    .objCreatefn =        &__nvoc_objCreateDynamic_IoAperture,
     .pCastInfo =          &__nvoc_castinfo__IoAperture,
     .pExportInfo =        &__nvoc_export_info__IoAperture
 };
@@ -66,7 +66,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_IoAperture =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__IoAperture __nvoc_metadata__IoAperture = {
     .rtti.pClassDef = &__nvoc_class_def_IoAperture,    // (ioaprt) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_IoAperture,
+    .rtti.dtor      = &__nvoc_dtor_IoAperture,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -156,18 +156,20 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__IoAperture =
 
 // Destruct IoAperture object.
 void __nvoc_ioaprtDestruct(IoAperture*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_RegisterAperture(RegisterAperture*);
-void __nvoc_dtor_IoAperture(IoAperture* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_RegisterAperture(Dynamic*);
+void __nvoc_dtor_IoAperture(Dynamic* pThis) {
+
+    IoAperture *__nvoc_this = (IoAperture *) pThis;
 
 // Call destructor.
-    __nvoc_ioaprtDestruct(pThis);
+    __nvoc_ioaprtDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
-    __nvoc_dtor_RegisterAperture(&pThis->__nvoc_base_RegisterAperture);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
+    __nvoc_dtor_RegisterAperture((Dynamic *) &__nvoc_this->__nvoc_base_RegisterAperture);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_IoAperture(IoAperture *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -196,9 +198,9 @@ NV_STATUS __nvoc_ctor_IoAperture(IoAperture *pAperture, struct IoAperture *pPare
 
     // Unwind on error.
 __nvoc_ctor_IoAperture_fail__init:
-    __nvoc_dtor_RegisterAperture(&pAperture->__nvoc_base_RegisterAperture);
+    __nvoc_dtor_RegisterAperture((Dynamic *)&pAperture->__nvoc_base_RegisterAperture);
 __nvoc_ctor_IoAperture_fail_RegisterAperture:
-    __nvoc_dtor_Object(&pAperture->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&pAperture->__nvoc_base_Object);
 __nvoc_ctor_IoAperture_fail_Object:
 __nvoc_ctor_IoAperture_exit:
     return status;
@@ -305,8 +307,7 @@ __nvoc_objCreate_IoAperture_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_IoAperture(IoAperture **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_IoAperture(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct IoAperture *pParentAperture = va_arg(__nvoc_args, struct IoAperture *);
     OBJGPU *pGpu = va_arg(__nvoc_args, OBJGPU *);
     NvU32 deviceIndex = va_arg(__nvoc_args, NvU32);
@@ -316,9 +317,7 @@ NV_STATUS __nvoc_objCreateDynamic_IoAperture(IoAperture **__nvoc_ppThis, Dynamic
     NvU32 offset = va_arg(__nvoc_args, NvU32);
     NvU64 length = va_arg(__nvoc_args, NvU64);
 
-    __nvoc_status = __nvoc_objCreate_IoAperture(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pParentAperture, pGpu, deviceIndex, deviceInstance, pMapping, mappingStartAddr, offset, length);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_IoAperture((IoAperture **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pParentAperture, pGpu, deviceIndex, deviceInstance, pMapping, mappingStartAddr, offset, length);
 }
 
 
@@ -337,7 +336,7 @@ void __nvoc_init__SwBcAperture(SwBcAperture*);
 void __nvoc_init_funcTable_SwBcAperture(SwBcAperture*);
 NV_STATUS __nvoc_ctor_SwBcAperture(SwBcAperture*, struct IoAperture *pApertures, NvU32 numApertures);
 void __nvoc_init_dataField_SwBcAperture(SwBcAperture*);
-void __nvoc_dtor_SwBcAperture(SwBcAperture*);
+void __nvoc_dtor_SwBcAperture(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__SwBcAperture;
@@ -364,7 +363,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_SwBcAperture =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "SwBcAperture",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_SwBcAperture,
+    .objCreatefn =        &__nvoc_objCreateDynamic_SwBcAperture,
     .pCastInfo =          &__nvoc_castinfo__SwBcAperture,
     .pExportInfo =        &__nvoc_export_info__SwBcAperture
 };
@@ -373,7 +372,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_SwBcAperture =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__SwBcAperture __nvoc_metadata__SwBcAperture = {
     .rtti.pClassDef = &__nvoc_class_def_SwBcAperture,    // (swbcaprt) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_SwBcAperture,
+    .rtti.dtor      = &__nvoc_dtor_SwBcAperture,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -462,15 +461,17 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__SwBcAperture =
 
 
 // Destruct SwBcAperture object.
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_RegisterAperture(RegisterAperture*);
-void __nvoc_dtor_SwBcAperture(SwBcAperture* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_RegisterAperture(Dynamic*);
+void __nvoc_dtor_SwBcAperture(Dynamic* pThis) {
+
+    SwBcAperture *__nvoc_this = (SwBcAperture *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
-    __nvoc_dtor_RegisterAperture(&pThis->__nvoc_base_RegisterAperture);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
+    __nvoc_dtor_RegisterAperture((Dynamic *) &__nvoc_this->__nvoc_base_RegisterAperture);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_SwBcAperture(SwBcAperture *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -499,9 +500,9 @@ NV_STATUS __nvoc_ctor_SwBcAperture(SwBcAperture *pAperture, struct IoAperture *p
 
     // Unwind on error.
 __nvoc_ctor_SwBcAperture_fail__init:
-    __nvoc_dtor_RegisterAperture(&pAperture->__nvoc_base_RegisterAperture);
+    __nvoc_dtor_RegisterAperture((Dynamic *)&pAperture->__nvoc_base_RegisterAperture);
 __nvoc_ctor_SwBcAperture_fail_RegisterAperture:
-    __nvoc_dtor_Object(&pAperture->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&pAperture->__nvoc_base_Object);
 __nvoc_ctor_SwBcAperture_fail_Object:
 __nvoc_ctor_SwBcAperture_exit:
     return status;
@@ -608,13 +609,10 @@ __nvoc_objCreate_SwBcAperture_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_SwBcAperture(SwBcAperture **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_SwBcAperture(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct IoAperture *pApertures = va_arg(__nvoc_args, struct IoAperture *);
     NvU32 numApertures = va_arg(__nvoc_args, NvU32);
 
-    __nvoc_status = __nvoc_objCreate_SwBcAperture(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pApertures, numApertures);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_SwBcAperture((SwBcAperture **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pApertures, numApertures);
 }
 

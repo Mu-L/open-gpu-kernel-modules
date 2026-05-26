@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1999-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1999-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -922,17 +922,6 @@ osInitNvMapping(
     NV_PRINTF(LEVEL_INFO,
               "NV fb using linear address  : 0x%p\n", pGpu->registerAccess.gpuFbAddr);
 
-    pGpu->setProperty(pGpu, PDB_PROP_GPU_ALTERNATE_TREE_HANDLE_LOCKLESS, NV_TRUE);
-
-    if (osReadRegistryDword(pGpu,
-                NV_REG_PROCESS_NONSTALL_INTR_IN_LOCKLESS_ISR, &data) == NV_OK)
-    {
-        if (data == NV_REG_PROCESS_NONSTALL_INTR_IN_LOCKLESS_ISR_DISABLE)
-        {
-            pGpu->setProperty(pGpu, PDB_PROP_GPU_ALTERNATE_TREE_HANDLE_LOCKLESS, NV_FALSE);
-        }
-    }
-
     if (!os_is_vgx_hyper())
     {
         pGpu->setProperty(pGpu, PDB_PROP_GPU_ALLOW_PAGE_RETIREMENT, NV_TRUE);
@@ -1044,48 +1033,6 @@ RmInitNvHal(
     return NV_OK;
 }
 
-#define NV_DBG_PRINT_VGA_STATUS(nv, src)    \
-    NV_DEV_PRINTF(NV_DBG_SETUP, nv, "%s reports GPU is %s VGA\n", \
-              src, NV_PRIMARY_VGA(nv) ? "primary" : "not primary");
-
-static void
-RmAssignPrimaryVga(
-    nv_state_t *nv,
-    OBJGPU     *pGpu
-)
-{
-    if (pGpu->getProperty(pGpu, PDB_PROP_GPU_TEGRA_SOC_NVDISPLAY))
-    {
-        return;
-    }
-
-    //
-    // Check with the OS for the primary VGA status of the adapter. If it knows
-    // definitively (nv_set_primary_vga_status() returns NV_OK), then we should
-    // use that value.
-    //
-    // Otherwise, check the I/O access and VGA decoding along the path from the
-    // adapter to the root. We expect that the primary VGA will be the only
-    // non-3D controller with these properties enabled along the entire path.
-    //
-    if (nv_set_primary_vga_status(nv) != NV_OK)
-    {
-        KernelBif *pKernelBif = GPU_GET_KERNEL_BIF(pGpu);
-        OBJSYS    *pSys       = SYS_GET_INSTANCE();
-        OBJCL     *pCl        = SYS_GET_CL(pSys);
-
-        nv->primary_vga = (kbifIsPciIoAccessEnabled_HAL(pGpu, pKernelBif) &&
-                           !kbifIs3dController_HAL(pGpu, pKernelBif) && (pCl != NULL) &&
-                           clUpstreamVgaDecodeEnabled(pGpu, pCl));
-
-        NV_DBG_PRINT_VGA_STATUS(nv, "PCI config space");
-    }
-    else
-    {
-        NV_DBG_PRINT_VGA_STATUS(nv, "OS");
-    }
-}
-
 static void
 RmDeterminePrimaryDevice(OBJGPU *pGpu)
 {
@@ -1096,8 +1043,6 @@ RmDeterminePrimaryDevice(OBJGPU *pGpu)
     {
         return;
     }
-
-    nv->primary_vga = NV_FALSE;
 
     //
     // In case of Passthru, GPU will always be secondary
@@ -1115,19 +1060,11 @@ RmDeterminePrimaryDevice(OBJGPU *pGpu)
         return;
     }
 
-    RmAssignPrimaryVga(nv, pGpu);
-
-    NV_DEV_PRINTF(NV_DBG_SETUP, nv, " is %s VGA\n",
-              !!nv->primary_vga ? "primary" : "not primary");
-
     //
     // If GPU is driving any frame buffer console(vesafb, efifb etc)
     // mark the console as client driven and GPU as Primary.
     //
     nv->client_managed_console = rm_get_uefi_console_status(nv);
-
-    NV_DEV_PRINTF(NV_DBG_SETUP, nv, " is %s UEFI console device\n",
-              nv->client_managed_console ? "primary" : "not primary");
 
     pGpu->setProperty(pGpu, PDB_PROP_GPU_PRIMARY_DEVICE,
                       (nv->client_managed_console || !!nv->primary_vga));
@@ -1158,10 +1095,10 @@ RmSetConsolePreservationParams(OBJGPU *pGpu)
     // the console memory is not mapped onto the BAR. The kernel can directly
     // access the console memory, while the GPU accesses system carveout memory
     // through the SMMU.
-    // The carveout is a reserved region of system memory that doesn’t get used
+    // The carveout is a reserved region of system memory that doesn't get used
     // in standard memory allocation.
     //
-    // In this scenario, you don’t need to reserve console memory or BAR mapping.
+    // In this scenario, you don't need to reserve console memory or BAR mapping.
     //
     if (NV_HAS_CONSOLE_IN_SYSMEM_CARVEOUT(nv))
     {
@@ -1417,11 +1354,6 @@ initCoreLogic(
     OBJSYS *pSys = SYS_GET_INSTANCE();
     OBJCL *pCl = SYS_GET_CL(pSys);
 
-#if defined(NVCPU_X86_64)
-    if (!os_pat_supported())
-        pSys->setProperty(pSys, PDB_PROP_SYS_PAT_UNSUPPORTED, NV_TRUE);
-#endif
-
     return clInit(pGpu, pCl);
 }
 
@@ -1663,12 +1595,8 @@ NvBool RmInitPrivateState(
     nv_set_dma_address_size(pNv, dmaAddrWidth);
 
     pNv->is_tegra_pci_igpu = !NV_IS_SOC_DISPLAY_DEVICE(pNv) && pGpuArch->bGpuArchIsZeroFb;
-
     //  Only certain Tegra PCI iGPUs support Rail-Gating
     pNv->supports_tegra_igpu_rg = pNv->is_tegra_pci_igpu && pGpuArch->bGpuarchSupportsIgpuRg;
-
-    // This offset is only used by the Tegra PCI iGPUs which register devfreq devices
-    pNv->gpc_fuse_status_offset = gpuarchGetGpcFuseStatusOffset(pGpuArch);
 
     pNv->sysmem_mapped_console = pGpuArch->bGpuArchIsZeroFb;
 
@@ -1954,7 +1882,8 @@ static NV_STATUS RmFetchGspRmImages
     nv_state_t    *nv,
     GSP_FIRMWARE  *pGspFw,
     const void   **gspFwHandle,
-    const void   **gspFwLogHandle
+    const void   **gspFwLogHandle,
+    const void   **gspUcodesHandle
 )
 {
     nv_firmware_chip_family_t chipFamily;
@@ -1971,13 +1900,35 @@ static NV_STATUS RmFetchGspRmImages
                                    chipFamily,
                                    &pGspFw->pBuf,
                                    &pGspFw->size);
-    if (*gspFwHandle == NULL &&
-        !nv->allow_fallback_to_monolithic_rm)
+
+    NvBool bFirmwareLoadSuccessful = *gspFwHandle != NULL;
+
+    //
+    // GR-3428 development: Temporarily gated by regkey so this code can be
+    // decoupled from the build infra changes to package up ucodes.bin.
+    //
+    // Because loading the bindata ends up calling request_firmware() on Linux,
+    // and that function will always print an error to dmesg if the requested
+    // file is not found, we use this to skip trying to load it.
+    //
+    // Check will be removed once ucodes.bin becomes part of the driver package.
+    //
+    NvU32 data = 0;
+    if ((osReadRegistryDword(NULL, "GR3428ReadUcodesBin", &data) == NV_OK) && data)
+    {
+        *gspUcodesHandle = nv_get_firmware(nv, NV_FIRMWARE_TYPE_UCODES,
+                                           chipFamily,
+                                           &pGspFw->pUcodesBin,
+                                           &pGspFw->ucodesBinSize);
+        bFirmwareLoadSuccessful &= *gspUcodesHandle != NULL;
+    }
+
+    if (!bFirmwareLoadSuccessful && !nv->allow_fallback_to_monolithic_rm)
     {
         NV_PRINTF(LEVEL_ERROR, "No firmware image found\n");
         return NV_ERR_NOT_SUPPORTED;
     }
-    else if (*gspFwHandle != NULL)
+    else if (bFirmwareLoadSuccessful)
     {
 #if LIBOS_LOG_DECODE_ENABLE
         if (nv->enable_firmware_logs)
@@ -2009,10 +1960,9 @@ static void _checkP2pChipsetSupport(
     OBJSYS *pSys = SYS_GET_INSTANCE();
     OBJCL  *pCl  = SYS_GET_CL(pSys);
 
-    // Grace and Ampere Computing chipsets are incapable of PCIe P2P
-    if ((pCl->Chipset == CS_NVIDIA_TH500) ||
-        (pCl->Chipset == CS_AMPERE_ALTRA) ||
-        (pCl->Chipset == CS_AMPERE_AMPEREONE160))
+    // Check for PCIe P2P chipset support
+    if (!pCl->bPciePeerWriteCapable ||
+        !pCl->bPciePeerReadCapable)
     {
         nv->flags |= NV_FLAG_PCI_P2P_UNSUPPORTED_CHIPSET;
     }
@@ -2032,6 +1982,7 @@ NvBool RmInitAdapter(
     KernelDisplay  *pKernelDisplay;
     const void     *gspFwHandle = NULL;
     const void     *gspFwLogHandle = NULL;
+    const void     *gspUcodesHandle = NULL;
 
     GSP_FIRMWARE    gspFw = {0};
     PORT_UNREFERENCED_VARIABLE(gspFw);
@@ -2068,7 +2019,7 @@ NvBool RmInitAdapter(
     {
         if (!NV_IS_SOC_DISPLAY_DEVICE(nv))
         {
-            status.rmStatus = RmFetchGspRmImages(nv, &gspFw, &gspFwHandle, &gspFwLogHandle);
+            status.rmStatus = RmFetchGspRmImages(nv, &gspFw, &gspFwHandle, &gspFwLogHandle, &gspUcodesHandle);
             if (status.rmStatus != NV_OK)
             {
                 RM_SET_ERROR(status, RM_INIT_FIRMWARE_FETCH_FAILED);
@@ -2420,6 +2371,7 @@ NvBool RmInitAdapter(
 done:
     nv_put_firmware(gspFwHandle);
     nv_put_firmware(gspFwLogHandle);
+    nv_put_firmware(gspUcodesHandle);
 
     gpumgrSetCurrentGpuInstance(NV_U32_MAX);
 

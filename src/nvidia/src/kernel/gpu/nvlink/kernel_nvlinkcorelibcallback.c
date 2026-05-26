@@ -1520,6 +1520,7 @@ knvlinkCoreAliTrainingCallback
     OBJGPU          *pGpu        = pNvlinkLink->pGpu;
     KernelNvlink   * pKernelNvlink     = NULL;
     NV_STATUS        status;
+    NVLINK_BIT_VECTOR linkMaskVec;
 
     if (pGpu == NULL)
     {
@@ -1539,7 +1540,9 @@ knvlinkCoreAliTrainingCallback
         goto knvlinkCoreAliTrainingCallback_end;
     }
 
-    status = knvlinkTrainLinksToActiveAli(pGpu, pKernelNvlink, NVBIT(pNvlinkLink->linkId), NV_FALSE);
+    bitVectorClrAll(&linkMaskVec);
+    bitVectorSet(&linkMaskVec, pNvlinkLink->linkId);
+    status = knvlinkTrainLinksToActiveAli(pGpu, pKernelNvlink, &linkMaskVec, NV_FALSE);
 
 knvlinkCoreAliTrainingCallback_end:
     if (status != NV_OK)

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2015-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2015-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -56,6 +56,7 @@
 #define NV_VGPU_SHARED_MEMORY_STATUS_VALID               0x00000001 /* RW--V */
 #define NV_VGPU_SHARED_MEMORY_SIZE                              5:4 /* RWIVF */
 #define NV_VGPU_SHARED_MEMORY_SIZE_4KB                   0x00000000 /* RW--V */
+#define NV_VGPU_SHARED_MEMORY_SIZE_8KB                   0x00000001 /* RW--V */
 #define NV_VGPU_SHARED_MEMORY_ADDR_LO                         31:12 /* RWIVF */
 
 #define NV_VGPU_SHARED_MEMORY_HI_ADDR                          19:0 /* RWIVF */
@@ -206,6 +207,7 @@ ct_assert(VGPU_EVENT_BUF_ENTRY_SIZE == (NV_VGPU_EV__SIZE_1 * sizeof (NvU32)));
 #define VGPU_GSP_BUF_ADDR_V2_SIZE_4K                                  0x00000000
 #define VGPU_GSP_BUF_ADDR_V2_SIZE_128K                                0x00000001
 #define VGPU_GSP_BUF_ADDR_V2_SIZE_2M                                  0x00000002
+#define VGPU_GSP_BUF_ADDR_V2_SIZE_8K                                  0x00000003
 #define VGPU_GSP_BUF_ADDR_V1_PFN                                           63:12
 
 #define VGPU_GSP_CTRL_BUF_V1_VERSION                                           1
@@ -340,10 +342,12 @@ typedef struct {
     NvU64   nodePfns[MAX_PFNS_PER_4K_PAGE - 1];
 } VGPU_GSP_SYSMEM_BITMAP_ROOT_NODE;
 
-#define NV_VGPU_DEBUG_BUFF_DRIVER_SIZE                                        0x7FF
+#define NV_VGPU_DEBUG_BUFF_DRIVER_SIZE                                       0x2000
 #define NV_VGPU_GSP_CAPS_DEBUG_BUFF_SUPPORTED                                   0:0
 #define NV_VGPU_GSP_CAPS_DEBUG_BUFF_SUPPORTED_TRUE                       0x00000001
 #define NV_VGPU_GSP_CAPS_DEBUG_BUFF_SUPPORTED_FALSE                      0x00000000
+
+#define VGPU_SHARED_MEMORY_BUFFER_SIZE_8K                               (8 * 1024)  // TDR debug buffer - 8 KB
 
 ct_assert(sizeof(VGPU_GSP_SYSMEM_BITMAP_ROOT_NODE) == 0x1000);
 #endif // __vgpu_dev_nv_vgpu_h__

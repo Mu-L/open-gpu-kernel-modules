@@ -873,7 +873,7 @@ void uvm_user_channel_destroy_detached(uvm_user_channel_t *user_channel)
 
     check_dead(user_channel);
 
-    // On Volta+ GPUs, clearing non-replayable faults requires pushing the
+    // Clearing non-replayable faults requires pushing the
     // channel id into a method. The bottom half fault handler adds all such
     // methods to a per-user_channel clear_faulted_tracker. We need to wait for
     // this tracker before calling nvUvmInterfaceReleaseChannel, since that

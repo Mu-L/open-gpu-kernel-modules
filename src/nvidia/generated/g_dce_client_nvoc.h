@@ -154,7 +154,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJDCECLIENTRM;
 #define PDB_PROP_DCECLIENT_IS_MISSING_BASE_NAME PDB_PROP_ENGSTATE_IS_MISSING
 
 
-NV_STATUS __nvoc_objCreateDynamic_OBJDCECLIENTRM(OBJDCECLIENTRM**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJDCECLIENTRM(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJDCECLIENTRM(OBJDCECLIENTRM**, Dynamic*, NvU32);
 #define __objCreate_OBJDCECLIENTRM(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

@@ -294,6 +294,7 @@ namespace DisplayPort
         virtual bool freeDisplayId(NvU32 displayId) = 0;
         virtual bool queryGPUCapability() {return false;}
         virtual bool isAvoidHBR3WAREnabled() = 0;
+        virtual bool isPollingEnabledForDpMstDetection() = 0;
         virtual bool queryAndUpdateDfpParams() = 0;
         virtual void updateFallbackMap(NvU32 maxLaneCount, LinkRate maxLinkRate, NvU32 sinkUhbrCaps = 0) { return; }
         virtual bool isConnectorUSBTypeC() { return false; }

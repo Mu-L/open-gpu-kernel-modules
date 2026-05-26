@@ -26,7 +26,7 @@ void __nvoc_init__RmResourceCommon(RmResourceCommon*);
 void __nvoc_init_funcTable_RmResourceCommon(RmResourceCommon*);
 NV_STATUS __nvoc_ctor_RmResourceCommon(RmResourceCommon*);
 void __nvoc_init_dataField_RmResourceCommon(RmResourceCommon*);
-void __nvoc_dtor_RmResourceCommon(RmResourceCommon*);
+void __nvoc_dtor_RmResourceCommon(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__RmResourceCommon;
@@ -46,7 +46,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RmResourceCommon =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "RmResourceCommon",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) NULL,
+    .objCreatefn =        NULL,
     .pCastInfo =          &__nvoc_castinfo__RmResourceCommon,
     .pExportInfo =        &__nvoc_export_info__RmResourceCommon
 };
@@ -55,7 +55,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RmResourceCommon =
 // Metadata with per-class RTTI
 static const struct NVOC_METADATA__RmResourceCommon __nvoc_metadata__RmResourceCommon = {
     .rtti.pClassDef = &__nvoc_class_def_RmResourceCommon,    // (rmrescmn) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_RmResourceCommon,
+    .rtti.dtor      = &__nvoc_dtor_RmResourceCommon,
     .rtti.offset    = 0,
 };
 
@@ -76,8 +76,10 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__RmResourceCommon =
 
 
 // Destruct RmResourceCommon object.
-void __nvoc_dtor_RmResourceCommon(RmResourceCommon* pThis) {
-    PORT_UNREFERENCED_VARIABLE(pThis);
+void __nvoc_dtor_RmResourceCommon(Dynamic* pThis) {
+
+    RmResourceCommon *__nvoc_this = (RmResourceCommon *) pThis;
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_RmResourceCommon(RmResourceCommon *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -143,7 +145,7 @@ void __nvoc_init__RmResource(RmResource*);
 void __nvoc_init_funcTable_RmResource(RmResource*);
 NV_STATUS __nvoc_ctor_RmResource(RmResource*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_RmResource(RmResource*);
-void __nvoc_dtor_RmResource(RmResource*);
+void __nvoc_dtor_RmResource(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__RmResource;
@@ -180,7 +182,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RmResource =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "RmResource",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_RmResource,
+    .objCreatefn =        &__nvoc_objCreateDynamic_RmResource,
     .pCastInfo =          &__nvoc_castinfo__RmResource,
     .pExportInfo =        &__nvoc_export_info__RmResource
 };
@@ -189,7 +191,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RmResource =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__RmResource __nvoc_metadata__RmResource = {
     .rtti.pClassDef = &__nvoc_class_def_RmResource,    // (rmres) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_RmResource,
+    .rtti.dtor      = &__nvoc_dtor_RmResource,
     .rtti.offset    = 0,
     .metadata__RsResource.rtti.pClassDef = &__nvoc_class_def_RsResource,    // (res) super
     .metadata__RsResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -358,15 +360,17 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__RmResource =
 
 
 // Destruct RmResource object.
-void __nvoc_dtor_RsResource(RsResource*);
-void __nvoc_dtor_RmResourceCommon(RmResourceCommon*);
-void __nvoc_dtor_RmResource(RmResource* pThis) {
+void __nvoc_dtor_RsResource(Dynamic*);
+void __nvoc_dtor_RmResourceCommon(Dynamic*);
+void __nvoc_dtor_RmResource(Dynamic* pThis) {
+
+    RmResource *__nvoc_this = (RmResource *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RsResource(&pThis->__nvoc_base_RsResource);
-    __nvoc_dtor_RmResourceCommon(&pThis->__nvoc_base_RmResourceCommon);
+    __nvoc_dtor_RsResource((Dynamic *) &__nvoc_this->__nvoc_base_RsResource);
+    __nvoc_dtor_RmResourceCommon((Dynamic *) &__nvoc_this->__nvoc_base_RmResourceCommon);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_RmResource(RmResource *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -395,9 +399,9 @@ NV_STATUS __nvoc_ctor_RmResource(RmResource *pResource, struct CALL_CONTEXT *pCa
 
     // Unwind on error.
 __nvoc_ctor_RmResource_fail__init:
-    __nvoc_dtor_RmResourceCommon(&pResource->__nvoc_base_RmResourceCommon);
+    __nvoc_dtor_RmResourceCommon((Dynamic *)&pResource->__nvoc_base_RmResourceCommon);
 __nvoc_ctor_RmResource_fail_RmResourceCommon:
-    __nvoc_dtor_RsResource(&pResource->__nvoc_base_RsResource);
+    __nvoc_dtor_RsResource((Dynamic *)&pResource->__nvoc_base_RsResource);
 __nvoc_ctor_RmResource_fail_RsResource:
 __nvoc_ctor_RmResource_exit:
     return status;
@@ -506,13 +510,10 @@ __nvoc_objCreate_RmResource_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_RmResource(RmResource **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_RmResource(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_RmResource(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_RmResource((RmResource **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

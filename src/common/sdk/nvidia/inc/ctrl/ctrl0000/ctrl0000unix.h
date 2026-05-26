@@ -30,6 +30,7 @@
 // Source file:      ctrl/ctrl0000/ctrl0000unix.finn
 //
 
+#include "ctrl0000gpu.h"
 #include "ctrl/ctrl0000/ctrl0000base.h"
 
 #include "ctrl/ctrlxxxx.h"
@@ -435,5 +436,33 @@ typedef struct NV0000_CTRL_OS_UNIX_IMPORT_OBJECTS_FROM_FD_PARAMS {
     NvU16    numObjects;                                                           /* IN  */
     NvU16    index;                                                                /* IN  */
 } NV0000_CTRL_OS_UNIX_IMPORT_OBJECTS_FROM_FD_PARAMS;
+
+#define NV0000_CTRL_OS_UNIX_MEMACCT_SET_LIMITS_PARAMS_MESSAGE_ID (0xDU)
+
+typedef struct NV0000_CTRL_OS_UNIX_MEMACCT_SET_LIMITS_PARAMS {
+    NvS32 cgroupFd;
+    NvU32 gpuId;
+    NV_DECLARE_ALIGNED(NvU64 softLimit, 8);
+    NV_DECLARE_ALIGNED(NvU64 hardLimit, 8);
+} NV0000_CTRL_OS_UNIX_MEMACCT_SET_LIMITS_PARAMS;
+
+#define NV0000_CTRL_OS_UNIX_CMD_MEMACCT_SET_LIMITS (0x3d0d) /* finn: Evaluated from "(FINN_NV01_ROOT_OS_UNIX_INTERFACE_ID << 8) | NV0000_CTRL_OS_UNIX_MEMACCT_SET_LIMITS_PARAMS_MESSAGE_ID" */
+
+typedef struct NV0000_CTRL_OS_UNIX_MEMACCT_LIMITS {
+    NvU32 gpuId;
+    NV_DECLARE_ALIGNED(NvU64 soft, 8);
+    NV_DECLARE_ALIGNED(NvU64 hard, 8);
+    NV_DECLARE_ALIGNED(NvU64 current, 8);
+} NV0000_CTRL_OS_UNIX_MEMACCT_LIMITS;
+
+#define NV0000_CTRL_OS_UNIX_MEMACCT_GET_LIMITS_PARAMS_MESSAGE_ID (0xEU)
+
+typedef struct NV0000_CTRL_OS_UNIX_MEMACCT_GET_LIMITS_PARAMS {
+    NvS32 cgroupFd;
+    NvU32 count;
+    NV_DECLARE_ALIGNED(NV0000_CTRL_OS_UNIX_MEMACCT_LIMITS limits[NV0000_CTRL_GPU_MAX_ATTACHED_GPUS], 8);
+} NV0000_CTRL_OS_UNIX_MEMACCT_GET_LIMITS_PARAMS;
+
+#define NV0000_CTRL_OS_UNIX_CMD_MEMACCT_GET_LIMITS (0x3d0e) /* finn: Evaluated from "(FINN_NV01_ROOT_OS_UNIX_INTERFACE_ID << 8) | NV0000_CTRL_OS_UNIX_MEMACCT_GET_LIMITS_PARAMS_MESSAGE_ID" */
 
 /* _ctrl0000unix_h_ */

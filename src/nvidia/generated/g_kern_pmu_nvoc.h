@@ -60,7 +60,7 @@ extern "C" {
 #define PMU_LOG_BUFFER_MAX_SIZE 0x1000
 
 // This value is used in both Physical-RM and Kernel-RM
-#define PMU_RESERVED_MEMORY_SURFACES_SIZE 0x1000000
+#define PMU_RESERVED_MEMORY_SURFACES_SIZE 0x1040000
 
 /*!
  * Alignment to use for reserved memory region
@@ -170,7 +170,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelPmu;
 #define PDB_PROP_KPMU_IS_MISSING_BASE_NAME PDB_PROP_ENGSTATE_IS_MISSING
 
 
-NV_STATUS __nvoc_objCreateDynamic_KernelPmu(KernelPmu**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelPmu(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelPmu(KernelPmu**, Dynamic*, NvU32);
 #define __objCreate_KernelPmu(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

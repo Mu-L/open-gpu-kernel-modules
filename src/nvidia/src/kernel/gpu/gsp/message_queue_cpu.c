@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2019-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -46,6 +46,8 @@
 #undef RPC_MESSAGE_STRUCTURES
 #undef RPC_MESSAGE_GENERIC_UNION
 
+#include "mctp_format.h"
+#include "nvdm_format.h"
 #include "gpu/gsp/message_queue.h"
 #include "gpu/gsp/message_queue_priv.h"
 #include "msgq/msgq_priv.h"
@@ -70,7 +72,19 @@ _getMsgQueueParams
     const NvLength defaultStatusQueueSize  = 0x40000; // 256 KB
     NvU32 regStatusQueueSize;
 
-    pRmQueueInfo->queueElementHdrSize = NV_OFFSETOF(GSP_MSG_QUEUE_ELEMENT, rpc);
+    //
+    // NOTE: We know if CC is enabled here because ConfidentialCompute engine
+    // is marked as bConstructEarly in gpu_child_list.h, while KernelGsp is not.
+    // We end up here in kgspConstructEngine, which happens after CC enablement.
+    //
+    pRmQueueInfo->bEncryptionEnabled = gpuIsCCFeatureEnabled(pGpu);
+
+    pRmQueueInfo->queueElementHdrSize = NV_OFFSETOF(GSP_MSG_QUEUE_ELEMENT, payload);
+    if (pRmQueueInfo->bEncryptionEnabled)
+    {
+        pRmQueueInfo->queueElementHdrSize += sizeof(GSP_MSG_QUEUE_ENCRYPTION_TAG);
+    }
+
     pRmQueueInfo->queueElementSizeMin = RM_PAGE_SIZE;
     pRmQueueInfo->queueElementSizeMax = RM_PAGE_SIZE * 16;
     pRmQueueInfo->queueHeaderAlign    = 4;
@@ -171,7 +185,7 @@ _gspMsgQueueInit
         goto error_ret;
     }
 
-    pMQI->pRpcMsgBuf   = &pMQI->pCmdQueueElement->rpc;
+    pMQI->pRpcMsgBuf = gspMsgQueueGetRpcMessageHeader(pMQI, pMQI->pCmdQueueElement);
 
     NV_PRINTF(LEVEL_INFO, "Created command queue.\n");
     return nvStatus;
@@ -228,7 +242,10 @@ GspMsgQueuesInit
                     pRmQueueInfo->commandQueueSize +
                     pRmQueueInfo->statusQueueSize;
 
-    flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    if (confComputeForceUnprotAlloc(pGpu))
+    {
+        flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    }
 
     //
     // For now, put all shared queue memory in one block.
@@ -237,7 +254,7 @@ GspMsgQueuesInit
         memdescCreate(&pMQCollection->pSharedMemDesc, pGpu, sharedBufSize,
             RM_PAGE_SIZE, NV_MEMORY_NONCONTIGUOUS, ADDR_SYSMEM, NV_MEMORY_CACHED,
             flags),
-        error_ret);
+        done);
 
     memdescSetFlag(pMQCollection->pSharedMemDesc, MEMDESC_FLAGS_KERNEL_MODE, NV_TRUE);
 
@@ -468,13 +485,13 @@ NV_STATUS GspMsgQueueSendCommand(MESSAGE_QUEUE_INFO *pMQI, OBJGPU *pGpu)
     RMTIMEOUT  timeout;
     NV_STATUS  nvStatus         = NV_OK;
     NvU32      msgLen           = pMQI->queueElementHdrSize +
-                                  pMQI->pCmdQueueElement->rpc.length;
+                                  gspMsgQueueGetRpcMessageLength(pMQI, pCQE);
+    NvU32      nElements;
 
-    if ((msgLen < sizeof(GSP_MSG_QUEUE_ELEMENT)) ||
+    if ((msgLen < pMQI->queueElementHdrSize) ||
         (msgLen > pMQI->queueElementSizeMax))
     {
-        NV_PRINTF(LEVEL_ERROR, "Incorrect message length %u\n",
-            pMQI->pCmdQueueElement->rpc.length);
+        NV_PRINTF(LEVEL_ERROR, "Incorrect message length %u\n", msgLen);
         nvStatus = NV_ERR_INVALID_PARAM_STRUCT;
         goto done;
     }
@@ -483,25 +500,29 @@ NV_STATUS GspMsgQueueSendCommand(MESSAGE_QUEUE_INFO *pMQI, OBJGPU *pGpu)
     if ((msgLen & 7) != 0)
         portMemSet(pSrc + msgLen, 0, 8 - (msgLen & 7));
 
+    nElements = gspMsgQueueBytesToElements(msgLen, pMQI->queueElementSizeMin);
+
+    pCQE->mctpHeader = mctpCreateTransportHeader(
+        1,                    // SOM = 1 (start of message)
+        1,                    // EOM = 1 (assume single packet, large RPC handled in vgpu/rpc.c "CONTINUATION_RECORD")
+        0,                    // SEID = 0 (unused)
+        0,                    // DEID = 0 (unused)
+        0                     // SEQ = 0 (unused)
+    );
+    pCQE->nvdmHeader = mctpCreateNvdmHeader(NVDM_TYPE_RM_RPC);
+
     pCQE->seqNum    = pMQI->txSeqNum;
-    pCQE->elemCount = gspMsgQueueBytesToElements(msgLen, pMQI->queueElementSizeMin);
     pCQE->checkSum  = 0; // The checkSum field is included in the checksum calculation, so zero it.
 
-    if (gpuIsCCFeatureEnabled(pGpu))
+    if (pMQI->bEncryptionEnabled)
     {
         ConfidentialCompute *pCC = GPU_GET_CONF_COMPUTE(pGpu);
-
-        // Use sequence number as AAD.
-        portMemCopy((NvU8*)pCQE->aadBuffer, sizeof(pCQE->aadBuffer), (NvU8 *)&pCQE->seqNum, sizeof(pCQE->seqNum));
+        GSP_MSG_QUEUE_ENCRYPTION_TAG *pCcTag = gspMsgQueueGetEncryptionTag(pCQE);
 
         // We need to encrypt the full queue elements to obscure the data.
-        nvStatus = ccslEncryptWithRotationChecks(pCC->pRpcCcslCtx,
-                               (pCQE->elemCount * pMQI->queueElementSizeMin) - pMQI->queueElementHdrSize,
-                               pSrc + pMQI->queueElementHdrSize,
-                               (NvU8*)pCQE->aadBuffer,
-                               sizeof(pCQE->aadBuffer),
-                               pSrc + pMQI->queueElementHdrSize,
-                               pCQE->authTagBuffer);
+        pCcTag->encryptedSize = (nElements * pMQI->queueElementSizeMin) - pMQI->queueElementHdrSize;
+        pCcTag->reserved = 0;
+        nvStatus = gspMsgQueueCCEncrypt(pCC->pRpcCcslCtx, pMQI, pCQE, pCcTag->encryptedSize);
 
         if (nvStatus != NV_OK)
         {
@@ -517,7 +538,7 @@ NV_STATUS GspMsgQueueSendCommand(MESSAGE_QUEUE_INFO *pMQI, OBJGPU *pGpu)
         }
 
         // Now that encryption covers elements completely, include them in checksum.
-        pCQE->checkSum = _checkSum32(pSrc, pCQE->elemCount * pMQI->queueElementSizeMin);
+        pCQE->checkSum = _checkSum32(pSrc, nElements * pMQI->queueElementSizeMin);
     }
     else
     {
@@ -530,7 +551,7 @@ NV_STATUS GspMsgQueueSendCommand(MESSAGE_QUEUE_INFO *pMQI, OBJGPU *pGpu)
         *pData = 0xFFFFFFFF;
     }
 
-    for (i = 0; i < pCQE->elemCount; i++)
+    for (i = 0; i < nElements; i++)
     {
         NvU32 timeoutFlags = 0;
 
@@ -562,7 +583,7 @@ NV_STATUS GspMsgQueueSendCommand(MESSAGE_QUEUE_INFO *pMQI, OBJGPU *pGpu)
             pMQI->txBufferFull++;
             NV_PRINTF_COND(pMQI->txBufferFull == 1, LEVEL_ERROR, LEVEL_INFO,
                            "buffer is full (waiting for %d free elements, got %d)\n",
-                           pCQE->elemCount, i);
+                           nElements, i);
             nvStatus = NV_ERR_BUSY_RETRY;
             goto done;
         }
@@ -586,7 +607,7 @@ NV_STATUS GspMsgQueueSendCommand(MESSAGE_QUEUE_INFO *pMQI, OBJGPU *pGpu)
     //
     portAtomicMemoryFenceStore();
 
-    nRet = msgqTxSubmitBuffers(pMQI->hQueue, pCQE->elemCount);
+    nRet = msgqTxSubmitBuffers(pMQI->hQueue, nElements);
 
     if (nRet != 0)
     {
@@ -664,9 +685,20 @@ NV_STATUS GspMsgQueueReceiveStatus(MESSAGE_QUEUE_INFO *pMQI, OBJGPU *pGpu)
             {
                 //
                 // Special processing for first element of the record.
-                // Pull out the element count. This adjusts the loop condition.
+                // Calculate element count from the message size. This adjusts the loop condition.
                 //
-                nElements = pMQI->pCmdQueueElement->elemCount;
+                if (pMQI->bEncryptionEnabled)
+                {
+                    GSP_MSG_QUEUE_ENCRYPTION_TAG *pCcTag = gspMsgQueueGetEncryptionTag(pMQI->pCmdQueueElement);
+                    nElements = gspMsgQueueBytesToElements(pMQI->queueElementHdrSize + pCcTag->encryptedSize,
+                                                           pMQI->queueElementSizeMin);
+                }
+                else
+                {
+                    nElements = gspMsgQueueBytesToElements(pMQI->queueElementHdrSize +
+                                                           gspMsgQueueGetRpcMessageLength(pMQI, pMQI->pCmdQueueElement),
+                                                           pMQI->queueElementSizeMin);
+                }
             }
         }
 
@@ -675,8 +707,10 @@ NV_STATUS GspMsgQueueReceiveStatus(MESSAGE_QUEUE_INFO *pMQI, OBJGPU *pGpu)
             continue;
 
         // Retry if checksum fails.
-        if (gpuIsCCFeatureEnabled(pGpu))
+        if (pMQI->bEncryptionEnabled)
         {
+            GSP_MSG_QUEUE_ENCRYPTION_TAG *pCcTag = gspMsgQueueGetEncryptionTag(pMQI->pCmdQueueElement);
+            
             //
             // In the Confidential Compute scenario, the actual message length
             // is inside the encrypted payload, and we can't access it before
@@ -685,12 +719,12 @@ NV_STATUS GspMsgQueueReceiveStatus(MESSAGE_QUEUE_INFO *pMQI, OBJGPU *pGpu)
             // because messages are typically much smaller than element size.
             //
             checkSum = _checkSum32(pMQI->pCmdQueueElement,
-                                   (nElements * pMQI->queueElementSizeMin));
+                                   (pMQI->queueElementHdrSize + pCcTag->encryptedSize));
         } else
         {
             checkSum = _checkSum32(pMQI->pCmdQueueElement,
                                    (pMQI->queueElementHdrSize +
-                                    pMQI->pCmdQueueElement->rpc.length));
+                                    gspMsgQueueGetRpcMessageLength(pMQI, pMQI->pCmdQueueElement)));
         }
 
         if (checkSum != 0)
@@ -698,6 +732,30 @@ NV_STATUS GspMsgQueueReceiveStatus(MESSAGE_QUEUE_INFO *pMQI, OBJGPU *pGpu)
             NV_PRINTF(LEVEL_ERROR, "Bad checksum.\n");
             nvStatus = NV_ERR_INVALID_DATA;
             continue;
+        }
+
+        // Validate MCTP/NVDM protocol headers.
+        {
+            NvU32 mctpVersion = REF_VAL(MCTP_HEADER_VERSION, pMQI->pCmdQueueElement->mctpHeader);
+            NvU32 vendorId    = REF_VAL(MCTP_MSG_HEADER_VENDOR_ID, pMQI->pCmdQueueElement->nvdmHeader);
+
+            if (mctpVersion != 0x1)
+            {
+                NV_PRINTF(LEVEL_ERROR,
+                          "MCTP protocol violation: invalid header version 0x%x (expected 0x1)\n",
+                          mctpVersion);
+                nvStatus = NV_ERR_INVALID_DATA;
+                continue;
+            }
+
+            if (vendorId != MCTP_MSG_HEADER_VENDOR_ID_NV)
+            {
+                NV_PRINTF(LEVEL_ERROR,
+                          "MCTP protocol violation: invalid vendor ID 0x%x (expected 0x%x)\n",
+                          vendorId, MCTP_MSG_HEADER_VENDOR_ID_NV);
+                nvStatus = NV_ERR_INVALID_DATA;
+                continue;
+            }
         }
 
         // Retry if sequence number is wrong.
@@ -746,17 +804,12 @@ NV_STATUS GspMsgQueueReceiveStatus(MESSAGE_QUEUE_INFO *pMQI, OBJGPU *pGpu)
         }
     }
 
-    if (gpuIsCCFeatureEnabled(pGpu))
+    if (pMQI->bEncryptionEnabled)
     {
         ConfidentialCompute *pCC = GPU_GET_CONF_COMPUTE(pGpu);
-        nvStatus = ccslDecryptWithRotationChecks(pCC->pRpcCcslCtx,
-                               (nElements * pMQI->queueElementSizeMin) - pMQI->queueElementHdrSize,
-                               ((NvU8*)pMQI->pCmdQueueElement) + pMQI->queueElementHdrSize,
-                               NULL,
-                               (NvU8*)pMQI->pCmdQueueElement->aadBuffer,
-                               sizeof(pMQI->pCmdQueueElement->aadBuffer),
-                               ((NvU8*)pMQI->pCmdQueueElement) + pMQI->queueElementHdrSize,
-                               ((NvU8*)pMQI->pCmdQueueElement->authTagBuffer));
+        GSP_MSG_QUEUE_ENCRYPTION_TAG *pCcTag = gspMsgQueueGetEncryptionTag(pMQI->pCmdQueueElement);
+
+        nvStatus = gspMsgQueueCCDecrypt(pCC->pRpcCcslCtx, pMQI, pMQI->pCmdQueueElement, pCcTag->encryptedSize);
 
         if (nvStatus != NV_OK)
         {
@@ -768,15 +821,14 @@ NV_STATUS GspMsgQueueReceiveStatus(MESSAGE_QUEUE_INFO *pMQI, OBJGPU *pGpu)
     }
 
     // Sanity check for the given RPC length
-    msgLen = pMQI->queueElementHdrSize + pMQI->pCmdQueueElement->rpc.length;
+    msgLen = pMQI->queueElementHdrSize + gspMsgQueueGetRpcMessageLength(pMQI, pMQI->pCmdQueueElement);
 
-    if ((msgLen < sizeof(GSP_MSG_QUEUE_ELEMENT)) ||
+    if ((msgLen < pMQI->queueElementHdrSize) ||
         (msgLen > pMQI->queueElementSizeMax))
     {
         // The length is not valid.  If we are running without a fence,
         // this could mean that the data is still in flight from the CPU.
-        NV_PRINTF(LEVEL_ERROR, "Incorrect message length %u\n",
-            pMQI->pCmdQueueElement->rpc.length);
+        NV_PRINTF(LEVEL_ERROR, "Incorrect message length %u\n", msgLen);
         nvStatus = NV_ERR_INVALID_PARAM_STRUCT;
     }
 

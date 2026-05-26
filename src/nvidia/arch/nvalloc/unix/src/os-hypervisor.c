@@ -931,8 +931,6 @@ void initVGXSpecificRegistry(OBJGPU *pGpu)
     osWriteRegistryDword(pGpu, NV_REG_STR_RM_POWER_FEATURES, 0x55455555);
     osWriteRegistryDword(pGpu, NV_REG_STR_RM_INFOROM_DISABLE_BBX,
                                NV_REG_STR_RM_INFOROM_DISABLE_BBX_YES);
-    osWriteRegistryDword(pGpu, NV_REG_PROCESS_NONSTALL_INTR_IN_LOCKLESS_ISR,
-                               NV_REG_PROCESS_NONSTALL_INTR_IN_LOCKLESS_ISR_ENABLE);
     if ((osReadRegistryDword(pGpu, NV_REG_STR_RM_DUMP_NVLOG, &data32) != NV_OK))
     {
         osWriteRegistryDword(pGpu, NV_REG_STR_RM_DUMP_NVLOG,

@@ -48,17 +48,24 @@
 // IMP requires information from various BPMP and MC driver functions.  The
 // macro below checks that all of the required functions are present.
 //
-#define IMP_SUPPORT_FUNCTIONS_PRESENT \
-    (defined(NV_SOC_TEGRA_TEGRA_BPMP_H_PRESENT) || \
+
+#if (defined(NV_SOC_TEGRA_TEGRA_BPMP_H_PRESENT) || \
      IS_ENABLED(CONFIG_TEGRA_BPMP)) && \
     defined(NV_LINUX_PLATFORM_TEGRA_MC_UTILS_H_PRESENT)
+#define IMP_SUPPORT_FUNCTIONS_PRESENT 1
+#else
+#define IMP_SUPPORT_FUNCTIONS_PRESENT 0
+#endif
 
 //
 // Also create a macro to check if all the required ICC symbols are present.
 // DT endpoints are defined in dt-bindings/interconnect/tegra_icc_id.h.
 //
-#define ICC_SUPPORT_FUNCTIONS_PRESENT \
-    defined(NV_DT_BINDINGS_INTERCONNECT_TEGRA_ICC_ID_H_PRESENT)
+#if defined(NV_DT_BINDINGS_INTERCONNECT_TEGRA_ICC_ID_H_PRESENT)
+#define ICC_SUPPORT_FUNCTIONS_PRESENT 1
+#else
+#define ICC_SUPPORT_FUNCTIONS_PRESENT 0
+#endif
 
 /*!
  * @brief Returns IMP-relevant data passed by UEFI GOP Driver

@@ -145,7 +145,7 @@ struct ConfidentialCompute {
     NV_STATUS (*__confComputeRotationNotifHandler__)(struct OBJGPU *, struct ConfidentialCompute * /*this*/, RM_API *, NvHandle, struct KernelChannel *, NvBool *, NvBool);  // halified (2 hals)
     NV_STATUS (*__confComputeUpdateSecrets__)(struct ConfidentialCompute * /*this*/, NvU32);  // halified (2 hals) body
     NV_STATUS (*__confComputeUpdatePerChannelSecrets__)(struct ConfidentialCompute * /*this*/, struct KernelChannel *);  // halified (2 hals) body
-    NvBool (*__confComputeIsSpdmEnabled__)(struct OBJGPU *, struct ConfidentialCompute * /*this*/);  // halified (2 hals) body
+    NvBool (*__confComputeIsSpdmSupported__)(struct OBJGPU *, struct ConfidentialCompute * /*this*/);  // halified (2 hals) body
     RM_ENGINE_TYPE (*__confComputeGetEngineIdFromKeySpace__)(struct ConfidentialCompute * /*this*/, NvU32);  // halified (3 hals) body
     NV_STATUS (*__confComputeGetKeySpaceFromKChannel__)(struct ConfidentialCompute * /*this*/, struct KernelChannel *, NvU16 *);  // halified (3 hals) body
     NV_STATUS (*__confComputeGetLceKeyIdFromKChannel__)(struct ConfidentialCompute * /*this*/, struct KernelChannel *, ROTATE_IV_TYPE, NvU16 *);  // halified (3 hals) body
@@ -287,7 +287,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_ConfidentialCompute;
 #define PDB_PROP_CONFCOMPUTE_WAR_5107790_SYSMEM_FLUSH_ADDR_BASE_NAME PDB_PROP_CONFCOMPUTE_WAR_5107790_SYSMEM_FLUSH_ADDR
 
 
-NV_STATUS __nvoc_objCreateDynamic_ConfidentialCompute(ConfidentialCompute**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_ConfidentialCompute(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_ConfidentialCompute(ConfidentialCompute**, Dynamic*, NvU32);
 #define __objCreate_ConfidentialCompute(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -526,9 +526,9 @@ NvBool confComputeIsGivenThresholdCrossed_IMPL(const CC_CRYPTOBUNDLE_STATS *pSta
 #define confComputeUpdatePerChannelSecrets_FNPTR(pConfCompute) pConfCompute->__confComputeUpdatePerChannelSecrets__
 #define confComputeUpdatePerChannelSecrets(pConfCompute, pKernelChannel) confComputeUpdatePerChannelSecrets_DISPATCH(pConfCompute, pKernelChannel)
 #define confComputeUpdatePerChannelSecrets_HAL(pConfCompute, pKernelChannel) confComputeUpdatePerChannelSecrets_DISPATCH(pConfCompute, pKernelChannel)
-#define confComputeIsSpdmEnabled_FNPTR(pConfCompute) pConfCompute->__confComputeIsSpdmEnabled__
-#define confComputeIsSpdmEnabled(pGpu, pConfCompute) confComputeIsSpdmEnabled_DISPATCH(pGpu, pConfCompute)
-#define confComputeIsSpdmEnabled_HAL(pGpu, pConfCompute) confComputeIsSpdmEnabled_DISPATCH(pGpu, pConfCompute)
+#define confComputeIsSpdmSupported_FNPTR(pConfCompute) pConfCompute->__confComputeIsSpdmSupported__
+#define confComputeIsSpdmSupported(pGpu, pConfCompute) confComputeIsSpdmSupported_DISPATCH(pGpu, pConfCompute)
+#define confComputeIsSpdmSupported_HAL(pGpu, pConfCompute) confComputeIsSpdmSupported_DISPATCH(pGpu, pConfCompute)
 #define confComputeGetEngineIdFromKeySpace_FNPTR(pConfCompute) pConfCompute->__confComputeGetEngineIdFromKeySpace__
 #define confComputeGetEngineIdFromKeySpace(pConfCompute, keySpace) confComputeGetEngineIdFromKeySpace_DISPATCH(pConfCompute, keySpace)
 #define confComputeGetEngineIdFromKeySpace_HAL(pConfCompute, keySpace) confComputeGetEngineIdFromKeySpace_DISPATCH(pConfCompute, keySpace)
@@ -692,8 +692,8 @@ static inline NV_STATUS confComputeUpdatePerChannelSecrets_DISPATCH(struct Confi
     return pConfCompute->__confComputeUpdatePerChannelSecrets__(pConfCompute, pKernelChannel);
 }
 
-static inline NvBool confComputeIsSpdmEnabled_DISPATCH(struct OBJGPU *pGpu, struct ConfidentialCompute *pConfCompute) {
-    return pConfCompute->__confComputeIsSpdmEnabled__(pGpu, pConfCompute);
+static inline NvBool confComputeIsSpdmSupported_DISPATCH(struct OBJGPU *pGpu, struct ConfidentialCompute *pConfCompute) {
+    return pConfCompute->__confComputeIsSpdmSupported__(pGpu, pConfCompute);
 }
 
 static inline RM_ENGINE_TYPE confComputeGetEngineIdFromKeySpace_DISPATCH(struct ConfidentialCompute *pConfCompute, NvU32 keySpace) {
@@ -996,11 +996,11 @@ static inline NV_STATUS confComputeUpdatePerChannelSecrets_395e98(struct Confide
     return NV_ERR_NOT_SUPPORTED;
 }
 
-static inline NvBool confComputeIsSpdmEnabled_e661f0(struct OBJGPU *pGpu, struct ConfidentialCompute *pConfCompute){
+static inline NvBool confComputeIsSpdmSupported_e661f0(struct OBJGPU *pGpu, struct ConfidentialCompute *pConfCompute){
     return NV_TRUE;
 }
 
-static inline NvBool confComputeIsSpdmEnabled_d69453(struct OBJGPU *pGpu, struct ConfidentialCompute *pConfCompute){
+static inline NvBool confComputeIsSpdmSupported_d69453(struct OBJGPU *pGpu, struct ConfidentialCompute *pConfCompute){
     return NV_FALSE;
 }
 
@@ -1167,6 +1167,8 @@ void NVOC_PRIVATE_FUNCTION(confComputeKeyStoreClearExportMasterKey_HAL)(struct C
  * @param[in]     data                     : void Pointer
  */
 void confComputeKeyRotationCallback(struct OBJGPU *pGpu, void *data);
+
+NvBool confComputeForceUnprotAlloc(struct OBJGPU *pGpu);
 #endif // CONF_COMPUTE_H
 
 #ifdef __cplusplus

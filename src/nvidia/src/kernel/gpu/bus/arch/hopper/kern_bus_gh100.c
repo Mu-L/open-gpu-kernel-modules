@@ -66,6 +66,8 @@
 #define COHERENT_CPU_MAPPING_RM_RESV_REGION_START       COHERENT_CPU_MAPPING_REGION_1
 #define COHERENT_CPU_MAPPING_RM_KERNEL_ONLINED_REGION   COHERENT_CPU_MAPPING_REGION_0
 
+#define NV_WPR_BLOCK_GRANULARITY 0x20000ULL
+
 /*!
  * @brief Tear Down BAR1 Mailbox
  *
@@ -973,7 +975,7 @@ kbusCarveoutWprs_GH100
 
     data = GPU_REG_RD32(pGpu, NV_PFB_PRI_MMU_WPR1_ADDR_HI);
     data = DRF_VAL(_PFB, _PRI_MMU_WPR1_ADDR_HI, _VAL, data);
-    end = (NvU64)data << NV_PFB_PRI_MMU_WPR1_ADDR_HI_ALIGNMENT;
+    end = ((NvU64)data << NV_PFB_PRI_MMU_WPR1_ADDR_HI_ALIGNMENT) + NV_WPR_BLOCK_GRANULARITY;
 
     if (start != end && end != 0)
         pWprRegions[0] = rangeMake(start, end - 1);
@@ -986,7 +988,7 @@ kbusCarveoutWprs_GH100
 
     data = GPU_REG_RD32(pGpu, NV_PFB_PRI_MMU_WPR2_ADDR_HI);
     data = DRF_VAL(_PFB, _PRI_MMU_WPR2_ADDR_HI, _VAL, data);
-    end = (NvU64)data << NV_PFB_PRI_MMU_WPR2_ADDR_HI_ALIGNMENT;
+    end = ((NvU64)data << NV_PFB_PRI_MMU_WPR2_ADDR_HI_ALIGNMENT) + NV_WPR_BLOCK_GRANULARITY;
 
     if (start != end && end != 0)
         pWprRegions[1] = rangeMake(start, end - 1);

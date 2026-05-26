@@ -170,6 +170,16 @@ portUtilWriteBigEndian64
     *((NvU8*)pBuf + 7) = (NvU8)(value);
 }
 
+PORT_UTIL_INLINE char portUtilToUpper(char c)
+{
+    return (c >= 'a' && c <= 'z') ? (c - 'a' + 'A') : c;
+}
+
+PORT_UTIL_INLINE char portUtilToLower(char c)
+{
+    return (c >= 'A' && c <= 'Z') ? (c - 'A' + 'a') : c;
+}
+
 #if PORT_COMPILER_IS_GCC || PORT_COMPILER_IS_CLANG
 #include "nvport/inline/util_gcc_clang.h"
 #elif PORT_COMPILER_IS_MSVC

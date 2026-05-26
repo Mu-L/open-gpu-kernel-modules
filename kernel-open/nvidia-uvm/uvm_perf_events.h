@@ -36,10 +36,7 @@
 // The callback lists are stored per va_space and, therefore, different
 // callbacks can be registered per client. This will be useful to use
 // different performance heuristic implementations depending on the GPU
-// resources used by each process. For example, on a system with Pascal +
-// Maxwell GPUs, VA spaces which have Maxwell GPU VA spaces will be restrited
-// to the UVM-Lite feature set, while a VA space which only uses the Pascal
-// GPU will not be downgraded. Registering/unregistering callbacks requires
+// resources used by each process. Registering/unregistering callbacks requires
 // holding the VA space events lock in write mode. The exact locking
 // guarantees under which callbacks are executed depend on the specific event,
 // but the VA space events lock is held in read mode for all of them. The
@@ -48,7 +45,8 @@
 // Performance-related events that can be notified
 typedef enum
 {
-    // Locking: uvm_va_space: at least in read mode, uvm_va_block: exclusive / nobody is referencing the block anymore
+    // Locking: uvm_va_space: at least in read mode, uvm_va_block: exclusive /
+    // nobody is referencing the block anymore
     UVM_PERF_EVENT_BLOCK_DESTROY = 0,
 
     // Locking: uvm_va_space: write
@@ -66,7 +64,8 @@ typedef enum
     // Locking: uvm_va_space: write
     UVM_PERF_EVENT_MODULE_UNLOAD,
 
-    // Locking: uvm_va_space: at least in read mode, uvm_va_block: exclusive (if uvm_va_block is not NULL)
+    // Locking: uvm_va_space: at least in read mode, uvm_va_block: exclusive
+    // (if uvm_va_block is not NULL)
     UVM_PERF_EVENT_FAULT,
 
     // Locking: None for pageable migrations. Otherwise, exclusive lock on
@@ -80,8 +79,8 @@ typedef enum
     UVM_PERF_EVENT_COUNT,
 } uvm_perf_event_t;
 
-// Format of the data passed to callbacks. Scope must be filled with the appropriate values by the code which notifies
-// the event
+// Format of the data passed to callbacks. Scope must be filled with the
+// appropriate values by the code which notifies the event.
 typedef union
 {
     struct

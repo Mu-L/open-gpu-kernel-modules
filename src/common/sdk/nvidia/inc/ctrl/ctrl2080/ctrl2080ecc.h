@@ -239,9 +239,10 @@ typedef struct NV2080_CTRL_ECC_GET_REPAIR_STATUS_PARAMS {
 #define NV2080_CTRL_ECC_INJECTION_SUPPORTED_PARAMS_MESSAGE_ID (0x5U)
 
 typedef struct NV2080_CTRL_ECC_INJECTION_SUPPORTED_PARAMS {
-    NvU32  unit;
-    NvBool bCorrectableSupported;
-    NvBool bUncorrectableSupported;
+    NvU32       unit;
+    eccLocation location;
+    NvBool      bCorrectableSupported;
+    NvBool      bUncorrectableSupported;
 } NV2080_CTRL_ECC_INJECTION_SUPPORTED_PARAMS;
 
 #define NV2080_CTRL_CMD_ECC_GET_UNREPAIRABLE_MEMORY_FLAG (0x20803406) /* finn: Evaluated from "(FINN_NV20_SUBDEVICE_0_ECC_INTERFACE_ID << 8) | NV2080_CTRL_ECC_GET_UNREPAIRABLE_MEMORY_FLAG_PARAMS_MESSAGE_ID" */

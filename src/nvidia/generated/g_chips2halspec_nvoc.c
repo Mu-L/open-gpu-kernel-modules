@@ -129,42 +129,57 @@ void __nvoc_init_halspec_ChipHal(ChipHal *pChipHal, NvU32 arch, NvU32 impl, NvU3
     // GB202
     else if(arch == 0x1B && impl == 0x2)
     {
-        pChipHal->__nvoc_HalVarIdx = 67;
+        pChipHal->__nvoc_HalVarIdx = 65;
     }
     // GB203
     else if(arch == 0x1B && impl == 0x3)
     {
-        pChipHal->__nvoc_HalVarIdx = 68;
+        pChipHal->__nvoc_HalVarIdx = 66;
     }
     // GB205
     else if(arch == 0x1B && impl == 0x5)
     {
-        pChipHal->__nvoc_HalVarIdx = 69;
+        pChipHal->__nvoc_HalVarIdx = 67;
     }
     // GB206
     else if(arch == 0x1B && impl == 0x6)
     {
-        pChipHal->__nvoc_HalVarIdx = 70;
+        pChipHal->__nvoc_HalVarIdx = 68;
     }
     // GB207
     else if(arch == 0x1B && impl == 0x7)
     {
-        pChipHal->__nvoc_HalVarIdx = 71;
+        pChipHal->__nvoc_HalVarIdx = 69;
     }
     // GB20B
     else if(arch == 0x1B && impl == 0xB)
     {
-        pChipHal->__nvoc_HalVarIdx = 72;
+        pChipHal->__nvoc_HalVarIdx = 70;
     }
     // GB20C
     else if(arch == 0x1B && impl == 0xC)
     {
-        pChipHal->__nvoc_HalVarIdx = 73;
+        pChipHal->__nvoc_HalVarIdx = 71;
+    }
+    // GR100
+    else if(arch == 0x1C && impl == 0x0)
+    {
+        pChipHal->__nvoc_HalVarIdx = 76;
+    }
+    // GR102
+    else if(arch == 0x1C && impl == 0x2)
+    {
+        pChipHal->__nvoc_HalVarIdx = 77;
     }
     // T234D
     else if(arch == 0x0 && impl == 0x0 && hidrev == 0x235)
     {
         pChipHal->__nvoc_HalVarIdx = 109;
+    }
+    // T239D
+    else if(arch == 0x0 && impl == 0x0 && hidrev == 0x23B)
+    {
+        pChipHal->__nvoc_HalVarIdx = 110;
     }
     // T264D
     else if(arch == 0x0 && impl == 0x0 && hidrev == 0x265)
@@ -218,6 +233,11 @@ void __nvoc_init_halspec_DispIpHal(DispIpHal *pDispIpHal, NvU32 ipver)
     {
         pDispIpHal->__nvoc_HalVarIdx = 12;
     }
+    // DISPv0403
+    else if(ipver == 0x4030000)
+    {
+        pDispIpHal->__nvoc_HalVarIdx = 13;
+    }
     // DISPv0404
     else if(ipver == 0x4040000)
     {
@@ -246,7 +266,7 @@ void __nvoc_init_halspec_DispIpHal(DispIpHal *pDispIpHal, NvU32 ipver)
     // DISPv0000
     else if(ipver == 0x0)
     {
-        pDispIpHal->__nvoc_HalVarIdx = 20;
+        pDispIpHal->__nvoc_HalVarIdx = 21;
     }
 }
 

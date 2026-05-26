@@ -154,7 +154,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_MemoryFabricImportedRef;
     ((MemoryFabricImportedRef*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(MemoryFabricImportedRef)))
 #endif //__nvoc_mem_fabric_import_ref_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_MemoryFabricImportedRef(MemoryFabricImportedRef**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_MemoryFabricImportedRef(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_MemoryFabricImportedRef(MemoryFabricImportedRef**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_MemoryFabricImportedRef(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

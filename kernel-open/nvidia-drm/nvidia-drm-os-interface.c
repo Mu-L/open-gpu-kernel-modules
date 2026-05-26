@@ -32,6 +32,10 @@
 #include <linux/sched.h>
 #include <linux/device.h>
 
+#if defined(NVCPU_AARCH64)
+#include <asm/page.h>
+#endif
+
 #include "nv-mm.h"
 
 #if defined(NV_DRM_DRMP_H_PRESENT)
@@ -40,6 +44,8 @@
 
 bool nv_drm_modeset_module_param = true;
 bool nv_drm_fbdev_module_param = true;
+bool nv_drm_vblank_module_param = false;
+bool nv_drm_color_pipeline_module_param = true;
 
 void *nv_drm_calloc(size_t nmemb, size_t size)
 {
@@ -216,6 +222,17 @@ unsigned long nv_drm_timer_now(void)
     return jiffies;
 }
 
+/* Return milliseconds since boot. Linux jiffies starts at INITIAL_JIFFIES
+ * (not 0); FreeBSD doesn't define it and starts at 0. */
+NvU64 nv_drm_get_time_since_boot_ms(void)
+{
+#ifdef INITIAL_JIFFIES
+    return (NvU64)(jiffies - INITIAL_JIFFIES) * 1000 / HZ;
+#else
+    return (NvU64)jiffies * 1000 / HZ;
+#endif
+}
+
 unsigned long nv_drm_timeout_from_ms(NvU64 relative_timeout_ms)
 {
     return jiffies + msecs_to_jiffies(relative_timeout_ms);
@@ -253,5 +270,24 @@ void nv_drm_yield(void)
     set_current_state(TASK_INTERRUPTIBLE);
     schedule_timeout(1);
 }
+
+#if defined(NVCPU_AARCH64)
+/*
+ * Check if a given pfn is kernel managed system memory on aarch64.
+ */
+NvBool nv_aarch64_pfn_is_map_memory(unsigned long pfn)
+{
+    /*
+     * pfn_is_map_memory() was added by commit id 873ba463914c ("arm64:
+     * decouple check whether pfn is in linear map from pfn_valid()") in
+     * 5.14 (2021-08-29) for aarch64. Prior to that, pfn_valid() was used.
+     */
+#if defined(NV_PFN_IS_MAP_MEMORY_PRESENT)
+    return pfn_is_map_memory(pfn);
+#else
+    return pfn_valid(pfn);
+#endif /* defined(NV_PFN_IS_MAP_MEMORY_PRESENT) */
+}
+#endif /* defined(NVCPU_AARCH64) */
 
 #endif /* NV_DRM_AVAILABLE */

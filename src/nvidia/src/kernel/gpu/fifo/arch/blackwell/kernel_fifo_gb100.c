@@ -263,6 +263,50 @@ kfifoWriteRamfcGpfifo_GB100
     MEM_WR32(pInstMem + SF_OFFSET(NV_RAMFC_GP_GET), 0);
 }
 
+/**
+ * @brief Initializing RAMFC signature
+ *
+ * @param[in] pGpu          OBJGPU pointer
+ * @param[in] pKernelFifo   Kernelfifo pointer
+ * @param[in] pInstMem      INST_BLOCK_DESC pointer
+ */
+void
+kfifoInitRamfcSignature_GB100
+(
+    OBJGPU     *pGpu,
+    KernelFifo *pKernelFifo,
+    NvU8       *pInstMem
+)
+{
+    MEM_WR32( pInstMem + SF_OFFSET( NV_RAMFC_SIGNATURE ),
+              DRF_DEF( _PBDMA, _SIGNATURE, _HW, _VALID ) |
+              DRF_DEF( _PBDMA, _SIGNATURE, _SW, _ZERO  ) );
+}
+
+/**
+ * @brief Initialize the PB header in RAMFC
+ */
+void
+kfifoInitRamfcPbHeader_GB100
+(
+    OBJGPU     *pGpu,
+    KernelFifo *pKernelFifo,
+    NvU8       *pInstMem
+)
+{
+    NvU32   fetchState;
+
+    MEM_WR32(pInstMem + SF_OFFSET(NV_RAMFC_PB_HEADER),
+             DRF_DEF(_PBDMA, _PB_HEADER, _METHOD,     _ZERO) |
+             DRF_DEF(_PBDMA, _PB_HEADER, _SUBCHANNEL, _ZERO) |
+             DRF_DEF(_PBDMA, _PB_HEADER, _LEVEL,      _MAIN) |
+             DRF_DEF(_PBDMA, _PB_HEADER, _FIRST,      _TRUE));
+
+    fetchState = MEM_RD32(pInstMem + SF_OFFSET(NV_RAMFC_MISC_FETCH_STATE));
+    fetchState = FLD_SET_DRF(_PBDMA, _MISC_FETCH_STATE, _PB_HEADER_TYPE, _INC, fetchState);
+    MEM_WR32(pInstMem + SF_OFFSET(NV_RAMFC_MISC_FETCH_STATE), fetchState);
+}
+
 NV_STATUS
 kfifoDisableChannelsForKeyRotation_GB100
 (

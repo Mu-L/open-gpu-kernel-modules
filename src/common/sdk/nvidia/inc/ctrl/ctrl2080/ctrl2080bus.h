@@ -1340,6 +1340,8 @@ typedef struct NV2080_CTRL_CMD_BUS_GET_C2C_INFO_PARAMS {
     NvBool bIsLinkUp;
     NvBool bLinkInHS;
 
+    NvBool bEncryptionEnabled;
+
 
     NvU32  nrLinks;
     NvU32  maxNrLinks;

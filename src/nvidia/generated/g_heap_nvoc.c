@@ -28,7 +28,7 @@ void __nvoc_init__Heap(Heap*);
 void __nvoc_init_funcTable_Heap(Heap*);
 NV_STATUS __nvoc_ctor_Heap(Heap*);
 void __nvoc_init_dataField_Heap(Heap*);
-void __nvoc_dtor_Heap(Heap*);
+void __nvoc_dtor_Heap(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__Heap;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_Heap =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "Heap",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_Heap,
+    .objCreatefn =        &__nvoc_objCreateDynamic_Heap,
     .pCastInfo =          &__nvoc_castinfo__Heap,
     .pExportInfo =        &__nvoc_export_info__Heap
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_Heap =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__Heap __nvoc_metadata__Heap = {
     .rtti.pClassDef = &__nvoc_class_def_Heap,    // (heap) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_Heap,
+    .rtti.dtor      = &__nvoc_dtor_Heap,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -82,16 +82,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__Heap =
 
 // Destruct Heap object.
 void __nvoc_heapDestruct(Heap*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_Heap(Heap* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_Heap(Dynamic* pThis) {
+
+    Heap *__nvoc_this = (Heap *) pThis;
 
 // Call destructor.
-    __nvoc_heapDestruct(pThis);
+    __nvoc_heapDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_Heap(Heap *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -215,11 +217,8 @@ __nvoc_objCreate_Heap_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_Heap(Heap **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_Heap(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_Heap(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_Heap((Heap **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

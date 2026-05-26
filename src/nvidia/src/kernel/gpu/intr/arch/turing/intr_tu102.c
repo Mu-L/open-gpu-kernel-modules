@@ -819,12 +819,76 @@ intrGetLocklessVectorsInRmSubtree_TU102
     }
 }
 
+/*!
+ * @brief read all leaf interrupt registers into an array
+ *
+ * @param[in]   pGpu       OBJGPU pointer
+ * @param[in]   pIntr      Intr pointer
+ * @param[in]   bUseCachedRegVal       whether to use the cached value of leaf 4 instead of reading it
+ * @param[in]   cachedStaticRegVal     the cached value of leaf 4 if bUseCachedRegVal is true
+ * @param[out]  pLeafVals  array that leaf values will be returned in.
+ *                         assumes that it is sufficiently large
+ */
+static NV_STATUS
+_intrGetLeafStatus_TU102
+(
+    OBJGPU             *pGpu,
+    Intr               *pIntr,
+    NvBool              bUseCachedRegVal,
+    NvU32               cachedStaticRegVal,
+    NvU32              *pLeafVals,
+    THREAD_STATE_NODE  *pThreadState
+)
+{
+    NvU32 subtreeIndex;
+    NvU32 leafIndex;
+
+    FOR_EACH_INDEX_IN_MASK(64, subtreeIndex,
+                           intrGetIntrTopLegacyStallMask_HAL(pIntr))
+    {
+        leafIndex = NV_CTRL_INTR_SUBTREE_TO_LEAF_IDX_START(subtreeIndex);
+        if (pIntr->getProperty(pIntr, PDB_PROP_INTR_READ_ONLY_EVEN_NUMBERED_INTR_LEAF_REGS))
+        {
+            //
+            // Since we know that on Turing, only one leaf per subtree has valid
+            // interrupts, optimize to only read those leaf registers.
+            //
+            if ((leafIndex == 4) && bUseCachedRegVal)
+            {
+                pLeafVals[leafIndex] = cachedStaticRegVal;
+            }
+            else
+            {
+                pLeafVals[leafIndex] = intrReadRegLeaf_HAL(pGpu, pIntr, leafIndex, pThreadState);
+            }
+        }
+        else
+        {
+            for (; leafIndex <= NV_CTRL_INTR_SUBTREE_TO_LEAF_IDX_END(subtreeIndex); leafIndex++)
+            {
+                if ((leafIndex == 4) && bUseCachedRegVal)
+                {
+                    pLeafVals[leafIndex] = cachedStaticRegVal;
+                }
+                else
+                {
+                    pLeafVals[leafIndex] = intrReadRegLeaf_HAL(pGpu, pIntr, leafIndex, pThreadState);
+                }
+
+            }
+        }
+    } FOR_EACH_INDEX_IN_MASK_END
+
+    return NV_OK;
+}
 
 /*!
  * @brief Gets list of engines with pending stalling interrupts as per the interrupt trees
  *
  * @param[in]  pGpu
  * @param[in]  pIntr
+ * @param[in]  bUseCachedRegVal       whether to use the cached value of leaf 4 instead of reading it
+ * @param[in]  cachedStaticRegVal     the cached value of leaf 4 if bUseCachedRegVal is true
  * @param[out] pEngines     List of engines that have pending stall interrupts
  * @param[in]  pThreadState
  *
@@ -835,6 +899,8 @@ intrGetPendingStallEngines_TU102
 (
     OBJGPU              *pGpu,
     Intr                *pIntr,
+    NvBool               bUseCachedRegVal,
+    NvU32                cachedStaticRegVal,
     MC_ENGINE_BITVECTOR *pEngines,
     THREAD_STATE_NODE   *pThreadState
 )
@@ -857,7 +923,7 @@ intrGetPendingStallEngines_TU102
         return NV_OK;
     }
 
-    NV_ASSERT_OK_OR_RETURN(intrGetLeafStatus_HAL(pGpu, pIntr, intrLeafValues, pThreadState));
+    NV_ASSERT_OK_OR_RETURN(_intrGetLeafStatus_TU102(pGpu, pIntr, bUseCachedRegVal, cachedStaticRegVal, intrLeafValues, pThreadState));
     NV_ASSERT_OK_OR_RETURN(intrGetInterruptTable_HAL(pGpu, pIntr, &pIntrTable));
 
     for (iter = vectIterAll(pIntrTable); vectIterNext(&iter);)
@@ -1040,7 +1106,6 @@ intrRetriggerTopLevel_TU102
     // Toggle the top level interrupt enables for all interrupts whose top
     // level enables are not toggled during RM lock acquire/release.
     //
-    if (pGpu->getProperty(pGpu, PDB_PROP_GPU_ALTERNATE_TREE_HANDLE_LOCKLESS))
     {
         //
         // 1. If the alternate tree (nonstall tree) is handled "lockless", it
@@ -1096,48 +1161,85 @@ intrRetriggerTopLevel_TU102
 }
 
 /*!
- * @brief read all leaf interrupt registers into an array
+ * @brief Gets list of engines with pending stalling interrupts as per the interrupt trees
  *
- * @param[in]   pGpu       OBJGPU pointer
- * @param[in]   pIntr      Intr pointer
- * @param[out]  pLeafVals  array that leaf values will be returned in.
- *                         assumes that it is sufficiently large
+ * @param[in]  pGpu
+ * @param[in]  pIntr
+ * @param[out] pStaticRegVal cached value of the main static interrupt register. For Turing+, it's leaf 4
+ * @param[out] pEngines      List of engines that have pending stall interrupts
+ * @param[in]  pThreadState
+ *
+ * @return NV_OK if the list of engines that have pending stall interrupts was retrieved
  */
 NV_STATUS
-intrGetLeafStatus_TU102
+intrGetPendingDispLowLatencyAndStaticReg_TU102
 (
-    OBJGPU             *pGpu,
-    Intr               *pIntr,
-    NvU32              *pLeafVals,
-    THREAD_STATE_NODE  *pThreadState
+    OBJGPU              *pGpu,
+    Intr                *pIntr,
+    NvU32               *pStaticRegVal,
+    MC_ENGINE_BITVECTOR *pEngines,
+    THREAD_STATE_NODE   *pThreadState
 )
 {
-    NvU32 subtreeIndex;
-    NvU32 leafIndex;
+    NvU32 bit;
+    NvU32 val;
 
-    FOR_EACH_INDEX_IN_MASK(64, subtreeIndex,
-                           intrGetIntrTopLegacyStallMask_HAL(pIntr))
+    *pStaticRegVal = 0;
+    bitVectorClrAll(pEngines);
+
+    if (IS_GPU_GC6_STATE_ENTERED(pGpu))
     {
-        leafIndex = NV_CTRL_INTR_SUBTREE_TO_LEAF_IDX_START(subtreeIndex);
-        if (pIntr->getProperty(pIntr, PDB_PROP_INTR_READ_ONLY_EVEN_NUMBERED_INTR_LEAF_REGS))
-        {
-            //
-            // Since we know that on Turing, only one leaf per subtree has valid
-            // interrupts, optimize to only read those leaf registers.
-            //
-            pLeafVals[leafIndex] = intrReadRegLeaf_HAL(pGpu, pIntr, leafIndex, pThreadState);
-        }
-        else
-        {
-            for (; leafIndex <= NV_CTRL_INTR_SUBTREE_TO_LEAF_IDX_END(subtreeIndex); leafIndex++)
-            {
-                pLeafVals[leafIndex] = intrReadRegLeaf_HAL(pGpu, pIntr, leafIndex, pThreadState);
-            }
-        }
-    } FOR_EACH_INDEX_IN_MASK_END
+        return NV_ERR_GPU_NOT_FULL_POWER;
+    }
+
+    if (!API_GPU_ATTACHED_SANITY_CHECK(pGpu))
+    {
+        return NV_ERR_GPU_IS_LOST;
+    }
+
+    val = intrReadRegLeaf_HAL(pGpu, pIntr, 4, pThreadState);
+    *pStaticRegVal = val;
+
+    if (pIntr->displayIntrVector == NV_INTR_VECTOR_INVALID)
+    {
+        return NV_OK;
+    }
+
+    bit = NV_CTRL_INTR_GPU_VECTOR_TO_LEAF_BIT(pIntr->displayIntrVector);
+
+    if (val & NVBIT(bit))
+        bitVectorSet(pEngines, MC_ENGINE_IDX_DISP);
 
     return NV_OK;
 }
+
+NV_STATUS
+intrGetRemainingPendingStall_TU102
+(
+    OBJGPU              *pGpu,
+    Intr                *pIntr,
+    NvU32                staticRegVal,
+    MC_ENGINE_BITVECTOR *pEngines,
+    THREAD_STATE_NODE   *pThreadState
+)
+{
+    if (IS_GPU_GC6_STATE_ENTERED(pGpu))
+    {
+        return NV_ERR_GPU_NOT_FULL_POWER;
+    }
+
+    if (!API_GPU_ATTACHED_SANITY_CHECK(pGpu))
+    {
+        return NV_ERR_GPU_IS_LOST;
+    }
+
+    NV_ASSERT_OK_OR_RETURN(intrGetPendingStallEngines_HAL(pGpu, pIntr, NV_TRUE, staticRegVal, pEngines, pThreadState));
+    intrGetAuxiliaryPendingStall_HAL(pGpu, pIntr, pEngines, NV_TRUE, MC_ENGINE_IDX_NULL, pThreadState);
+
+    return NV_OK;
+}
+
+
 
 /*!
  * @brief Returns a bitfield with only MC_ENGINE_IDX_DISP set if it's pending in hardware

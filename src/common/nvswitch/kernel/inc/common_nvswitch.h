@@ -67,11 +67,13 @@ static NV_INLINE void nvswitch_clear_flags(NvU32 *val, NvU32 flags)
 #define NVSWITCH_REVERSE_BITMASK_32(numBits, mask)  \
 {                                                   \
     NvU32 i, reverse = 0;                           \
-    FOR_EACH_INDEX_IN_MASK(32, i, mask)             \
+    for (i = 0; i < numBits; i++)                   \
     {                                               \
-        reverse |= NVBIT((numBits - 1) - i);          \
+        if (NVBIT(i) & mask)                        \
+        {                                           \
+            reverse |= NVBIT((numBits - 1) - i);    \
+        }                                           \
     }                                               \
-    FOR_EACH_INDEX_IN_MASK_END;                     \
                                                     \
     mask = reverse;                                 \
 }

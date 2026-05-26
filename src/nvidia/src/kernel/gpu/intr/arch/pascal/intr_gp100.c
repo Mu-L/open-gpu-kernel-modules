@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2014-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2014-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -54,9 +54,6 @@ _intrSetIntrEnInHw_GP100
     // Only set the mask interrupt line and clear the rest all interrupt lines.
     pmcIntrEnSet   = pIntr->intrCachedEnSet   &   pIntr->intrMask.cached;
     pmcIntrEnClear = pIntr->intrCachedEnClear | (~pIntr->intrMask.cached); // with INTR_MASK_FOR_LOCKING, this OR may not respect the pmcRmOwnsIntrMask
-
-    // Mask the leaf level interrupts for cases where top PMC intr is not toggeled
-    intrSetHubLeafIntr_HAL(pGpu, pIntr, pIntr->intrCachedEn0, &pmcIntrEnClear, &pmcIntrEnSet, pThreadState);
 
     //
     // Only toggle those interrupts that RM owns. With INTR_MASK_FOR_LOCKING,

@@ -38,7 +38,7 @@ void __nvoc_init__CrashCatWayfinder(CrashCatWayfinder*,
 void __nvoc_init_funcTable_CrashCatWayfinder(CrashCatWayfinder*);
 NV_STATUS __nvoc_ctor_CrashCatWayfinder(CrashCatWayfinder*, NvU32 wfl0);
 void __nvoc_init_dataField_CrashCatWayfinder(CrashCatWayfinder*);
-void __nvoc_dtor_CrashCatWayfinder(CrashCatWayfinder*);
+void __nvoc_dtor_CrashCatWayfinder(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__CrashCatWayfinder;
@@ -57,7 +57,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_CrashCatWayfinder =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "CrashCatWayfinder",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_CrashCatWayfinder,
+    .objCreatefn =        &__nvoc_objCreateDynamic_CrashCatWayfinder,
     .pCastInfo =          &__nvoc_castinfo__CrashCatWayfinder,
     .pExportInfo =        &__nvoc_export_info__CrashCatWayfinder
 };
@@ -66,7 +66,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_CrashCatWayfinder =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__CrashCatWayfinder __nvoc_metadata__CrashCatWayfinder = {
     .rtti.pClassDef = &__nvoc_class_def_CrashCatWayfinder,    // (crashcatWayfinder) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_CrashCatWayfinder,
+    .rtti.dtor      = &__nvoc_dtor_CrashCatWayfinder,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -92,16 +92,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__CrashCatWayfinder =
 
 // Destruct CrashCatWayfinder object.
 void __nvoc_crashcatWayfinderDestruct(CrashCatWayfinder*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_CrashCatWayfinder(CrashCatWayfinder* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_CrashCatWayfinder(Dynamic* pThis) {
+
+    CrashCatWayfinder *__nvoc_this = (CrashCatWayfinder *) pThis;
 
 // Call destructor.
-    __nvoc_crashcatWayfinderDestruct(pThis);
+    __nvoc_crashcatWayfinderDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_CrashCatWayfinder(CrashCatWayfinder *pThis) {
     CrashCatWayfinderHal *wayfinderHal = &pThis->wayfinderHal;
@@ -131,7 +133,7 @@ NV_STATUS __nvoc_ctor_CrashCatWayfinder(CrashCatWayfinder *arg_this, NvU32 wfl0)
 
     // Unwind on error.
 __nvoc_ctor_CrashCatWayfinder_fail__init:
-    __nvoc_dtor_Object(&arg_this->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&arg_this->__nvoc_base_Object);
 __nvoc_ctor_CrashCatWayfinder_fail_Object:
 __nvoc_ctor_CrashCatWayfinder_exit:
     return status;
@@ -244,13 +246,10 @@ __nvoc_objCreate_CrashCatWayfinder_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_CrashCatWayfinder(CrashCatWayfinder **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_CrashCatWayfinder(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     NV_CRASHCAT_WAYFINDER_VERSION CrashCatWayfinderHal_version = va_arg(__nvoc_args, NV_CRASHCAT_WAYFINDER_VERSION);
     NvU32 wfl0 = va_arg(__nvoc_args, NvU32);
 
-    __nvoc_status = __nvoc_objCreate_CrashCatWayfinder(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, CrashCatWayfinderHal_version, wfl0);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_CrashCatWayfinder((CrashCatWayfinder **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, CrashCatWayfinderHal_version, wfl0);
 }
 

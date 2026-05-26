@@ -143,7 +143,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_Sec2Utils;
     ((Sec2Utils*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(Sec2Utils)))
 #endif //__nvoc_sec2_utils_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_Sec2Utils(Sec2Utils**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_Sec2Utils(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_Sec2Utils(Sec2Utils**, Dynamic*, NvU32, struct OBJGPU *pGpu, KERNEL_MIG_GPU_INSTANCE *pKernelMIGGPUInstance);
 #define __objCreate_Sec2Utils(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pGpu, pKernelMIGGPUInstance) \

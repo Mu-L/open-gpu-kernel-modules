@@ -97,9 +97,7 @@ void nvKmsKapiFreeNisoSurface(struct NvKmsKapiDevice *device,
 static void InitNotifier(struct NvKmsKapiDevice *device,
                          NvU32 head, NvU32 layer, NvU32 index)
 {
-    nvKmsResetNotifier(device->notifier.format,
-                       (layer == NVKMS_OVERLAY_LAYER),
-                       NVKMS_KAPI_NOTIFIER_INDEX(head, layer, index),
+    nvKmsResetNotifier(NVKMS_KAPI_NOTIFIER_INDEX(head, layer, index),
                        device->notifier.pLinearAddress);
 }
 
@@ -206,10 +204,7 @@ NvBool nvKmsKapiAllocateNotifiers(struct NvKmsKapiDevice *device)
               NVKMS_KAPI_NOTIFIERS_SURFACE_SIZE);
 
     ct_assert(NVKMS_KAPI_NOTIFIER_SIZE >= sizeof(NvNotification));
-    nvAssert(NVKMS_KAPI_NOTIFIER_SIZE >=
-             nvKmsSizeOfNotifier(device->notifier.format, TRUE /* overlay */));
-    nvAssert(NVKMS_KAPI_NOTIFIER_SIZE >=
-             nvKmsSizeOfNotifier(device->notifier.format, FALSE /* overlay */));
+    nvAssert(NVKMS_KAPI_NOTIFIER_SIZE >= nvKmsSizeOfNotifier());
 
     if (!AllocateNisoSurface(device,
                              &device->notifier,
@@ -244,8 +239,7 @@ static void ResetSemaphore(struct NvKmsKapiDevice *device,
                           NvU32 index,
                           NvU32 payload)
 {
-    nvKmsResetSemaphore(device->semaphore.format,
-                        index,
+    nvKmsResetSemaphore(index,
                         device->semaphore.pLinearAddress,
                         payload);
 }
@@ -267,7 +261,7 @@ NvBool nvKmsKapiAllocateSemaphores(struct NvKmsKapiDevice *device,
     /* Init Semaphores */
 
     device->numDisplaySemaphores = NVKMS_KAPI_SEMAPHORE_SURFACE_SIZE /
-        nvKmsSizeOfSemaphore(device->semaphore.format);
+        nvKmsSizeOfSemaphore();
 
     /*
      * See the comment in nvKmsKapiSignalDisplaySemaphore() for the full
@@ -290,8 +284,7 @@ NvBool nvKmsKapiTryInitDisplaySemaphore(struct NvKmsKapiDevice *device,
 {
     struct nvKmsParsedSemaphore semParsed;
 
-    nvKmsParseSemaphore(device->semaphore.format,
-                        index,
+    nvKmsParseSemaphore(index,
                         device->semaphore.pLinearAddress,
                         &semParsed);
 
@@ -330,8 +323,7 @@ void nvKmsKapiCancelDisplaySemaphore(struct NvKmsKapiDevice *device,
 {
     struct nvKmsParsedSemaphore semParsed;
 
-    nvKmsParseSemaphore(device->semaphore.format,
-                        index,
+    nvKmsParseSemaphore(index,
                         device->semaphore.pLinearAddress,
                         &semParsed);
 
@@ -341,8 +333,7 @@ void nvKmsKapiCancelDisplaySemaphore(struct NvKmsKapiDevice *device,
     }
 }
 
-NvU32 nvKmsKapiGetDisplaySemaphoreOffset(struct NvKmsKapiDevice *device,
-                                         NvU32 index)
+NvU32 nvKmsKapiGetDisplaySemaphoreOffset(NvU32 index)
 {
-    return nvKmsSizeOfSemaphore(device->semaphore.format) * index;
+    return nvKmsSizeOfSemaphore() * index;
 }

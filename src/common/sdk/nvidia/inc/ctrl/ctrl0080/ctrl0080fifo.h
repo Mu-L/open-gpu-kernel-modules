@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2006-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2006-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -89,6 +89,7 @@ typedef struct NV0080_CTRL_FIFO_GET_CAPS_PARAMS {
 
 
 #define NV0080_CTRL_FIFO_CAPS_SUPPORT_WDDM_INTERLEAVING              1:0x40
+#define NV0080_CTRL_FIFO_CAPS_IS_GRCE_VALID_REQUIRED                 1:0x80
 
 /* size in bytes of fifo caps table */
 #define NV0080_CTRL_FIFO_CAPS_TBL_SIZE                                                    2
@@ -236,25 +237,8 @@ typedef struct NV0080_CTRL_FIFO_GET_LATENCY_BUFFER_SIZE_PARAMS {
  *
  *   value
  *     The new value for the property.
- *     When property = NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_ENGINETIMESLICEINMICROSECONDS
- *          value    = timeslice in microseconds
- *          desc:      Used to change a channel's engine timeslice in microseconds
  *
- *          property = NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_PBDMATIMESLICEINMICROSECONDS
- *          value    = timeslice in microseconds
- *          desc:      Used to change a channel's pbdma timeslice in microseconds
- *
- *          property = NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_ENGINETIMESLICEDISABLE
- *          value    is ignored
- *          desc:      Disables a channel from being timesliced out from an engine.
- *                     Other scheduling events like explicit yield, acquire failures will
- *                     switch out the channel though.
- *
- *          property = NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_PBDMATIMESLICEDISABLE
- *          value    is ignored
- *          desc:      Disables a channel from being timesliced out from its pbdma.
- *
- *          property = NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_INVALIDATE_PDB_TARGET
+ *     When property = NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_INVALIDATE_PDB_TARGET
  *          value    is ignored
  *          desc:      Override the channel's page directory pointer table with an
  *                     erroneous aperture value. (TODO: make test calls NV_VERIF_FEATURES
@@ -297,14 +281,10 @@ typedef struct NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_PARAMS {
     NV_DECLARE_ALIGNED(NvU64 value, 8);
 } NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_PARAMS;
 
-#define NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_ENGINETIMESLICEINMICROSECONDS (0x00000000)
-#define NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_PBDMATIMESLICEINMICROSECONDS  (0x00000001)
-#define NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_ENGINETIMESLICEDISABLE        (0x00000002)
-#define NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_PBDMATIMESLICEDISABLE         (0x00000003)
-#define NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_INVALIDATE_PDB_TARGET         (0x00000004)
-#define NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_RESETENGINECONTEXT            (0x00000005)
-#define NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_NOOP                          (0x00000007)
-#define NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_RESETENGINECONTEXT_NOPREEMPT  (0x00000008)
+#define NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_INVALIDATE_PDB_TARGET        (0x00000004)
+#define NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_RESETENGINECONTEXT           (0x00000005)
+#define NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_NOOP                         (0x00000007)
+#define NV0080_CTRL_FIFO_SET_CHANNEL_PROPERTIES_RESETENGINECONTEXT_NOPREEMPT (0x00000008)
 
 
 

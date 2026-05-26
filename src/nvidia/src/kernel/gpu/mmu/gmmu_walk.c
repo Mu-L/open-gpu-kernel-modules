@@ -163,6 +163,14 @@ _gmmuWalkCBLevelAlloc
             memPoolList[memPoolListCount++] = ADDR_SYSMEM;
         }
 
+        //
+        // Make sure the memdesc encompasses 2 extra entries if we are allocating the root memdesc.
+        // Required for WARing HW bug 5394264.
+        //
+        if (kgmmuIsBug5394264WarNeeded_HAL(pKernelGmmu) && pLevelFmt == pFmt->pRoot)
+        {
+            newMemSize += 2 * pLevelFmt->entrySize;
+        }
     }
     else
     {
@@ -815,6 +823,14 @@ _gmmuWalkCBFillEntries
 
         dest.pMemDesc = pMemDesc[j];
         dest.offset = entryIndexLo * pLevelFmt->entrySize;
+
+        if (pLevelFmt->pageLevelIdTag == MMU_FMT_PT_SURF_ID_PD0 &&
+            fillState == MMU_WALK_FILL_INVALID &&
+             kgmmuIsBug5394264WarNeeded_HAL(pKernelGmmu))
+        {
+            // Add 2 more entries to invalidate all possible entries in the root page table. This is a workaround for Bug 5394264.
+            sizeOfEntries = (mmuFmtLevelEntryCount(pLevelFmt) + 2) * pLevelFmt->entrySize;
+        }
 
         //
         // A shadow buffer is allocated to store the PTEs in case of writes

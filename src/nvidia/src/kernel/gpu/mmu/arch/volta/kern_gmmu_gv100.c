@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -1426,7 +1426,7 @@ kgmmuFaultBufferLoad_GV100
         kgmmuWriteClientShadowBufPutIndex_HAL(pGpu, pKernelGmmu, gfid, index, 0);
     }
 
-    status = kgmmuEnableFaultBuffer_HAL(pGpu, pKernelGmmu, index, NV_FALSE, gfid);
+    status = kgmmuEnableFaultBuffer_HAL(pGpu, pKernelGmmu, index, gfid);
     if (status != NV_OK)
     {
         (void) kgmmuFaultBufferUnmap(pGpu, pKernelGmmu, index, gfid);
@@ -1442,7 +1442,6 @@ kgmmuEnableFaultBuffer_GV100
     OBJGPU               *pGpu,
     KernelGmmu           *pKernelGmmu,
     NvU32                 index,
-    NvBool                bIsErrorRecovery,
     NvU32                 gfid
 )
 {
@@ -1491,12 +1490,6 @@ kgmmuEnableFaultBuffer_GV100
     }
 
     kgmmuWriteMmuFaultBufferSize_HAL(pGpu, pKernelGmmu, index, regVal, gfid);
-    // Don't touch interrupts if called in error recovery path
-    if (!bIsErrorRecovery)
-    {
-        kgmmuEnableMmuFaultInterrupts_HAL(pGpu, pKernelGmmu, index);
-        kgmmuEnableMmuFaultOverflowIntr_HAL(pGpu, pKernelGmmu, index);
-    }
     return NV_OK;
 }
 
@@ -1638,6 +1631,7 @@ kgmmuSignExtendFaultAddress_GV100
             case OOR_ARCH_X86_64:
             case OOR_ARCH_ARM:
             case OOR_ARCH_AARCH64:
+            case OOR_ARCH_RISCV64:
                 *pMmuFaultAddress = (NvU64)(((NvS64)*pMmuFaultAddress << (64 - cpuAddrShift)) >>
                                             (64 - cpuAddrShift));
                 break;
@@ -1653,6 +1647,7 @@ kgmmuSignExtendFaultAddress_GV100
         switch (pGpu->busInfo.oorArch)
         {
             case OOR_ARCH_X86_64:
+            case OOR_ARCH_RISCV64:
                 *pMmuFaultAddress = (NvU64)(((NvS64)*pMmuFaultAddress << (64 - 48)) >>
                                             (64 - 48));
                 break;
@@ -2374,7 +2369,7 @@ _kgmmuServiceBar2Faults_GV100
 
     if (replayableFaultError || nonReplayableFaultError)
     {
-        rmStatus = kgmmuEnableFaultBuffer_HAL(pGpu, pKernelGmmu, faultBufType, NV_TRUE, GPU_GFID_PF);
+        rmStatus = kgmmuEnableFaultBuffer_HAL(pGpu, pKernelGmmu, faultBufType, GPU_GFID_PF);
         if (rmStatus != NV_OK)
             return rmStatus;
 

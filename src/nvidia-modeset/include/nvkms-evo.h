@@ -119,7 +119,6 @@ NvBool nvSetUsageBoundsEvo(
     const struct NvKmsUsageBounds *pUsage,
     NVEvoUpdateState *updateState);
 void nvEnableMidFrameAndDWCFWatermark(NVDevEvoPtr pDevEvo,
-                                      NvU32 sd,
                                       NvU32 head,
                                       NvBool enable,
                                       NVEvoUpdateState *pUpdateState);
@@ -193,7 +192,7 @@ NvBool nvDowngradeColorBpc(
     const NvKmsDpyOutputColorFormatInfo *pSupportedColorFormats,
     NVDpyAttributeColor *pDpyColor);
 
-NvBool nvDowngradeColorSpaceAndBpc(
+NvBool nvDowngradeColorFormatAndBpc(
     const NVDpyEvoRec *pDpyEvo,
     const NvKmsDpyOutputColorFormatInfo *pSupportedColorFormats,
     NVDpyAttributeColor *pDpyColor);
@@ -265,22 +264,22 @@ NvBool nvValidateSetLutCommonParams(
 
 NvBool nvChooseColorRangeEvo(
     const enum NvKmsDpyAttributeColorRangeValue requestedColorRange,
-    const enum NvKmsDpyAttributeCurrentColorSpaceValue colorSpace,
+    const enum NvKmsDpyAttributeCurrentColorFormatValue colorFormat,
     const enum NvKmsDpyAttributeColorBpcValue colorBpc,
     enum NvKmsDpyAttributeColorRangeValue *pColorRange);
 
-NvBool nvChooseCurrentColorSpaceAndRangeEvo(
+NvBool nvChooseCurrentColorFormatAndRangeEvo(
     const NVDpyEvoRec *pDpyEvo,
     const enum NvYuv420Mode yuv420Mode,
     enum NvKmsOutputColorimetry colorimetry,
-    const enum NvKmsDpyAttributeRequestedColorSpaceValue requestedColorSpace,
+    const enum NvKmsDpyAttributeRequestedColorFormatValue requestedColorFormat,
     const enum NvKmsDpyAttributeColorBpcValue requestedColorBpc,
     const enum NvKmsDpyAttributeColorRangeValue requestedColorRange,
-    enum NvKmsDpyAttributeCurrentColorSpaceValue *pCurrentColorSpace,
+    enum NvKmsDpyAttributeCurrentColorFormatValue *pCurrentColorFormat,
     enum NvKmsDpyAttributeColorBpcValue *pCurrentColorBpc,
     enum NvKmsDpyAttributeColorRangeValue *pCurrentColorRange);
 
-void nvUpdateCurrentHardwareColorSpaceAndRangeEvo(
+void nvUpdateCurrentHardwareColorFormatAndRangeEvo(
     NVDispEvoPtr pDispEvo,
     const NvU32 head,
     const NVDpyAttributeColor *pDpyColor,
@@ -362,6 +361,9 @@ enum nvKmsPixelDepth nvEvoDpyColorToPixelDepth(
 
 void nvSuspendDevEvo(NVDevEvoRec *pDevEvo);
 NvBool nvResumeDevEvo(NVDevEvoRec *pDevEvo);
+void nvUpdateGpuCpuTimeDiff(NVDevEvoPtr pDevEvo);
+void nvStartGpuCpuTimeDiffRefreshTimer(NVDevEvoPtr pDevEvo);
+void nvStopGpuCpuTimeDiffRefreshTimer(NVDevEvoPtr pDevEvo);
 
 NvBool nvGetDefaultDpyColor(
     const NvKmsDpyOutputColorFormatInfo *pColorFormatsInfo,

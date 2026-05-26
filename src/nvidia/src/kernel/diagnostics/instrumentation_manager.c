@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -30,8 +30,26 @@
 void 
 instrumentationmanagerRegisterBuffer_IMPL(InstrumentationManager *pInstrumentationManager, NvU32 gfid, NvU32 gpuInstance, NvU64 bufferSize)
 {
-    GSP_INSTRUMENTATION_DATA *pBufferNode = listAppendNew(&pInstrumentationManager->bufferList);
-    NvU8 *pBuffer = (NvU8*) portMemAllocNonPaged(bufferSize);
+    GSP_INSTRUMENTATION_DATA *pBufferNode;
+    NvU8 *pBuffer;
+
+    pBufferNode = listAppendNew(&pInstrumentationManager->bufferList);
+    if (pBufferNode == NULL)
+    {
+        NV_PRINTF(LEVEL_ERROR, "Failed to allocate buffer node for gfid %u, gpuInstance %u\n",
+                  gfid, gpuInstance);
+        return;
+    }
+
+    pBuffer = (NvU8*) portMemAllocNonPaged(bufferSize);
+    if (pBuffer == NULL)
+    {
+        NV_PRINTF(LEVEL_ERROR, "Failed to allocate %llu bytes for coverage buffer (gfid %u, gpuInstance %u)\n",
+                  bufferSize, gfid, gpuInstance);
+        listRemove(&pInstrumentationManager->bufferList, pBufferNode);
+        return;
+    }
+
     pBufferNode->gfid = gfid;
     pBufferNode->gpuInstance = gpuInstance;
     pBufferNode->pData = pBuffer;
@@ -79,7 +97,7 @@ instrumentationmanagerGetNode_IMPL(InstrumentationManager *pInstrumentationManag
         }
         pNode = listNext(&pInstrumentationManager->bufferList, pNode);    
     }
-    /* not able to find a buffer with the given gfid and gpuInstance */
+
     return NULL;
 }
 
@@ -91,22 +109,45 @@ instrumentationmanagerGetBuffer_IMPL(InstrumentationManager *pInstrumentationMan
 }
 
 void
-instrumentationmanagerMerge_IMPL(InstrumentationManager *pInstrumentationManager, NvU32 gfid, NvU32 gpuInstance, NvU8* pSysmemBuffer)
+instrumentationmanagerMerge_IMPL(InstrumentationManager *pInstrumentationManager, NvU32 gfid, NvU32 gpuInstance, NvU8* pData, NvU32 offset, NvU32 size)
 {
-    if (pSysmemBuffer != NULL) 
+    GSP_INSTRUMENTATION_DATA *pNode;
+    NvU32 endOffset;
+    NvU32 i;
+
+    if (pData == NULL || size == 0)
     {
-        /* the first 8 bytes are the size of the buffer */
-        pInstrumentationManager->outputBuffer.length = *((NvU64*) pSysmemBuffer);
-        pInstrumentationManager->outputBuffer.dataBuffer = pSysmemBuffer+sizeof(NvU64);
-        GSP_INSTRUMENTATION_DATA *pNode = instrumentationmanagerGetNode(pInstrumentationManager, gfid, gpuInstance);
-        if (pNode != NULL)
+        return;
+    }
+
+    pNode = instrumentationmanagerGetNode(pInstrumentationManager, gfid, gpuInstance);
+
+    if (pNode == NULL || pNode->pData == NULL)
+    {
+        return;
+    }
+
+    endOffset = offset + size;
+    if (endOffset > BULLSEYE_GSP_RM_COVERAGE_SIZE)
+    {
+        if (offset >= BULLSEYE_GSP_RM_COVERAGE_SIZE)
         {
-            for (NvU64 i = 0; i < pInstrumentationManager->outputBuffer.length; i++) 
-            {
-                pNode->pData[i] |= pInstrumentationManager->outputBuffer.dataBuffer[i];
-            }
-            pNode->bufferLength = pInstrumentationManager->outputBuffer.length;
-        }  
+            return;
+        }
+        size = BULLSEYE_GSP_RM_COVERAGE_SIZE - offset;
+        endOffset = BULLSEYE_GSP_RM_COVERAGE_SIZE;
+    }
+
+    // Merge (OR) the chunk data into the node's buffer at the specified offset
+    for (i = 0; i < size; i++)
+    {
+        pNode->pData[offset + i] |= pData[i];
+    }
+
+    // Update buffer length if this chunk extends beyond current length
+    if (endOffset > pNode->bufferLength)
+    {
+        pNode->bufferLength = endOffset;
     }
 }
 
@@ -114,7 +155,7 @@ void
 instrumentationmanagerReset_IMPL(InstrumentationManager *pInstrumentationManager, NvU32 gfid, NvU32 gpuInstance)
 {
     GSP_INSTRUMENTATION_DATA *pNode = instrumentationmanagerGetNode(pInstrumentationManager, gfid, gpuInstance);
-    if (pNode != NULL)
+    if (pNode != NULL && pNode->pData != NULL)
     {
         portMemSet(pNode->pData, 0x00, pNode->bufferLength);
     }

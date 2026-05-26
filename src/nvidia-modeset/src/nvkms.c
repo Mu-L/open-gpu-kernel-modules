@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2015 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2015-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -148,6 +148,7 @@ struct NvKmsPerOpenDisp {
     NVEvoApiHandlesRec           vblankSyncObjectHandles[NVKMS_MAX_HEADS_PER_DISP];
     NVEvoApiHandlesRec           vblankCallbackHandles[NVKMS_MAX_HEADS_PER_DISP];
     NVEvoApiHandlesRec           vblankSemControlHandles;
+    NVEvoApiHandlesRec           vblankIntrCallbackHandles[NVKMS_MAX_HEADS_PER_DISP];
 };
 
 struct NvKmsPerOpenDev {
@@ -693,6 +694,8 @@ static void ClearPerOpenDisp(
     nvEvoDestroyApiHandles(&pOpenDisp->connectorHandles);
 
     for (NvU32 i = 0; i < NVKMS_MAX_HEADS_PER_DISP; i++) {
+        NVRgInterruptCallbackRec *pCallback;
+
         nvEvoDestroyApiHandles(&pOpenDisp->vblankSyncObjectHandles[i]);
 
         FOR_ALL_POINTERS_IN_EVO_API_HANDLES(&pOpenDisp->vblankCallbackHandles[i],
@@ -700,6 +703,13 @@ static void ClearPerOpenDisp(
             nvRemoveUnicastEvent(pCallbackData->pUserData);
         }
         nvEvoDestroyApiHandles(&pOpenDisp->vblankCallbackHandles[i]);
+
+        FOR_ALL_POINTERS_IN_EVO_API_HANDLES(&pOpenDisp->vblankIntrCallbackHandles[i],
+                                            pCallback, callback) {
+            nvApiHeadUnregisterRgInterruptCallback(pOpenDisp->pDispEvo,
+                                                   pCallback);
+        }
+        nvEvoDestroyApiHandles(&pOpenDisp->vblankIntrCallbackHandles[i]);
     }
 
     nvEvoDestroyApiHandles(&pOpenDisp->vblankSemControlHandles);
@@ -773,6 +783,11 @@ static NvBool InitPerOpenDisp(
      * here, but we need something. */
     for (NvU32 i = 0; i < NVKMS_MAX_HEADS_PER_DISP; i++) {
         if (!nvEvoInitApiHandles(&pOpenDisp->vblankCallbackHandles[i],
+                                 NVKMS_MAX_VBLANK_SYNC_OBJECTS_PER_HEAD)) {
+            goto fail;
+        }
+
+        if (!nvEvoInitApiHandles(&pOpenDisp->vblankIntrCallbackHandles[i],
                                  NVKMS_MAX_VBLANK_SYNC_OBJECTS_PER_HEAD)) {
             goto fail;
         }
@@ -1084,8 +1099,8 @@ static void RestoreConsole(NVDevEvoPtr pDevEvo)
 {
     // Try to issue a modeset and flip to the framebuffer console surface.
     const NvBool bFail = nvkms_test_fail_alloc_core_channel(
-                     FAIL_ALLOC_CORE_CHANNEL_RESTORE_CONSOLE);
-    
+                     NVKMS_FAIL_ALLOC_CORE_CHANNEL_RESTORE_CONSOLE);
+
     if (bFail || !nvEvoRestoreConsole(pDevEvo, TRUE /* allowMST */)) {
         // If that didn't work, free the core channel to trigger RM's console
         // restore code.
@@ -1436,7 +1451,7 @@ static NvBool AllocDevice(struct NvKmsPerOpen *pOpen,
         pDevEvo->requiresAllAllocationsInSysmem;
     pParams->reply.supportsHeadSurface = pDevEvo->isHeadSurfaceSupported;
 
-    pParams->reply.validNIsoFormatMask = pDevEvo->caps.validNIsoFormatMask;
+    pParams->reply.validNIsoFormatMask = (1 << NVKMS_NISO_FORMAT_FOUR_WORD_NVDISPLAY);
 
     pParams->reply.maxWidthInBytes   = pDevEvo->caps.maxWidthInBytes;
     pParams->reply.maxWidthInPixels  = pDevEvo->caps.maxWidthInPixels;
@@ -1829,6 +1844,7 @@ static NvBool QueryDpyStaticData(struct NvKmsPerOpen *pOpen,
     pParams->reply.mobileInternal = pDpyEvo->internal;
     pParams->reply.isDpMST = nvDpyEvoIsDPMST(pDpyEvo);
     pParams->reply.headMask = nvDpyGetPossibleApiHeadsMask(pDpyEvo);
+    pParams->reply.isHDRCapable = nvDpyIsHDRCapable(pDpyEvo);
 
     return TRUE;
 }
@@ -4930,6 +4946,92 @@ static NvBool FramebufferConsoleDisabled(
     return TRUE;
 }
 
+static NvBool RegisterVblankIntrCallback(struct NvKmsPerOpen *pOpen,
+                                         void *pParamsVoid)
+{
+    NvKmsVblankIntrCallbackHandle callbackHandle;
+    struct NvKmsRegisterVblankIntrCallbackParams *pParams = pParamsVoid;
+    struct NvKmsPerOpenDisp* pOpenDisp =
+            GetPerOpenDisp(pOpen, pParams->request.deviceHandle,
+                           pParams->request.dispHandle);
+
+    if (pOpenDisp == NULL) {
+        return FALSE;
+    }
+
+    /*
+     * This IOCTL involves passing a kernel callback pointer as a parameter,
+     * so it should only be callable by kernel clients to prevent userspace
+     * clients from crashing the kernel with a malformed callback pointer.
+     */
+    if (pOpen->clientType != NVKMS_CLIENT_KERNEL_SPACE) {
+        return FALSE;
+    }
+
+    NVRgInterruptCallbackRec *pCallback =
+        nvApiHeadRegisterRgInterruptCallback(pOpenDisp->pDispEvo,
+                                             pParams->request.head,
+                                             pParams->request.pCallback,
+                                             pParams->request.param);
+
+    if (pCallback == NULL) {
+        return FALSE;
+    }
+
+    callbackHandle = nvEvoCreateApiHandle(
+        &pOpenDisp->vblankIntrCallbackHandles[pParams->request.head],
+        pCallback);
+    if (callbackHandle == 0) {
+        nvApiHeadUnregisterRgInterruptCallback(pOpenDisp->pDispEvo,
+                                               pCallback);
+        return FALSE;
+    }
+
+    pParams->reply.callbackHandle = callbackHandle;
+    return TRUE;
+}
+
+static NvBool UnregisterVblankIntrCallback(struct NvKmsPerOpen *pOpen,
+                                           void *pParamsVoid)
+{
+    struct NvKmsUnregisterVblankIntrCallbackParams *pParams = pParamsVoid;
+    struct NvKmsPerOpenDisp* pOpenDisp =
+            GetPerOpenDisp(pOpen, pParams->request.deviceHandle,
+                           pParams->request.dispHandle);
+    const NvU32 apiHead = pParams->request.head;
+    NVRgInterruptCallbackRec *pCallback;
+
+    if (pOpenDisp == NULL) {
+        return FALSE;
+    }
+
+    /*
+     * This IOCTL should only be callable by kernel clients, matching the
+     * requirement for RegisterVblankIntrCallback.
+     */
+    if (pOpen->clientType != NVKMS_CLIENT_KERNEL_SPACE) {
+        return FALSE;
+    }
+
+    if (apiHead >= ARRAY_LEN(pOpenDisp->vblankIntrCallbackHandles)) {
+        return FALSE;
+    }
+
+    pCallback = nvEvoGetPointerFromApiHandle(
+        &pOpenDisp->vblankIntrCallbackHandles[apiHead],
+        pParams->request.callbackHandle);
+    if (pCallback == NULL) {
+        return FALSE;
+    }
+
+    nvApiHeadUnregisterRgInterruptCallback(pOpenDisp->pDispEvo,
+                                           pCallback);
+    nvEvoDestroyApiHandle(&pOpenDisp->vblankIntrCallbackHandles[apiHead],
+                          pParams->request.callbackHandle);
+
+    return TRUE;
+}
+
 /*!
  * Perform the ioctl operation requested by the client.
  *
@@ -5056,6 +5158,8 @@ NvBool nvKmsIoctl(
         ENTRY(NVKMS_IOCTL_DISABLE_VBLANK_SEM_CONTROL, DisableVblankSemControl),
         ENTRY(NVKMS_IOCTL_ACCEL_VBLANK_SEM_CONTROLS, AccelVblankSemControls),
         ENTRY(NVKMS_IOCTL_FRAMEBUFFER_CONSOLE_DISABLED, FramebufferConsoleDisabled),
+        ENTRY(NVKMS_IOCTL_REGISTER_VBLANK_INTR_CALLBACK, RegisterVblankIntrCallback),
+        ENTRY(NVKMS_IOCTL_UNREGISTER_VBLANK_INTR_CALLBACK, UnregisterVblankIntrCallback),
     };
 
     struct NvKmsPerOpen *pOpen = pOpenVoid;
@@ -6953,7 +7057,6 @@ NvBool nvKmsGetBacklight(NvU32 display_id, void *drv_priv, NvU32 *brightness)
     NVDispEvoRec *pDispEvo = drv_priv;
     NVDevEvoRec *pDevEvo = pDispEvo->pDevEvo;
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId = display_id;
     params.brightnessType = NV0073_CTRL_SPECIFIC_BACKLIGHT_BRIGHTNESS_TYPE_PERCENT100;
 
@@ -6976,7 +7079,6 @@ NvBool nvKmsSetBacklight(NvU32 display_id, void *drv_priv, NvU32 brightness)
     NVDispEvoRec *pDispEvo = drv_priv;
     NVDevEvoRec *pDevEvo = pDispEvo->pDevEvo;
 
-    params.subDeviceInstance = pDispEvo->displayOwner;
     params.displayId  = display_id;
     params.brightness = brightness;
     params.brightnessType = NV0073_CTRL_SPECIFIC_BACKLIGHT_BRIGHTNESS_TYPE_PERCENT100;

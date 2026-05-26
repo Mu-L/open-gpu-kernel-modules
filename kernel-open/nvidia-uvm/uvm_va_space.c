@@ -1,5 +1,5 @@
 /*******************************************************************************
-    Copyright (c) 2015-2025 NVIDIA Corporation
+    Copyright (c) 2015-2026 NVIDIA Corporation
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
@@ -43,7 +43,16 @@
 #include "uvm_common.h"
 #include "nv_uvm_interface.h"
 #include "nv-kthread-q.h"
+#include "uvm_hmm.h"
 #include <linux/mmzone.h>
+
+static bool uvm_disable_sam_migration = false;
+MODULE_PARM_DESC(uvm_disable_sam_migration,
+                 "Disable migration of system allocated memory for CDMM/HMM "
+                 "Default: false (migration is enabled if possible). "
+                 "However, even with uvm_disable_sam_migration=false, migation "
+                 "will not be enabled if is not supported in this driver build ");
+module_param(uvm_disable_sam_migration, bool, 0444);
 
 static bool processor_mask_array_test(const uvm_processor_mask_t *mask,
                                       uvm_processor_id_t mask_id,
@@ -178,6 +187,60 @@ static bool va_space_check_processors_masks(uvm_va_space_t *va_space)
     return true;
 }
 
+static void uvm_va_space_init_pageable_mem_access_enabled(uvm_va_space_t *va_space)
+{
+    va_space->pageable.access_enabled = false;
+
+    // Any pageable memory access requires that we have mm_struct association
+    // via va_space_mm.
+    if (!uvm_va_space_mm_enabled(va_space))
+        return;
+
+    if (va_space->initialization_flags & UVM_INIT_FLAGS_DISABLE_PAGEABLE_ACCESS)
+        return;
+
+    if ((g_uvm_global.ats.supported && g_uvm_global.ats.enabled) || uvm_hmm_is_enabled_system_wide())
+        va_space->pageable.access_enabled = true;
+}
+
+static void uvm_va_space_init_pageable_migrations_enabled(uvm_va_space_t *va_space)
+{
+    va_space->pageable.migrations_enabled = false;
+
+    if (!va_space->pageable.access_enabled)
+        return;
+
+    if (uvm_disable_sam_migration)
+        return;
+
+    if (!(va_space->initialization_flags & UVM_INIT_FLAGS_DISABLE_PAGEABLE_MIGRATIONS))
+        va_space->pageable.migrations_enabled = true;
+}
+
+NV_STATUS uvm_test_get_pageable_mem_type(UVM_TEST_GET_PAGEABLE_MEM_TYPE_PARAMS *params, struct file *filp)
+{
+    uvm_va_space_t *va_space = uvm_va_space_get(filp);
+
+    uvm_va_space_down_read(va_space);
+
+    if (va_space->pageable.access_enabled) {
+        if (va_space->pageable.migrations_enabled)
+            params->type = UVM_TEST_PAGEABLE_MEM_TYPE_MIGRATION;
+        else
+            params->type = UVM_TEST_PAGEABLE_MEM_TYPE_ACCESS;
+    }
+    else if (uvm_va_space_mm_enabled(va_space)) {
+        params->type = UVM_TEST_PAGEABLE_MEM_TYPE_MMU_NOTIFIER;
+    }
+    else {
+        params->type = UVM_TEST_PAGEABLE_MEM_TYPE_NONE;
+    }
+
+    uvm_va_space_up_read(va_space);
+
+    return NV_OK;
+}
+
 NV_STATUS uvm_va_space_create(struct address_space *mapping, uvm_va_space_t **va_space_ptr, NvU64 flags)
 {
     NV_STATUS status;
@@ -201,13 +264,6 @@ NV_STATUS uvm_va_space_create(struct address_space *mapping, uvm_va_space_t **va
     uvm_spin_lock_init(&va_space->va_space_mm.lock, UVM_LOCK_ORDER_LEAF);
     uvm_range_tree_init(&va_space->va_range_tree);
     uvm_init_rwsem(&va_space->ats.lock, UVM_LOCK_ORDER_LEAF);
-
-    // Init to 0 since we rely on atomic_inc_return behavior to return 1 as the
-    // first ID.
-    atomic64_set(&va_space->range_group_id_counter, 0);
-
-    INIT_RADIX_TREE(&va_space->range_groups, NV_UVM_GFP_FLAGS);
-    uvm_range_tree_init(&va_space->range_group_ranges);
 
     bitmap_zero(va_space->enabled_peers, UVM_MAX_UNIQUE_GPU_PAIRS);
 
@@ -260,16 +316,21 @@ NV_STATUS uvm_va_space_create(struct address_space *mapping, uvm_va_space_t **va
 
     va_space->initialization_flags = flags;
 
+    va_space->pageable.cdmm_enabled = true;
+
+    uvm_va_space_init_pageable_mem_access_enabled(va_space);
+    uvm_va_space_init_pageable_migrations_enabled(va_space);
+
+    if (g_uvm_global.ats.enabled && !g_uvm_global.cdmm_enabled)
+        atomic_set(&va_space->ats.state, UVM_ATS_VA_SPACE_ATS_UNSET);
+    else
+        uvm_va_space_ats_set(va_space, UVM_ATS_VA_SPACE_ATS_UNSUPPORTED);
+
     status = uvm_va_space_mm_register(va_space);
     if (status != NV_OK)
         goto fail;
 
     uvm_hmm_va_space_initialize(va_space);
-
-    if (g_uvm_global.ats.enabled)
-        atomic_set(&va_space->ats.state, UVM_ATS_VA_SPACE_ATS_UNSET);
-    else
-        uvm_va_space_ats_set(va_space, UVM_ATS_VA_SPACE_ATS_UNSUPPORTED);
 
     uvm_va_space_up_write(va_space);
     uvm_up_write_mmap_lock(current->mm);
@@ -393,8 +454,11 @@ static void unregister_gpu(uvm_va_space_t *va_space,
 
     uvm_processor_mask_clear(&va_space->registered_gpus, gpu->id);
 
-    if (gpu->parent->is_integrated_gpu)
+    if (gpu->parent->is_integrated_gpu) {
         va_space->num_integrated_gpus--;
+        uvm_processor_mask_clear(&va_space->integrated_gpus, gpu->id);
+        UVM_ASSERT(va_space->num_integrated_gpus >= 0);
+    }
 
     // Remove the GPU from the CPU/GPU affinity masks
     if (gpu->parent->closest_cpu_numa_node != -1) {
@@ -501,8 +565,6 @@ void uvm_va_space_destroy(uvm_va_space_t *va_space)
         UVM_ASSERT(va_range->type != UVM_VA_RANGE_TYPE_CHANNEL);
         uvm_va_range_destroy(va_range, &deferred_free_list);
     }
-
-    uvm_range_group_radix_tree_destroy(va_space);
 
     // Unregister all GPUs in the VA space. Note that this does not release the
     // GPUs nor peers. We do that below.
@@ -738,12 +800,11 @@ NV_STATUS uvm_va_space_register_gpu(uvm_va_space_t *va_space,
     NV_STATUS status;
     uvm_va_range_t *va_range;
     uvm_gpu_t *gpu;
-    uvm_gpu_t *other_gpu;
     bool gpu_can_access_sysmem = true;
     uvm_processor_mask_t *peers_to_release = NULL;
-    bool enable_hmm = !(va_space->initialization_flags & UVM_INIT_FLAGS_DISABLE_HMM);
+    bool enable_devmem = !(va_space->initialization_flags & UVM_INIT_FLAGS_DISABLE_PAGEABLE_MIGRATIONS);
 
-    status = uvm_gpu_retain_by_uuid(gpu_uuid, user_rm_device, &va_space->test.parent_gpu_error, enable_hmm, &gpu);
+    status = uvm_gpu_retain_by_uuid(gpu_uuid, user_rm_device, &va_space->test.parent_gpu_error, enable_devmem, &gpu);
     if (status != NV_OK)
         return status;
 
@@ -771,32 +832,40 @@ NV_STATUS uvm_va_space_register_gpu(uvm_va_space_t *va_space,
         goto done;
     }
 
-    // Mixing coherent and non-coherent GPUs is not supported
-    for_each_va_space_gpu(other_gpu, va_space) {
-        if (uvm_parent_gpu_is_coherent(gpu->parent) != uvm_parent_gpu_is_coherent(other_gpu->parent)) {
-            status = NV_ERR_INVALID_DEVICE;
-            goto done;
+    if (!uvm_processor_mask_get_gpu_count(&va_space->registered_gpus)) {
+        if (!gpu->parent->is_integrated_gpu) {
+            va_space->pageable.cdmm_enabled = !gpu->mem_info.numa.enabled;
+        } else {
+            // Whether NUMA is enabled for a GPU is determined by the platform
+            // setting issued from RM. Since iGPUs never support NUMA mode,
+            // require CDMM to be enabled platform wide.
+            va_space->pageable.cdmm_enabled = g_uvm_global.cdmm_enabled;
         }
-    }
 
-    // Adding a non-coherent GPU to a coherent VA space is not allowed and vice
-    // versa.
-    if (!uvm_va_space_ats_unset(va_space) &&
-        (uvm_va_space_ats_supported(va_space) !=
-         uvm_parent_gpu_supports_ats(gpu->parent))) {
-        status = NV_ERR_INVALID_DEVICE;
-        goto done;
+        if (va_space->pageable.cdmm_enabled &&
+            va_space->pageable.migrations_enabled &&
+            !UVM_CAN_USE_DEVICE_PRIVATE_MEMREMAP_PAGES()) {
+                va_space->pageable.migrations_enabled = NV_FALSE;
+        }
+
+        // Destroy any HMM blocks if CDMM or HMM mode isn't detected.
+        if (!va_space->pageable.cdmm_enabled)
+            uvm_hmm_va_space_destroy(va_space);
+    }
+    else {
+        uvm_gpu_t *other_gpu;
+        for_each_va_space_gpu(other_gpu, va_space) {
+            if (other_gpu->mem_info.numa.enabled != gpu->mem_info.numa.enabled) {
+                status = NV_ERR_INVALID_DEVICE;
+                goto done;
+            }
+        }
     }
 
     if (gpu->parent->is_integrated_gpu) {
-        // TODO: Bug 5003533 [UVM][T264/GB10B] Multiple iGPU support
-        if (uvm_processor_mask_get_gpu_count(&va_space->registered_gpus)) {
-            status = NV_ERR_INVALID_DEVICE;
-            goto done;
-        }
-
         UVM_ASSERT(gpu->mem_info.size == 0);
         va_space->num_integrated_gpus++;
+        uvm_processor_mask_set(&va_space->integrated_gpus, gpu->id);
     }
 
     // The VA space's mm is being torn down, so don't allow more work
@@ -837,17 +906,20 @@ NV_STATUS uvm_va_space_register_gpu(uvm_va_space_t *va_space,
     }
 
     if (uvm_parent_gpu_is_coherent(gpu->parent)) {
-        // TODO: Bug 5277206: Integrated GPUs should report native atomics to system
-        // memory. In the case of integrated GPUs we need to add checks to
-        // detect GPUs can access CPU memory coherently
         processor_mask_array_set(va_space->has_native_atomics, UVM_ID_CPU, gpu->id);
 
-        if (gpu->mem_info.numa.enabled) {
+        // For CDMM mode if struct pages were initialized (parent devmem is not NULL)
+        // then the GPU memory becomes accessible from the CPU (it is possible to call
+        // vm_insert_page for GPU memory)
+        if (gpu->mem_info.numa.enabled || uvm_devmem_cdmm_present(gpu->parent)) {
             processor_mask_array_set(va_space->can_access, UVM_ID_CPU, gpu->id);
             processor_mask_array_set(va_space->accessible_from, gpu->id, UVM_ID_CPU);
             processor_mask_array_set(va_space->has_native_atomics, gpu->id, UVM_ID_CPU);
         }
     }
+
+    if (gpu->parent->is_integrated_gpu)
+        processor_mask_array_set(va_space->has_native_atomics, UVM_ID_CPU, gpu->id);
 
     // All processors have direct access to their own memory
     processor_mask_array_set(va_space->can_access, gpu->id, gpu->id);
@@ -911,7 +983,7 @@ NV_STATUS uvm_va_space_register_gpu(uvm_va_space_t *va_space,
         *numa_node_id = -1;
     }
 
-    if (g_uvm_global.ats.enabled && uvm_parent_gpu_supports_ats(gpu->parent))
+    if (g_uvm_global.ats.enabled && uvm_parent_gpu_supports_ats(gpu->parent) && !g_uvm_global.cdmm_enabled)
         uvm_va_space_ats_set(va_space, UVM_ATS_VA_SPACE_ATS_SUPPORTED);
     else
         uvm_va_space_ats_set(va_space, UVM_ATS_VA_SPACE_ATS_UNSUPPORTED);
@@ -1458,7 +1530,6 @@ static void destroy_gpu_va_space(uvm_gpu_va_space_t *gpu_va_space)
 
     uvm_ats_unbind_gpu(gpu_va_space);
 
-
     uvm_gpu_va_space_release(gpu_va_space);
 }
 
@@ -1501,16 +1572,11 @@ static NV_STATUS create_gpu_va_space(uvm_gpu_t *gpu,
 
     // If ATS support in the UVM driver isn't enabled, fail registration of GPU
     // VA spaces which have ATS enabled.
-    if (!uvm_va_space_ats_enabled(va_space) && gpu_va_space->ats.enabled) {
-        UVM_INFO_PRINT("GPU VA space requires ATS, but ATS is not supported or enabled\n");
-        status = NV_ERR_INVALID_FLAGS;
-        goto error;
-    }
 
     // If this GPU VA space uses ATS then pageable memory access must not have
     // been disabled in the VA space.
     // The VA space can be in an ATS_UNSET state and accept either ATS or non-ATS.
-    if (gpu_va_space->ats.enabled && !uvm_va_space_pageable_mem_access_enabled(va_space)) {
+    if (gpu_va_space->ats.enabled && !va_space->pageable.access_enabled) {
         UVM_INFO_PRINT("GPU VA space requires ATS, but pageable memory access is not supported\n");
         status = NV_ERR_INVALID_FLAGS;
         goto error;
@@ -1585,18 +1651,19 @@ static NV_STATUS check_gpu_va_space(uvm_gpu_va_space_t *gpu_va_space)
     if (va_space->disallow_new_registers)
         return NV_ERR_PAGE_TABLE_NOT_AVAIL;
 
-    // This GPU VA space must match its big page size with all enabled peers.
-    // Also, the new GPU VA space must have the same ATS setting as previously-
-    // registered GPU VA spaces
-    for_each_va_space_gpu_in_mask(other_gpu, va_space, &va_space->registered_gpu_va_spaces) {
-        UVM_ASSERT(other_gpu != gpu);
+    if (!va_space->pageable.cdmm_enabled) {
+        // In NUMA mode, the new GPU VA space must have the same ATS setting as
+        // previously registered GPU VA spaces
+        for_each_va_space_gpu_in_mask(other_gpu, va_space, &va_space->registered_gpu_va_spaces) {
+            UVM_ASSERT(other_gpu != gpu);
 
-        other_gpu_va_space = uvm_gpu_va_space_get(va_space, other_gpu);
-        if (other_gpu_va_space->ats.enabled != gpu_va_space->ats.enabled)
-            return NV_ERR_INVALID_FLAGS;
+            other_gpu_va_space = uvm_gpu_va_space_get(va_space, other_gpu);
+            if (other_gpu_va_space->ats.enabled != gpu_va_space->ats.enabled)
+                return NV_ERR_INVALID_FLAGS;
 
-        if (!test_bit(uvm_gpu_pair_index(gpu->id, other_gpu->id), va_space->enabled_peers))
-            continue;
+            if (!test_bit(uvm_gpu_pair_index(gpu->id, other_gpu->id), va_space->enabled_peers))
+                continue;
+        }
     }
 
     return NV_OK;
@@ -2070,57 +2137,6 @@ NV_STATUS uvm_api_disable_peer_access(UVM_DISABLE_PEER_ACCESS_PARAMS *params, st
 error:
     uvm_va_space_up_write(va_space);
     return status;
-}
-
-bool uvm_va_space_pageable_mem_access_enabled(uvm_va_space_t *va_space)
-{
-    // Any pageable memory access requires that we have mm_struct association
-    // via va_space_mm.
-    if (!uvm_va_space_mm_enabled(va_space))
-        return false;
-
-    // We might have systems with both ATS and HMM support. ATS gets priority.
-    // TODO: Bug 4103580: Once aarch64 supports HMM this condition will no
-    // longer be true.
-    if (g_uvm_global.ats.enabled)
-        return !uvm_va_space_ats_unsupported(va_space);
-
-    return uvm_hmm_is_enabled(va_space);
-}
-
-bool uvm_va_space_pageable_mem_access_supported(uvm_va_space_t *va_space)
-{
-    // Any pageable memory access requires that we have mm_struct association
-    // via va_space_mm.
-    if (!uvm_va_space_mm_enabled(va_space))
-        return false;
-
-    // We might have systems with both ATS and HMM support. ATS gets priority.
-    // TODO: Bug 4103580: Once aarch64 supports HMM this condition will no
-    // longer be true.
-    if (g_uvm_global.ats.supported)
-        return g_uvm_global.ats.enabled;
-
-    return uvm_hmm_is_enabled(va_space);
-}
-
-NV_STATUS uvm_test_get_pageable_mem_access_type(UVM_TEST_GET_PAGEABLE_MEM_ACCESS_TYPE_PARAMS *params, struct file *filp)
-{
-    uvm_va_space_t *va_space = uvm_va_space_get(filp);
-
-    params->type = UVM_TEST_PAGEABLE_MEM_ACCESS_TYPE_NONE;
-
-    if (uvm_va_space_pageable_mem_access_enabled(va_space)) {
-        if (g_uvm_global.ats.enabled)
-            params->type = UVM_TEST_PAGEABLE_MEM_ACCESS_TYPE_ATS;
-        else
-            params->type = UVM_TEST_PAGEABLE_MEM_ACCESS_TYPE_HMM;
-    }
-    else if (uvm_va_space_mm_enabled(va_space)) {
-        params->type = UVM_TEST_PAGEABLE_MEM_ACCESS_TYPE_MMU_NOTIFIER;
-    }
-
-    return NV_OK;
 }
 
 NV_STATUS uvm_test_flush_deferred_work(UVM_TEST_FLUSH_DEFERRED_WORK_PARAMS *params, struct file *filp)

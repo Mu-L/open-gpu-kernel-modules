@@ -32,7 +32,7 @@ void __nvoc_init__ComputeInstanceSubscription(ComputeInstanceSubscription*);
 void __nvoc_init_funcTable_ComputeInstanceSubscription(ComputeInstanceSubscription*);
 NV_STATUS __nvoc_ctor_ComputeInstanceSubscription(ComputeInstanceSubscription*, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_ComputeInstanceSubscription(ComputeInstanceSubscription*);
-void __nvoc_dtor_ComputeInstanceSubscription(ComputeInstanceSubscription*);
+void __nvoc_dtor_ComputeInstanceSubscription(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__ComputeInstanceSubscription;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ComputeInstanceSubscription =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "ComputeInstanceSubscription",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_ComputeInstanceSubscription,
+    .objCreatefn =        &__nvoc_objCreateDynamic_ComputeInstanceSubscription,
     .pCastInfo =          &__nvoc_castinfo__ComputeInstanceSubscription,
     .pExportInfo =        &__nvoc_export_info__ComputeInstanceSubscription
 };
@@ -125,6 +125,13 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ComputeInstanceSubscription =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+static NV_STATUS cisubscriptionCtrlCmdGetUuid__EXPORT(void *arg_this, void *arg2) {
+    return cisubscriptionCtrlCmdGetUuid_IMPL(arg_this, arg2);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000109u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ComputeInstanceSubscription[] = 
 {
@@ -132,7 +139,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ComputeI
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &cisubscriptionCtrlCmdGetUuid_IMPL,
+        /*pFunc=*/      (void (*)(void)) &cisubscriptionCtrlCmdGetUuid__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x109u)
         /*flags=*/      0x109u,
         /*accessRight=*/0x0u,
@@ -149,7 +156,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ComputeI
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__ComputeInstanceSubscription __nvoc_metadata__ComputeInstanceSubscription = {
     .rtti.pClassDef = &__nvoc_class_def_ComputeInstanceSubscription,    // (cisubscription) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_ComputeInstanceSubscription,
+    .rtti.dtor      = &__nvoc_dtor_ComputeInstanceSubscription,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -412,16 +419,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__ComputeInstanceSubscription =
 
 // Destruct ComputeInstanceSubscription object.
 void __nvoc_cisubscriptionDestruct(ComputeInstanceSubscription*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_ComputeInstanceSubscription(ComputeInstanceSubscription* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_ComputeInstanceSubscription(Dynamic* pThis) {
+
+    ComputeInstanceSubscription *__nvoc_this = (ComputeInstanceSubscription *) pThis;
 
 // Call destructor.
-    __nvoc_cisubscriptionDestruct(pThis);
+    __nvoc_cisubscriptionDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_ComputeInstanceSubscription(ComputeInstanceSubscription *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -447,7 +456,7 @@ NV_STATUS __nvoc_ctor_ComputeInstanceSubscription(ComputeInstanceSubscription *p
 
     // Unwind on error.
 __nvoc_ctor_ComputeInstanceSubscription_fail__init:
-    __nvoc_dtor_GpuResource(&pComputeInstanceSubscription->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pComputeInstanceSubscription->__nvoc_base_GpuResource);
 __nvoc_ctor_ComputeInstanceSubscription_fail_GpuResource:
 __nvoc_ctor_ComputeInstanceSubscription_exit:
     return status;
@@ -559,13 +568,10 @@ __nvoc_objCreate_ComputeInstanceSubscription_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_ComputeInstanceSubscription(ComputeInstanceSubscription **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_ComputeInstanceSubscription(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_ComputeInstanceSubscription(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_ComputeInstanceSubscription((ComputeInstanceSubscription **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

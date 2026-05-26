@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2019-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2019-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -52,7 +52,7 @@
                                                              sizeof(DISPLAYID_2_0_DATA_BLOCK_HEADER))
 #define DISPLAYID_2_0_SECTION_SIZE_MAX                      256
 #define DISPLAYID_2_0_SECTION_DATA_SIZE_MAX                 (DISPLAYID_2_0_SECTION_SIZE_MAX -        \
-                                                            sizeof(DISPLAYID_2_0_SECTION_HEADER)
+                                                            sizeof(DISPLAYID_2_0_SECTION_HEADER))
 
 typedef struct _tagDISPLAYID_2_0_SECTION_HEADER
 {
@@ -367,9 +367,10 @@ typedef struct _tagDISPLAYID_2_0_TIMING_10_BLOCK_HEADER
     NvU8  payload_bytes;
 } DISPLAYID_2_0_TIMING_10_BLOCK_HEADER;
 
-#define DISPLAYID_2_0_TIMING_10_MAX_6BYTES_DESCRIPTORS 18
-#define DISPLAYID_2_0_TIMING_10_MAX_7BYTES_DESCRIPTORS 16
-#define DISPLAYID_2_1_TIMING_10_MAX_8BYTES_DESCRIPTORS 14
+// The values from (floor(section_data / descriptor_size))
+#define DISPLAYID_2_0_TIMING_10_MAX_6BYTES_DESCRIPTORS 41
+#define DISPLAYID_2_0_TIMING_10_MAX_7BYTES_DESCRIPTORS 35
+#define DISPLAYID_2_1_TIMING_10_MAX_8BYTES_DESCRIPTORS 31
 
 typedef struct _DISPLAYID_2_0_TIMING_10_6BYTES_DESCRIPTOR
 {
@@ -407,7 +408,7 @@ typedef struct _DISPLAYID_2_1_TIMING_10_8BYTES_DESCRIPTOR
 typedef struct _DISPLAYID_2_0_TIMING_10_BLOCK
 {
     DISPLAYID_2_0_TIMING_10_BLOCK_HEADER    header;
-    NvU8                                    descriptors[144];
+    NvU8                                    descriptors[248];
 } DISPLAYID_2_0_TIMING_10_BLOCK;
 
 #define DISPLAYID_2_0_RANGE_LIMITS_BLOCK_PAYLOAD_LENGTH   9

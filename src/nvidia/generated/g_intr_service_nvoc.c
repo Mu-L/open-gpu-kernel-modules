@@ -26,7 +26,7 @@ void __nvoc_init__IntrService(IntrService*);
 void __nvoc_init_funcTable_IntrService(IntrService*);
 NV_STATUS __nvoc_ctor_IntrService(IntrService*);
 void __nvoc_init_dataField_IntrService(IntrService*);
-void __nvoc_dtor_IntrService(IntrService*);
+void __nvoc_dtor_IntrService(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__IntrService;
@@ -46,7 +46,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_IntrService =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "IntrService",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) NULL,
+    .objCreatefn =        NULL,
     .pCastInfo =          &__nvoc_castinfo__IntrService,
     .pExportInfo =        &__nvoc_export_info__IntrService
 };
@@ -55,7 +55,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_IntrService =
 // Metadata with per-class RTTI and vtable
 static const struct NVOC_METADATA__IntrService __nvoc_metadata__IntrService = {
     .rtti.pClassDef = &__nvoc_class_def_IntrService,    // (intrserv) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_IntrService,
+    .rtti.dtor      = &__nvoc_dtor_IntrService,
     .rtti.offset    = 0,
 
     .vtable.__intrservRegisterIntrService__ = &intrservRegisterIntrService_IMPL,    // virtual
@@ -81,8 +81,10 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__IntrService =
 
 
 // Destruct IntrService object.
-void __nvoc_dtor_IntrService(IntrService* pThis) {
-    PORT_UNREFERENCED_VARIABLE(pThis);
+void __nvoc_dtor_IntrService(Dynamic* pThis) {
+
+    IntrService *__nvoc_this = (IntrService *) pThis;
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_IntrService(IntrService *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);

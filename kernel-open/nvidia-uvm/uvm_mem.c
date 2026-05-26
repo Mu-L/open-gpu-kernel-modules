@@ -720,7 +720,7 @@ static NV_STATUS mem_map_cpu_to_sysmem_kernel(uvm_mem_t *mem)
             pages[page_index] = mem_cpu_page(mem, page_index * PAGE_SIZE);
     }
 
-    if (g_uvm_global.conf_computing_enabled && uvm_mem_is_sysmem_dma(mem))
+    if (g_uvm_global.hw_conf_computing_enabled && uvm_mem_is_sysmem_dma(mem))
         prot = uvm_pgprot_decrypted(PAGE_KERNEL_NOENC);
     else
         prot = PAGE_KERNEL;

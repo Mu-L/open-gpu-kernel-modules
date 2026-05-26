@@ -94,12 +94,7 @@ kgraphicsAllocGrGlobalCtxBuffers_GM200
         pKernelGraphicsStaticInfo->pContextBuffersInfo->engine[NV0080_CTRL_FIFO_GET_ENGINE_CONTEXT_PROPERTIES_ENGINE_ID_GRAPHICS_PRIV_ACCESS_MAP].alignment;
 
     // Setup the Circular Buffer DB
-    cbAllocFlags = MEMDESC_FLAGS_LOST_ON_SUSPEND;
-
-    if (kgraphicsShouldSetContextBuffersGPUPrivileged(pGpu, pKernelGraphics))
-    {
-        cbAllocFlags |= MEMDESC_FLAGS_GPU_PRIVILEGED;
-    }
+    cbAllocFlags = MEMDESC_FLAGS_LOST_ON_SUSPEND | MEMDESC_FLAGS_GPU_PRIVILEGED;
 
     pCtxBufPool = NULL;
     if (pKernelGraphicsContext != NULL)

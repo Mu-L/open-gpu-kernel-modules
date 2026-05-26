@@ -258,7 +258,7 @@ NV_STATUS krcErrorSetNotifier_IMPL
     //
     if (pKernelChannel->bUvmOwned)
     {
-        sysSetRecoveryRebootRequired(pSys, NV_TRUE);
+        sysSetRecoveryOsRebootRequired(pSys, NV_TRUE);
     }
 
     //

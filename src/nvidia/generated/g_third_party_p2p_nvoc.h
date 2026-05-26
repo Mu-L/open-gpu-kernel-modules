@@ -264,7 +264,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_P2PTokenShare;
     ((P2PTokenShare*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(P2PTokenShare)))
 #endif //__nvoc_third_party_p2p_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_P2PTokenShare(P2PTokenShare**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_P2PTokenShare(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_P2PTokenShare(P2PTokenShare**, Dynamic*, NvU32);
 #define __objCreate_P2PTokenShare(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -400,7 +400,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_ThirdPartyP2P;
     ((ThirdPartyP2P*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(ThirdPartyP2P)))
 #endif //__nvoc_third_party_p2p_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_ThirdPartyP2P(ThirdPartyP2P**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_ThirdPartyP2P(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_ThirdPartyP2P(ThirdPartyP2P**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_ThirdPartyP2P(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

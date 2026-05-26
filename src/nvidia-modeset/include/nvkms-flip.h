@@ -97,7 +97,7 @@ NvU32 nvCollectSurfaceUsageMaskOneApiHead(const NVDispEvoRec *pDispEvo,
                                           NVSurfaceEvoPtr pSurfaceEvo);
 
 void nvIdleLayerChannels(NVDevEvoRec *pDevEvo,
-    NvU32 layerMaskPerSdApiHead[NVKMS_MAX_SUBDEVICES][NVKMS_MAX_HEADS_PER_DISP]);
+    NvU32 layerMaskPerApiHead[NVKMS_MAX_HEADS_PER_DISP]);
 
 void nvEvoClearSurfaceUsage(NVDevEvoRec *pDevEvo,
                             NVSurfaceEvoPtr pSurfaceEvo,

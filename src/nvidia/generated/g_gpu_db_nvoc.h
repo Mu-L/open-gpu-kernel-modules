@@ -165,7 +165,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_GpuDb;
     ((GpuDb*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(GpuDb)))
 #endif //__nvoc_gpu_db_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_GpuDb(GpuDb**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_GpuDb(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_GpuDb(GpuDb**, Dynamic*, NvU32);
 #define __objCreate_GpuDb(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

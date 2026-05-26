@@ -38,7 +38,6 @@
 // XXX Cleanup to do: change PCI_VENDOR_* to NV_PCI_SUBID_VENDOR_*
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
-#define NV_PCI_SUBID_VENDOR         15:0  /* RW--F */
 #define NV_PCI_SUBID_VENDOR_AMD           0x1022
 #define NV_PCI_SUBID_VENDOR_ALI           0x10B9
 #define NV_PCI_SUBID_VENDOR_NVIDIA        0x10DE
@@ -154,7 +153,9 @@
 #define PCI_VENDOR_ID_PHYTIUM       0x1DB7
 
 #define NV_PCI_DEVID_DEVICE                    31:16  /* RW--F */
+#define NV_PCI_DEVID_VENDOR                    15:0   /* RW--F */
 #define NV_PCI_SUBID_DEVICE                    31:16  /* RW--F */
+#define NV_PCI_SUBID_VENDOR                    15:0   /* RW--F */
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -663,12 +664,14 @@ enum {
 ,     CS_RESERVED_4
 ,     CS_AMPERE_AMPEREONE192
 ,     CS_NVIDIA_T254
-,     CS_RESERVED_5
+,     CS_NVIDIA_TB500
 ,     CS_MAX_PCIE
 };
 
 // Chip IDs for Tegra SoCs
 #define NV_CHIP_ID_T234 0x2350
+
+#define NV_CHIP_ID_T239 0x23b0
 
 enum {
     RP_UNKNOWN = 0

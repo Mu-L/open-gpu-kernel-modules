@@ -26,7 +26,7 @@ void __nvoc_init__RegisterAperture(RegisterAperture*);
 void __nvoc_init_funcTable_RegisterAperture(RegisterAperture*);
 NV_STATUS __nvoc_ctor_RegisterAperture(RegisterAperture*);
 void __nvoc_init_dataField_RegisterAperture(RegisterAperture*);
-void __nvoc_dtor_RegisterAperture(RegisterAperture*);
+void __nvoc_dtor_RegisterAperture(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__RegisterAperture;
@@ -55,7 +55,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RegisterAperture =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "RegisterAperture",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) NULL,
+    .objCreatefn =        NULL,
     .pCastInfo =          &__nvoc_castinfo__RegisterAperture,
     .pExportInfo =        &__nvoc_export_info__RegisterAperture
 };
@@ -64,7 +64,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RegisterAperture =
 // Metadata with per-class RTTI and vtable
 static const struct NVOC_METADATA__RegisterAperture __nvoc_metadata__RegisterAperture = {
     .rtti.pClassDef = &__nvoc_class_def_RegisterAperture,    // (regaprt) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_RegisterAperture,
+    .rtti.dtor      = &__nvoc_dtor_RegisterAperture,
     .rtti.offset    = 0,
 
     .vtable.__regaprtReadReg08__ = NULL,    // pure virtual
@@ -94,8 +94,10 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__RegisterAperture =
 
 
 // Destruct RegisterAperture object.
-void __nvoc_dtor_RegisterAperture(RegisterAperture* pThis) {
-    PORT_UNREFERENCED_VARIABLE(pThis);
+void __nvoc_dtor_RegisterAperture(Dynamic* pThis) {
+
+    RegisterAperture *__nvoc_this = (RegisterAperture *) pThis;
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_RegisterAperture(RegisterAperture *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);

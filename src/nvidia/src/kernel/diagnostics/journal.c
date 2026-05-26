@@ -3790,12 +3790,19 @@ _rcdbSendNocatJournalNotification
         return NV_OK;
     }
 
-    RMTRACE_NOCAT(_REPORT_PENDING, (pGpu ? pGpu->gpuId : RMTRACE_UNKNOWN_GPUID),
+    if (pRcdb->getProperty(pRcdb, PDB_PROP_RCDB_NOCAT_EVTBUF_SUPPORTED))
+    {
+        /* On non-Windows, use EventBuffer notification for NOCAT */
+    }
+    else 
+    {
+        RMTRACE_NOCAT(_REPORT_PENDING, (pGpu ? pGpu->gpuId : RMTRACE_UNKNOWN_GPUID),
         RmNocatReport,
         posted,
         type,
         rcdbGetNocatOutstandingCount(pRcdb),
         timeStamp);
+    }
 
     // count the number of notifications.
     pRcdb->nocatJournalDescriptor.nocatEventCounters[NV2080_NOCAT_JOURNAL_REPORT_ACTIVITY_NOTIFICATIONS_IDX]++;

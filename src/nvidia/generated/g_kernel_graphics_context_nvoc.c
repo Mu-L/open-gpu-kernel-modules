@@ -32,7 +32,7 @@ void __nvoc_init__KernelGraphicsContext(KernelGraphicsContext*, GpuHalspecOwner 
 void __nvoc_init_funcTable_KernelGraphicsContext(KernelGraphicsContext*, GpuHalspecOwner *pGpuhalspecowner, RmHalspecOwner *pRmhalspecowner);
 NV_STATUS __nvoc_ctor_KernelGraphicsContext(KernelGraphicsContext*, GpuHalspecOwner *pGpuhalspecowner, RmHalspecOwner *pRmhalspecowner, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_KernelGraphicsContext(KernelGraphicsContext*, GpuHalspecOwner *pGpuhalspecowner, RmHalspecOwner *pRmhalspecowner);
-void __nvoc_dtor_KernelGraphicsContext(KernelGraphicsContext*);
+void __nvoc_dtor_KernelGraphicsContext(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__KernelGraphicsContext;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelGraphicsContext =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "KernelGraphicsContext",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_KernelGraphicsContext,
+    .objCreatefn =        &__nvoc_objCreateDynamic_KernelGraphicsContext,
     .pCastInfo =          &__nvoc_castinfo__KernelGraphicsContext,
     .pExportInfo =        &__nvoc_export_info__KernelGraphicsContext
 };
@@ -125,6 +125,37 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelGraphicsContext =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS kgrctxCtrlGetTpcPartitionMode__EXPORT(void *pKernelGraphicsContext, void *pParams) {
+    return kgrctxCtrlGetTpcPartitionMode_IMPL(pKernelGraphicsContext, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS kgrctxCtrlSetTpcPartitionMode__EXPORT(void *pKernelGraphicsContext, void *pParams) {
+    return kgrctxCtrlSetTpcPartitionMode_IMPL(pKernelGraphicsContext, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010008u)
+static NV_STATUS kgrctxCtrlGetMMUDebugMode__EXPORT(void *pKernelGraphicsContext, void *pParams) {
+    return kgrctxCtrlGetMMUDebugMode_IMPL(pKernelGraphicsContext, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00010008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS kgrctxCtrlProgramVidmemPromote__EXPORT(void *pKernelGraphicsContext, void *pParams) {
+    return kgrctxCtrlProgramVidmemPromote_IMPL(pKernelGraphicsContext, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS kgrctxCtrlSetLgSectorPromotion__EXPORT(void *pKernelGraphicsContext, void *pParams) {
+    return kgrctxCtrlSetLgSectorPromotion_IMPL(pKernelGraphicsContext, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelGraphicsContext[] = 
 {
@@ -132,7 +163,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelGr
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kgrctxCtrlSetTpcPartitionMode_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kgrctxCtrlSetTpcPartitionMode__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -147,7 +178,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelGr
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kgrctxCtrlGetTpcPartitionMode_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kgrctxCtrlGetTpcPartitionMode__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -162,7 +193,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelGr
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kgrctxCtrlGetMMUDebugMode_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kgrctxCtrlGetMMUDebugMode__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
         /*flags=*/      0x10008u,
         /*accessRight=*/0x0u,
@@ -177,7 +208,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelGr
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kgrctxCtrlProgramVidmemPromote_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kgrctxCtrlProgramVidmemPromote__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -192,7 +223,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelGr
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &kgrctxCtrlSetLgSectorPromotion_IMPL,
+        /*pFunc=*/      (void (*)(void)) &kgrctxCtrlSetLgSectorPromotion__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -209,7 +240,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_KernelGr
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__KernelGraphicsContext __nvoc_metadata__KernelGraphicsContext = {
     .rtti.pClassDef = &__nvoc_class_def_KernelGraphicsContext,    // (kgrctx) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_KernelGraphicsContext,
+    .rtti.dtor      = &__nvoc_dtor_KernelGraphicsContext,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -472,16 +503,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__KernelGraphicsContext =
 
 // Destruct KernelGraphicsContext object.
 void __nvoc_kgrctxDestruct(KernelGraphicsContext*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_KernelGraphicsContext(KernelGraphicsContext* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_KernelGraphicsContext(Dynamic* pThis) {
+
+    KernelGraphicsContext *__nvoc_this = (KernelGraphicsContext *) pThis;
 
 // Call destructor.
-    __nvoc_kgrctxDestruct(pThis);
+    __nvoc_kgrctxDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_KernelGraphicsContext(KernelGraphicsContext *pThis, GpuHalspecOwner *pGpuhalspecowner, RmHalspecOwner *pRmhalspecowner) {
     ChipHal *chipHal = &pGpuhalspecowner->chipHal;
@@ -517,7 +550,7 @@ NV_STATUS __nvoc_ctor_KernelGraphicsContext(KernelGraphicsContext *pKernelGraphi
 
     // Unwind on error.
 __nvoc_ctor_KernelGraphicsContext_fail__init:
-    __nvoc_dtor_GpuResource(&pKernelGraphicsContext->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pKernelGraphicsContext->__nvoc_base_GpuResource);
 __nvoc_ctor_KernelGraphicsContext_fail_GpuResource:
 __nvoc_ctor_KernelGraphicsContext_exit:
     return status;
@@ -539,8 +572,8 @@ static void __nvoc_init_funcTable_KernelGraphicsContext_1(KernelGraphicsContext 
 
     // kgrctxShouldPreAllocPmBuffer -- halified (2 hals) body
     if (((( ((chipHal_HalVarIdx >> 5) == 1UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0xbdf0ffe0UL) ) ||
-        ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000003f9UL) ) ||
-        ( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000a000UL) )) /* ChipHal: TU102 | TU104 | TU106 | TU116 | TU117 | GA100 | GA102 | GA103 | GA104 | GA106 | GA107 | AD102 | AD103 | AD104 | AD106 | AD107 | GH100 | GB100 | GB102 | GB10B | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C | T234D | T264D */  && (( ((rmVariantHal_HalVarIdx >> 5) == 0UL) && ((1UL << (rmVariantHal_HalVarIdx & 0x1f)) & 0x00000001UL) )) /* RmVariantHal: VF */ ))
+        ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000030ffUL) ) ||
+        ( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000e000UL) )) /* ChipHal: TU102 | TU104 | TU106 | TU116 | TU117 | GA100 | GA102 | GA103 | GA104 | GA106 | GA107 | AD102 | AD103 | AD104 | AD106 | AD107 | GH100 | GB100 | GB102 | GB10B | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C | GR100 | GR102 | T234D | T239D | T264D */  && (( ((rmVariantHal_HalVarIdx >> 5) == 0UL) && ((1UL << (rmVariantHal_HalVarIdx & 0x1f)) & 0x00000001UL) )) /* RmVariantHal: VF */ ))
     {
         pThis->__kgrctxShouldPreAllocPmBuffer__ = &kgrctxShouldPreAllocPmBuffer_VF;
     }
@@ -677,14 +710,11 @@ __nvoc_objCreate_KernelGraphicsContext_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_KernelGraphicsContext(KernelGraphicsContext **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_KernelGraphicsContext(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_KernelGraphicsContext(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_KernelGraphicsContext((KernelGraphicsContext **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 
 
@@ -702,7 +732,7 @@ void __nvoc_init__KernelGraphicsContextShared(KernelGraphicsContextShared*);
 void __nvoc_init_funcTable_KernelGraphicsContextShared(KernelGraphicsContextShared*);
 NV_STATUS __nvoc_ctor_KernelGraphicsContextShared(KernelGraphicsContextShared*);
 void __nvoc_init_dataField_KernelGraphicsContextShared(KernelGraphicsContextShared*);
-void __nvoc_dtor_KernelGraphicsContextShared(KernelGraphicsContextShared*);
+void __nvoc_dtor_KernelGraphicsContextShared(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__KernelGraphicsContextShared;
@@ -721,7 +751,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelGraphicsContextShared =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "KernelGraphicsContextShared",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_KernelGraphicsContextShared,
+    .objCreatefn =        &__nvoc_objCreateDynamic_KernelGraphicsContextShared,
     .pCastInfo =          &__nvoc_castinfo__KernelGraphicsContextShared,
     .pExportInfo =        &__nvoc_export_info__KernelGraphicsContextShared
 };
@@ -730,7 +760,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelGraphicsContextShared =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__KernelGraphicsContextShared __nvoc_metadata__KernelGraphicsContextShared = {
     .rtti.pClassDef = &__nvoc_class_def_KernelGraphicsContextShared,    // (shrkgrctx) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_KernelGraphicsContextShared,
+    .rtti.dtor      = &__nvoc_dtor_KernelGraphicsContextShared,
     .rtti.offset    = 0,
     .metadata__RsShared.rtti.pClassDef = &__nvoc_class_def_RsShared,    // (shr) super
     .metadata__RsShared.rtti.dtor      = &__nvoc_destructFromBase,
@@ -760,16 +790,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__KernelGraphicsContextShared =
 
 // Destruct KernelGraphicsContextShared object.
 void __nvoc_shrkgrctxDestruct(KernelGraphicsContextShared*);
-void __nvoc_dtor_RsShared(RsShared*);
-void __nvoc_dtor_KernelGraphicsContextShared(KernelGraphicsContextShared* pThis) {
+void __nvoc_dtor_RsShared(Dynamic*);
+void __nvoc_dtor_KernelGraphicsContextShared(Dynamic* pThis) {
+
+    KernelGraphicsContextShared *__nvoc_this = (KernelGraphicsContextShared *) pThis;
 
 // Call destructor.
-    __nvoc_shrkgrctxDestruct(pThis);
+    __nvoc_shrkgrctxDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RsShared(&pThis->__nvoc_base_RsShared);
+    __nvoc_dtor_RsShared((Dynamic *) &__nvoc_this->__nvoc_base_RsShared);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_KernelGraphicsContextShared(KernelGraphicsContextShared *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -795,7 +827,7 @@ NV_STATUS __nvoc_ctor_KernelGraphicsContextShared(KernelGraphicsContextShared *a
 
     // Unwind on error.
 __nvoc_ctor_KernelGraphicsContextShared_fail__init:
-    __nvoc_dtor_RsShared(&arg_this->__nvoc_base_RsShared);
+    __nvoc_dtor_RsShared((Dynamic *)&arg_this->__nvoc_base_RsShared);
 __nvoc_ctor_KernelGraphicsContextShared_fail_RsShared:
 __nvoc_ctor_KernelGraphicsContextShared_exit:
     return status;
@@ -901,11 +933,8 @@ __nvoc_objCreate_KernelGraphicsContextShared_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_KernelGraphicsContextShared(KernelGraphicsContextShared **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_KernelGraphicsContextShared(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_KernelGraphicsContextShared(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_KernelGraphicsContextShared((KernelGraphicsContextShared **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

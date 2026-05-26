@@ -33,7 +33,7 @@ void __nvoc_init__VirtualMemory(VirtualMemory*);
 void __nvoc_init_funcTable_VirtualMemory(VirtualMemory*);
 NV_STATUS __nvoc_ctor_VirtualMemory(VirtualMemory*, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_VirtualMemory(VirtualMemory*);
-void __nvoc_dtor_VirtualMemory(VirtualMemory*);
+void __nvoc_dtor_VirtualMemory(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__VirtualMemory;
@@ -143,7 +143,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_VirtualMemory =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "VirtualMemory",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_VirtualMemory,
+    .objCreatefn =        &__nvoc_objCreateDynamic_VirtualMemory,
     .pCastInfo =          &__nvoc_castinfo__VirtualMemory,
     .pExportInfo =        &__nvoc_export_info__VirtualMemory
 };
@@ -152,7 +152,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_VirtualMemory =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__VirtualMemory __nvoc_metadata__VirtualMemory = {
     .rtti.pClassDef = &__nvoc_class_def_VirtualMemory,    // (virtmem) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_VirtualMemory,
+    .rtti.dtor      = &__nvoc_dtor_VirtualMemory,
     .rtti.offset    = 0,
     .metadata__StandardMemory.rtti.pClassDef = &__nvoc_class_def_StandardMemory,    // (stdmem) super
     .metadata__StandardMemory.rtti.dtor      = &__nvoc_destructFromBase,
@@ -452,16 +452,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__VirtualMemory =
 
 // Destruct VirtualMemory object.
 void __nvoc_virtmemDestruct(VirtualMemory*);
-void __nvoc_dtor_StandardMemory(StandardMemory*);
-void __nvoc_dtor_VirtualMemory(VirtualMemory* pThis) {
+void __nvoc_dtor_StandardMemory(Dynamic*);
+void __nvoc_dtor_VirtualMemory(Dynamic* pThis) {
+
+    VirtualMemory *__nvoc_this = (VirtualMemory *) pThis;
 
 // Call destructor.
-    __nvoc_virtmemDestruct(pThis);
+    __nvoc_virtmemDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_StandardMemory(&pThis->__nvoc_base_StandardMemory);
+    __nvoc_dtor_StandardMemory((Dynamic *) &__nvoc_this->__nvoc_base_StandardMemory);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_VirtualMemory(VirtualMemory *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -487,7 +489,7 @@ NV_STATUS __nvoc_ctor_VirtualMemory(VirtualMemory *pVirtualMemory, CALL_CONTEXT 
 
     // Unwind on error.
 __nvoc_ctor_VirtualMemory_fail__init:
-    __nvoc_dtor_StandardMemory(&pVirtualMemory->__nvoc_base_StandardMemory);
+    __nvoc_dtor_StandardMemory((Dynamic *)&pVirtualMemory->__nvoc_base_StandardMemory);
 __nvoc_ctor_VirtualMemory_fail_StandardMemory:
 __nvoc_ctor_VirtualMemory_exit:
     return status;
@@ -601,13 +603,10 @@ __nvoc_objCreate_VirtualMemory_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_VirtualMemory(VirtualMemory **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_VirtualMemory(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_VirtualMemory(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_VirtualMemory((VirtualMemory **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

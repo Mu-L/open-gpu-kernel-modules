@@ -31,5 +31,14 @@ void _nv3dSetVertexStreamEndTuring(
     Nv3dChannelPtr p3dChannel,
     enum Nv3dVertexAttributeStreamType stream,
     const Nv3dVertexAttributeStreamRec *pStream);
+void _nv3dUploadDataInlineTuring(
+    Nv3dChannelRec *p3dChannel,
+    NvU64 gpuBaseAddress,
+    size_t offset,
+    const void *data,
+    size_t bytes);
+void _nv3dAssignNv3dTextureTuring(
+    Nv3dRenderTexInfo info,
+    Nv3dTexture *tex);
 
 #endif /* __NVIDIA_3D_TURING__ */

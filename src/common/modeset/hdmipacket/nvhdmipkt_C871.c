@@ -229,30 +229,38 @@ hdmiPacketWriteC871_exit:
 }
 
 
-NvBool 
+NvBool
 isInfoframeOffsetAvailable(NvU32*     pBaseReg,
                            NvU32      head,
-                           NvU32      requestedInfoframe)
+                           NvU32      requestedInfoframeIndex,
+                           NvU32      infoframeSize,
+                           NvU32*     pCollisionIndex,
+                           NvU32*     pCollisionSize)
 {
     NvU32 regAddr, regData = 0;
     NvU32 ifIndex, size;
     NvBool bResult = NV_TRUE;
 
-    for (ifIndex = 0; ifIndex < NVC871_SF_GENERIC_INFOFRAME_CTRL__SIZE_2; ifIndex++)
+    for (ifIndex = 0; ifIndex <= (requestedInfoframeIndex + infoframeSize);)
     {
         regAddr = NVC871_SF_GENERIC_INFOFRAME_CTRL(head, ifIndex);
         regData = REG_RD32(pBaseReg, regAddr);
         size    = DRF_VAL(C871, _SF_GENERIC_INFOFRAME_CTRL, _SIZE, regData);
 
-        // if an infoframe is enabled and it's occupying the offset the requested infoframe would use, 
+        // if an infoframe is enabled and it's occupying the offset the requested infoframe would use,
         // we cannot allow programming this requested infoframe
-        if (FLD_TEST_DRF(C871, _SF_GENERIC_INFOFRAME_CTRL, _ENABLE, _YES, regData) && (size > 0))
+        if (FLD_TEST_DRF(C871, _SF_GENERIC_INFOFRAME_CTRL, _ENABLE, _YES, regData))
         {
-            if ((ifIndex + size) > requestedInfoframe)
+            if ((ifIndex + size) >= requestedInfoframeIndex)
             {
+                *pCollisionIndex = ifIndex;
+                *pCollisionSize = size;
                 bResult = NV_FALSE;
                 break;
             }
+            ifIndex += size + 1;
+        } else {
+            ifIndex++;
         }
     }
 
@@ -271,6 +279,8 @@ disableInfoframeC871(NVHDMIPKT_CLASS*  pThis,
 {
     NVHDMIPKT_RESULT result = NVHDMIPKT_TIMEOUT;
     NvU32  regAddr, regData;
+
+    NvHdmiPkt_Print(pThis, "disableInfoframeC871: head %u ifIndex %u", head, ifIndex);
 
     regAddr = NVC871_SF_GENERIC_INFOFRAME_CTRL(head, ifIndex);
     regData = REG_RD32(pBaseReg, regAddr);
@@ -323,9 +333,154 @@ disableInfoframe_exit:
 }
 
 /*
+ * updateAdvancedInfoframeCtrlC871
+ *
+ * Updates control registers for advanced infoframe without data writes.
+ * DOES NOT acquire/release mutex - caller must hold mutex.
+ * Sets FID, runMode, location, and other control parameters.
+ */
+static NVHDMIPKT_RESULT
+updateAdvancedInfoframeCtrlC871(NVHDMIPKT_CLASS                *pThis,
+                                NvU32                          *pBaseReg,
+                                NvU32                           head,
+                                NVHDMIPKT_TYPE                  packetReg,
+                                const ADVANCED_INFOFRAME_CTRL  *pInfoframeCtrl)
+{
+    NVHDMIPKT_RESULT result = NVHDMIPKT_SUCCESS;
+    NvU32  regAddr, regData;
+    NvU32  ifIndex;
+    const ADVANCED_INFOFRAME *pInfoframe;
+
+    ifIndex = packetReg - NVHDMIPKT_TYPE_SHARED_GENERIC1;
+
+    // If disable requested, just disable and return
+    if (!pInfoframeCtrl->enable)
+    {
+        return disableInfoframeC871(pThis, pBaseReg, head, ifIndex);
+    }
+
+    // Get pointer to the actual infoframe structure
+    pInfoframe = &pInfoframeCtrl->infoframe;
+
+    // write GENERIC_CONFIG
+    regData = 0;
+    regAddr = NVC871_SF_GENERIC_INFOFRAME_CONFIG(head, ifIndex);
+    regData = FLD_SET_DRF_NUM(C871, _SF_GENERIC_INFOFRAME_CONFIG, _FID, pInfoframe->flipId, regData);
+    if (pInfoframe->location == INFOFRAME_CTRL_LOC_LINE)
+    {
+        regData = FLD_SET_DRF_NUM(C871, _SF_GENERIC_INFOFRAME_CONFIG, _LINE_ID, pInfoframe->lineNum, regData);
+        regData = (pInfoframe->lineIdReversed) ?
+                        FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_CONFIG, _LINE_ID_REVERSED, _YES, regData) :
+                        FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_CONFIG, _LINE_ID_REVERSED, _NO,  regData);
+    }
+
+    regData = (pInfoframe->crcOverride) ?
+                    FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_CONFIG, _CRC_OVERRIDE, _YES, regData) :
+                    FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_CONFIG, _CRC_OVERRIDE, _NO,  regData);
+
+    regData = (pInfoframe->matchFidMethodArmState) ?
+                    FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_CONFIG, _MTD_STATE_CTRL, _ARM, regData) : // send Infoframe at LOC when matching FID found at channel's FID method's ARM state
+                    FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_CONFIG, _MTD_STATE_CTRL, _ACT,  regData); // default is when FID method is at ACTIVE state
+
+    // write reg
+    REG_WR32(pBaseReg, regAddr, regData);
+
+    // ENABLE_YES to GENERIC_CTRL
+    regData = 0;
+    regAddr = NVC871_SF_GENERIC_INFOFRAME_CTRL(head, ifIndex);
+    regData = FLD_SET_DRF_NUM(C871, _SF_GENERIC_INFOFRAME_CTRL, _RUN_MODE, pInfoframe->runMode,            regData);
+    regData = FLD_SET_DRF_NUM(C871, _SF_GENERIC_INFOFRAME_CTRL, _LOC,      pInfoframe->location,           regData);
+    regData = FLD_SET_DRF_NUM(C871, _SF_GENERIC_INFOFRAME_CTRL, _OFFSET,   ifIndex,                        regData);
+    regData = FLD_SET_DRF_NUM(C871, _SF_GENERIC_INFOFRAME_CTRL, _SIZE,     pInfoframe->numAdditionalInfoframes, regData);
+    regData = FLD_SET_DRF    (C871, _SF_GENERIC_INFOFRAME_CTRL, _ENABLE,   _YES,                           regData);
+
+    // write reg
+    REG_WR32(pBaseReg, regAddr, regData);
+
+    NvHdmiPkt_Print(pThis, "MoreInfoframe: Sent infoframe of length %d bytes, transmit ctrl 0x%x at offset %d head=%x fid=%d runMode=%d loc=%d numInfoframes=%d",
+        pInfoframe->packetLen, regData, ifIndex, head, pInfoframe->flipId, pInfoframe->runMode, pInfoframe->location,
+        pInfoframe->isLargeInfoframe ? (pInfoframe->numAdditionalInfoframes + 1) : 1);
+
+    // setup MSC_CTRL
+    regData = 0;
+    regAddr = NVC871_SF_GENERIC_INFOFRAME_MISC_CTRL(head);
+    regData = pInfoframe->winMethodCyaBroadcast ?
+                                             FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_MISC_CTRL, _WIN_CHN_SEL,    _PUBLIC, regData) :
+                                             FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_MISC_CTRL, _WIN_CHN_SEL,    _PRIVATE, regData) ;
+    regData = pInfoframe->highAudioPriority ?
+                                             FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_MISC_CTRL, _AUDIO_PRIORITY, _HIGH,   regData) :
+                                             FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_MISC_CTRL, _AUDIO_PRIORITY, _LOW,    regData);
+    // write reg
+    REG_WR32(pBaseReg, regAddr, regData);
+
+    return result;
+}
+
+/*
+ * hdmiAdvancedPacketCtrlC871
+ *
+ * Public interface that updates control registers for advanced infoframe.
+ * Acquires/releases mutex for atomic operation.
+ */
+NVHDMIPKT_RESULT
+hdmiAdvancedPacketCtrlC871(NVHDMIPKT_CLASS                 *pThis,
+                           NvU32                            subDevice,
+                           NvU32                            head,
+                           NVHDMIPKT_TYPE                   packetReg,
+                           const ADVANCED_INFOFRAME_CTRL  *pInfoframeCtrl)
+{
+    NVHDMIPKT_RESULT result;
+
+    if (!pThis || !pInfoframeCtrl) {
+        return NVHDMIPKT_INVALID_ARG;
+    }
+
+    NvU32* pBaseReg = (NvU32*)pThis->memMap[subDevice].pMemBase;
+    NvU32 ifIndex = packetReg - NVHDMIPKT_TYPE_SHARED_GENERIC1;
+    const ADVANCED_INFOFRAME *pInfoframe = &pInfoframeCtrl->infoframe;
+
+    NvU32 numOfInfoframes = pInfoframe->isLargeInfoframe ? (pInfoframe->numAdditionalInfoframes + 1) : 1;
+
+    if (ifIndex + numOfInfoframes > NVC871_SF_GENERIC_INFOFRAME_CTRL__SIZE_2)
+    {
+        NvHdmiPkt_Print(pThis, "Invalid generic infoframe idx %u and/or length %u", ifIndex, numOfInfoframes);
+        return NVHDMIPKT_INVALID_ARG;
+    }
+
+    // Acquire mutex for atomic operation
+    pThis->callback.acquireMutex(pThis->cbHandle);
+
+    // Check for slot collisions with other active infoframes
+    NvU32 collisionIndex = 0;
+    NvU32 collisionSize = 0;
+    if (isInfoframeOffsetAvailable(pBaseReg, head, ifIndex, pInfoframe->numAdditionalInfoframes,
+                                    &collisionIndex, &collisionSize) == NV_FALSE)
+    {
+        // Collision is only allowed if it's with itself (same index and size)
+        if ((collisionIndex != ifIndex) || (collisionSize != pInfoframe->numAdditionalInfoframes))
+        {
+            NvHdmiPkt_Print(pThis, "ReqIfIdx %u ReqIfSz %u CollIfIdx %u CollIfSz %u",
+                            ifIndex, pInfoframe->numAdditionalInfoframes, collisionIndex, collisionSize);
+            result = NVHDMIPKT_INVALID_ARG;
+            goto release_mutex;
+        }
+    }
+
+    // Call internal function
+    result = updateAdvancedInfoframeCtrlC871(pThis, pBaseReg, head,
+                                             packetReg, pInfoframeCtrl);
+
+release_mutex:
+    // Release mutex
+    pThis->callback.releaseMutex(pThis->cbHandle);
+
+    return result;
+}
+
+/*
  * programAdvancedInfoframeC871
  */
-static NVHDMIPKT_RESULT 
+static NVHDMIPKT_RESULT
 programAdvancedInfoframeC871(NVHDMIPKT_CLASS           *pThis,
                              NvU32                      subDevice,
                              NvU32                      head,
@@ -333,6 +488,11 @@ programAdvancedInfoframeC871(NVHDMIPKT_CLASS           *pThis,
                              const ADVANCED_INFOFRAME  *pInfoframe)
 {
     NVHDMIPKT_RESULT result = NVHDMIPKT_SUCCESS;
+
+    if (!pThis || !pInfoframe) {
+        return NVHDMIPKT_INVALID_ARG;
+    }
+
     NvU32* pBaseReg = (NvU32*)pThis->memMap[subDevice].pMemBase;
 
     if ((packetReg < NVHDMIPKT_TYPE_SHARED_GENERIC1) || (packetReg >= NVHDMIPKT_INVALID_PKT_TYPE))
@@ -347,13 +507,31 @@ programAdvancedInfoframeC871(NVHDMIPKT_CLASS           *pThis,
     NvU32 regData         = 0;
     NvU32 numOfInfoframes = pInfoframe->isLargeInfoframe ? (pInfoframe->numAdditionalInfoframes + 1) : 1;
 
-    if (NV_FALSE == isInfoframeOffsetAvailable(pBaseReg, head, ifIndex))
+    // Validate infoframe index and length don't exceed hardware limits
+    if (ifIndex + numOfInfoframes > NVC871_SF_GENERIC_INFOFRAME_CTRL__SIZE_2)
     {
-        NvHdmiPkt_Print(pThis, "MoreInfoframe: Client requested overwriting an active infoframe");
+        NvHdmiPkt_Print(pThis, "Invalid generic infoframe idx %u and/or length %u", ifIndex, numOfInfoframes);
+        return NVHDMIPKT_INVALID_ARG;
     }
 
     // acquire mutex
     pThis->callback.acquireMutex(pThis->cbHandle);
+
+    // Check for slot collisions with other active infoframes
+    NvU32 collisionIndex = 0;
+    NvU32 collisionSize = 0;
+    if (isInfoframeOffsetAvailable(pBaseReg, head, ifIndex, pInfoframe->numAdditionalInfoframes,
+                                    &collisionIndex, &collisionSize) == NV_FALSE)
+    {
+        // Collision is only allowed if it's with itself (same index and size)
+        if ((collisionIndex != ifIndex) || (collisionSize != pInfoframe->numAdditionalInfoframes))
+        {
+            NvHdmiPkt_Print(pThis, "ReqIfIdx %u ReqIfSz %u CollIfIdx %u CollIfSz %u",
+                            ifIndex, pInfoframe->numAdditionalInfoframes, collisionIndex, collisionSize);
+            result = NVHDMIPKT_INVALID_ARG;
+            goto release_mutex;
+        }
+    }
 
     // disable and wait for infoframe HW unit to be ready
     result = disableInfoframeC871(pThis, pBaseReg, head, ifIndex);
@@ -387,58 +565,16 @@ programAdvancedInfoframeC871(NVHDMIPKT_CLASS           *pThis,
         }
     }
 
-    // write GENERIC_CONFIG
-    regData = 0;
-    regAddr = NVC871_SF_GENERIC_INFOFRAME_CONFIG(head, ifIndex);
-    regData = FLD_SET_DRF_NUM(C871, _SF_GENERIC_INFOFRAME_CONFIG, _FID, pInfoframe->flipId, regData);
-    if (pInfoframe->location == INFOFRAME_CTRL_LOC_LINE)
-    {
-        regData = FLD_SET_DRF_NUM(C871, _SF_GENERIC_INFOFRAME_CONFIG, _LINE_ID, pInfoframe->lineNum, regData);
-        regData = (pInfoframe->lineIdReversed) ? 
-                        FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_CONFIG, _LINE_ID_REVERSED, _YES, regData) :
-                        FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_CONFIG, _LINE_ID_REVERSED, _NO,  regData);
-    }
+    // Wrap the infoframe in control structure with enable=NV_TRUE
+    ADVANCED_INFOFRAME_CTRL infoframeCtrl;
+    infoframeCtrl.enable = NV_TRUE;
+    infoframeCtrl.infoframe = *pInfoframe;
 
-    regData = (pInfoframe->crcOverride) ? 
-                    FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_CONFIG, _CRC_OVERRIDE, _YES, regData) :
-                    FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_CONFIG, _CRC_OVERRIDE, _NO,  regData);
+    // Write control registers atomically (mutex still held from data write)
+    result = updateAdvancedInfoframeCtrlC871(pThis, pBaseReg, head, packetReg, &infoframeCtrl);
 
-    regData = (pInfoframe->matchFidMethodArmState) ? 
-                    FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_CONFIG, _MTD_STATE_CTRL, _ARM, regData) : // send Infoframe at LOC when matching FID found at channel's FID method's ARM state
-                    FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_CONFIG, _MTD_STATE_CTRL, _ACT,  regData); // default is when FID method is at ACTIVE state
-
-    // write reg
-    REG_WR32(pBaseReg, regAddr, regData);
-
-    // ENABLE_YES to GENERIC_CTRL
-    regData = 0;
-    regAddr = NVC871_SF_GENERIC_INFOFRAME_CTRL(head, ifIndex);
-    regData = FLD_SET_DRF_NUM(C871, _SF_GENERIC_INFOFRAME_CTRL, _RUN_MODE, pInfoframe->runMode,            regData);
-    regData = FLD_SET_DRF_NUM(C871, _SF_GENERIC_INFOFRAME_CTRL, _LOC,      pInfoframe->location,           regData);
-    regData = FLD_SET_DRF_NUM(C871, _SF_GENERIC_INFOFRAME_CTRL, _OFFSET,   ifIndex,                        regData);
-    regData = FLD_SET_DRF_NUM(C871, _SF_GENERIC_INFOFRAME_CTRL, _SIZE,     pInfoframe->numAdditionalInfoframes, regData);
-    regData = FLD_SET_DRF    (C871, _SF_GENERIC_INFOFRAME_CTRL, _ENABLE,   _YES,                           regData);
-
-    // write reg
-    REG_WR32(pBaseReg, regAddr, regData);
-
-    NvHdmiPkt_Print(pThis, "MoreInfoframe: Sent infoframe of length %d bytes, transmit ctrl 0x%x at offset %d head=%x subdev=%d", 
-                                                                pInfoframe->packetLen, regData, ifIndex, head, subDevice);
-
-    // setup MSC_CTRL
-    regData = 0;
-    regAddr = NVC871_SF_GENERIC_INFOFRAME_MISC_CTRL(head);
-    regData = pInfoframe->winMethodCyaBroadcast ? 
-                                             FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_MISC_CTRL, _WIN_CHN_SEL,    _PUBLIC, regData) : 
-                                             FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_MISC_CTRL, _WIN_CHN_SEL,    _PRIVATE, regData) ;
-    regData = pInfoframe->highAudioPriority ?
-                                             FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_MISC_CTRL, _AUDIO_PRIORITY, _HIGH,   regData) :
-                                             FLD_SET_DRF(C871, _SF_GENERIC_INFOFRAME_MISC_CTRL, _AUDIO_PRIORITY, _LOW,    regData);
-    // write reg
-    REG_WR32(pBaseReg, regAddr, regData);
-
-
-    // release mutex
+release_mutex:
+    // Release mutex after all operations complete
     pThis->callback.releaseMutex(pThis->cbHandle);
 
     return result;
@@ -447,7 +583,7 @@ programAdvancedInfoframeC871(NVHDMIPKT_CLASS           *pThis,
 /*
  * hdmiWritePacketCtrlC871
  */
-static NVHDMIPKT_RESULT 
+static NVHDMIPKT_RESULT
 hdmiWritePacketCtrlLegacyPktsC871(NVHDMIPKT_CLASS*  pThis,
                                   NvU32*            pBaseReg,
                                   NvU32             head,
@@ -637,4 +773,5 @@ initializeHdmiPktInterfaceC871(NVHDMIPKT_CLASS* pClass)
     // generic infoframe (shareable by DP and HDMI)
     pClass->hdmiPacketRead           = hdmiPacketReadC871;
     pClass->programAdvancedInfoframe = programAdvancedInfoframeC871;
+    pClass->hdmiAdvancedPacketCtrl   = hdmiAdvancedPacketCtrlC871;
 }

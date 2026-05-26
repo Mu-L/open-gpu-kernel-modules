@@ -378,15 +378,19 @@ kgmmuServiceMmuFault_GA100
 )
 {
     NV_STATUS status = NV_OK;
+    NvBool bPoison = NV_FALSE;
 
     MMU_FAULT_BUFFER_ENTRY *pParsedFaultEntry = KERNEL_POINTER_FROM_NvP64(MMU_FAULT_BUFFER_ENTRY *, pParsedFaultInfo);
 
     //  If FLA fault do not reset channel
     if (pParsedFaultEntry->mmuFaultEngineId == NV_PFAULT_MMU_ENG_ID_FLA)
     {
+        bPoison = pMmuExceptionData->faultType == NV_PFAULT_FAULT_TYPE_POISONED;
+
         nvErrorLog_va((void *)pGpu,
-            NVLINK_REMOTE_TRANSLATION_ERROR,
-            "NVLink remote translation error: faulted @ 0x%x_%08x. Fault is of type %s %s",
+            bPoison ? REMOTE_TRANSLATION_POISON_ERROR : NVLINK_REMOTE_TRANSLATION_ERROR,
+            "NVLink remote translation %serror: faulted @ 0x%x_%08x. Fault is of type %s %s",
+            bPoison ? "poison " : "",
             pMmuExceptionData->addrHi,
             pMmuExceptionData->addrLo,
             kgmmuGetFaultTypeString_HAL(pKernelGmmu, pMmuExceptionData->faultType),

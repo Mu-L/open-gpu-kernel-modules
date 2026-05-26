@@ -28,7 +28,7 @@ void __nvoc_init__OBJVMM(OBJVMM*);
 void __nvoc_init_funcTable_OBJVMM(OBJVMM*);
 NV_STATUS __nvoc_ctor_OBJVMM(OBJVMM*);
 void __nvoc_init_dataField_OBJVMM(OBJVMM*);
-void __nvoc_dtor_OBJVMM(OBJVMM*);
+void __nvoc_dtor_OBJVMM(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJVMM;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJVMM =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJVMM",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_OBJVMM,
+    .objCreatefn =        &__nvoc_objCreateDynamic_OBJVMM,
     .pCastInfo =          &__nvoc_castinfo__OBJVMM,
     .pExportInfo =        &__nvoc_export_info__OBJVMM
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJVMM =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__OBJVMM __nvoc_metadata__OBJVMM = {
     .rtti.pClassDef = &__nvoc_class_def_OBJVMM,    // (vmm) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJVMM,
+    .rtti.dtor      = &__nvoc_dtor_OBJVMM,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -81,13 +81,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJVMM =
 
 
 // Destruct OBJVMM object.
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_OBJVMM(OBJVMM* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_OBJVMM(Dynamic* pThis) {
+
+    OBJVMM *__nvoc_this = (OBJVMM *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJVMM(OBJVMM *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -211,11 +213,8 @@ __nvoc_objCreate_OBJVMM_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_OBJVMM(OBJVMM **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_OBJVMM(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_OBJVMM(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_OBJVMM((OBJVMM **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2001-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2001-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -231,16 +231,6 @@ NV_STATUS nvos_forward_error_to_cray(struct pci_dev *, NvU32,
 #include <asm/kgdb.h>
 #endif
 
-#if defined(NVCPU_X86_64) && !defined(NV_XEN_SUPPORT_FULLY_VIRTUALIZED_KERNEL)
-#define NV_ENABLE_PAT_SUPPORT
-#endif
-
-#define NV_PAT_MODE_DISABLED    0
-#define NV_PAT_MODE_KERNEL      1
-#define NV_PAT_MODE_BUILTIN     2
-
-extern int nv_pat_mode;
-
 #if defined(CONFIG_HOTPLUG_CPU)
 #define NV_ENABLE_HOTPLUG_CPU
 #include <linux/notifier.h>         /* struct notifier_block, etc       */
@@ -288,13 +278,7 @@ extern int nv_pat_mode;
 #if defined(NVCPU_AARCH64) || defined(NVCPU_RISCV64)
 #define NV_ALLOW_WRITE_COMBINING(mt)    1
 #elif defined(NVCPU_X86_64)
-#if defined(NV_ENABLE_PAT_SUPPORT)
-#define NV_ALLOW_WRITE_COMBINING(mt)    \
-    ((nv_pat_mode != NV_PAT_MODE_DISABLED) && \
-     ((mt) != NV_MEMORY_TYPE_REGISTERS))
-#else
-#define NV_ALLOW_WRITE_COMBINING(mt)    0
-#endif
+#define NV_ALLOW_WRITE_COMBINING(mt)    ((mt) != NV_MEMORY_TYPE_REGISTERS)
 #endif
 
 #define NV_MAX_RECURRING_WARNING_MESSAGES 10
@@ -949,18 +933,12 @@ typedef struct nv_alloc_s {
  * Starting with the 5.0 kernel, SWIOTLB is merged into
  * direct_dma, so systems without an IOMMU use direct_dma.  We
  * need to know if this is the case, so that we can use a
- * different check for SWIOTLB enablement.
+ * different check for SWIOTLB enablement. dma_is_direct()
+ * performs this same check.
  */
 static inline NvBool nv_is_dma_direct(struct device *dev)
 {
-    NvBool is_direct = NV_FALSE;
-
-#if defined(NV_DMA_IS_DIRECT_PRESENT)
-    if (dma_is_direct(get_dma_ops(dev)))
-        is_direct = NV_TRUE;
-#endif
-
-    return is_direct;
+    return get_dma_ops(dev) == NULL;
 }
 
 /**
@@ -1427,6 +1405,7 @@ typedef struct nv_linux_state_s {
     struct nv_pci_tegra_devfreq_dev *nvd_devfreq_dev;
     struct nv_pci_tegra_devfreq_dev *sys_devfreq_dev;
     struct nv_pci_tegra_devfreq_dev *pwr_devfreq_dev;
+    NvU32 tegra_suspend_freq;
 
     int (*devfreq_suspend)(struct device *dev);
     int (*devfreq_resume)(struct device *dev);
@@ -1604,6 +1583,7 @@ static inline NV_STATUS nv_check_gpu_state(nv_state_t *nv)
 }
 
 extern NvU32 NVreg_EnableUserNUMAManagement;
+extern NvU32 NVreg_OsEnableCxlSupport;
 extern NvU32 NVreg_RegisterPCIDriver;
 extern NvU32 NVreg_RegisterPlatformDeviceDriver;
 extern NvU32 NVreg_EnableResizableBar;

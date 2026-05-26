@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -515,6 +515,13 @@ void osDestroyOSHwInfo(
 }
 
 NV_STATUS osDoFunctionLevelReset(
+    OBJGPU *pGpu
+)
+{
+    return NV_ERR_NOT_SUPPORTED;
+}
+
+NV_STATUS osDoCxlReset(
     OBJGPU *pGpu
 )
 {

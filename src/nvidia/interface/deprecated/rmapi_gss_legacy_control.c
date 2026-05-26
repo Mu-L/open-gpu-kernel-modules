@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2019-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -42,16 +42,16 @@ NV_STATUS RmGssLegacyRpcCmd
     NVOS54_PARAMETERS  *pArgs
 )
 {
-    OBJGPU    *pGpu           = NULL;
-    RsClient  *pClient        = NULL;
-    NV_STATUS  status         = NV_OK;
-    GPU_MASK   gpuMaskRelease = 0;
-    void      *pKernelParams  = NULL;
-    NvBool     bApiLockTaken  = NV_FALSE;
-    THREAD_STATE_NODE   threadState;
+    OBJGPU    *pGpu               = NULL;
+    RsClient  *pClient            = NULL;
+    NV_STATUS  status             = NV_OK;
+    GPU_MASK   gpuMaskRelease     = 0;
+    void      *pKernelParams      = NULL;
+    NvBool     bApiLockTaken      = NV_FALSE;
+    NvBool     bUseParamsDirectly = NV_FALSE;
+    THREAD_STATE_NODE threadState;
 
-    NV_ASSERT_OR_RETURN((pArgs->cmd & RM_GSS_LEGACY_MASK),
-                        NV_ERR_INVALID_STATE);
+    NV_ASSERT_OR_RETURN((pArgs->cmd & RM_GSS_LEGACY_MASK), NV_ERR_INVALID_STATE);
 
     if (((pArgs->cmd & RM_GSS_LEGACY_MASK_PRIVILEGED) == RM_GSS_LEGACY_MASK_PRIVILEGED) &&
         (pSecInfo->privLevel < RS_PRIV_LEVEL_USER_ROOT))
@@ -59,9 +59,25 @@ NV_STATUS RmGssLegacyRpcCmd
         return NV_ERR_INSUFFICIENT_PERMISSIONS;
     }
 
+    // Error check parameters
+    if (((pArgs->paramsSize != 0) && (pArgs->params == NvP64_NULL)) ||
+        ((pArgs->paramsSize == 0) && (pArgs->params != NvP64_NULL)))
+    {
+        NV_PRINTF(LEVEL_WARNING, "Bad params from client: ptr " NvP64_fmt " size: 0x%x\n",
+                  pArgs->params, pArgs->paramsSize);
+        status = NV_ERR_INVALID_ARGUMENT;
+        goto done;
+    }
+
+    bUseParamsDirectly = (pArgs->paramsSize == 0) || (pSecInfo->paramLocation != PARAM_LOCATION_USER);
+
     threadStateInit(&threadState, THREAD_STATE_FLAGS_NONE);
 
-    if (pSecInfo->paramLocation == PARAM_LOCATION_USER)
+    if (bUseParamsDirectly)
+    {
+        pKernelParams = (void*)pArgs->params;
+    }
+    else
     {
         pKernelParams = portMemAllocNonPaged(pArgs->paramsSize);
         if (pKernelParams == NULL)
@@ -73,10 +89,6 @@ NV_STATUS RmGssLegacyRpcCmd
         status = portMemExCopyFromUser(pArgs->params, pKernelParams, pArgs->paramsSize);
         if (status != NV_OK)
             goto done;
-    }
-    else
-    {
-        pKernelParams = (void*)pArgs->params;
     }
 
     status = rmapiLockAcquire(RMAPI_LOCK_FLAGS_READ, RM_LOCK_MODULES_CLIENT);
@@ -142,7 +154,7 @@ done:
         rmapiLockRelease();
     }
 
-    if (pSecInfo->paramLocation == PARAM_LOCATION_USER)
+    if (!bUseParamsDirectly)
     {
         if (status == NV_OK)
         {

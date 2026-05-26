@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -676,6 +676,7 @@ kceMapPceLceForNvlinkPeers_GH100
     NvU32         lceIndex, pceIndex;
     NvU8          hshubId = 0, i;
     NvU32         linkId, gpuMask, gpuInstance = 0, j;
+    NVLINK_BIT_VECTOR *pPeerLinkMask = NULL;
 
     NV2080_CTRL_INTERNAL_HSHUB_GET_HSHUB_ID_FOR_LINKS_PARAMS params;
 
@@ -744,7 +745,14 @@ kceMapPceLceForNvlinkPeers_GH100
 
         pKCe->nvlinkNumPeers++;
 
-        peerLinkMask = knvlinkGetLinkMaskToPeer(pGpu, pKernelNvlink, pRemoteGpu);
+        pPeerLinkMask = knvlinkGetLinkMaskToPeer(pGpu, pKernelNvlink, pRemoteGpu);
+        if (pPeerLinkMask == NULL)
+        {
+            NV_PRINTF(LEVEL_INFO, "GPU%d has nvlink disabled. Skip programming\n", pRemoteGpu->gpuInstance);
+            continue;
+        }
+
+        peerLinkMask = (NvU32)NvU64_LO32(kNvlinkGetLinkMaskAsPrimitve(pPeerLinkMask));
         if (peerLinkMask == 0)
         {
             NV_PRINTF(LEVEL_INFO, "GPU%d has nvlink disabled. Skip programming\n", pRemoteGpu->gpuInstance);
@@ -1126,6 +1134,7 @@ NV_STATUS kceGetP2PCes_GH100(KernelCE *pKCe, OBJGPU *pGpu, NvU32 gpuMask, NvU32 
         NvU32         peerLinkMask      = 0;
         NvU32         gpuInstance       = 0;
         NvU32         phyLinkId, status, targetPceMask, numPces;
+        NVLINK_BIT_VECTOR *pPeerLinkMaskPtr = NULL;
 
         //
         // The LCE returned should be the LCE which has the most PCEs mapped
@@ -1152,7 +1161,11 @@ NV_STATUS kceGetP2PCes_GH100(KernelCE *pKCe, OBJGPU *pGpu, NvU32 gpuMask, NvU32 
             NV_ASSERT_OR_RETURN(pRemoteGpu != NULL, NV_ERR_INVALID_STATE);
             gpuInstance = gpuGetInstance(pRemoteGpu);
 
-            peerLinkMask = knvlinkGetLinkMaskToPeer(pGpu, pKernelNvlink, pRemoteGpu);
+            pPeerLinkMaskPtr = knvlinkGetLinkMaskToPeer(pGpu, pKernelNvlink, pRemoteGpu);
+            if (pPeerLinkMaskPtr != NULL)
+            {
+                peerLinkMask = (NvU32)NvU64_LO32(kNvlinkGetLinkMaskAsPrimitve(pPeerLinkMaskPtr));
+            }
         }
 
         portMemSet(&params, 0, sizeof(params));
@@ -1166,7 +1179,6 @@ NV_STATUS kceGetP2PCes_GH100(KernelCE *pKCe, OBJGPU *pGpu, NvU32 gpuMask, NvU32 
         FOR_EACH_INDEX_IN_MASK(32, phyLinkId, peerLinkMask)
         {
             NvU32 hshubId = params.hshubIds[phyLinkId];
-            NV_ASSERT_OR_RETURN(hshubId < NV_CE_MAX_HSHUBS, NV_ERR_INVALID_STATE);
             linksPerHshub[hshubId]++;
 
             if (linksPerHshub[hshubId] > maxLinksConnectedHshub)
@@ -1176,12 +1188,6 @@ NV_STATUS kceGetP2PCes_GH100(KernelCE *pKCe, OBJGPU *pGpu, NvU32 gpuMask, NvU32 
             }
         }
         FOR_EACH_INDEX_IN_MASK_END;
-
-        // If no peer links were found, maxConnectedHshubId is still the sentinel value
-        if (maxConnectedHshubId >= NV_CE_MAX_HSHUBS)
-        {
-            return NV_OK;
-        }
 
         //
         // Iterate through all Async LCEs to track which HSHUB should

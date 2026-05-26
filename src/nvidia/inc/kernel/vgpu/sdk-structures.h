@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -31,7 +31,7 @@
 #include <ctrl/ctrlc637.h>
 #include <ctrl/ctrl0000/ctrl0000system.h>
 #include <ctrl/ctrl0080/ctrl0080nvjpg.h>
-#include <ctrl/ctrl0080/ctrl0080bsp.h>
+#include <ctrl/ctrl0080/ctrl0080nvdec.h>
 #include <ctrl/ctrl0080/ctrl0080dma.h>
 #include <ctrl/ctrl0080/ctrl0080fb.h>
 #include <ctrl/ctrl0080/ctrl0080gr.h>
@@ -109,6 +109,7 @@ typedef struct vmiopd_SM_info {
 
 //Maximum ECC Addresses
 #define NV2080_CTRL_ECC_GET_LATEST_ECC_ADDRESSES_MAX_COUNT_v18_04   32
+#define NV2080_CTRL_ECC_GET_LATEST_ECC_ADDRESSES_MAX_COUNT_v2E_04   16
 
 #define NV2080_CTRL_NVLINK_MAX_LINKS_v15_02  6
 #define NV2080_CTRL_NVLINK_MAX_LINKS_v1A_18 12
@@ -140,13 +141,16 @@ typedef struct vmiopd_SM_info {
 #define NV0080_CTRL_GR_INFO_MAX_SIZE_24_07                                      (0x00000038)
 #define NV0080_CTRL_GR_INFO_MAX_SIZE_29_00                                      (0x0000003A)
 #define NV0080_CTRL_GR_INFO_MAX_SIZE_2C_03                                      (0x0000003B)
+#define NV0080_CTRL_GR_INFO_MAX_SIZE_2E_06                                      (0x0000003F)
 #define NV2080_CTRL_INTERNAL_GR_MAX_ENGINES_1B_04                               8
 #define NV2080_CTRL_INTERNAL_GR_MAX_SM_v1B_05                                   256
 #define NV2080_CTRL_INTERNAL_GR_MAX_SM_v1E_03                                   240
+#define NV2080_CTRL_INTERNAL_GR_MAX_SM_v2E_02                                   512
 #define NV2080_CTRL_INTERNAL_GR_MAX_GPC_v1B_05                                  8
 #define NV2080_CTRL_INTERNAL_GR_MAX_GPC_v1C_03                                  12
 #define NV2080_CTRL_INTERNAL_GR_MAX_GPC_v2B_01                                  16
 #define NV2080_CTRL_INTERNAL_GR_MAX_GPC_v2D_02                                  32
+#define NV2080_CTRL_INTERNAL_GR_MAX_GPC_v2E_09                                  64
 #define NV2080_CTRL_INTERNAL_ENGINE_CONTEXT_PROPERTIES_ENGINE_ID_COUNT_v1B_05   0x19
 #define NV2080_CTRL_INTERNAL_ENGINE_CONTEXT_PROPERTIES_ENGINE_ID_COUNT_v25_07   0x1a
 #define NV2080_CTRL_INTERNAL_MAX_TPC_PER_GPC_COUNT_v1C_03                       10
@@ -157,6 +161,7 @@ typedef struct vmiopd_SM_info {
 #define NVB0CC_MAX_CREDIT_INFO_ENTRIES_v21_08                                   63
 #define NV2080_CTRL_MIGRATABLE_OPS_ARRAY_MAX_v21_07                             50
 #define NV2080_CTRL_MAX_PCES_v21_0A                                             32
+#define NV2080_CTRL_MAX_PCES_v2E_0A                                             64
 #define NV2080_CTRL_CE_CAPS_TBL_SIZE_v21_0A                                     2
 #define NV2080_CTRL_NVLINK_INBAND_MAX_DATA_SIZE_v26_05                          1024
 #define NVB0CC_CREDIT_POOL_MAX_COUNT_v29_0A                                     30
@@ -307,6 +312,7 @@ typedef struct VGPU_BSP_CAPS
 #define NV2080_CTRL_GPU_INFO_MAX_LIST_SIZE_v2B_05 0x00000044
 #define NV2080_CTRL_GPU_INFO_MAX_LIST_SIZE_v2B_0C 0x00000045
 #define NV2080_CTRL_GPU_INFO_MAX_LIST_SIZE_v2B_13 0x00000046
+#define NV2080_CTRL_GPU_INFO_MAX_LIST_SIZE_v2E_0C 0x00000048
 // Versioned define for struct vgpuPstateInfo
 #define VGPU_PSTATE_MAX_v06_00  5
 
@@ -315,6 +321,7 @@ typedef struct VGPU_BSP_CAPS
 
 #define VGPU_PSTATE_CLK_DOM_MAX_v03_00 10
 #define VGPU_PSTATE_CLK_DOM_MAX_v2B_0F 15
+#define VGPU_PSTATE_CLK_DOM_MAX_v2E_07 18
 
 #define VGPU_PSTATE_VOLT_DOM_MAX_v03_00 2
 
@@ -429,6 +436,7 @@ struct _vgpu_static_info
     GPU_PARTITION_INFO gpuPartitionInfo; // Default (Admin created) EXEC-I PARTITION INFO
     NvBool bC2CLinkUp;
     NvBool bSelfHostedMode;
+    NvBool bSysL2CacheCoherentMode;
     NvBool bLocalEgmEnabled;
     NvU32  localEgmPeerId;
     NvU32 ceFaultMethodBufferDepth;
@@ -483,6 +491,9 @@ struct _vgpu_static_info
     NV2080_CTRL_MC_GET_INTR_CATEGORY_SUBTREE_MAP_PARAMS intrCategorySubtreeMapParams;
     VIRTUAL_DISPLAY_GET_MAX_RESOLUTION_PARAMS maxRes;
     VIRTUAL_DISPLAY_GET_NUM_HEADS_PARAMS heads;
+    NvU32 maxGpcClkFreqKHz;
+    NvU32 maxDramClkFreqKHz;
+    NvU32 maxNvdClkFreqKHz;
 };
 
 typedef struct _vgpu_static_info VGPU_STATIC_INFO, VGPU_STATIC_INFO2;
@@ -504,12 +515,12 @@ ct_assert(NV2080_CTRL_FB_FS_INFO_MAX_QUERIES == NV2080_CTRL_FB_FS_INFO_MAX_QUERI
 ct_assert(NV2080_CTRL_FB_FS_INFO_MAX_QUERY_SIZE == NV2080_CTRL_FB_FS_INFO_MAX_QUERY_SIZE_v1A_1D);
 ct_assert(NV2080_CTRL_GRMGR_GR_FS_INFO_MAX_QUERIES == NV2080_CTRL_GRMGR_GR_FS_INFO_MAX_QUERIES_v1A_1D);
 ct_assert(NV2080_CTRL_GRMGR_MAX_SMC_IDS == NV2080_CTRL_GRMGR_MAX_SMC_IDS_v1A_1D);
-ct_assert((NV0080_CTRL_GR_INFO_INDEX_MAX + 1) == NV0080_CTRL_GR_INFO_MAX_SIZE_2C_03);
+ct_assert((NV0080_CTRL_GR_INFO_INDEX_MAX + 1) == NV0080_CTRL_GR_INFO_MAX_SIZE_2E_06);
 ct_assert(NV2080_CTRL_INTERNAL_GR_MAX_ENGINES == NV2080_CTRL_INTERNAL_GR_MAX_ENGINES_1B_04);
 ct_assert(NV2080_CTRL_GR_SM_ISSUE_RATE_MODIFIER_V2_MAX_LIST_SIZE == NV2080_CTRL_GR_SM_ISSUE_RATE_MODIFIER_V2_MAX_LIST_SIZE_v2B_06);
 ct_assert(NV2080_CTRL_GR_SM_ISSUE_THROTTLE_CTRL_MAX_LIST_SIZE == NV2080_CTRL_GR_SM_ISSUE_THROTTLE_CTRL_MAX_LIST_SIZE_v2B_10);
-ct_assert(NV2080_CTRL_INTERNAL_GR_MAX_SM == NV2080_CTRL_INTERNAL_GR_MAX_SM_v1E_03);
-ct_assert(NV2080_CTRL_INTERNAL_GR_MAX_GPC == NV2080_CTRL_INTERNAL_GR_MAX_GPC_v2D_02);
+ct_assert(NV2080_CTRL_INTERNAL_GR_MAX_SM == NV2080_CTRL_INTERNAL_GR_MAX_SM_v2E_02);
+ct_assert(NV2080_CTRL_INTERNAL_GR_MAX_GPC == NV2080_CTRL_INTERNAL_GR_MAX_GPC_v2E_09);
 ct_assert(NV2080_CTRL_INTERNAL_ENGINE_CONTEXT_PROPERTIES_ENGINE_ID_COUNT ==
           NV2080_CTRL_INTERNAL_ENGINE_CONTEXT_PROPERTIES_ENGINE_ID_COUNT_v25_07);
 ct_assert(NV2080_CTRL_INTERNAL_MAX_TPC_PER_GPC_COUNT == NV2080_CTRL_INTERNAL_MAX_TPC_PER_GPC_COUNT_v1C_03);
@@ -539,7 +550,7 @@ ct_assert(NV2080_ENGINE_TYPE_GR_SIZE == 8);
 ct_assert(NV0000_CTRL_P2P_CAPS_INDEX_TABLE_SIZE == NV0000_CTRL_P2P_CAPS_INDEX_TABLE_SIZE_v1F_0D);
 ct_assert(NV0000_CTRL_SYSTEM_MAX_ATTACHED_GPUS == NV0000_CTRL_SYSTEM_MAX_ATTACHED_GPUS_v21_02);
 ct_assert(VM_UUID_SIZE == VM_UUID_SIZE_v21_02);
-ct_assert(NV2080_CTRL_MAX_PCES == NV2080_CTRL_MAX_PCES_v21_0A);
+ct_assert(NV2080_CTRL_MAX_PCES == NV2080_CTRL_MAX_PCES_v2E_0A);
 ct_assert(NV0080_CTRL_MSENC_CAPS_TBL_SIZE_V2C_07 == NV0080_CTRL_MSENC_CAPS_TBL_SIZE);
 ct_assert(MAX_NVDEC_ENGINES_V1A_07 <= NV2080_CTRL_CMD_INTERNAL_MAX_BSPS);
 ct_assert(MAX_NVDEC_ENGINES_V25_00 == NV2080_CTRL_CMD_INTERNAL_MAX_BSPS);
@@ -553,7 +564,7 @@ ct_assert(NV2080_CTRL_CMD_GR_CTXSW_PREEMPTION_BIND_BUFFERS_CONTEXT_POOL_v25_0E =
 ct_assert(RPC_GR_BUFFER_TYPE_GRAPHICS_MAX_v25_0E == RPC_GR_BUFFER_TYPE_GRAPHICS_MAX);
 ct_assert(NV9096_CTRL_ZBC_CLEAR_TABLE_TYPE_COUNT_v1A_07 == NV9096_CTRL_ZBC_CLEAR_TABLE_TYPE_COUNT);
 ct_assert(NVC637_CTRL_MAX_EXEC_PARTITIONS_v18_05 == NVC637_CTRL_MAX_EXEC_PARTITIONS);
-ct_assert(NV2080_CTRL_GPU_INFO_MAX_LIST_SIZE_v2B_13 == NV2080_CTRL_GPU_INFO_MAX_LIST_SIZE);
+ct_assert(NV2080_CTRL_GPU_INFO_MAX_LIST_SIZE_v2E_0C == NV2080_CTRL_GPU_INFO_MAX_LIST_SIZE);
 ct_assert(NVGPU_VGPU_ENGINE_LIST_MASK_ARRAY_MAX_v27_01 == NVGPU_VGPU_ENGINE_LIST_MASK_ARRAY_MAX);
 ct_assert(NVB0CC_CREDIT_POOL_MAX_COUNT_v29_0A == NVB0CC_CREDIT_POOL_MAX_COUNT);
 ct_assert(NVB0CC_MAX_CREDIT_INFO_ENTRIES_v21_08 == NVB0CC_MAX_CREDIT_INFO_ENTRIES);

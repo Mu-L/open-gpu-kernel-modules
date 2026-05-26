@@ -1,5 +1,5 @@
 /*******************************************************************************
-    Copyright (c) 2015-2025 NVIDIA Corporation
+    Copyright (c) 2015-2026 NVIDIA Corporation
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
@@ -29,6 +29,7 @@
 #include "uvm_gpu_semaphore.h"
 #include "uvm_hal.h"
 #include "uvm_procfs.h"
+#include "uvm_devmem.h"
 #include "uvm_pmm_gpu.h"
 #include "uvm_pmm_sysmem.h"
 #include "uvm_va_space.h"
@@ -80,6 +81,8 @@ static uvm_gpu_link_type_t get_gpu_link_type(UVM_LINK_TYPE link_type)
             return UVM_GPU_LINK_NVLINK_4;
         case UVM_LINK_TYPE_NVLINK_5:
             return UVM_GPU_LINK_NVLINK_5;
+        case UVM_LINK_TYPE_NVLINK_6:
+            return UVM_GPU_LINK_NVLINK_6;
         case UVM_LINK_TYPE_C2C:
             return UVM_GPU_LINK_C2C;
         default:
@@ -375,7 +378,7 @@ bool uvm_gpu_can_address(uvm_gpu_t *gpu, NvU64 addr, NvU64 size)
     cpu_addr_shift = uvm_cpu_num_va_bits();
     addr_shift = gpu_addr_shift;
 
-    // Pascal+ GPUs are capable of accessing kernel pointers in various modes
+    // Turing+ GPUs are capable of accessing kernel pointers in various modes
     // by applying the same upper-bit checks that x86 or ARM CPU processors do.
     // The x86 and ARM platforms use canonical form addresses. For ARM, even
     // with Top-Byte Ignore enabled, the following logic validates addresses
@@ -408,19 +411,16 @@ bool uvm_gpu_can_address(uvm_gpu_t *gpu, NvU64 addr, NvU64 size)
     //                 |VVVVVVVVVVVVVVVV|                 |VVVVVVVVVVVVVVVV|
     //               0 +----------------+               0 +----------------+
 
-    // On Pascal+ GPUs.
-    if (gpu_addr_shift > 40) {
-        // On x86, when cpu_addr_shift > gpu_addr_shift, it means the CPU uses
-        // 5-level paging and the GPU is pre-Hopper. On Pascal-Ada GPUs (49b
-        // wide VA) we set addr_shift to match a 4-level paging x86 (48b wide).
-        // See more details on uvm_parent_gpu_canonical_address(..);
-        if (cpu_addr_shift > gpu_addr_shift)
-            addr_shift = NVCPU_IS_X86_64 ? 48 : 49;
-        else if (gpu_addr_shift == 57)
-            addr_shift = gpu_addr_shift;
-        else
-            addr_shift = cpu_addr_shift;
-    }
+    // On x86 and RISCV, when cpu_addr_shift > gpu_addr_shift, it means the CPU
+    // uses 5-level paging and the GPU is pre-Hopper. On Turing-Ada GPUs (49b
+    // wide VA) we set addr_shift to match a 4-level paging x86 (48b wide).
+    // See more details on uvm_parent_gpu_canonical_address(..);
+    if (cpu_addr_shift > gpu_addr_shift)
+        addr_shift = NVCPU_IS_AARCH64 ? 49 : 48;
+    else if (gpu_addr_shift == 57)
+        addr_shift = gpu_addr_shift;
+    else
+        addr_shift = cpu_addr_shift;
 
     uvm_get_unaddressable_range(addr_shift, &max_va_lower, &min_va_upper);
 
@@ -452,14 +452,14 @@ NvU64 uvm_parent_gpu_canonical_address(uvm_parent_gpu_t *parent_gpu, NvU64 addr)
 
     // When the CPU VA width is larger than GPU's, it means that:
     // On ARM: the CPU is on LVA mode and the GPU is pre-Hopper.
-    // On x86: the CPU uses 5-level paging and the GPU is pre-Hopper.
+    // On x86 & RISCV64: the CPU uses 5-level paging and the GPU is pre-Hopper.
     // We sign-extend on the 48b on ARM and on the 47b on x86 to mirror the
     // behavior of CPUs with smaller (than GPU) VA widths.
     gpu_addr_shift = parent_gpu->arch_hal->mmu_mode_hal()->num_va_bits();
     cpu_addr_shift = uvm_cpu_num_va_bits();
 
     if (cpu_addr_shift > gpu_addr_shift)
-        addr_shift = NVCPU_IS_X86_64 ? 48 : 49;
+        addr_shift = NVCPU_IS_AARCH64 ? 49 : 48;
     else if (gpu_addr_shift == 57)
         addr_shift = gpu_addr_shift;
     else
@@ -467,7 +467,7 @@ NvU64 uvm_parent_gpu_canonical_address(uvm_parent_gpu_t *parent_gpu, NvU64 addr)
 
     addr = (NvU64)((NvS64)(addr << (64 - addr_shift)) >> (64 - addr_shift));
 
-    // This protection acts on when the address is not covered by the GPU's
+    // This protection acts only when the address is not covered by the GPU's
     // OOR_ADDR_CHECK. This can only happen when OOR_ADDR_CHECK is in
     // permissive (NO_CHECK) mode.
     if ((addr << (64 - gpu_addr_shift)) != (input_addr << (64 - gpu_addr_shift)))
@@ -536,7 +536,7 @@ static const char *uvm_gpu_virt_type_string(UVM_VIRT_MODE virtMode)
 static const char *uvm_gpu_link_type_string(uvm_gpu_link_type_t link_type)
 {
 
-    BUILD_BUG_ON(UVM_GPU_LINK_MAX != 9);
+    BUILD_BUG_ON(UVM_GPU_LINK_MAX != 10);
 
     switch (link_type) {
         UVM_ENUM_STRING_CASE(UVM_GPU_LINK_INVALID);
@@ -547,6 +547,7 @@ static const char *uvm_gpu_link_type_string(uvm_gpu_link_type_t link_type)
         UVM_ENUM_STRING_CASE(UVM_GPU_LINK_NVLINK_3);
         UVM_ENUM_STRING_CASE(UVM_GPU_LINK_NVLINK_4);
         UVM_ENUM_STRING_CASE(UVM_GPU_LINK_NVLINK_5);
+        UVM_ENUM_STRING_CASE(UVM_GPU_LINK_NVLINK_6);
         UVM_ENUM_STRING_CASE(UVM_GPU_LINK_C2C);
         UVM_ENUM_STRING_DEFAULT();
     }
@@ -566,7 +567,8 @@ static void gpu_info_print_common(uvm_gpu_t *gpu, struct seq_file *s)
     UVM_SEQ_OR_DBG_PRINT(s, "GPU %s\n", uvm_gpu_name(gpu));
     UVM_SEQ_OR_DBG_PRINT(s, "retained_count                         %llu\n", uvm_gpu_retained_count(gpu));
     UVM_SEQ_OR_DBG_PRINT(s, "ecc                                    %s\n", gpu->ecc.enabled ? "enabled" : "disabled");
-    UVM_SEQ_OR_DBG_PRINT(s, "nvlink status and recovery             %s\n", gpu->nvlink_status.enabled ? "enabled" : "disabled");
+    UVM_SEQ_OR_DBG_PRINT(s, "nvlink status and recovery             %s\n",
+                         gpu->nvlink_status.enabled ? "enabled" : "disabled");
     if (gpu->parent->closest_cpu_numa_node == -1)
         UVM_SEQ_OR_DBG_PRINT(s, "closest_cpu_numa_node                  n/a\n");
     else
@@ -1445,8 +1447,7 @@ NV_STATUS uvm_gpu_check_nvlink_error(uvm_gpu_t *gpu)
 static NV_STATUS init_parent_gpu(uvm_parent_gpu_t *parent_gpu,
                                  const NvProcessorUuid *gpu_uuid,
                                  const UvmGpuInfo *gpu_info,
-                                 const UvmGpuPlatformInfo *gpu_platform_info,
-                                 bool enable_hmm)
+                                 const UvmGpuPlatformInfo *gpu_platform_info)
 {
     NV_STATUS status;
     UvmGpuFbInfo fb_info = {0};
@@ -1527,18 +1528,6 @@ static NV_STATUS init_parent_gpu(uvm_parent_gpu_t *parent_gpu,
     parent_gpu->smc.enabled = !!parent_gpu->rm_info.smcEnabled;
 
     uvm_mmu_init_gpu_chunk_sizes(parent_gpu);
-
-    if (enable_hmm) {
-        status = uvm_pmm_devmem_init(parent_gpu);
-        if (status != NV_OK) {
-            UVM_ERR_PRINT("failed to intialize device private memory: %s, GPU %s\n",
-                          nvstatusToString(status),
-                          uvm_parent_gpu_name(parent_gpu));
-            return status;
-        }
-    }
-
-    uvm_pmm_gpu_device_p2p_init(parent_gpu);
 
     status = uvm_ats_add_gpu(parent_gpu);
     if (status != NV_OK) {
@@ -1634,7 +1623,9 @@ static NV_STATUS init_gpu(uvm_gpu_t *gpu, const UvmGpuInfo *gpu_info)
 
     status = get_gpu_nvlink_info(gpu);
     if (status != NV_OK) {
-        UVM_ERR_PRINT("Failed to get GPU NVLINK RECOVERY info: %s, GPU %s\n", nvstatusToString(status), uvm_gpu_name(gpu));
+        UVM_ERR_PRINT("Failed to get GPU NVLINK RECOVERY info: %s, GPU %s\n",
+                      nvstatusToString(status),
+                      uvm_gpu_name(gpu));
         return status;
     }
 
@@ -1795,9 +1786,9 @@ static void deinit_parent_gpu(uvm_parent_gpu_t *parent_gpu)
     // Return ownership to RM
     uvm_parent_gpu_deinit_isr(parent_gpu);
 
-    uvm_pmm_gpu_device_p2p_deinit(parent_gpu);
+    uvm_devmem_device_p2p_deinit(parent_gpu);
 
-    uvm_pmm_devmem_deinit(parent_gpu);
+    uvm_devmem_deinit(parent_gpu);
     uvm_ats_remove_gpu(parent_gpu);
 
     UVM_ASSERT(atomic64_read(&parent_gpu->mapped_cpu_pages_size) == 0);
@@ -2218,7 +2209,7 @@ NV_STATUS uvm_gpu_check_ecc_error_no_rm(uvm_gpu_t *gpu)
     // interrupt that might indicate one. We might get false positives because
     // the interrupt bits we read are not ECC-specific. They're just the
     // top-level bits for any interrupt on all engines which support ECC. On
-    // Pascal for example, RM returns us a mask with the bits for GR, L2, and
+    // Turing for example, RM returns us a mask with the bits for GR, L2, and
     // FB, because any of those might raise an ECC interrupt. So if they're set
     // we have to ask RM to check whether it was really an ECC error (and a
     // double-bit ECC error at that), in which case it sets the notifier.
@@ -2773,19 +2764,27 @@ cleanup:
     return status;
 }
 
-static NV_STATUS uvm_gpu_init_access_bits(uvm_parent_gpu_t *parent_gpu)
+static NV_STATUS parent_gpu_init_access_bits(uvm_parent_gpu_t *parent_gpu)
 {
+    UVM_ASSERT(parent_gpu->vab_info.accessBitsBufferHandle == 0);
     return uvm_rm_locked_call(nvUvmInterfaceAccessBitsBufAlloc(parent_gpu->rm_device, &parent_gpu->vab_info));
 }
 
-static NV_STATUS uvm_gpu_update_access_bits(uvm_parent_gpu_t *parent_gpu, UVM_ACCESS_BITS_DUMP_MODE mode)
+static NV_STATUS parent_gpu_update_access_bits(uvm_parent_gpu_t *parent_gpu, UVM_ACCESS_BITS_DUMP_MODE mode)
 {
     return nvUvmInterfaceAccessBitsDump(parent_gpu->rm_device, &parent_gpu->vab_info, mode);
 }
 
-static NV_STATUS uvm_gpu_deinit_access_bits(uvm_parent_gpu_t *parent_gpu)
+static NV_STATUS parent_gpu_deinit_access_bits(uvm_parent_gpu_t *parent_gpu)
 {
-    return uvm_rm_locked_call(nvUvmInterfaceAccessBitsBufFree(parent_gpu->rm_device, &parent_gpu->vab_info));
+    NV_STATUS status = NV_OK;
+
+    if (parent_gpu->vab_info.accessBitsBufferHandle) {
+        status =  uvm_rm_locked_call(nvUvmInterfaceAccessBitsBufFree(parent_gpu->rm_device, &parent_gpu->vab_info));
+        parent_gpu->vab_info.accessBitsBufferHandle = 0;
+    }
+
+    return status;
 }
 
 // Remove a gpu and unregister it from RM
@@ -2813,7 +2812,7 @@ static void remove_gpu(uvm_gpu_t *gpu)
     free_parent = (parent_gpu->num_retained_gpus == 0);
 
     if (free_parent && parent_gpu->access_bits_supported) {
-        status = uvm_gpu_deinit_access_bits(parent_gpu);
+        status = parent_gpu_deinit_access_bits(parent_gpu);
         UVM_ASSERT(status == NV_OK);
     }
 
@@ -2874,7 +2873,7 @@ static NV_STATUS add_gpu(const NvProcessorUuid *gpu_uuid,
                          const UvmGpuPlatformInfo *gpu_platform_info,
                          uvm_parent_gpu_t *parent_gpu,
                          const uvm_test_parent_gpu_inject_error_t *parent_gpu_error,
-                         bool enable_hmm,
+                         bool enable_devmem,
                          uvm_gpu_t **gpu_out)
 {
     NV_STATUS status;
@@ -2914,22 +2913,36 @@ static NV_STATUS add_gpu(const NvProcessorUuid *gpu_uuid,
     }
 
     if (alloc_parent) {
-        status = init_parent_gpu(parent_gpu, gpu_uuid, gpu_info, gpu_platform_info, enable_hmm);
+        status = init_parent_gpu(parent_gpu, gpu_uuid, gpu_info, gpu_platform_info);
         if (status != NV_OK)
             goto error;
     }
-#if UVM_IS_CONFIG_HMM()
-    // HMM was disabled when first initialising the parent so we can't support
-    // it now. Tell the caller to retry with it disabled.
-    else if (!parent_gpu->devmem && enable_hmm && uvm_hmm_is_enabled_system_wide()) {
-        status = NV_ERR_BUSY_RETRY;
-        goto error;
-    }
-#endif
 
     status = init_gpu(gpu, gpu_info);
     if (status != NV_OK)
         goto error;
+
+    if (alloc_parent) {
+        if (enable_devmem && !gpu->mem_info.numa.enabled && !gpu->parent->is_integrated_gpu) {
+            status = uvm_devmem_init(parent_gpu);
+            if (status != NV_OK) {
+                UVM_ERR_PRINT("failed to intialize device private memory: %s, GPU %s\n",
+                              nvstatusToString(status),
+                              uvm_parent_gpu_name(parent_gpu));
+                goto error;
+            }
+        }
+
+        uvm_devmem_device_p2p_init(parent_gpu);
+    }
+#if UVM_IS_CONFIG_HMM()
+    // HMM was disabled when first initialising the parent so we can't support
+    // it now. Tell the caller to retry with it disabled.
+    else if (!parent_gpu->devmem && enable_devmem && !gpu->mem_info.numa.enabled && !gpu->parent->is_integrated_gpu) {
+        status = NV_ERR_BUSY_RETRY;
+        goto error;
+    }
+#endif
 
     status = uvm_gpu_check_ecc_error(gpu);
     if (status != NV_OK)
@@ -2977,26 +2990,27 @@ static NV_STATUS add_gpu(const NvProcessorUuid *gpu_uuid,
     if (alloc_parent) {
         status = parent_peers_discover_static_link(parent_gpu);
         if (status != NV_OK)
-            goto error_retained;
+            goto error_retained_peers_discover_link;
     }
 
     status = peers_discover_static_link(gpu);
     if (status != NV_OK)
-        goto error_retained;
-
-    *gpu_out = gpu;
+        goto error_retained_peers_discover_link;
 
     if (alloc_parent && parent_gpu->access_bits_supported) {
-        status = uvm_gpu_init_access_bits(parent_gpu);
+        status = parent_gpu_init_access_bits(parent_gpu);
         if (status != NV_OK)
             goto error_retained;
     }
 
+    *gpu_out = gpu;
+
     return NV_OK;
 
-error_retained:
+error_retained_peers_discover_link:
     UVM_ERR_PRINT("Failed to discover NVLINK/BAR1 peers: %s, GPU %s\n", nvstatusToString(status), uvm_gpu_name(gpu));
 
+error_retained:
     // Nobody can have retained the GPU yet, since we still hold the
     // global lock.
     UVM_ASSERT(uvm_gpu_retained_count(gpu) == 1);
@@ -3017,7 +3031,7 @@ error:
 static NV_STATUS gpu_retain_by_uuid_locked(const NvProcessorUuid *gpu_uuid,
                                            const uvm_rm_user_object_t *user_rm_device,
                                            const uvm_test_parent_gpu_inject_error_t *parent_gpu_error,
-                                           bool enable_hmm,
+                                           bool enable_devmem,
                                            uvm_gpu_t **gpu_out)
 {
     NV_STATUS status = NV_OK;
@@ -3069,7 +3083,14 @@ static NV_STATUS gpu_retain_by_uuid_locked(const NvProcessorUuid *gpu_uuid,
         if (status != NV_OK)
             goto error_unregister;
 
-        status = add_gpu(gpu_uuid, gpu_id, gpu_info, &gpu_platform_info, parent_gpu, parent_gpu_error, enable_hmm, &gpu);
+        status = add_gpu(gpu_uuid,
+                         gpu_id,
+                         gpu_info,
+                         &gpu_platform_info,
+                         parent_gpu,
+                         parent_gpu_error,
+                         enable_devmem,
+                         &gpu);
         if (status != NV_OK)
             goto error_unregister;
     }
@@ -3095,12 +3116,12 @@ error_free_gpu_info:
 NV_STATUS uvm_gpu_retain_by_uuid(const NvProcessorUuid *gpu_uuid,
                                  const uvm_rm_user_object_t *user_rm_device,
                                  const uvm_test_parent_gpu_inject_error_t *parent_gpu_error,
-                                 bool enable_hmm,
+                                 bool enable_devmem,
                                  uvm_gpu_t **gpu_out)
 {
     NV_STATUS status;
     uvm_mutex_lock(&g_uvm_global.global_lock);
-    status = gpu_retain_by_uuid_locked(gpu_uuid, user_rm_device, parent_gpu_error, enable_hmm, gpu_out);
+    status = gpu_retain_by_uuid_locked(gpu_uuid, user_rm_device, parent_gpu_error, enable_devmem, gpu_out);
     uvm_mutex_unlock(&g_uvm_global.global_lock);
     return status;
 }
@@ -3331,7 +3352,8 @@ static bool gpu_phys_address_is_bar1p2p_peer(uvm_gpu_t *gpu, uvm_gpu_phys_addres
             continue;
 
         if (address.address >= peer_caps->bar1_p2p_dma_base_address[peer_index] &&
-            address.address < (peer_caps->bar1_p2p_dma_base_address[peer_index] + peer_caps->bar1_p2p_dma_size[peer_index])) {
+            address.address < (peer_caps->bar1_p2p_dma_base_address[peer_index] +
+                               peer_caps->bar1_p2p_dma_size[peer_index])) {
             is_peer = true;
             break;
         }
@@ -3404,7 +3426,6 @@ uvm_aperture_t uvm_get_page_tree_location(const uvm_gpu_t *gpu)
     // Sysmem is represented by UVM_APERTURE_SYS
     if (!gpu->mem_info.size)
         return UVM_APERTURE_SYS;
-
 
     return UVM_APERTURE_DEFAULT;
 }
@@ -4072,7 +4093,7 @@ NV_STATUS uvm_api_pageable_mem_access_on_gpu(UVM_PAGEABLE_MEM_ACCESS_ON_GPU_PARA
         return NV_ERR_INVALID_DEVICE;
     }
 
-    if (uvm_va_space_pageable_mem_access_enabled(va_space))
+    if (va_space->pageable.access_enabled)
         params->pageableMemAccess = NV_TRUE;
     else
         params->pageableMemAccess = NV_FALSE;
@@ -4147,7 +4168,6 @@ NV_STATUS uvm_test_dump_access_bits(UVM_TEST_DUMP_ACCESS_BITS_PARAMS *params, st
     uvm_va_space_t *va_space = uvm_va_space_get(filp);
     uvm_gpu_t *gpu = NULL;
     NV_STATUS status = NV_OK;
-    NvU64 granularity_size_kb = 0;
 
     gpu = uvm_va_space_retain_gpu_by_uuid(va_space, &params->gpu_uuid);
     if (!gpu || !gpu->parent->access_bits_supported) {
@@ -4160,11 +4180,11 @@ NV_STATUS uvm_test_dump_access_bits(UVM_TEST_DUMP_ACCESS_BITS_PARAMS *params, st
         goto done;
     }
 
-    // See resman/interface/rmapi/finn/ctrl/ctrlc763.finn for 'granularity' enum values
-    granularity_size_kb = (NvU64)(64) << gpu->parent->vab_info.granularity;
-    params->granularity_size_kb = granularity_size_kb;
+    // See resman/interface/rmapi/finn/ctrl/ctrlc763.finn for 'granularity' enum
+    // values.
+    params->granularity_size_kb = (NvU64)(64) << gpu->parent->vab_info.granularity;
 
-    status = uvm_gpu_update_access_bits(gpu->parent, params->mode);
+    status = parent_gpu_update_access_bits(gpu->parent, params->mode);
     if (status != NV_OK)
         goto done;
 
@@ -4187,4 +4207,3 @@ done:
         uvm_gpu_release(gpu);
     return status;
 }
-

@@ -138,7 +138,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_CrashCatWayfinder;
     ((CrashCatWayfinder*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(CrashCatWayfinder)))
 #endif //__nvoc_crashcat_wayfinder_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_CrashCatWayfinder(CrashCatWayfinder**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_CrashCatWayfinder(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_CrashCatWayfinder(CrashCatWayfinder**, Dynamic*, NvU32,
         NV_CRASHCAT_WAYFINDER_VERSION CrashCatWayfinderHal_version, NvU32 wfl0);

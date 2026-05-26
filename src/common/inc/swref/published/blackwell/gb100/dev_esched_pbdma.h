@@ -40,4 +40,25 @@
 #define NV_PBDMA_PB_SEGMENT_EXTENDED_BASE_RSVD_ZERO     0x00000000 /* RW--V */
 #define NV_PBDMA_PB_SEGMENT_EXTENDED_BASE_RSVD2                7:0 /* RWXUF */
 #define NV_PBDMA_PB_SEGMENT_EXTENDED_BASE_RSVD2_ZERO    0x00000000 /* RW--V */
+#define NV_PBDMA_SIGNATURE                                   0x038 /* RW-4R */
+#define NV_PBDMA_SIGNATURE_HW                                 15:0 /* RWXUF */
+#define NV_PBDMA_SIGNATURE_HW_VALID                     0x0000face /* RW--V */
+#define NV_PBDMA_SIGNATURE_HW_HOST_CLASS_ID                 51567 /* RW--V */
+#define NV_PBDMA_SIGNATURE_SW                                31:16 /* RWXUF */
+#define NV_PBDMA_SIGNATURE_SW_ZERO                      0x00000000 /* RW--V */
+#define NV_PBDMA_PB_HEADER                                   0x420 /* RW-4R */
+#define NV_PBDMA_PB_HEADER_METHOD_OR_SDMASK                   15:2 /* RWXUF */
+#define NV_PBDMA_PB_HEADER_METHOD                             13:2 /*       */
+#define NV_PBDMA_PB_HEADER_METHOD_ZERO                  0x00000000 /*       */
+#define NV_PBDMA_PB_HEADER_SDMASK                             15:4 /*       */
+#define NV_PBDMA_PB_HEADER_SUBCHANNEL                        18:16 /* RWXUF */
+#define NV_PBDMA_PB_HEADER_SUBCHANNEL_ZERO              0x00000000 /* RW--V */
+#define NV_PBDMA_PB_HEADER_LEVEL                             20:20 /* RWXVF */
+#define NV_PBDMA_PB_HEADER_LEVEL_MAIN                   0x00000000 /* RW--V */
+#define NV_PBDMA_PB_HEADER_LEVEL_SUBROUTINE             0x00000001 /* RW--V */
+#define NV_PBDMA_PB_HEADER_FIRST                             22:22 /* RWXVF */
+#define NV_PBDMA_PB_HEADER_FIRST_FALSE                  0x00000000 /* RW--V */
+#define NV_PBDMA_PB_HEADER_FIRST_TRUE                   0x00000001 /* RW--V */
+#define NV_PBDMA_MISC_FETCH_STATE_PB_HEADER_TYPE                        5:3 /* RWXUF */
+#define NV_PBDMA_MISC_FETCH_STATE_PB_HEADER_TYPE_INC             0x00000001 /* RW--V */
 #endif // __gb100_dev_esched_pbdma_h__

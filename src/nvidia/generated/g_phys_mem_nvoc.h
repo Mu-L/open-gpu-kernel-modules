@@ -144,7 +144,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_PhysicalMemory;
     ((PhysicalMemory*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(PhysicalMemory)))
 #endif //__nvoc_phys_mem_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_PhysicalMemory(PhysicalMemory**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_PhysicalMemory(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_PhysicalMemory(PhysicalMemory**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_PhysicalMemory(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

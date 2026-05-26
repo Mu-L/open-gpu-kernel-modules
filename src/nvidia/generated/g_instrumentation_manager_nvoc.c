@@ -28,7 +28,7 @@ void __nvoc_init__InstrumentationManager(InstrumentationManager*);
 void __nvoc_init_funcTable_InstrumentationManager(InstrumentationManager*);
 NV_STATUS __nvoc_ctor_InstrumentationManager(InstrumentationManager*);
 void __nvoc_init_dataField_InstrumentationManager(InstrumentationManager*);
-void __nvoc_dtor_InstrumentationManager(InstrumentationManager*);
+void __nvoc_dtor_InstrumentationManager(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__InstrumentationManager;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_InstrumentationManager =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "InstrumentationManager",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_InstrumentationManager,
+    .objCreatefn =        &__nvoc_objCreateDynamic_InstrumentationManager,
     .pCastInfo =          &__nvoc_castinfo__InstrumentationManager,
     .pExportInfo =        &__nvoc_export_info__InstrumentationManager
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_InstrumentationManager =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__InstrumentationManager __nvoc_metadata__InstrumentationManager = {
     .rtti.pClassDef = &__nvoc_class_def_InstrumentationManager,    // (instrumentationmanager) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_InstrumentationManager,
+    .rtti.dtor      = &__nvoc_dtor_InstrumentationManager,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -82,16 +82,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__InstrumentationManager =
 
 // Destruct InstrumentationManager object.
 void __nvoc_instrumentationmanagerDestruct(InstrumentationManager*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_InstrumentationManager(InstrumentationManager* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_InstrumentationManager(Dynamic* pThis) {
+
+    InstrumentationManager *__nvoc_this = (InstrumentationManager *) pThis;
 
 // Call destructor.
-    __nvoc_instrumentationmanagerDestruct(pThis);
+    __nvoc_instrumentationmanagerDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_InstrumentationManager(InstrumentationManager *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -117,7 +119,7 @@ NV_STATUS __nvoc_ctor_InstrumentationManager(InstrumentationManager *pInstrument
 
     // Unwind on error.
 __nvoc_ctor_InstrumentationManager_fail__init:
-    __nvoc_dtor_Object(&pInstrumentationManager->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&pInstrumentationManager->__nvoc_base_Object);
 __nvoc_ctor_InstrumentationManager_fail_Object:
 __nvoc_ctor_InstrumentationManager_exit:
     return status;
@@ -221,11 +223,8 @@ __nvoc_objCreate_InstrumentationManager_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_InstrumentationManager(InstrumentationManager **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_InstrumentationManager(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_InstrumentationManager(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_InstrumentationManager((InstrumentationManager **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

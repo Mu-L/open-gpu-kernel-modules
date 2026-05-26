@@ -55,8 +55,11 @@ programAdvancedInfoframeC971(NVHDMIPKT_CLASS           *pThis,
     NvU32 regAddr         = 0;
     NvU32 regData         = 0;
     NvU32 numOfInfoframes = pInfoframe->isLargeInfoframe ? (pInfoframe->numAdditionalInfoframes + 1) : 1;
+    NvU32 infoFrameCollisionIndex;
+    NvU32 infoFrameCollisionSize;
 
-    if (NV_FALSE == isInfoframeOffsetAvailable(pBaseReg, head, ifIndex))
+    if (NV_FALSE == isInfoframeOffsetAvailable(pBaseReg, head, ifIndex, pInfoframe->numAdditionalInfoframes,
+        &infoFrameCollisionIndex, &infoFrameCollisionSize))
     {
         NvHdmiPkt_Print(pThis, "MoreInfoframe: Client requested overwriting an active infoframe");
     }

@@ -1,5 +1,5 @@
 /*******************************************************************************
-    Copyright (c) 2017-2025 NVIDIA Corporation
+    Copyright (c) 2017-2026 NVIDIA Corporation
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
@@ -91,5 +91,6 @@ NV_STATUS uvm_test_reconfigure_access_counters(UVM_TEST_RECONFIGURE_ACCESS_COUNT
 NV_STATUS uvm_test_reset_access_counters(UVM_TEST_RESET_ACCESS_COUNTERS_PARAMS *params, struct file *filp);
 NV_STATUS uvm_test_set_ignore_access_counters(UVM_TEST_SET_IGNORE_ACCESS_COUNTERS_PARAMS *params, struct file *filp);
 NV_STATUS uvm_test_query_access_counters(UVM_TEST_QUERY_ACCESS_COUNTERS_PARAMS *params, struct file *filp);
+NV_STATUS uvm_test_drain_access_counters(UVM_TEST_DRAIN_ACCESS_COUNTERS_PARAMS *params, struct file *filp);
 
 #endif // __UVM_GPU_ACCESS_COUNTERS_H__

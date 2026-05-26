@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -502,6 +502,14 @@ vidmemCopyConstruct
             break;
     }
 
+    // copy and reference any memory accounting charges
+    if (status == NV_OK)
+    {
+        Memory *pMemory = staticCast(pVideoMemory, Memory);
+        pMemory->pCharge = pMemorySrc->pCharge;
+        memacctIncrementChargeRefCount(pMemory->pCharge);
+    }
+
     return status;
 }
 
@@ -606,6 +614,11 @@ vidmemConstruct_IMPL
 
     stdmemDumpInputAllocParams(pAllocData, pCallContext);
 
+    NvU64 pid = pRmClient->ProcID;
+    void *pidInfo = pRmClient->pOsPidInfo;
+    NV_CHECK_OK_OR_RETURN(LEVEL_ERROR,
+        memacctTryCharge(osClientGroupID(pid, pidInfo), pGpu->gpuId, pAllocData->size, &pMemory->pCharge));
+
     if (pCallContext->secInfo.privLevel >= RS_PRIV_LEVEL_KERNEL)
     {
         bRsvdHeap = FLD_TEST_DRF(OS32, _ATTR, _ALLOCATE_FROM_RESERVED_HEAP, _YES, pAllocData->attr);
@@ -613,7 +626,10 @@ vidmemConstruct_IMPL
 
     bSubheap = FLD_TEST_DRF(OS32, _ATTR2, _ALLOCATE_FROM_SUBHEAP, _YES, pAllocData->attr2);
     pHeap = vidmemGetHeap(pGpu, pDevice, bSubheap, bRsvdHeap);
-    NV_CHECK_OR_RETURN(LEVEL_INFO, pHeap != NULL, NV_ERR_INVALID_STATE);
+    NV_CHECK_OR_ELSE(LEVEL_INFO,
+        pHeap != NULL,
+        rmStatus = NV_ERR_INVALID_STATE;
+        goto done);
 
     attr  = pAllocData->attr;
     attr2 = pAllocData->attr2;
@@ -628,13 +644,16 @@ vidmemConstruct_IMPL
     {
         // CC-TODO: Remove this once non-CPR regions are created
         NV_PRINTF(LEVEL_ERROR, "Non-CPR region not yet created\n");
-        NV_ASSERT_OR_RETURN(0, NV_ERR_INVALID_ARGUMENT);
+        NV_ASSERT_OR_ELSE(0,
+            rmStatus = NV_ERR_INVALID_ARGUMENT;
+            goto done);
     }
     else if (!gpuIsCCorApmFeatureEnabled(pGpu) &&
              FLD_TEST_DRF(OS32, _ATTR2, _MEMORY_PROTECTION, _PROTECTED, pAllocData->attr2))
     {
         NV_PRINTF(LEVEL_ERROR, "Protected memory not enabled but PROTECTED flag is set by client");
-        return NV_ERR_INVALID_ARGUMENT;
+        rmStatus = NV_ERR_INVALID_ARGUMENT;
+        goto done;
     }
 
     pAllocRequest->classNum = NV01_MEMORY_LOCAL_USER;
@@ -660,9 +679,10 @@ vidmemConstruct_IMPL
                       heapIsPmaManaged(pGpu, pHeap, pAllocData->offset, pAllocData->offset+pAllocData->size-1));
 
     // Scrub-on-free is not supported by heap. Make sure clients don't get unscrubbed allocations
-    NV_CHECK_OR_RETURN(LEVEL_WARNING,
+    NV_CHECK_OR_ELSE(LEVEL_WARNING,
         !memmgrIsScrubOnFreeEnabled(pMemoryManager) || bIsPmaAlloc || bSubheap || bRsvdHeap,
-        NV_ERR_INVALID_STATE);
+            rmStatus = NV_ERR_INVALID_STATE;
+            goto done);
 
     if (!FLD_TEST_DRF(OS32, _ATTR2, _ENABLE_LOCALIZED_MEMORY, _DEFAULT, pAllocData->attr2))
     {
@@ -776,7 +796,7 @@ vidmemConstruct_IMPL
             portMemSet(pFbAllocPageFormat, 0, sizeof(FB_ALLOC_PAGE_FORMAT));
             pFbAllocInfo->pageFormat = pFbAllocPageFormat;
 
-            memUtilsInitFBAllocInfo(pAllocRequest->pUserParams, pFbAllocInfo, hClient, hParent);
+            memUtilsInitFBAllocInfo(pAllocRequest->pUserParams, pFbAllocInfo, hClient, pDeviceRef->hResource);
 
             rmStatus = memmgrAllocResources(pGpu, pMemoryManager, pAllocRequest, pFbAllocInfo);
             if (rmStatus != NV_OK)
@@ -834,7 +854,7 @@ vidmemConstruct_IMPL
         portMemSet(pFbAllocPageFormat, 0, sizeof(FB_ALLOC_PAGE_FORMAT));
         pFbAllocInfo->pageFormat = pFbAllocPageFormat;
 
-        memUtilsInitFBAllocInfo(pAllocRequest->pUserParams, pFbAllocInfo, hClient, hParent);
+        memUtilsInitFBAllocInfo(pAllocRequest->pUserParams, pFbAllocInfo, hClient, pDeviceRef->hResource);
 
         rmStatus = memmgrAllocResources(pGpu, pMemoryManager, pAllocRequest, pFbAllocInfo);
         if (rmStatus != NV_OK)
@@ -1078,6 +1098,9 @@ vidmemConstruct_IMPL
     stdmemDumpOutputAllocParams(pAllocData);
 
 done:
+    if (pMemory->pCharge != NULL && rmStatus != NV_OK)
+        memacctReleaseCharge(pMemory->pCharge);
+
     if (bSubheap && pTempMemDesc != NULL && rmStatus != NV_OK)
         heapRemoveRef(pHeap);
 
@@ -1117,6 +1140,7 @@ vidmemDestruct_IMPL
     // Free any association of the memory with existing third-party p2p object
     CliUnregisterMemoryFromThirdPartyP2P(pMemory);
 
+    memacctReleaseCharge(pMemory->pCharge);
     memDestructCommon(pMemory);
 
     //

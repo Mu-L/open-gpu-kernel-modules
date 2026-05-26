@@ -29,7 +29,7 @@ void __nvoc_init__P2PTokenShare(P2PTokenShare*);
 void __nvoc_init_funcTable_P2PTokenShare(P2PTokenShare*);
 NV_STATUS __nvoc_ctor_P2PTokenShare(P2PTokenShare*);
 void __nvoc_init_dataField_P2PTokenShare(P2PTokenShare*);
-void __nvoc_dtor_P2PTokenShare(P2PTokenShare*);
+void __nvoc_dtor_P2PTokenShare(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__P2PTokenShare;
@@ -48,7 +48,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_P2PTokenShare =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "P2PTokenShare",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_P2PTokenShare,
+    .objCreatefn =        &__nvoc_objCreateDynamic_P2PTokenShare,
     .pCastInfo =          &__nvoc_castinfo__P2PTokenShare,
     .pExportInfo =        &__nvoc_export_info__P2PTokenShare
 };
@@ -57,7 +57,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_P2PTokenShare =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__P2PTokenShare __nvoc_metadata__P2PTokenShare = {
     .rtti.pClassDef = &__nvoc_class_def_P2PTokenShare,    // (shrp2p) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_P2PTokenShare,
+    .rtti.dtor      = &__nvoc_dtor_P2PTokenShare,
     .rtti.offset    = 0,
     .metadata__RsShared.rtti.pClassDef = &__nvoc_class_def_RsShared,    // (shr) super
     .metadata__RsShared.rtti.dtor      = &__nvoc_destructFromBase,
@@ -87,16 +87,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__P2PTokenShare =
 
 // Destruct P2PTokenShare object.
 void __nvoc_shrp2pDestruct(P2PTokenShare*);
-void __nvoc_dtor_RsShared(RsShared*);
-void __nvoc_dtor_P2PTokenShare(P2PTokenShare* pThis) {
+void __nvoc_dtor_RsShared(Dynamic*);
+void __nvoc_dtor_P2PTokenShare(Dynamic* pThis) {
+
+    P2PTokenShare *__nvoc_this = (P2PTokenShare *) pThis;
 
 // Call destructor.
-    __nvoc_shrp2pDestruct(pThis);
+    __nvoc_shrp2pDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RsShared(&pThis->__nvoc_base_RsShared);
+    __nvoc_dtor_RsShared((Dynamic *) &__nvoc_this->__nvoc_base_RsShared);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_P2PTokenShare(P2PTokenShare *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -122,7 +124,7 @@ NV_STATUS __nvoc_ctor_P2PTokenShare(P2PTokenShare *pP2PTokenShare) {
 
     // Unwind on error.
 __nvoc_ctor_P2PTokenShare_fail__init:
-    __nvoc_dtor_RsShared(&pP2PTokenShare->__nvoc_base_RsShared);
+    __nvoc_dtor_RsShared((Dynamic *)&pP2PTokenShare->__nvoc_base_RsShared);
 __nvoc_ctor_P2PTokenShare_fail_RsShared:
 __nvoc_ctor_P2PTokenShare_exit:
     return status;
@@ -228,12 +230,9 @@ __nvoc_objCreate_P2PTokenShare_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_P2PTokenShare(P2PTokenShare **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_P2PTokenShare(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_P2PTokenShare(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_P2PTokenShare((P2PTokenShare **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 
 
@@ -254,7 +253,7 @@ void __nvoc_init__ThirdPartyP2P(ThirdPartyP2P*);
 void __nvoc_init_funcTable_ThirdPartyP2P(ThirdPartyP2P*);
 NV_STATUS __nvoc_ctor_ThirdPartyP2P(ThirdPartyP2P*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_ThirdPartyP2P(ThirdPartyP2P*);
-void __nvoc_dtor_ThirdPartyP2P(ThirdPartyP2P*);
+void __nvoc_dtor_ThirdPartyP2P(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__ThirdPartyP2P;
@@ -337,7 +336,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ThirdPartyP2P =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "ThirdPartyP2P",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_ThirdPartyP2P,
+    .objCreatefn =        &__nvoc_objCreateDynamic_ThirdPartyP2P,
     .pCastInfo =          &__nvoc_castinfo__ThirdPartyP2P,
     .pExportInfo =        &__nvoc_export_info__ThirdPartyP2P
 };
@@ -347,6 +346,37 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ThirdPartyP2P =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS thirdpartyp2pCtrlCmdRegisterVaSpace__EXPORT(void *pThirdPartyP2P, void *pRegisterVaSpaceParams) {
+    return thirdpartyp2pCtrlCmdRegisterVaSpace_IMPL(pThirdPartyP2P, pRegisterVaSpaceParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS thirdpartyp2pCtrlCmdUnregisterVaSpace__EXPORT(void *pThirdPartyP2P, void *pUnregisterVaSpaceParams) {
+    return thirdpartyp2pCtrlCmdUnregisterVaSpace_IMPL(pThirdPartyP2P, pUnregisterVaSpaceParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS thirdpartyp2pCtrlCmdRegisterVidmem__EXPORT(void *pThirdPartyP2P, void *pRegisterVidmemParams) {
+    return thirdpartyp2pCtrlCmdRegisterVidmem_IMPL(pThirdPartyP2P, pRegisterVidmemParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS thirdpartyp2pCtrlCmdUnregisterVidmem__EXPORT(void *pThirdPartyP2P, void *pUnregisterVidmemParams) {
+    return thirdpartyp2pCtrlCmdUnregisterVidmem_IMPL(pThirdPartyP2P, pUnregisterVidmemParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS thirdpartyp2pCtrlCmdRegisterPid__EXPORT(void *pThirdPartyP2P, void *pParams) {
+    return thirdpartyp2pCtrlCmdRegisterPid_IMPL(pThirdPartyP2P, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ThirdPartyP2P[] = 
 {
@@ -354,7 +384,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ThirdPar
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &thirdpartyp2pCtrlCmdRegisterVaSpace_IMPL,
+        /*pFunc=*/      (void (*)(void)) &thirdpartyp2pCtrlCmdRegisterVaSpace__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -369,7 +399,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ThirdPar
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &thirdpartyp2pCtrlCmdUnregisterVaSpace_IMPL,
+        /*pFunc=*/      (void (*)(void)) &thirdpartyp2pCtrlCmdUnregisterVaSpace__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -384,7 +414,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ThirdPar
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &thirdpartyp2pCtrlCmdRegisterVidmem_IMPL,
+        /*pFunc=*/      (void (*)(void)) &thirdpartyp2pCtrlCmdRegisterVidmem__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -399,7 +429,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ThirdPar
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &thirdpartyp2pCtrlCmdUnregisterVidmem_IMPL,
+        /*pFunc=*/      (void (*)(void)) &thirdpartyp2pCtrlCmdUnregisterVidmem__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -414,7 +444,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ThirdPar
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &thirdpartyp2pCtrlCmdRegisterPid_IMPL,
+        /*pFunc=*/      (void (*)(void)) &thirdpartyp2pCtrlCmdRegisterPid__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -431,7 +461,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ThirdPar
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__ThirdPartyP2P __nvoc_metadata__ThirdPartyP2P = {
     .rtti.pClassDef = &__nvoc_class_def_ThirdPartyP2P,    // (thirdpartyp2p) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_ThirdPartyP2P,
+    .rtti.dtor      = &__nvoc_dtor_ThirdPartyP2P,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -691,16 +721,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__ThirdPartyP2P =
 
 // Destruct ThirdPartyP2P object.
 void __nvoc_thirdpartyp2pDestruct(ThirdPartyP2P*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_ThirdPartyP2P(ThirdPartyP2P* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_ThirdPartyP2P(Dynamic* pThis) {
+
+    ThirdPartyP2P *__nvoc_this = (ThirdPartyP2P *) pThis;
 
 // Call destructor.
-    __nvoc_thirdpartyp2pDestruct(pThis);
+    __nvoc_thirdpartyp2pDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_ThirdPartyP2P(ThirdPartyP2P *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -726,7 +758,7 @@ NV_STATUS __nvoc_ctor_ThirdPartyP2P(ThirdPartyP2P *pResource, struct CALL_CONTEX
 
     // Unwind on error.
 __nvoc_ctor_ThirdPartyP2P_fail__init:
-    __nvoc_dtor_GpuResource(&pResource->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pResource->__nvoc_base_GpuResource);
 __nvoc_ctor_ThirdPartyP2P_fail_GpuResource:
 __nvoc_ctor_ThirdPartyP2P_exit:
     return status;
@@ -838,13 +870,10 @@ __nvoc_objCreate_ThirdPartyP2P_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_ThirdPartyP2P(ThirdPartyP2P **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_ThirdPartyP2P(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_ThirdPartyP2P(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_ThirdPartyP2P((ThirdPartyP2P **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

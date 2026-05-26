@@ -164,8 +164,9 @@
 #define MC_ENGINE_IDX_DISP_LOW                      177
 #define MC_ENGINE_IDX_HFRP                          178
 #define MC_ENGINE_IDX_I2C                           179
+#define MC_ENGINE_IDX_LPSEC                         180
 // This must be kept as the max bit if we need to add more engines
-#define MC_ENGINE_IDX_MAX                           180
+#define MC_ENGINE_IDX_MAX                           181
 
 // Index GR reference
 #define MC_ENGINE_IDX_GRn(x)            (MC_ENGINE_IDX_GR0 + (x))

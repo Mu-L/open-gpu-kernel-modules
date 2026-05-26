@@ -26,7 +26,7 @@ void __nvoc_init__Object(Object*);
 void __nvoc_init_funcTable_Object(Object*);
 NV_STATUS __nvoc_ctor_Object(Object*);
 void __nvoc_init_dataField_Object(Object*);
-void __nvoc_dtor_Object(Object*);
+void __nvoc_dtor_Object(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__Object;
@@ -45,7 +45,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_Object =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "Object",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_Object,
+    .objCreatefn =        &__nvoc_objCreateDynamic_Object,
     .pCastInfo =          &__nvoc_castinfo__Object,
     .pExportInfo =        &__nvoc_export_info__Object
 };
@@ -54,7 +54,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_Object =
 // Metadata with per-class RTTI
 static const struct NVOC_METADATA__Object __nvoc_metadata__Object = {
     .rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_Object,
+    .rtti.dtor      = &__nvoc_dtor_Object,
     .rtti.offset    = 0,
 };
 
@@ -75,8 +75,10 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__Object =
 
 
 // Destruct Object object.
-void __nvoc_dtor_Object(Object* pThis) {
-    PORT_UNREFERENCED_VARIABLE(pThis);
+void __nvoc_dtor_Object(Dynamic* pThis) {
+
+    Object *__nvoc_this = (Object *) pThis;
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_Object(Object *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -189,11 +191,8 @@ __nvoc_objCreate_Object_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_Object(Object **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_Object(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_Object(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_Object((Object **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

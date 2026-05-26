@@ -29,7 +29,7 @@ void __nvoc_init__KernelPmu(KernelPmu*, GpuHalspecOwner *pGpuhalspecowner);
 void __nvoc_init_funcTable_KernelPmu(KernelPmu*, GpuHalspecOwner *pGpuhalspecowner);
 NV_STATUS __nvoc_ctor_KernelPmu(KernelPmu*, GpuHalspecOwner *pGpuhalspecowner);
 void __nvoc_init_dataField_KernelPmu(KernelPmu*, GpuHalspecOwner *pGpuhalspecowner);
-void __nvoc_dtor_KernelPmu(KernelPmu*);
+void __nvoc_dtor_KernelPmu(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__KernelPmu;
@@ -62,7 +62,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelPmu =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "KernelPmu",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_KernelPmu,
+    .objCreatefn =        &__nvoc_objCreateDynamic_KernelPmu,
     .pCastInfo =          &__nvoc_castinfo__KernelPmu,
     .pExportInfo =        &__nvoc_export_info__KernelPmu
 };
@@ -71,7 +71,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelPmu =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__KernelPmu __nvoc_metadata__KernelPmu = {
     .rtti.pClassDef = &__nvoc_class_def_KernelPmu,    // (kpmu) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_KernelPmu,
+    .rtti.dtor      = &__nvoc_dtor_KernelPmu,
     .rtti.offset    = 0,
     .metadata__OBJENGSTATE.rtti.pClassDef = &__nvoc_class_def_OBJENGSTATE,    // (engstate) super
     .metadata__OBJENGSTATE.rtti.dtor      = &__nvoc_destructFromBase,
@@ -206,16 +206,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__KernelPmu =
 
 // Destruct KernelPmu object.
 void __nvoc_kpmuDestruct(KernelPmu*);
-void __nvoc_dtor_OBJENGSTATE(OBJENGSTATE*);
-void __nvoc_dtor_KernelPmu(KernelPmu* pThis) {
+void __nvoc_dtor_OBJENGSTATE(Dynamic*);
+void __nvoc_dtor_KernelPmu(Dynamic* pThis) {
+
+    KernelPmu *__nvoc_this = (KernelPmu *) pThis;
 
 // Call destructor.
-    __nvoc_kpmuDestruct(pThis);
+    __nvoc_kpmuDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_OBJENGSTATE(&pThis->__nvoc_base_OBJENGSTATE);
+    __nvoc_dtor_OBJENGSTATE((Dynamic *) &__nvoc_this->__nvoc_base_OBJENGSTATE);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_KernelPmu(KernelPmu *pThis, GpuHalspecOwner *pGpuhalspecowner) {
     ChipHal *chipHal = &pGpuhalspecowner->chipHal;
@@ -257,7 +259,7 @@ static void __nvoc_init_funcTable_KernelPmu_1(KernelPmu *pThis, GpuHalspecOwner 
 
     // kpmuGetIsSelfInit -- halified (2 hals) body
     if (( ((chipHal_HalVarIdx >> 5) == 1UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x98000000UL) ) ||
-        ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000003f9UL) )) /* ChipHal: GB100 | GB102 | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C */ 
+        ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000030ffUL) )) /* ChipHal: GB100 | GB102 | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C | GR100 | GR102 */ 
     {
         pThis->__kpmuGetIsSelfInit__ = &kpmuGetIsSelfInit_e661f0;
     }
@@ -374,11 +376,8 @@ __nvoc_objCreate_KernelPmu_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_KernelPmu(KernelPmu **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_KernelPmu(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_KernelPmu(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_KernelPmu((KernelPmu **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

@@ -28,7 +28,7 @@ void __nvoc_init__OBJVASPACE(OBJVASPACE*);
 void __nvoc_init_funcTable_OBJVASPACE(OBJVASPACE*);
 NV_STATUS __nvoc_ctor_OBJVASPACE(OBJVASPACE*);
 void __nvoc_init_dataField_OBJVASPACE(OBJVASPACE*);
-void __nvoc_dtor_OBJVASPACE(OBJVASPACE*);
+void __nvoc_dtor_OBJVASPACE(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJVASPACE;
@@ -53,7 +53,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJVASPACE =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJVASPACE",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) NULL,
+    .objCreatefn =        NULL,
     .pCastInfo =          &__nvoc_castinfo__OBJVASPACE,
     .pExportInfo =        &__nvoc_export_info__OBJVASPACE
 };
@@ -62,7 +62,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJVASPACE =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__OBJVASPACE __nvoc_metadata__OBJVASPACE = {
     .rtti.pClassDef = &__nvoc_class_def_OBJVASPACE,    // (vaspace) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJVASPACE,
+    .rtti.dtor      = &__nvoc_dtor_OBJVASPACE,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -115,13 +115,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJVASPACE =
 
 
 // Destruct OBJVASPACE object.
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_OBJVASPACE(OBJVASPACE* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_OBJVASPACE(Dynamic* pThis) {
+
+    OBJVASPACE *__nvoc_this = (OBJVASPACE *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJVASPACE(OBJVASPACE *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);

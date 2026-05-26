@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2022, NVIDIA CORPORATION. All rights reserved.
+ * Copyright (c) 2016-2025, NVIDIA CORPORATION. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -29,6 +29,10 @@
 
 #include "nvidia-drm-helper.h"
 
+#if defined(NV_DRM_HAS_COLOROP)
+#include "nvidia-drm-color-pipeline.h"
+#endif
+
 #if defined(NV_DRM_DRMP_H_PRESENT)
 #include <drm/drmP.h>
 #endif
@@ -42,6 +46,21 @@
 struct nv_drm_crtc {
     NvU32 head;
 
+#if defined(NV_DRM_CRTC_FUNCS_HAS_GET_VBLANK_TIMESTAMP)
+    /* Last vblank timestamp stored when callback occurs (nanoseconds) */
+    NvU64 last_vblank_time;
+#endif
+
+    /* True if a real vblank interrupt has fired since vblank was enabled.
+     *
+     * It is protected by dev->vblank_time_lock that is DRM core's designated
+     * spinlock for protecting vblank timestamps. The flag's validity is
+     * dependent on the timestamp data itself, protecting both with the same
+     * lock prevents race where the flag might indicate "valid" while the
+     * timestamp is stale.
+     */
+    bool vblank_intr_fired;
+
     /**
      * @flip_list:
      *
@@ -49,6 +68,8 @@ struct nv_drm_crtc {
      * Protected by @flip_list_lock.
      */
     struct list_head flip_list;
+
+    struct mutex vblank_q_lock;
 
     /**
      * @flip_list_lock:
@@ -63,6 +84,11 @@ struct nv_drm_crtc {
      * The filep using this crtc with DRM_IOCTL_NVIDIA_GRANT_PERMISSIONS.
      */
     struct drm_file *modeset_permission_filep;
+
+    struct NvKmsKapiVblankIntrCallback *vblankIntrCallback;
+
+    nv_drm_work disable_vblank_work;
+    nv_drm_work enable_vblank_work;
 
     struct NvKmsLUTCaps olut_caps;
 
@@ -187,6 +213,11 @@ struct nv_drm_plane {
 
     struct NvKmsLUTCaps ilut_caps;
     struct NvKmsLUTCaps tmo_caps;
+
+#if defined(NV_DRM_HAS_COLOROP)
+    struct nv_drm_color_pipeline *color_pipelines[NV_DRM_PLANE_MAX_COLOR_PIPELINES];
+    int num_color_pipelines;
+#endif
 };
 
 static inline struct nv_drm_plane *to_nv_plane(struct drm_plane *plane)
@@ -231,10 +262,12 @@ struct nv_drm_plane_state {
 #if defined(NV_DRM_HAS_HDR_OUTPUT_METADATA)
     struct drm_property_blob *hdr_output_metadata;
 #endif
+    struct drm_property_blob *fmt_ctm;
     struct drm_property_blob *lms_ctm;
     struct drm_property_blob *lms_to_itp_ctm;
     struct drm_property_blob *itp_to_lms_ctm;
     struct drm_property_blob *blend_ctm;
+    NvBool ctms_default_to_identity;
 
     enum nv_drm_transfer_function degamma_tf;
     struct drm_property_blob *degamma_lut;

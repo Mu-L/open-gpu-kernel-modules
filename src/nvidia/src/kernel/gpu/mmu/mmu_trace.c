@@ -766,7 +766,7 @@ _mmuTracePteCallback
     {
         PMMU_TRACE_ARG pMmuTraceArg = (PMMU_TRACE_ARG)pArg;
 
-        pMmuTraceArg->pa       = pTraceCb->getPtePa(pGpu, pFmtPte, pPte);
+        pMmuTraceArg->pa       = pTraceCb->getPtePa(pGpu, pFmtPte, pFmtLevel, pPte);
         pMmuTraceArg->pa      += mmuFmtVirtAddrPageOffset(pFmtLevel, va);
         pMmuTraceArg->aperture = pTraceCb->pteAddrSpace(pFmtPte, pPte);
     }
@@ -797,7 +797,7 @@ _mmuTraceTranslateCallback
     }
 
     pMmuTraceArg           = (PMMU_TRACE_ARG)pArg;
-    pMmuTraceArg->pa       = pTraceCb->getPtePa(pGpu, pFmtPte, pPte);
+    pMmuTraceArg->pa       = pTraceCb->getPtePa(pGpu, pFmtPte, pFmtLevel, pPte);
 
     pMmuTraceArg->pa      += mmuFmtVirtAddrPageOffset(pFmtLevel, va);
     pMmuTraceArg->aperture = pTraceCb->pteAddrSpace(pFmtPte, pPte);

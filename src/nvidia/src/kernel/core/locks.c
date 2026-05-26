@@ -496,7 +496,7 @@ rmGpuLockAlloc(NvU32 gpuInst)
 
 
     threadId = portThreadGetCurrentThreadId();
-    timestamp = osGetMonotonicTimeNs();
+    timestamp = portTimeGetUptimeNanoseconds();
     INSERT_LOCK_TRACE(&rmGpuLockInfo.traceInfo,
                       NV_RETURN_ADDRESS(),
                       lockTraceAlloc,
@@ -579,7 +579,7 @@ rmGpuLockFree(NvU32 gpuInst)
     rmGpuLockInfo.gpusLockableMask &= ~NVBIT(gpuInst);
 
     threadId = portThreadGetCurrentThreadId();
-    timestamp = osGetMonotonicTimeNs();
+    timestamp = portTimeGetUptimeNanoseconds();
     INSERT_LOCK_TRACE(&rmGpuLockInfo.traceInfo,
                       NV_RETURN_ADDRESS(),
                       lockTraceFree,
@@ -938,7 +938,7 @@ _rmGpuLocksAcquire(NvU32 gpuMask, NvU32 flags, NvU32 module, void *ra, NvU32 *pG
 
     // Get start wait time if measuring lock times
     if (pSys->getProperty(pSys, PDB_PROP_SYS_RM_LOCK_TIME_COLLECT))
-        startWaitTime = osGetMonotonicTimeNs();
+        startWaitTime = portTimeGetUptimeNanoseconds();
 
     //
     // Now (attempt) to acquire the locks...
@@ -971,7 +971,15 @@ _rmGpuLocksAcquire(NvU32 gpuMask, NvU32 flags, NvU32 module, void *ra, NvU32 *pG
                 NV_PRINTF(LEVEL_NOTICE,
                     "GPU lock %d freed while we were waiting on a previous lock\n",
                     gpuInst);
-                continue;
+
+                // If caller requested all GPU locks, we can still potentially do that so continue iterating
+                if (bLockAll)
+                    continue;
+                else
+                {
+                    status = NV_ERR_INVALID_DEVICE;
+                    goto done;
+                }
             }
 
             pGpuLock = &rmGpuLockInfo.gpuLocks[gpuInst];
@@ -1014,8 +1022,18 @@ _rmGpuLocksAcquire(NvU32 gpuMask, NvU32 flags, NvU32 module, void *ra, NvU32 *pG
                         NV_PRINTF(LEVEL_WARNING,
                                 "GPU lock %d freed while threads were still waiting.\n",
                                 gpuInst);
-                        // Skip this GPU, keep trying any others.
-                        goto next_gpu_instance;
+
+                        // If caller requested all GPU locks, we can still potentially do that so continue iterating
+                        if (bLockAll)
+                        {
+                            // Skip this GPU, keep trying any others.
+                            goto next_gpu_instance;
+                        }
+                        else
+                        {
+                            status = NV_ERR_INVALID_DEVICE;
+                            goto done;
+                        }
                     }
 
                     if (!pGpuLock->bRunning)
@@ -1045,8 +1063,18 @@ _rmGpuLocksAcquire(NvU32 gpuMask, NvU32 flags, NvU32 module, void *ra, NvU32 *pG
                     // Loop assumes spinlock is held, so reacquire
                     portSyncSpinlockAcquire(rmGpuLockInfo.pLock);
                     portAtomicIncrementS32(&pGpuLock->count);
-                    // Skip this GPU, keep trying any others.
-                    goto next_gpu_instance;
+
+                    // If caller requested all GPU locks, we can still potentially do that so continue iterating
+                    if (bLockAll)
+                    {
+                        // Skip this GPU, keep trying any others.
+                        goto next_gpu_instance;
+                    }
+                    else
+                    {
+                        status = NV_ERR_INVALID_DEVICE;
+                        goto done;
+                    }
                 }
                 pGpuLock->bSignaled = NV_FALSE;
             }
@@ -1077,7 +1105,7 @@ per_gpu_lock_acquired:
         }
 
         // add acquire record to GPUs lock trace
-        timestamp = osGetMonotonicTimeNs();
+        timestamp = portTimeGetUptimeNanoseconds();
         INSERT_LOCK_TRACE(&rmGpuLockInfo.traceInfo,
                           ra,
                           lockTraceAcquire,
@@ -1097,7 +1125,7 @@ next_gpu_instance:
     // Update total GPU lock wait time if measuring lock times
     if (status == NV_OK && pSys->getProperty(pSys, PDB_PROP_SYS_RM_LOCK_TIME_COLLECT))
     {
-        timestamp = osGetMonotonicTimeNs();
+        timestamp = portTimeGetUptimeNanoseconds();
 
         portAtomicExAddU64(&rmGpuLockInfo.totalWaitTime, timestamp - startWaitTime);
     }
@@ -1848,7 +1876,7 @@ _rmGpuLocksRelease(NvU32 gpuMask, NvU32 flags, OBJGPU *pDpcGpu, void *ra)
             }
 
             // add release record to GPUs lock trace
-            timestamp = osGetMonotonicTimeNs();
+            timestamp = portTimeGetUptimeNanoseconds();
             INSERT_LOCK_TRACE(&rmGpuLockInfo.traceInfo,
                               ra,
                               lockTraceRelease,
@@ -1980,7 +2008,7 @@ done:
         pSys->getProperty(pSys, PDB_PROP_SYS_RM_LOCK_TIME_COLLECT) &&
         startHoldTime > 0)
     {
-        timestamp = osGetMonotonicTimeNs();
+        timestamp = portTimeGetUptimeNanoseconds();
 
         portAtomicExAddU64(&rmGpuLockInfo.totalHoldTime,
             timestamp - startHoldTime);

@@ -407,7 +407,6 @@ static NvBool HsIoctlFlipAssignHwStateOneHead(
 
             ret = nvAssignSemaphoreEvoHwState(pDevEvo,
                                               pOpenDevSurfaceHandles,
-                                              layer,
                                               sd,
                                               &pParams->layer[layer].syncObjects.val,
                                               &pFlipState->layer[layer].syncObject);
@@ -434,7 +433,6 @@ static NvBool HsIoctlFlipAssignHwStateOneHead(
                       pDevEvo,
                       pOpenDevSurfaceHandles,
                       &pParams->layer[layer].completionNotifier.val,
-                      layer,
                       &pFlipState->layer[layer].completionNotifier);
             if (!ret) {
                 return FALSE;

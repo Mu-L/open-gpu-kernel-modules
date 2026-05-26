@@ -28,7 +28,7 @@ void __nvoc_init__OBJCL(OBJCL*);
 void __nvoc_init_funcTable_OBJCL(OBJCL*);
 NV_STATUS __nvoc_ctor_OBJCL(OBJCL*);
 void __nvoc_init_dataField_OBJCL(OBJCL*);
-void __nvoc_dtor_OBJCL(OBJCL*);
+void __nvoc_dtor_OBJCL(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJCL;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJCL =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJCL",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_OBJCL,
+    .objCreatefn =        &__nvoc_objCreateDynamic_OBJCL,
     .pCastInfo =          &__nvoc_castinfo__OBJCL,
     .pExportInfo =        &__nvoc_export_info__OBJCL
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJCL =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__OBJCL __nvoc_metadata__OBJCL = {
     .rtti.pClassDef = &__nvoc_class_def_OBJCL,    // (cl) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJCL,
+    .rtti.dtor      = &__nvoc_dtor_OBJCL,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -82,21 +82,23 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJCL =
 
 // Destruct OBJCL object.
 void __nvoc_clDestruct(OBJCL*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_OBJCL(OBJCL* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_OBJCL(Dynamic* pThis) {
+
+    OBJCL *__nvoc_this = (OBJCL *) pThis;
 
 // Call destructor.
-    __nvoc_clDestruct(pThis);
+    __nvoc_clDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJCL(OBJCL *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
-    pThis->setProperty(pThis, PDB_PROP_CL_HAS_RESIZABLE_BAR_ISSUE, NV_FALSE);
-    pThis->setProperty(pThis, PDB_PROP_CL_BUG_3751839_GEN_SPEED_WAR, NV_FALSE);
+    pThis->setProperty(pThis, PDB_PROP_CL_HAS_RESIZABLE_BAR_ISSUE, ((NvBool)(0 != 0)));
+    pThis->setProperty(pThis, PDB_PROP_CL_BUG_3751839_GEN_SPEED_WAR, ((NvBool)(0 != 0)));
 }
 
 
@@ -119,7 +121,7 @@ NV_STATUS __nvoc_ctor_OBJCL(OBJCL *pCl) {
 
     // Unwind on error.
 __nvoc_ctor_OBJCL_fail__init:
-    __nvoc_dtor_Object(&pCl->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&pCl->__nvoc_base_Object);
 __nvoc_ctor_OBJCL_fail_Object:
 __nvoc_ctor_OBJCL_exit:
     return status;
@@ -223,11 +225,8 @@ __nvoc_objCreate_OBJCL_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_OBJCL(OBJCL **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_OBJCL(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_OBJCL(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_OBJCL((OBJCL **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

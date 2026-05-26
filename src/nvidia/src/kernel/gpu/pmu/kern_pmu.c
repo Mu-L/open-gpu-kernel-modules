@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -81,6 +81,15 @@ kpmuReservedMemoryBackingStoreSizeGet_IMPL
     KernelPmu *pKernelPmu
 )
 {
+    if (kpmuGetIsSelfInit(pKernelPmu))
+    {
+        //
+        // MMINTS-TODO: cross-reference with this when reserving memory
+        // in pmu_20.c
+        //
+        return 0x950000;
+    }
+
     if (kpmuGetIsSelfInit(pKernelPmu))
     {
         //

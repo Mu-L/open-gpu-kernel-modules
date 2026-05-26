@@ -24,7 +24,6 @@
 #include <nvkms-types.h>
 #include <nvkms-utils.h>
 
-#include <class/clc37a.h>
 #include <class/clc57a.h>
 #include <class/clc67a.h>
 #include <class/clc97a.h>
@@ -33,7 +32,7 @@
 #include <class/clcc7a.h>
 
 static void WaitForFreeSpace(NVDevEvoPtr pDevEvo,
-                             NVC37ADispCursorImmControlPio *pEvoCursorControl)
+                             NVC57ADispCursorImmControlPio *pEvoCursorControl)
 {
     /*
      * Wait for Free to be non-zero, indicating there is space to push a method.
@@ -61,39 +60,37 @@ static void WaitForFreeSpace(NVDevEvoPtr pDevEvo,
                      "Timed out waiting for cursor PIO space");
 }
 
-static void MoveCursorC3(NVDevEvoPtr pDevEvo, NvU32 sd, NvU32 head,
+static void MoveCursorC5(NVDevEvoPtr pDevEvo, NvU32 head,
                          NvS16 x, NvS16 y)
 {
-    NVEvoSubDevPtr pEvoSubDev = &pDevEvo->gpus[sd];
-    NVC37ADispCursorImmControlPio *pEvoCursorControl =
-        pEvoSubDev->cursorPio[head];
+    NVC57ADispCursorImmControlPio *pEvoCursorControl =
+        pDevEvo->cursorPio[head];
 
     WaitForFreeSpace(pDevEvo, pEvoCursorControl);
     pEvoCursorControl->SetCursorHotSpotPointOut[0] =
-            DRF_NUM(C37A, _SET_CURSOR_HOT_SPOT_POINT_OUT, _X, x) |
-            DRF_NUM(C37A, _SET_CURSOR_HOT_SPOT_POINT_OUT, _Y, y);
+            DRF_NUM(C57A, _SET_CURSOR_HOT_SPOT_POINT_OUT, _X, x) |
+            DRF_NUM(C57A, _SET_CURSOR_HOT_SPOT_POINT_OUT, _Y, y);
 
     WaitForFreeSpace(pDevEvo, pEvoCursorControl);
     pEvoCursorControl->Update =
-            DRF_DEF(C37A, _UPDATE, _FLIP_LOCK_PIN, _LOCK_PIN_NONE);
+            DRF_DEF(C57A, _UPDATE, _FLIP_LOCK_PIN, _LOCK_PIN_NONE);
 }
 
-static void ReleaseElvC3(NVDevEvoPtr pDevEvo, NvU32 sd, NvU32 head)
+static void ReleaseElvC5(NVDevEvoPtr pDevEvo, NvU32 head)
 {
-    NVEvoSubDevPtr pEvoSubDev = &pDevEvo->gpus[sd];
-    NVC37ADispCursorImmControlPio *pEvoCursorControl =
-        pEvoSubDev->cursorPio[head];
+    NVC57ADispCursorImmControlPio *pEvoCursorControl =
+        pDevEvo->cursorPio[head];
 
     WaitForFreeSpace(pDevEvo, pEvoCursorControl);
     pEvoCursorControl->Update =
-            DRF_DEF(C37A, _UPDATE, _FLIP_LOCK_PIN, _LOCK_PIN_NONE) |
-            DRF_DEF(C37A, _UPDATE, _RELEASE_ELV, _TRUE);
+            DRF_DEF(C57A, _UPDATE, _FLIP_LOCK_PIN, _LOCK_PIN_NONE) |
+            DRF_DEF(C57A, _UPDATE, _RELEASE_ELV, _TRUE);
 }
 
 NVEvoCursorHAL nvEvoCursorC5 = {
     NVC57A_CURSOR_IMM_CHANNEL_PIO,              /* klass */
-    MoveCursorC3,                               /* MoveCursor */
-    ReleaseElvC3,                               /* ReleaseElv */
+    MoveCursorC5,                               /* MoveCursor */
+    ReleaseElvC5,                               /* ReleaseElv */
     {                                           /* caps */
         256,                                    /* maxSize */
     },
@@ -101,8 +98,8 @@ NVEvoCursorHAL nvEvoCursorC5 = {
 
 NVEvoCursorHAL nvEvoCursorC6 = {
     NVC67A_CURSOR_IMM_CHANNEL_PIO,              /* klass */
-    MoveCursorC3,                               /* MoveCursor */
-    ReleaseElvC3,                               /* ReleaseElv */
+    MoveCursorC5,                               /* MoveCursor */
+    ReleaseElvC5,                               /* ReleaseElv */
     {                                           /* caps */
         256,                                    /* maxSize */
     },
@@ -110,8 +107,8 @@ NVEvoCursorHAL nvEvoCursorC6 = {
 
 NVEvoCursorHAL nvEvoCursorC9 = {
     NVC97A_CURSOR_IMM_CHANNEL_PIO,              /* klass */
-    MoveCursorC3,                               /* MoveCursor */
-    ReleaseElvC3,                               /* ReleaseElv */
+    MoveCursorC5,                               /* MoveCursor */
+    ReleaseElvC5,                               /* ReleaseElv */
     {                                           /* caps */
         256,                                    /* maxSize */
     },
@@ -119,8 +116,8 @@ NVEvoCursorHAL nvEvoCursorC9 = {
 
 NVEvoCursorHAL nvEvoCursorCA = {
     NVCA7A_CURSOR_IMM_CHANNEL_PIO,              /* klass */
-    MoveCursorC3,                               /* MoveCursor */
-    ReleaseElvC3,                               /* ReleaseElv */
+    MoveCursorC5,                               /* MoveCursor */
+    ReleaseElvC5,                               /* ReleaseElv */
     {                                           /* caps */
         256,                                    /* maxSize */
     },
@@ -128,8 +125,8 @@ NVEvoCursorHAL nvEvoCursorCA = {
 
 NVEvoCursorHAL nvEvoCursorCB = {
     NVCB7A_CURSOR_IMM_CHANNEL_PIO,              /* klass */
-    MoveCursorC3,                               /* MoveCursor */
-    ReleaseElvC3,                               /* ReleaseElv */
+    MoveCursorC5,                               /* MoveCursor */
+    ReleaseElvC5,                               /* ReleaseElv */
     {                                           /* caps */
         256,                                    /* maxSize */
     },
@@ -137,8 +134,8 @@ NVEvoCursorHAL nvEvoCursorCB = {
 
 NVEvoCursorHAL nvEvoCursorCC = {
     NVCC7A_CURSOR_IMM_CHANNEL_PIO,              /* klass */
-    MoveCursorC3,                               /* MoveCursor */
-    ReleaseElvC3,                               /* ReleaseElv */
+    MoveCursorC5,                               /* MoveCursor */
+    ReleaseElvC5,                               /* ReleaseElv */
     {                                           /* caps */
         256,                                    /* maxSize */
     },

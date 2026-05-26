@@ -31,7 +31,7 @@ void __nvoc_init__GpuManagementApi(GpuManagementApi*);
 void __nvoc_init_funcTable_GpuManagementApi(GpuManagementApi*);
 NV_STATUS __nvoc_ctor_GpuManagementApi(GpuManagementApi*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_GpuManagementApi(GpuManagementApi*);
-void __nvoc_dtor_GpuManagementApi(GpuManagementApi*);
+void __nvoc_dtor_GpuManagementApi(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__GpuManagementApi;
@@ -89,7 +89,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_GpuManagementApi =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "GpuManagementApi",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_GpuManagementApi,
+    .objCreatefn =        &__nvoc_objCreateDynamic_GpuManagementApi,
     .pCastInfo =          &__nvoc_castinfo__GpuManagementApi,
     .pExportInfo =        &__nvoc_export_info__GpuManagementApi
 };
@@ -99,6 +99,13 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_GpuManagementApi =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000007u)
+static NV_STATUS gpumgmtapiCtrlCmdSetShutdownState__EXPORT(void *pGpuMgmt, void *pParams) {
+    return gpumgmtapiCtrlCmdSetShutdownState_IMPL(pGpuMgmt, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000007u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_GpuManagementApi[] = 
 {
@@ -106,7 +113,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_GpuManag
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x7u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &gpumgmtapiCtrlCmdSetShutdownState_IMPL,
+        /*pFunc=*/      (void (*)(void)) &gpumgmtapiCtrlCmdSetShutdownState__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x7u)
         /*flags=*/      0x7u,
         /*accessRight=*/0x0u,
@@ -123,7 +130,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_GpuManag
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__GpuManagementApi __nvoc_metadata__GpuManagementApi = {
     .rtti.pClassDef = &__nvoc_class_def_GpuManagementApi,    // (gpumgmtapi) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_GpuManagementApi,
+    .rtti.dtor      = &__nvoc_dtor_GpuManagementApi,
     .rtti.offset    = 0,
     .metadata__RmResource.rtti.pClassDef = &__nvoc_class_def_RmResource,    // (rmres) super
     .metadata__RmResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -330,16 +337,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__GpuManagementApi =
 
 // Destruct GpuManagementApi object.
 void __nvoc_gpumgmtapiDestruct(GpuManagementApi*);
-void __nvoc_dtor_RmResource(RmResource*);
-void __nvoc_dtor_GpuManagementApi(GpuManagementApi* pThis) {
+void __nvoc_dtor_RmResource(Dynamic*);
+void __nvoc_dtor_GpuManagementApi(Dynamic* pThis) {
+
+    GpuManagementApi *__nvoc_this = (GpuManagementApi *) pThis;
 
 // Call destructor.
-    __nvoc_gpumgmtapiDestruct(pThis);
+    __nvoc_gpumgmtapiDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RmResource(&pThis->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *) &__nvoc_this->__nvoc_base_RmResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_GpuManagementApi(GpuManagementApi *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -365,7 +374,7 @@ NV_STATUS __nvoc_ctor_GpuManagementApi(GpuManagementApi *pGpuMgmt, struct CALL_C
 
     // Unwind on error.
 __nvoc_ctor_GpuManagementApi_fail__init:
-    __nvoc_dtor_RmResource(&pGpuMgmt->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *)&pGpuMgmt->__nvoc_base_RmResource);
 __nvoc_ctor_GpuManagementApi_fail_RmResource:
 __nvoc_ctor_GpuManagementApi_exit:
     return status;
@@ -475,13 +484,10 @@ __nvoc_objCreate_GpuManagementApi_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_GpuManagementApi(GpuManagementApi **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_GpuManagementApi(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_GpuManagementApi(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_GpuManagementApi((GpuManagementApi **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

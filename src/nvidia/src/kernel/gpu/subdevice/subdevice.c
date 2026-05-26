@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -45,6 +45,7 @@
 #include "gpu/timer/objtmr.h"
 #include "kernel/gpu/rc/kernel_rc.h"
 #include "gpu/bus/p2p_api.h"
+#include "gpu/mig_mgr/kernel_mig_manager.h"
 
 NV_STATUS
 subdeviceConstruct_IMPL
@@ -230,7 +231,12 @@ subdeviceDestruct_IMPL
     // Remove NVLink error injection mode request
     subdeviceReleaseNvlinkErrorInjectionMode(pSubdevice, pCallContext);
 
-    subdeviceReleaseComputeModeReservation(pSubdevice, pCallContext);
+    // In MIG mode, we must have already released the reservation
+    // as subscriptions to this Subdevice are already destroyed.
+    if (!IS_MIG_ENABLED(pGpu))
+    {
+        subdeviceReleaseComputeModeReservation(pSubdevice);
+    }
 
 #ifdef DEBUG
     NV_ASSERT(pSubdevice->notifyActions[NV2080_NOTIFIERS_TIMER] == NV2080_CTRL_EVENT_SET_NOTIFICATION_ACTION_DISABLE);
@@ -396,22 +402,76 @@ subdeviceUnsetGpuDebugMode_IMPL
     pGpu->bIsDebugModeEnabled = NV_FALSE;
 }
 
-void
-subdeviceReleaseComputeModeReservation_IMPL
+/*
+ * Compute Mode is configurable at per compute instance granularity.
+ * If MIG is disabled, it is tracked in pGpu instead.
+ *
+ * Require pGpu level configuration to be in its initial state (no reservation,
+ * default rules).
+ */
+NV_STATUS
+subdeviceGetComputeModeState_IMPL
 (
-    Subdevice       *pSubdevice,
-    CALL_CONTEXT    *pCallContext
+    Subdevice *pSubdevice,
+    ComputeModeState **ppCMS
 )
 {
-    RsClient *pRsClient = pCallContext->pClient;
-    OBJGPU   *pGpu = GPU_RES_GET_GPU(pSubdevice);
-    GPU_RES_SET_THREAD_BC_STATE(pSubdevice);
+    OBJGPU *pGpu = GPU_RES_GET_GPU(pSubdevice);
+    ComputeModeState *pCMS = &pGpu->computeModeState;
 
+    if (IS_MIG_IN_USE(pGpu))
+    {
+        Device *pDevice = GPU_RES_GET_DEVICE(pSubdevice);
+        KernelMIGManager *pKernelMIGManager = GPU_GET_KERNEL_MIG_MANAGER(pGpu);
+        MIG_INSTANCE_REF ref;
+        NV_STATUS  status;
+
+        status = kmigmgrGetInstanceRefFromDevice(pGpu, pKernelMIGManager, pDevice, &ref);
+
+        // Give out MIG state, only if we are subscribed
+        if ((status == NV_OK) && (ref.pMIGComputeInstance != NULL))
+        {
+            pCMS = &ref.pMIGComputeInstance->computeModeState;
+        }
+        else
+        {
+            // No CMS for unsubscribed subdevice in MIG mode
+            return NV_ERR_INVALID_STATE;
+        }
+    }
+
+    *ppCMS = pCMS;
+
+    return NV_OK;
+}
+
+NV_STATUS
+subdeviceReleaseComputeModeReservation_IMPL
+(
+    Subdevice *pSubdevice
+)
+{
+    NvHandle hClient = RES_GET_CLIENT_HANDLE(pSubdevice);
+    ComputeModeState *pCMS;
+
+    NV_STATUS status = subdeviceGetComputeModeState(pSubdevice, &pCMS);
+    if (status != NV_OK)
+    {
+        return status;
+    }
+
+    //
     // Release the reservation ONLY IF we had the reservation to begin with. Otherwise,
     // leave it alone, because someone else has acquired it:
-    if (pGpu->hComputeModeReservation == pRsClient->hClient)
+    //
+    if (pCMS->hComputeModeReservation == hClient)
     {
-        pGpu->hComputeModeReservation = NV01_NULL_OBJECT;
+        pCMS->hComputeModeReservation = NV01_NULL_OBJECT;
+        return NV_OK;
+    }
+    else
+    {
+        return NV_ERR_STATE_IN_USE;
     }
 }
 

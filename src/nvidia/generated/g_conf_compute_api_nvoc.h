@@ -148,7 +148,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_ConfidentialComputeApi;
     ((ConfidentialComputeApi*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(ConfidentialComputeApi)))
 #endif //__nvoc_conf_compute_api_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_ConfidentialComputeApi(ConfidentialComputeApi**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_ConfidentialComputeApi(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_ConfidentialComputeApi(ConfidentialComputeApi**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_ConfidentialComputeApi(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

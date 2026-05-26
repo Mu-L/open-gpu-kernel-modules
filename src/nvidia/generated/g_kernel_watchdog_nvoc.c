@@ -32,7 +32,7 @@ void __nvoc_init__KernelWatchdog(KernelWatchdog*);
 void __nvoc_init_funcTable_KernelWatchdog(KernelWatchdog*);
 NV_STATUS __nvoc_ctor_KernelWatchdog(KernelWatchdog*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_KernelWatchdog(KernelWatchdog*);
-void __nvoc_dtor_KernelWatchdog(KernelWatchdog*);
+void __nvoc_dtor_KernelWatchdog(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__KernelWatchdog;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelWatchdog =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "KernelWatchdog",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_KernelWatchdog,
+    .objCreatefn =        &__nvoc_objCreateDynamic_KernelWatchdog,
     .pCastInfo =          &__nvoc_castinfo__KernelWatchdog,
     .pExportInfo =        &__nvoc_export_info__KernelWatchdog
 };
@@ -124,7 +124,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelWatchdog =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__KernelWatchdog __nvoc_metadata__KernelWatchdog = {
     .rtti.pClassDef = &__nvoc_class_def_KernelWatchdog,    // (kwdt) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_KernelWatchdog,
+    .rtti.dtor      = &__nvoc_dtor_KernelWatchdog,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -384,16 +384,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__KernelWatchdog =
 
 // Destruct KernelWatchdog object.
 void __nvoc_kwdtDestruct(KernelWatchdog*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_KernelWatchdog(KernelWatchdog* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_KernelWatchdog(Dynamic* pThis) {
+
+    KernelWatchdog *__nvoc_this = (KernelWatchdog *) pThis;
 
 // Call destructor.
-    __nvoc_kwdtDestruct(pThis);
+    __nvoc_kwdtDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_KernelWatchdog(KernelWatchdog *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -419,7 +421,7 @@ NV_STATUS __nvoc_ctor_KernelWatchdog(KernelWatchdog *pKernelWatchdog, struct CAL
 
     // Unwind on error.
 __nvoc_ctor_KernelWatchdog_fail__init:
-    __nvoc_dtor_GpuResource(&pKernelWatchdog->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pKernelWatchdog->__nvoc_base_GpuResource);
 __nvoc_ctor_KernelWatchdog_fail_GpuResource:
 __nvoc_ctor_KernelWatchdog_exit:
     return status;
@@ -531,13 +533,10 @@ __nvoc_objCreate_KernelWatchdog_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_KernelWatchdog(KernelWatchdog **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_KernelWatchdog(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_KernelWatchdog(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_KernelWatchdog((KernelWatchdog **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

@@ -67,14 +67,6 @@ void uvm_hal_blackwell_arch_init_properties(uvm_parent_gpu_t *parent_gpu)
 
     parent_gpu->access_counters_serialize_clear_ops_by_type = parent_gpu->rm_info.accessCntrBufferCount == 2;
 
-    // TODO: Bug 5262806: Remove this WAR once the bug is fixed.
-    // Before this override, accessCntrBufferCount has only been used to
-    // determine the support for access counters in uvm_gpu.c and the statement
-    // above. After the HAL init, it is used for buffer allocations, and must
-    // not change its value.
-    if (parent_gpu->rm_info.accessCntrBufferCount > 1)
-        parent_gpu->rm_info.accessCntrBufferCount = 1;
-
     parent_gpu->has_clear_faulted_channel_sw_method = true;
 
     parent_gpu->has_clear_faulted_channel_method = false;

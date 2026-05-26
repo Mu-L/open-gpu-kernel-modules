@@ -172,7 +172,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJPFM;
 #define PDB_PROP_PFM_APPLE_EDP_SUPPORTED_BASE_NAME PDB_PROP_PFM_APPLE_EDP_SUPPORTED
 
 
-NV_STATUS __nvoc_objCreateDynamic_OBJPFM(OBJPFM**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJPFM(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJPFM(OBJPFM**, Dynamic*, NvU32);
 #define __objCreate_OBJPFM(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

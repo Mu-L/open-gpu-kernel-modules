@@ -33,6 +33,7 @@ typedef enum
 {
     NV_FIRMWARE_TYPE_GSP,
     NV_FIRMWARE_TYPE_GSP_LOG,
+    NV_FIRMWARE_TYPE_UCODES
 } nv_firmware_type_t;
 
 typedef enum
@@ -46,6 +47,7 @@ typedef enum
     NV_FIRMWARE_CHIP_FAMILY_GH100 = 6,
     NV_FIRMWARE_CHIP_FAMILY_GB10X = 8,
     NV_FIRMWARE_CHIP_FAMILY_GB20X = 9,
+    NV_FIRMWARE_CHIP_FAMILY_GR10X = 10,
     NV_FIRMWARE_CHIP_FAMILY_GB10Y = 11,
     NV_FIRMWARE_CHIP_FAMILY_GB20Y = 12,
     NV_FIRMWARE_CHIP_FAMILY_END,
@@ -56,6 +58,7 @@ static inline const char *nv_firmware_chip_family_to_string(
 )
 {
     switch (fw_chip_family) {
+        case NV_FIRMWARE_CHIP_FAMILY_GR10X: return "gr10x";
         case NV_FIRMWARE_CHIP_FAMILY_GB10X: return "gb10x";
         case NV_FIRMWARE_CHIP_FAMILY_GB10Y: return "gb10y";
         case NV_FIRMWARE_CHIP_FAMILY_GB20Y: return "gb20y";
@@ -76,7 +79,7 @@ static inline const char *nv_firmware_chip_family_to_string(
 
 // The includer may optionally define
 // NV_FIRMWARE_FOR_NAME(name)
-// to return a platform-defined string for a given a gsp_* or gsp_log_* name.
+// to return a platform-defined string for a given a firmware base name.
 //
 // The function nv_firmware_for_chip_family will then be available.
 #if defined(NV_FIRMWARE_FOR_NAME)
@@ -85,52 +88,44 @@ static inline const char *nv_firmware_for_chip_family(
     nv_firmware_chip_family_t fw_chip_family
 )
 {
-    if (fw_type == NV_FIRMWARE_TYPE_GSP)
+    switch (fw_chip_family)
     {
-        switch (fw_chip_family)
+        case NV_FIRMWARE_CHIP_FAMILY_GR10X:  // fall through
+        case NV_FIRMWARE_CHIP_FAMILY_GB10X:  // fall through
+        case NV_FIRMWARE_CHIP_FAMILY_GB10Y:  // fall through
+        case NV_FIRMWARE_CHIP_FAMILY_GB20Y:  // fall through
+        case NV_FIRMWARE_CHIP_FAMILY_GB20X:  // fall through
+        case NV_FIRMWARE_CHIP_FAMILY_GH100:  // fall through
+        case NV_FIRMWARE_CHIP_FAMILY_AD10X:  // fall through
+        case NV_FIRMWARE_CHIP_FAMILY_GA10X:
         {
-            case NV_FIRMWARE_CHIP_FAMILY_GB10X:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_GB10Y:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_GB20Y:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_GB20X:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_GH100:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_AD10X:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_GA10X:
-                return NV_FIRMWARE_FOR_NAME("gsp_ga10x");
-
-            case NV_FIRMWARE_CHIP_FAMILY_GA100:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_TU11X:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_TU10X:
-                return NV_FIRMWARE_FOR_NAME("gsp_tu10x");
-
-            case NV_FIRMWARE_CHIP_FAMILY_END:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_NULL:
-                return "";
+            switch (fw_type)
+            {
+                case NV_FIRMWARE_TYPE_GSP:     return NV_FIRMWARE_FOR_NAME("gsp_ga10x");
+                case NV_FIRMWARE_TYPE_GSP_LOG: return NV_FIRMWARE_FOR_NAME("gsp_log_ga10x");
+                case NV_FIRMWARE_TYPE_UCODES:  return NV_FIRMWARE_FOR_NAME("ucodes_ga10x");
+            }
+            return "";
         }
-    }
-    else if (fw_type == NV_FIRMWARE_TYPE_GSP_LOG)
-    {
-        switch (fw_chip_family)
+
+        case NV_FIRMWARE_CHIP_FAMILY_GA100:  // fall through
+        case NV_FIRMWARE_CHIP_FAMILY_TU11X:  // fall through
+        case NV_FIRMWARE_CHIP_FAMILY_TU10X:
         {
-            case NV_FIRMWARE_CHIP_FAMILY_GB10X:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_GB10Y:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_GB20Y:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_GB20X:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_GH100:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_AD10X:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_GA10X:
-                return NV_FIRMWARE_FOR_NAME("gsp_log_ga10x");
-
-            case NV_FIRMWARE_CHIP_FAMILY_GA100:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_TU11X:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_TU10X:
-                return NV_FIRMWARE_FOR_NAME("gsp_log_tu10x");
-
-            case NV_FIRMWARE_CHIP_FAMILY_END:  // fall through
-            case NV_FIRMWARE_CHIP_FAMILY_NULL:
-                return "";
+            switch (fw_type)
+            {
+                case NV_FIRMWARE_TYPE_GSP:     return NV_FIRMWARE_FOR_NAME("gsp_tu10x");
+                case NV_FIRMWARE_TYPE_GSP_LOG: return NV_FIRMWARE_FOR_NAME("gsp_log_tu10x");
+                case NV_FIRMWARE_TYPE_UCODES:  return NV_FIRMWARE_FOR_NAME("ucodes_tu10x");
+            }
+            return "";
         }
+
+        case NV_FIRMWARE_CHIP_FAMILY_END:  // fall through
+        case NV_FIRMWARE_CHIP_FAMILY_NULL:
+            return "";
     }
+
     return "";
 }
 #endif  // defined(NV_FIRMWARE_FOR_NAME)
@@ -138,10 +133,13 @@ static inline const char *nv_firmware_for_chip_family(
 // The includer may optionally define
 // NV_FIRMWARE_DECLARE_GSP(name)
 // which will then be invoked (at the top-level) for each
-// gsp_* (but not gsp_log_*)
+// gsp_* and ucodes_* (but not gsp_log_*)
 #if defined(NV_FIRMWARE_DECLARE_GSP)
 NV_FIRMWARE_DECLARE_GSP("gsp_ga10x")
 NV_FIRMWARE_DECLARE_GSP("gsp_tu10x")
+NV_FIRMWARE_DECLARE_GSP("ucodes_ga10x")
+NV_FIRMWARE_DECLARE_GSP("ucodes_tu10x")
 #endif  // defined(NV_FIRMWARE_DECLARE_GSP)
 
 #endif  // NV_FIRMWARE_DECLARE_GSP
+

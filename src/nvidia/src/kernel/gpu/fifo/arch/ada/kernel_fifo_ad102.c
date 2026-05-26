@@ -22,9 +22,12 @@
  */
 
 #include "kernel/gpu/fifo/kernel_fifo.h"
+#include "kernel/gpu/fifo/kernel_channel_group.h"
 #include "gpu/mmu/kern_gmmu.h"
 
 #include "published/ada/ad102/dev_fault.h"
+#include "published/ada/ad102/dev_esched_pbdma.h"
+#include "published/ada/ad102/dev_ram.h"
 
 /*!
  * @brief Converts a mmu engine id (NV_PFAULT_MMU_ENG_ID_*) into a string.
@@ -189,4 +192,31 @@ kfifoGetClientIdString_AD102
     }
     // Fallback to GA100 HAL if above did not hit
     return kfifoGetClientIdString_GA100(pGpu, pKernelFifo, pMmuExceptInfo);
+}
+
+/*!
+ * @brief  Initialize CE prefetch channel
+ *
+ * @param pGpu
+ * @param pKernelFifo
+ * @param pKernelChannel
+ * @param pInstMem
+ *
+ */
+void
+kfifoInitCePrefetch_AD102
+(
+    OBJGPU           *pGpu,
+    KernelFifo       *pKernelFifo,
+    KernelChannel    *pKernelChannel,
+    NvU8             *pInstMem
+)
+{
+    if (pKernelChannel->bCePrefetchEnable)
+    {
+        NvU32 data = MEM_RD32(pInstMem + SF_OFFSET(NV_RAMFC_SET_CHANNEL_INFO));
+        data = FLD_SET_DRF_NUM(_PBDMA, _SET_CHANNEL_INFO, _ASYNC_CE_PREFETCH_ENABLE,
+                               NV_PBDMA_SET_CHANNEL_INFO_ASYNC_CE_PREFETCH_ENABLE_TRUE, data);
+        MEM_WR32(pInstMem + SF_OFFSET(NV_RAMFC_SET_CHANNEL_INFO), data);
+    }
 }

@@ -171,9 +171,12 @@ static NV_STATUS block_migrate_add_mappings(uvm_va_block_t *va_block,
     // When migrating to an integrated GPU the dest_id is the CPU. In cases
     // where residency has not changed we need to ensure the iGPU mapping is
     // also updated here.
-    // TODO: Bug 5003533: Multiple iGPU support.
-    if (uvm_va_space_has_integrated_gpu(va_space)) {
-        for_each_gpu_id_in_mask(gpu_id, &va_space->registered_gpu_va_spaces) {
+    // TODO: Bug 5003533: Multiple iGPUs are still unsupported.
+    if (uvm_va_space_has_integrated_gpu(va_space) && UVM_ID_IS_CPU(dest_id)) {
+        uvm_processor_mask_t *mask = &va_space->scratch_processor_mask;
+
+        uvm_processor_mask_and(mask, &va_space->registered_gpu_va_spaces, &va_space->integrated_gpus);
+        for_each_gpu_id_in_mask(gpu_id, mask) {
             status = uvm_va_block_migrate_map_mapped_pages(va_block,
                                                            va_block_retry,
                                                            va_block_context,
@@ -421,8 +424,6 @@ static void preunmap_multi_block(uvm_va_range_managed_t *managed_range,
     UVM_ASSERT(end  <= managed_range->va_range.node.end);
     uvm_assert_rwsem_locked(&managed_range->va_range.va_space->lock);
 
-    UVM_ASSERT(uvm_range_group_all_migratable(managed_range->va_range.va_space, start, end));
-
     for (i = first_block_index; i <= last_block_index; i++) {
         NvU32 num_block_unmap_pages;
 
@@ -457,8 +458,6 @@ static NV_STATUS uvm_va_range_migrate_multi_block(uvm_va_range_managed_t *manage
     UVM_ASSERT(start >= managed_range->va_range.node.start);
     UVM_ASSERT(end  <= managed_range->va_range.node.end);
     uvm_assert_rwsem_locked(&managed_range->va_range.va_space->lock);
-
-    UVM_ASSERT(uvm_range_group_all_migratable(managed_range->va_range.va_space, start, end));
 
     // Iterate over blocks, populating them if necessary
     for (i = first_block_index; i <= last_block_index; i++) {
@@ -552,8 +551,6 @@ static NV_STATUS uvm_migrate_ranges(uvm_va_space_t *va_space,
 {
     uvm_va_range_managed_t *managed_range, *managed_range_last;
     NvU64 end = base + length - 1;
-    NV_STATUS status = NV_OK;
-    bool skipped_migrate = false;
 
     if (!first_managed_range) {
         // For HMM, we iterate over va_blocks since there is no managed_range.
@@ -564,51 +561,25 @@ static NV_STATUS uvm_migrate_ranges(uvm_va_space_t *va_space,
 
     managed_range_last = NULL;
     uvm_for_each_va_range_managed_in_contig_from(managed_range, first_managed_range, end) {
-        uvm_range_group_range_iter_t iter;
-        uvm_va_policy_t *policy = &managed_range->policy;
+        NV_STATUS status;
 
         managed_range_last = managed_range;
 
-        // For UVM-Lite GPUs, the CUDA driver may suballocate a single
-        // managed_range into many range groups. For this reason, we iterate
-        // over each managed_range first then through the range groups within.
-        uvm_range_group_for_each_migratability_in(&iter,
-                                                  va_space,
-                                                  max(base, managed_range->va_range.node.start),
-                                                  min(end, managed_range->va_range.node.end)) {
-            // Skip non-migratable ranges
-            if (!iter.migratable) {
-                // Only return NV_WARN_MORE_PROCESSING_REQUIRED if the pages aren't
-                // already resident at dest_id.
-                if (!uvm_va_policy_preferred_location_equal(policy,
-                                                            dest_id,
-                                                            service_context->block_context->make_resident.dest_nid))
-                    skipped_migrate = true;
-            }
-            else {
-                status = uvm_va_range_migrate(managed_range,
-                                              service_context,
-                                              iter.start,
-                                              iter.end,
-                                              dest_id,
-                                              mode,
-                                              should_do_cpu_preunmap,
-                                              out_tracker);
-                if (status != NV_OK)
-                    break;
-            }
-        }
+        status = uvm_va_range_migrate(managed_range,
+                                      service_context,
+                                      max(base, managed_range->va_range.node.start),
+                                      min(end, managed_range->va_range.node.end),
+                                      dest_id,
+                                      mode,
+                                      should_do_cpu_preunmap,
+                                      out_tracker);
+        if (status != NV_OK)
+            return status;
     }
-
-    if (status != NV_OK)
-        return status;
 
     // Check that we were able to iterate over the entire range without any gaps
     if (!managed_range_last || managed_range_last->va_range.node.end < end)
         return NV_ERR_INVALID_ADDRESS;
-
-    if (skipped_migrate)
-        return NV_WARN_MORE_PROCESSING_REQUIRED;
 
     return NV_OK;
 }
@@ -989,7 +960,7 @@ NV_STATUS uvm_api_migrate(UVM_MIGRATE_PARAMS *params, struct file *filp)
             goto done;
         }
 
-        if (type == UVM_API_RANGE_TYPE_ATS) {
+        if (type == UVM_API_RANGE_TYPE_NUMA) {
             uvm_migrate_args_t uvm_migrate_args =
             {
                 .va_space                           = va_space,
@@ -1010,15 +981,19 @@ NV_STATUS uvm_api_migrate(UVM_MIGRATE_PARAMS *params, struct file *filp)
                 .fail_on_unresolved_sto_errors      = false,
             };
 
-            if (dest_gpu && dest_gpu->parent->cdmm_enabled) {
+            if (dest_gpu && !va_space->pageable.migrations_enabled) {
                 uvm_migrate_args.dst_id = UVM_ID_CPU;
                 uvm_migrate_args.dst_node_id = dest_gpu->parent->closest_cpu_numa_node;
-                uvm_migrate_args.populate_on_cpu_alloc_failures = true;
             }
 
             status = uvm_migrate_pageable(&uvm_migrate_args);
         }
         else {
+            if ((type == UVM_API_RANGE_TYPE_CDMM) && dest_gpu && !va_space->pageable.migrations_enabled) {
+                dest_id = UVM_ID_CPU;
+                cpu_numa_node = dest_gpu->parent->closest_cpu_numa_node;
+            }
+
             status = uvm_migrate(va_space,
                                  mm,
                                  params->base,
@@ -1088,113 +1063,4 @@ done:
         uvm_tools_flush_events();
 
     return status;
-}
-
-NV_STATUS uvm_api_migrate_range_group(UVM_MIGRATE_RANGE_GROUP_PARAMS *params, struct file *filp)
-{
-    NV_STATUS status = NV_OK;
-    NV_STATUS tracker_status = NV_OK;
-    uvm_va_space_t *va_space = uvm_va_space_get(filp);
-    struct mm_struct *mm;
-    uvm_range_group_t *range_group;
-    uvm_range_group_range_t *rgr;
-    uvm_processor_id_t dest_id;
-    uvm_tracker_t local_tracker = UVM_TRACKER_INIT();
-    NvU32 migrate_flags = 0;
-    uvm_gpu_t *gpu = NULL;
-    uvm_processor_mask_t *gpus_to_check_for_nvlink_errors = NULL;
-
-    gpus_to_check_for_nvlink_errors = uvm_processor_mask_cache_alloc();
-    if (!gpus_to_check_for_nvlink_errors)
-        return NV_ERR_NO_MEMORY;
-
-    uvm_processor_mask_zero(gpus_to_check_for_nvlink_errors);
-
-    // mmap_lock will be needed if we have to create CPU mappings
-    mm = uvm_va_space_mm_or_current_retain_lock(va_space);
-    uvm_va_space_down_read(va_space);
-
-    if (uvm_uuid_is_cpu(&params->destinationUuid)) {
-        dest_id = UVM_ID_CPU;
-    }
-    else {
-        gpu = uvm_va_space_get_gpu_by_uuid_with_gpu_va_space(va_space, &params->destinationUuid);
-        if (!gpu) {
-            status = NV_ERR_INVALID_DEVICE;
-            goto done;
-        }
-
-        dest_id = gpu->id;
-    }
-
-    if (gpu && gpu->parent->is_integrated_gpu)
-            dest_id = UVM_ID_CPU;
-
-    range_group = radix_tree_lookup(&va_space->range_groups, params->rangeGroupId);
-    if (!range_group) {
-        status = NV_ERR_OBJECT_NOT_FOUND;
-        goto done;
-    }
-
-    // Migrate all VA ranges in the range group. uvm_migrate is used because it performs all
-    // VA range validity checks.
-    list_for_each_entry(rgr, &range_group->ranges, range_group_list_node) {
-        NvU64 start = rgr->node.start;
-        NvU64 length = rgr->node.end - rgr->node.start + 1;
-
-        if (gpu && !uvm_gpu_can_address(gpu, start, length)) {
-            status = NV_ERR_OUT_OF_RANGE;
-        }
-        else {
-            uvm_va_range_managed_t *first_managed_range = uvm_va_space_iter_managed_first(va_space, start, start);
-
-            if (!first_managed_range) {
-                status = NV_ERR_INVALID_ADDRESS;
-                goto done;
-            }
-
-            status = uvm_migrate(va_space,
-                                 mm,
-                                 start,
-                                 length,
-                                 dest_id,
-                                 NUMA_NO_NODE,
-                                 migrate_flags,
-                                 first_managed_range,
-                                 &local_tracker,
-                                 gpus_to_check_for_nvlink_errors);
-        }
-
-        if (status != NV_OK)
-            goto done;
-    }
-
-done:
-    uvm_global_gpu_retain(gpus_to_check_for_nvlink_errors);
-
-    // We only need to hold mmap_lock to create new CPU mappings, so drop it if
-    // we need to wait for the tracker to finish.
-    //
-    // TODO: Bug 1766650: For large migrations with destination CPU, try
-    //       benchmarks to see if a two-pass approach would be faster (first
-    //       pass pushes all GPU work asynchronously, second pass updates CPU
-    //       mappings synchronously).
-    if (mm)
-        uvm_up_read_mmap_lock_out_of_order(mm);
-
-    tracker_status = uvm_tracker_wait_deinit(&local_tracker);
-    uvm_va_space_up_read(va_space);
-    uvm_va_space_mm_or_current_release(va_space, mm);
-
-    // This API is synchronous, so wait for migrations to finish
-    uvm_tools_flush_events();
-
-    // Check for STO errors in case there was no other error until now.
-    if (status == NV_OK && tracker_status == NV_OK)
-        status = uvm_global_gpu_check_nvlink_error(gpus_to_check_for_nvlink_errors);
-
-    uvm_global_gpu_release(gpus_to_check_for_nvlink_errors);
-    uvm_processor_mask_cache_free(gpus_to_check_for_nvlink_errors);
-
-    return status == NV_OK? tracker_status : status;
 }

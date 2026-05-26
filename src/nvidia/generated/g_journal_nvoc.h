@@ -226,9 +226,10 @@ struct OBJRCDB {
     struct OBJTRACEABLE *__nvoc_pbase_OBJTRACEABLE;    // traceable super
     struct OBJRCDB *__nvoc_pbase_OBJRCDB;    // rcdb
 
-    // 2 PDB properties
+    // 3 PDB properties
     NvBool PDB_PROP_RCDB_COMPRESS;
     NvBool PDB_PROP_RCDB_IN_DEFERRED_DUMP_CODEPATH;
+    NvBool PDB_PROP_RCDB_NOCAT_EVTBUF_SUPPORTED;
 
     // Data members
     SYS_ERROR_INFO ErrorInfo;
@@ -281,9 +282,11 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJRCDB;
 #define PDB_PROP_RCDB_COMPRESS_BASE_NAME PDB_PROP_RCDB_COMPRESS
 #define PDB_PROP_RCDB_IN_DEFERRED_DUMP_CODEPATH_BASE_CAST
 #define PDB_PROP_RCDB_IN_DEFERRED_DUMP_CODEPATH_BASE_NAME PDB_PROP_RCDB_IN_DEFERRED_DUMP_CODEPATH
+#define PDB_PROP_RCDB_NOCAT_EVTBUF_SUPPORTED_BASE_CAST
+#define PDB_PROP_RCDB_NOCAT_EVTBUF_SUPPORTED_BASE_NAME PDB_PROP_RCDB_NOCAT_EVTBUF_SUPPORTED
 
 
-NV_STATUS __nvoc_objCreateDynamic_OBJRCDB(OBJRCDB**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJRCDB(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJRCDB(OBJRCDB**, Dynamic*, NvU32);
 #define __objCreate_OBJRCDB(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

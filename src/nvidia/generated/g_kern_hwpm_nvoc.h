@@ -177,7 +177,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelHwpm;
 #define PDB_PROP_KHWPM_IS_MISSING_BASE_NAME PDB_PROP_ENGSTATE_IS_MISSING
 
 
-NV_STATUS __nvoc_objCreateDynamic_KernelHwpm(KernelHwpm**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelHwpm(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelHwpm(KernelHwpm**, Dynamic*, NvU32);
 #define __objCreate_KernelHwpm(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

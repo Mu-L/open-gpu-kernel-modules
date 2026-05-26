@@ -1049,7 +1049,8 @@ kceGetPceConfigForLceType_IMPL
     NvU32       *pNumLces,
     NvU32       *pSupportedPceMask,
     NvU32       *pSupportedLceMask,
-    NvU32       *pPcesPerHshub
+    NvU32       *pPcesPerHshub,
+    NV2080_CTRL_CE_SHIM_PREFERENCE *pShimPreference
 )
 {
     RM_API   *pRmApi    = GPU_GET_PHYSICAL_RMAPI(pGpu);
@@ -1059,6 +1060,7 @@ kceGetPceConfigForLceType_IMPL
     NV_ASSERT_OR_RETURN(pSupportedPceMask != NULL,  NV_ERR_INVALID_ARGUMENT);
     NV_ASSERT_OR_RETURN(pSupportedLceMask != NULL,  NV_ERR_INVALID_ARGUMENT);
     NV_ASSERT_OR_RETURN(pPcesPerHshub != NULL,      NV_ERR_INVALID_ARGUMENT);
+    NV_ASSERT_OR_RETURN(pShimPreference != NULL,    NV_ERR_INVALID_ARGUMENT);
 
     NV2080_CTRL_INTERNAL_CE_GET_PCE_CONFIG_FOR_LCE_TYPE_PARAMS pceConfigParams;
     portMemSet(&pceConfigParams, 0, sizeof(pceConfigParams));
@@ -1095,6 +1097,7 @@ kceGetPceConfigForLceType_IMPL
     *pSupportedPceMask    = pceConfigParams.supportedPceMask;
     *pSupportedLceMask    = pceConfigParams.supportedLceMask;
     *pPcesPerHshub        = pceConfigParams.pcePerHshub;
+    *pShimPreference      = pceConfigParams.multipleLceShimPreference;
 
     return NV_OK;
 }

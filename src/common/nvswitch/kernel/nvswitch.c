@@ -4560,7 +4560,7 @@ nvswitch_filter_messages
     nvswitch_inband_data_list *msg = device->link[linkId].inbandData.message;
     NvU8   *buffer = device->link[linkId].inbandData.message->data;
     NVSWITCH_DRIVER_FABRIC_STATE driver_fabric_state = 0;
-    NvBool bSendNackOrDrop = NV_FALSE;
+    NvBool bNotify = NV_TRUE;
 
     NVSWITCH_ASSERT(nvswitch_lib_read_fabric_state(device, NULL, NULL,
                                         &driver_fabric_state) == NVL_SUCCESS);
@@ -4576,28 +4576,18 @@ nvswitch_filter_messages
         }
         else
         {
-            bSendNackOrDrop = NV_TRUE;
+            NVSWITCH_PRINT(device, ERROR, "Dropping message (type 0x%x)\n", msghdr->type);
+            nvswitch_os_free(msg);
+            bNotify = NV_FALSE;
         }
     }
     else
     {
-         if (driver_fabric_state == NVSWITCH_DRIVER_FABRIC_STATE_CONFIGURED)
-         {
-              nvListAdd(&msg->entry,
-                        &device->link[linkId].inbandData.nonpersistent_list);
-         }
-         else
-         {
-              bSendNackOrDrop = NV_TRUE;
-         }
+        // Might be nacked... if GFM is not alive. Let the background thread handle that...
+        nvListAdd(&msg->entry, &device->link[linkId].inbandData.nonpersistent_list);
     }
 
-    if (bSendNackOrDrop)
-    {
-        nvswitch_send_nack_or_drop(device, linkId, msghdr);
-        nvswitch_os_free(msg);
-    }
-    else
+    if (bNotify)
     {
         status = nvswitch_lib_notify_client_events(device,
                                                    NVSWITCH_DEVICE_EVENT_INBAND_DATA);
@@ -5007,17 +4997,26 @@ nvswitch_read_64bit_counter
     NvU32 hi_offset
 )
 {
-    NvU32   hi0;
+    NvU32   hi0 = 0xDEADBEEF;
     NvU32   hi1;
-    NvU32   lo;
+    NvU32   lo = 0xDEADBEEF;
 
-    hi0 = nvswitch_reg_read_32(device, hi_offset);
-    do
+    if ((lo_offset == NVSWITCH_ENGINE_INSTANCE_INVALID) ||
+        (hi_offset == NVSWITCH_ENGINE_INSTANCE_INVALID))
     {
-        hi1 = hi0;
-        lo  = nvswitch_reg_read_32(device, lo_offset);
+        NVSWITCH_PRINT_SXID(device, NVSWITCH_ERR_HW_HOST_IO_FAILURE,
+            "IO error reading invalid address 0x%08x/0x%08x\n", lo_offset, hi_offset);
+    }
+    else
+    {
         hi0 = nvswitch_reg_read_32(device, hi_offset);
-    } while (hi0 != hi1);
+        do
+        {
+            hi1 = hi0;
+            lo  = nvswitch_reg_read_32(device, lo_offset);
+            hi0 = nvswitch_reg_read_32(device, hi_offset);
+        } while (hi0 != hi1);
+    }
 
     return (lo | ((NvU64)hi0 << 32));
 }

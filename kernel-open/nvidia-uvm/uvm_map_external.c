@@ -360,16 +360,20 @@ static uvm_membar_t va_range_downgrade_membar(uvm_va_range_t *va_range, uvm_ext_
                                              uvm_va_range_to_channel(va_range)->aperture == UVM_APERTURE_VID);
     }
 
-    // If there is no mem_handle, this is a sparse mapping.
-    // UVM_MEMBAR_GPU is sufficient because the debug pages remain allocated
-    // until the GPU is torn down. GPU tear down implies that our context has
-    // been switched out. In turn, this implies a sysmembar.
-    if (!ext_gpu_map->mem_handle)
+    // If fabricmem is False and there is no mem_handle, this is a sparse
+    // mapping. UVM_MEMBAR_GPU is sufficient because the debug pages remain
+    // allocated until the GPU is torn down. GPU tear down implies that our
+    // context has been switched out. In turn, this implies a sysmembar.
+    // TODO: Bug 5731784: Add test for fabric loopback allocations when FM
+    //       support is ready.
+    if (!ext_gpu_map->is_fabricmem && !ext_gpu_map->mem_handle)
         return UVM_MEMBAR_GPU;
 
     // EGM uses the same barriers as sysmem.
     return uvm_hal_downgrade_membar_type(ext_gpu_map->gpu,
-                                         !ext_gpu_map->is_sysmem && ext_gpu_map->gpu == ext_gpu_map->owning_gpu);
+                                         !ext_gpu_map->is_sysmem &&
+                                         !ext_gpu_map->is_fabricmem &&
+                                         ext_gpu_map->gpu == ext_gpu_map->owning_gpu);
 }
 
 NV_STATUS uvm_va_range_map_rm_allocation(uvm_va_range_t *va_range,
@@ -635,16 +639,20 @@ static NV_STATUS set_ext_gpu_map_location(uvm_ext_gpu_map_t *ext_gpu_map,
     if (mem_info->egm)
         UVM_ASSERT(mem_info->sysmem);
 
-    // !mem_info->deviceDescendant && !mem_info->sysmem imply fabric allocation.
+    // mem_info->fabric == True means that the allocation is a fabric allocation,
+    // which includes allocations on direct-connected GPUs.
     // !mem_info->deviceDescendant also means that mem_info->uuid is invalid. In
     // this case the owning GPU is NULL, meaning that UVM is oblivious to the
     // topology and relies on RM and/or the fabric manager (FM) for memory
     // lifetime management and GPU ref counting.
-    if (!mem_info->deviceDescendant && !mem_info->sysmem) {
+    if (mem_info->fabricmem && !mem_info->deviceDescendant) {
+        UVM_ASSERT(!mem_info->sysmem);
         ext_gpu_map->owning_gpu = NULL;
         ext_gpu_map->is_sysmem = false;
+        ext_gpu_map->is_fabricmem = true;
         return NV_OK;
     }
+
     // This is a local or peer allocation, so the owning GPU must have been
     // registered. This also checks for if EGM owning GPU is registered.
     owning_gpu = uvm_va_space_get_gpu_by_mem_info(va_space, mem_info);
@@ -670,6 +678,7 @@ static NV_STATUS set_ext_gpu_map_location(uvm_ext_gpu_map_t *ext_gpu_map,
     ext_gpu_map->owning_gpu = owning_gpu;
     ext_gpu_map->is_sysmem = mem_info->sysmem;
     ext_gpu_map->is_egm = mem_info->egm;
+    ext_gpu_map->is_fabricmem = mem_info->fabricmem;
 
     return NV_OK;
 }
@@ -725,6 +734,7 @@ static NV_STATUS uvm_ext_gpu_map_split(uvm_range_tree_t *tree,
     new->owning_gpu = existing_map->owning_gpu;
     new->is_sysmem = existing_map->is_sysmem;
     new->is_egm = existing_map->is_egm;
+    new->is_fabricmem = existing_map->is_fabricmem;
 
     // Initialize the new ext_gpu_map tracker as a copy of the existing_map tracker.
     // This way, any operations on any of the two ext_gpu_maps will be able to

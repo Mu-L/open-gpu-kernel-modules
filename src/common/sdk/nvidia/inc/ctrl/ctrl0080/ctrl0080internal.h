@@ -120,8 +120,6 @@ typedef struct NV0080_CTRL_INTERNAL_FIFO_RC_AND_PERMANENTLY_DISABLE_CHANNELS_PAR
  * Tell Physical RM whether any ZBC-kind surfaces are allocated.
  * If PF and all VFs report false, ZBC table can be flushed by Physical RM.
  *
- *   subdevInstance [IN]
- *     Subdevice instance of the GPU to be checked with
  *   bZbcReferenced [IN]
  *     NV_TRUE -> ZBC-kind (and no _SKIP_ZBCREFCOUNT flag) are allocated in Kernel RM
  *
@@ -131,7 +129,6 @@ typedef struct NV0080_CTRL_INTERNAL_FIFO_RC_AND_PERMANENTLY_DISABLE_CHANNELS_PAR
 #define NV0080_CTRL_INTERNAL_MEMSYS_SET_ZBC_REFERENCED_PARAMS_MESSAGE_ID (0x0AU)
 
 typedef struct NV0080_CTRL_INTERNAL_MEMSYS_SET_ZBC_REFERENCED_PARAMS {
-    NvU32  subdevInstance;
     NvBool bZbcSurfacesExist;
 } NV0080_CTRL_INTERNAL_MEMSYS_SET_ZBC_REFERENCED_PARAMS;
 

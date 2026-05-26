@@ -383,7 +383,14 @@ void DiscoveryManager::BranchDetection::expired(const void * tag)
 
         retryLinkAddressMessage = false;
         linkAddressMessage.set(address);
-        parent->messageManager->post(&linkAddressMessage, this);
+        if (parent->hal->isPollingEnabledForDpMstDetection())
+        {
+            parent->messageManager->send(&linkAddressMessage, this);
+        }
+        else
+        {
+            parent->messageManager->post(&linkAddressMessage, this);
+        }
     }
     else if (retryRemoteDpcdWriteMessage)
     {
@@ -398,7 +405,14 @@ void DiscoveryManager::BranchDetection::expired(const void * tag)
         remoteDpcdWriteMessage.set(parentAddress, parentAddress.tail(), NV_DPCD_GUID, sizeof(GUID), (NvU8 *)&parentDevice.peerGuid);
         DP_PRINTF(DP_NOTICE, "DP-DM> Setting GUID (remotely) for '%s' sent REMOTE_DPCD_WRITE {%p}", address.toString(sb), &remoteDpcdWriteMessage);
 
-        parent->messageManager->post(&remoteDpcdWriteMessage, this);
+        if (parent->hal->isPollingEnabledForDpMstDetection())
+        {
+            parent->messageManager->send(&remoteDpcdWriteMessage, this);
+        }
+        else
+        {
+            parent->messageManager->post(&remoteDpcdWriteMessage, this);
+        }
     }
 }
 
@@ -416,7 +430,14 @@ void DiscoveryManager::SinkDetection::expired(const void * tag)
         retryLinkAddressMessage = false;
         linkAddressMessage.set(parentAddress);
 
-        parent->messageManager->post(&linkAddressMessage, this);
+        if (parent->hal->isPollingEnabledForDpMstDetection())
+        {
+            parent->messageManager->send(&linkAddressMessage, this);
+        }
+        else
+        {
+            parent->messageManager->post(&linkAddressMessage, this);
+        }
     }
     else if (retryRemoteDpcdReadMessage)
     {
@@ -431,7 +452,14 @@ void DiscoveryManager::SinkDetection::expired(const void * tag)
         remoteDpcdReadMessage.set(parentAddress, parentAddress.tail(), NV_DPCD_GUID, sizeof(GUID));
         DP_PRINTF(DP_NOTICE, "DP-DM> Setting GUID (remotely) for '%s' sent REMOTE_DPCD_READ {%p}", address.toString(sb), &remoteDpcdReadMessage);
 
-        parent->messageManager->post(&remoteDpcdReadMessage, this);
+        if (parent->hal->isPollingEnabledForDpMstDetection())
+        {
+            parent->messageManager->send(&remoteDpcdReadMessage, this);
+        }
+        else
+        {
+            parent->messageManager->post(&remoteDpcdReadMessage, this);
+        }
     }
     else if (retryRemoteDpcdWriteMessage)
     {
@@ -449,7 +477,14 @@ void DiscoveryManager::SinkDetection::expired(const void * tag)
                                     (NvU8 *)&device.peerGuid);
         DP_PRINTF(DP_NOTICE, "DP-DM> Setting GUID (remotely) for '%s' sent REMOTE_DPCD_WRITE {%p}", address.toString(sb), &remoteDpcdWriteMessage);
 
-        parent->messageManager->post(&remoteDpcdWriteMessage, this);
+        if (parent->hal->isPollingEnabledForDpMstDetection())
+        {
+            parent->messageManager->send(&remoteDpcdWriteMessage, this);
+        }
+        else
+        {
+            parent->messageManager->post(&remoteDpcdWriteMessage, this);
+        }
     }
 }
 
@@ -583,7 +618,14 @@ void DiscoveryManager::SinkDetection::handleLinkAddressDownReply()
     Address parentAddress = address.parent();
     remoteDpcdReadMessage.set(parentAddress, address.tail(), NV_DPCD_GUID, sizeof(GUID));
 
-    parent->messageManager->post(&remoteDpcdReadMessage, this);
+    if (parent->hal->isPollingEnabledForDpMstDetection())
+    {
+        parent->messageManager->send(&remoteDpcdReadMessage, this);
+    }
+    else
+    {
+        parent->messageManager->post(&remoteDpcdReadMessage, this);
+    }
 
 }
 
@@ -625,7 +667,14 @@ void DiscoveryManager::SinkDetection::handleRemoteDpcdReadDownReply()
         DP_PRINTF(DP_NOTICE, "DP-DM> Setting GUID (remotely) for '%s' sent REMOTE_DPCD_WRITE {%p}",
                   address.toString(sb), &remoteDpcdWriteMessage);
 
-        parent->messageManager->post(&remoteDpcdWriteMessage, this);
+        if (parent->hal->isPollingEnabledForDpMstDetection())
+        {
+            parent->messageManager->send(&remoteDpcdWriteMessage, this);
+        }
+        else
+        {
+            parent->messageManager->post(&remoteDpcdWriteMessage, this);
+        }
     }
 }
 
@@ -705,7 +754,14 @@ void DiscoveryManager::BranchDetection::handleLinkAddressDownReply()
             DP_PRINTF(DP_NOTICE, "DP-DM> Setting GUID (remotely) for '%s' sent REMOTE_DPCD_WRITE {%p}",
                      address.toString(sb), &remoteDpcdWriteMessage);
 
-            parent->messageManager->post(&remoteDpcdWriteMessage, this);
+            if (parent->hal->isPollingEnabledForDpMstDetection())
+            {
+                parent->messageManager->send(&remoteDpcdWriteMessage, this);
+            }
+            else
+            {
+                parent->messageManager->post(&remoteDpcdWriteMessage, this);
+            }
         }
     }
     else
@@ -752,7 +808,15 @@ void DiscoveryManager::BranchDetection::start()
               address.toString(sb),
               (MessageManager::Message *)&linkAddressMessage);
 
-    parent->messageManager->post(&linkAddressMessage, this);
+    if (parent->hal->isPollingEnabledForDpMstDetection())
+    {
+        retryLinkAddressMessage = true;
+        parent->timer->queueCallback(this, "DISC", DPCD_LINK_ADDRESS_MESSAGE_COOLDOWN);
+    }
+    else
+    {
+       parent->messageManager->post(&linkAddressMessage, this);
+    }
 }
 
 void DiscoveryManager::SinkDetection::start()
@@ -778,7 +842,14 @@ void DiscoveryManager::SinkDetection::start()
         DP_PRINTF(DP_NOTICE, "DP-DM> Detecting '%s' (sending LINK_ADDRESS_MESSAGE {%p})",
                   address.toString(sb),
                   (MessageManager::Message *)&linkAddressMessage);
-        parent->messageManager->post(&linkAddressMessage, this);
+        if (parent->hal->isPollingEnabledForDpMstDetection())
+        {
+            parent->messageManager->send(&linkAddressMessage, this);
+        }
+        else
+        {
+            parent->messageManager->post(&linkAddressMessage, this);
+        }
     }
     else // The sink is found in LAM sent for branch, and with DPCD rev.
     {
@@ -798,7 +869,14 @@ void DiscoveryManager::SinkDetection::start()
         Address parentAddress = address.parent();
         remoteDpcdReadMessage.set(parentAddress, address.tail(), NV_DPCD_GUID, sizeof(GUID));
 
-        parent->messageManager->post(&remoteDpcdReadMessage, this);
+        if (parent->hal->isPollingEnabledForDpMstDetection())
+        {
+            parent->messageManager->send(&remoteDpcdReadMessage, this);
+        }
+        else
+        {
+            parent->messageManager->post(&remoteDpcdReadMessage, this);
+        }
     }
 
 }

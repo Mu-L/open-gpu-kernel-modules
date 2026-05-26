@@ -50,10 +50,7 @@
 // Non-replayable faults originated in other engines are considered fatal, and
 // do not reach the UVM driver. While UVM can distinguish between faults
 // originated in the Copy Engine and faults originated in the PBDMA Engine, in
-// practice they are all processed in the same way. Replayable fault support in
-// Graphics was introduced in Pascal, and non-replayable fault support in CE and
-// PBDMA Engines was introduced in Volta; all non-replayable faults were fatal
-// before Volta.
+// practice they are all processed in the same way.
 //
 // An example of a Copy Engine non-replayable fault is a memory copy between two
 // virtual addresses on a GPU, in which either the source or destination
@@ -441,6 +438,23 @@ static NV_STATUS service_managed_fault_in_block_locked(uvm_va_block_t *va_block,
                                                   hmm_migratable,
                                                   &read_duplicate);
 
+    // If this is a ATS processor and the page is already resident in the correct location
+    // then it should already be mapped on the CPU so handle this as a minor fault.
+    if (uvm_va_block_is_hmm(va_block) && gpu->parent->ats_supported) {
+        uvm_page_mask_t *resident_pages = uvm_va_block_resident_mask_get(va_block, gpu->id, NUMA_NO_NODE);
+
+        if (resident_pages && uvm_page_mask_test(resident_pages, page_index)) {
+            unsigned int flags = FAULT_FLAG_REMOTE;
+            if (fault_entry->fault_access_type >= UVM_FAULT_ACCESS_TYPE_WRITE)
+                flags |= FAULT_FLAG_WRITE;
+
+            UVM_HANDLE_MM_FAULT(service_context->block_context->hmm.vma,
+                                uvm_va_block_cpu_page_address(va_block, page_index), flags);
+
+            return NV_OK;
+        }
+    }
+
     // Initialize the minimum necessary state in the fault service context
     uvm_processor_mask_zero(&service_context->resident_processors);
 
@@ -461,7 +475,7 @@ static NV_STATUS service_managed_fault_in_block_locked(uvm_va_block_t *va_block,
 
     service_context->region = uvm_va_block_region_for_page(page_index);
 
-    status = uvm_va_block_service_locked(gpu->id, va_block, va_block_retry, service_context);
+    status = uvm_va_block_service_locked(gpu, va_block, va_block_retry, service_context);
 
     ++service_context->num_retries;
 
@@ -741,8 +755,24 @@ static NV_STATUS service_fault_once(uvm_parent_gpu_t *parent_gpu,
                                                       fault_entry->fault_address,
                                                       &va_block);
         }
-        if (status == NV_OK)
+
+        if (status == NV_OK) {
             status = service_managed_fault_in_block(va_block, fault_entry, hmm_migratable);
+
+            // Since mixed-coherency now involves the va_block to handle
+            // pageable memory ats faults, we need to ensure that 4K pages
+            // are handled the same way as in the ats faulting path for numa.
+            // See the comment at the end of uvm_ats_service_faults_region()
+            // in the numa path for why this flush is necessary.
+            if (status == NV_OK && PAGE_SIZE == UVM_PAGE_SIZE_4K &&
+                gpu->parent->ats_supported && uvm_va_block_is_hmm(va_block)) {
+                uvm_flush_tlb_va_region(gpu_va_space, fault_entry->fault_address, UVM_PAGE_SIZE_4K, UVM_FAULT_CLIENT_TYPE_HUB);
+
+                status = uvm_ats_invalidate_tlbs(gpu_va_space,
+                                                 &non_replayable_faults->ats_invalidate,
+                                                 &non_replayable_faults->fault_service_tracker);
+            }
+        }
         else
             status = service_non_managed_fault(gpu_va_space, mm, fault_entry, status);
 

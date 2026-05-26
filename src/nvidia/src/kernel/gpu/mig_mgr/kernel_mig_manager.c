@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -1512,6 +1512,7 @@ kmigmgrLoadStaticInfo_VF
             pCIProfile->physicalSlots = pVSI->ciProfiles.profiles[i].gpcCount;
             pCIProfile->veidCount     = pVSI->ciProfiles.profiles[i].veidCount;
             pCIProfile->smCount       = pVSI->ciProfiles.profiles[i].smCount;
+            pCIProfile->flags         = pVSI->ciProfiles.profiles[i].flags;
 
             entryCount++;
         }
@@ -1880,6 +1881,7 @@ kmigmgrSaveToPersistenceFromVgpuStaticInfo_VF
 
         pComputeInstanceSave->bValid = NV_TRUE;
         pComputeInstanceSave->ciInfo.sharedEngFlags = pExecPartInfo->sharedEngFlag;
+        pComputeInstanceSave->ciInfo.execPartFlags = pExecPartInfo->execPartFlags;
         pComputeInstanceSave->id = pVSI->execPartitionInfo.execPartId[CIIdx];
 
         //
@@ -1954,6 +1956,12 @@ kmigmgrSaveToPersistenceFromVgpuStaticInfo_VF
         pComputeInstanceSave->ciInfo.computeSize = pExecPartInfo->computeSize;
         pComputeInstanceSave->ciInfo.veidCount = pExecPartInfo->veidCount;
         pComputeInstanceSave->ciInfo.veidOffset = pExecPartInfo->veidStartOffset;
+
+        //
+        // TODO: Consider caching computeModeRules in VGPU_STATIC_INFO for persistence
+        //       across VM migration. Currently defaults to NONE.
+        //
+        pComputeInstanceSave->computeModeRules = NV2080_CTRL_GPU_COMPUTE_MODE_RULES_NONE;
 
         NV_CHECK_OK_OR_RETURN(LEVEL_ERROR,
                               osRmCapRegisterSmcExecutionPartition(pGPUInstanceSave->pOsRmCaps,
@@ -2809,6 +2817,8 @@ kmigmgrRestoreFromPersistence_PF
 
             // Restore capability caps
             pKernelMIGGpuInstance->MIGComputeInstance[pExecPartImportParams->id].pOsRmCaps = pComputeInstanceSave->pOsRmCaps;
+            // And Compute Mode rules
+            pKernelMIGGpuInstance->MIGComputeInstance[pExecPartImportParams->id].computeModeState.computeModeRules = pComputeInstanceSave->computeModeRules;
 
             pRmApi->Free(pRmApi, hClient, hSubscription);
         }
@@ -2929,6 +2939,8 @@ kmigmgrRestoreFromPersistence_VF
 
             // Restore capability caps
             pKernelMIGGPUInstance->MIGComputeInstance[id].pOsRmCaps = pComputeInstanceSave->pOsRmCaps;
+            // And Compute Mode state
+            pKernelMIGGPUInstance->MIGComputeInstance[id].computeModeState.computeModeRules = pComputeInstanceSave->computeModeRules;
         }
     }
 
@@ -4198,6 +4210,7 @@ kmigmgrSaveComputeInstances_IMPL
         portMemSet(pComputeInstanceSave, 0, sizeof(*pComputeInstanceSave));
         pComputeInstanceSave->bValid = NV_TRUE;
         pComputeInstanceSave->ciInfo.sharedEngFlags = pMIGComputeInstance->sharedEngFlag;
+        pComputeInstanceSave->ciInfo.execPartFlags = pMIGComputeInstance->execPartFlags;
         pComputeInstanceSave->id = CIIdx;
         pComputeInstanceSave->pOsRmCaps = pMIGComputeInstance->pOsRmCaps;
         bitVectorToRaw(&pMIGComputeInstance->resourceAllocation.engines,
@@ -4225,6 +4238,8 @@ kmigmgrSaveComputeInstances_IMPL
 
         portMemCopy(pComputeInstanceSave->ciInfo.uuid, sizeof(pComputeInstanceSave->ciInfo.uuid),
                     pMIGComputeInstance->uuid.uuid, sizeof(pMIGComputeInstance->uuid.uuid));
+
+        pComputeInstanceSave->computeModeRules = pMIGComputeInstance->computeModeState.computeModeRules;
 
         ++ciCount;
     }
@@ -4642,6 +4657,10 @@ kmigmgrCreateComputeInstances_VF
                 (params.type == KMIGMGR_CREATE_COMPUTE_INSTANCE_PARAMS_TYPE_REQUEST)
                 ? params.inst.request.pReqComputeInstanceInfo[CIIdx].sharedEngFlag
                 : params.inst.restore.pComputeInstanceSave->ciInfo.sharedEngFlags;
+        pMIGComputeInstance->execPartFlags =
+                (params.type == KMIGMGR_CREATE_COMPUTE_INSTANCE_PARAMS_TYPE_REQUEST)
+                ? params.inst.request.pReqComputeInstanceInfo[CIIdx].execPartFlags
+                : params.inst.restore.pComputeInstanceSave->ciInfo.execPartFlags;
         NvU32 spanStart;
         NvU32 ctsId;
 
@@ -4704,6 +4723,7 @@ kmigmgrCreateComputeInstances_VF
                                             0x0,
                                             shadowCTSInUseMask,
                                             pCIProfile->computeSize,
+                                            NV_FALSE,
                                             NV_FALSE,
                                             NV_FALSE),
                         done);
@@ -5024,7 +5044,7 @@ kmigmgrCreateComputeInstances_VF
                 NV_ASSERT_OK_OR_GOTO(status,
                     kmigmgrEngineTypeXlate(&pComputeResourceAllocation->localEngines, RM_ENGINE_TYPE_GR(0),
                                            &pComputeResourceAllocation->engines, &localRmEngineType), done);
-                
+
                 NV_ASSERT_OR_ELSE(RM_ENGINE_TYPE_IS_GR(localRmEngineType), status = NV_ERR_INVALID_STATE; goto done;);
 
                 if (portUtilCountTrailingZeros32(updateEngMaskShadow) == RM_ENGINE_TYPE_GR_IDX(localRmEngineType))
@@ -5346,6 +5366,7 @@ kmigmgrCreateComputeInstances_FWCLIENT
     portMemCopy(pMIGComputeInstance->uuid.uuid, sizeof(pMIGComputeInstance->uuid.uuid),
                 info.uuid, sizeof(info.uuid));
     pMIGComputeInstance->sharedEngFlag = info.sharedEngFlags;
+    pMIGComputeInstance->execPartFlags = info.execPartFlags;
 
     pComputeResourceAllocation->gpcCount = 0;
     tempGpcMask = info.gpcMask;
@@ -5707,7 +5728,7 @@ kmigmgrDeleteComputeInstance_IMPL
         NV_ASSERT_TRUE_OR_GOTO(status, pVSI != NULL, NV_ERR_INVALID_ARGUMENT, done);
         if (pKernelCcu != NULL)
         {
-            //GPM Support Check 
+            //GPM Support Check
             if (FLD_TEST_DRF(A080, _CTRL_CMD_VGPU_GET_CONFIG,
                              _PARAMS_VGPU_DEV_CAPS_GPM_ENABLED,
                              _TRUE, pVSI->vgpuConfig.vgpuDeviceCapsBits))
@@ -5722,6 +5743,7 @@ kmigmgrDeleteComputeInstance_IMPL
 
     // Now that we no longer need it, clear the shared engine flag
     pMIGComputeInstance->sharedEngFlag = 0x0;
+    pMIGComputeInstance->execPartFlags = 0x0;
     pMIGComputeInstance->id = KMIGMGR_COMPUTE_INSTANCE_ID_INVALID;
 
     pMIGComputeInstance->pOsRmCaps = NULL;
@@ -6578,6 +6600,15 @@ kmigmgrSetMIGState_FWCLIENT
         kgraphicsInvalidateStaticInfo(pGpu, pKGr);
 
         //
+        // Reset GPU-level compute mode state when enabling MIG.
+        // Compute mode is now managed per-CI, not per-GPU.
+        // This ensures any pre-MIG compute mode settings
+        // don't block compute instance creation.
+        //
+        pGpu->computeModeState.computeModeRules = NV2080_CTRL_GPU_COMPUTE_MODE_RULES_NONE;
+        pGpu->computeModeState.hComputeModeReservation = NV01_NULL_OBJECT;
+
+        //
         // Destroy all global ctx buffers, we will need to recreate them in
         // partitionable memory later.
         //
@@ -6765,6 +6796,19 @@ cleanup_destroyInternalChannels:
                 kmigmgrRestoreWatchdog(pGpu, pKernelMIGManager));
             NV_ASSERT_OK_OR_CAPTURE_FIRST_ERROR(rmStatus,
                 kgraphicsCreateGoldenImageChannel(pGpu, pKGr));
+
+            //
+            // Restore GPU-level compute mode from registry.
+            // This was reset to NONE when MIG was enabled.
+            //
+            {
+                NvU32 computeModeRules;
+                if (osReadRegistryDword(pGpu, NV_REG_STR_RM_COMPUTE_MODE_RULES,
+                                        &computeModeRules) == NV_OK)
+                {
+                    pGpu->computeModeState.computeModeRules = computeModeRules;
+                }
+            }
         }
 
         // Return to non-MIG CE Mappings
@@ -7081,7 +7125,6 @@ kmigmgrInitGPUInstanceRunlistBufPools_IMPL
     KERNEL_MIG_GPU_INSTANCE *pKernelMIGGpuInstance
 )
 {
-    NV_STATUS         status = NV_OK;
     RM_ENGINE_TYPE    rmEngineType;
     KernelFifo       *pKernelFifo = GPU_GET_KERNEL_FIFO(pGpu);
     CTX_BUF_INFO     *runlistBufInfo = NULL;
@@ -7137,44 +7180,29 @@ kmigmgrInitGPUInstanceRunlistBufPools_IMPL
         //
         for (i = 0; i < rlCount; i++)
         {
-            NV_ASSERT_OK_OR_GOTO(status,
-                kfifoGetRunlistBufInfo(pGpu, pKernelFifo, runlistId,
-                                      0, &rlSize, &rlAlign),
-                cleanup);
-
+            NV_ASSERT_OK_OR_RETURN(kfifoGetRunlistBufInfo(pGpu, pKernelFifo, runlistId,
+                                   0, &rlSize, &rlAlign));
             runlistBufInfo[i].size = rlSize;
             runlistBufInfo[i].align = rlAlign;
             runlistBufInfo[i].attr = RM_ATTR_PAGE_SIZE_DEFAULT;
             runlistBufInfo[i].bContig = NV_TRUE;
         }
 
-        NV_ASSERT_OK_OR_GOTO(status,
-            ctxBufPoolInit(pGpu, pHeap, &pKernelFifo->pRunlistBufPool[rmEngineType]),
-            cleanup);
-
-        NV_ASSERT_TRUE_OR_GOTO(status,
-            pKernelFifo->pRunlistBufPool[rmEngineType] != NULL,
-            NV_ERR_INVALID_STATE, cleanup);
+        NV_ASSERT_OK_OR_RETURN(ctxBufPoolInit(pGpu, pHeap, &pKernelFifo->pRunlistBufPool[rmEngineType]));
+        NV_ASSERT_OR_RETURN(pKernelFifo->pRunlistBufPool[rmEngineType] != NULL, NV_ERR_INVALID_STATE);
 
         //
         // Skip scrubber for runlist buffer alloctions since gpu instance scrubber is not setup yet
         // and it will be destroyed before deleting the runlist buffer pool.
         //
         ctxBufPoolSetScrubSkip(pKernelFifo->pRunlistBufPool[rmEngineType], NV_TRUE);
+        NV_ASSERT_OK_OR_RETURN(ctxBufPoolReserve(pGpu, pKernelFifo->pRunlistBufPool[rmEngineType], &runlistBufInfo[0], rlCount));
 
-        NV_ASSERT_OK_OR_GOTO(status,
-            ctxBufPoolReserve(pGpu, pKernelFifo->pRunlistBufPool[rmEngineType],
-                              &runlistBufInfo[0], rlCount),
-            cleanup);
-
-cleanup:
         portMemFree(runlistBufInfo);
         runlistBufInfo = NULL;
-        if (status != NV_OK)
-            break;
     }
 
-    return status;
+    return NV_OK;
 }
 
 /*
@@ -8322,18 +8350,26 @@ subdeviceCtrlCmdGpuGetComputeProfiles_IMPL
     NvU32 i;
     NV2080_CTRL_INTERNAL_MIGMGR_PROFILE_INFO giProfile;
 
+    NV_CHECK_OR_RETURN(LEVEL_ERROR, pStaticInfo != NULL, NV_ERR_INVALID_STATE);
+    NV_CHECK_OR_RETURN(LEVEL_ERROR, pStaticInfo->pCIProfiles != NULL, NV_ERR_INVALID_STATE);
+
     if (!IS_MIG_ENABLED(pGpu))
         return NV_ERR_INVALID_STATE;
 
     //
-    // Grab MIG partition reference if available. The profile's SM count is used
-    // to filter out compute profiles which wouldn't fit on the GI anyway. This
-    // is not fatal as we still want to allow compute profiles for entire GPU view
-    // to be queried without a specific GPU instance.
-    // If GPU partition is not avaiable, fall back to control provided partitionFlag
-    // to determine host GPU instance properties.
+    // Determine GPU instance properties for filtering compute profiles.
+    // Priority: explicit partitionFlag (if non-zero), then device's MIG partition
+    // reference, then fall back to partitionFlag lookup (handles FULL/0 case).
     //
-    if (kmigmgrGetInstanceRefFromDevice(pGpu, pKernelMIGManager, pDevice, &ref) == NV_OK)
+    if (pParams->partitionFlag != 0)
+    {
+        NV_CHECK_OK_OR_RETURN(LEVEL_ERROR,
+            kmigmgrGetGpuProfileFromFlag(pGpu, pKernelMIGManager, pParams->partitionFlag, &giProfile));
+
+        maxSmCount = giProfile.smCount;
+        maxPhysicalSlotCount = giProfile.virtualGpcCount;
+    }
+    else if (kmigmgrGetInstanceRefFromDevice(pGpu, pKernelMIGManager, pDevice, &ref) == NV_OK)
     {
         maxSmCount = ref.pKernelMIGGpuInstance->pProfile->smCount;
         maxPhysicalSlotCount = ref.pKernelMIGGpuInstance->pProfile->virtualGpcCount;
@@ -8349,8 +8385,6 @@ subdeviceCtrlCmdGpuGetComputeProfiles_IMPL
         maxPhysicalSlotCount = giProfile.virtualGpcCount;
     }
 
-    NV_CHECK_OR_RETURN(LEVEL_ERROR, pStaticInfo != NULL, NV_ERR_INVALID_STATE);
-    NV_CHECK_OR_RETURN(LEVEL_ERROR, pStaticInfo->pCIProfiles != NULL, NV_ERR_INVALID_STATE);
     NV_ASSERT(pStaticInfo->pCIProfiles->profileCount <= NV_ARRAY_ELEMENTS(pParams->profiles));
 
     entryCount = 0;
@@ -8386,6 +8420,7 @@ subdeviceCtrlCmdGpuGetComputeProfiles_IMPL
         }
 
         pParams->profiles[entryCount].computeSize = pStaticInfo->pCIProfiles->profiles[i].computeSize;
+        pParams->profiles[entryCount].flags       = pStaticInfo->pCIProfiles->profiles[i].flags;
         pParams->profiles[entryCount].gfxGpcCount = pStaticInfo->pCIProfiles->profiles[i].gfxGpcCount;
         pParams->profiles[entryCount].gpcCount    = pStaticInfo->pCIProfiles->profiles[i].physicalSlots;
         pParams->profiles[entryCount].smCount     = pStaticInfo->pCIProfiles->profiles[i].smCount;
@@ -8918,6 +8953,7 @@ kmigmgrCtsIdToSpan_IMPL
  * @param[IN]   profileSize            Profile size to get a CTS ID for
  * @param[IN]   bRestrictWithGfx       Whether to restrict the CTS ID chosen with Gfx info
  * @param[IN]   bGfxRequested          Whether Gfx info is requested. Unused if bRestrictWithGfx is NV_FALSE
+ * @param[IN]   bInitProfile           Whether this is called during initial profile generation
  *
  * @return  Returns NV_STATUS
  *          NV_OK
@@ -8936,7 +8972,8 @@ kmigmgrGetFreeCTSId_IMPL
     NvU64  ctsIdsInUseMask,
     NvU32  profileSize,
     NvBool bRestrictWithGfx,
-    NvBool bGfxRequested
+    NvBool bGfxRequested,
+    NvBool bInitProfile
 )
 {
     NV_RANGE ctsRange = kmigmgrComputeProfileSizeToCTSIdRange(profileSize);
@@ -9010,15 +9047,23 @@ kmigmgrGetFreeCTSId_IMPL
     }
     else
     {
-        // Determine which available CTS ids will reduce the remaining capacity the least
         maxRemainingCapacity = 0;
         idealCTSId = portUtilCountTrailingZeros64(validMask);
         FOR_EACH_INDEX_IN_MASK(64, ctsId, validMask)
         {
             NvU64 invalidMask;
+            NvU32 remainingCapacity;
             NV_ASSERT_OK(kmigmgrGetInvalidCTSIdMask(pGpu, pKernelMIGManager, ctsId, &invalidMask));
 
-            NvU32 remainingCapacity = nvPopCount64(shadowValidCTSIdMask & ~invalidMask);
+            //
+            // If called during profile generation, select the CTS ID with the most capacity,
+            // since it represents the actual capacity and will be used to compute subsequent profiles
+            // Otherwise, select the CTS ID that will reduce the remaining capacity the least
+            //
+            if (bInitProfile)
+                remainingCapacity = nvPopCount64(shadowValidCTSIdMask & invalidMask);
+            else
+                remainingCapacity = nvPopCount64(shadowValidCTSIdMask & ~invalidMask);
 
             if (remainingCapacity > maxRemainingCapacity)
             {
@@ -9562,6 +9607,7 @@ kmigmgrRestoreFromBootConfig_PF
         createParams.execPartInfo[0].nvJpgCount     = bootConfig.CIs[CIIdx].nvJpgCount;
         createParams.execPartInfo[0].ofaCount       = bootConfig.CIs[CIIdx].ofaCount;
         createParams.execPartInfo[0].spanStart      = bootConfig.CIs[CIIdx].spanStart;
+        createParams.execPartInfo[0].execPartFlags  = 0x0U;
         createParams.execPartInfo[0].sharedEngFlag  = NVC637_CTRL_EXEC_PARTITIONS_SHARED_FLAG_CE    |
                                                       NVC637_CTRL_EXEC_PARTITIONS_SHARED_FLAG_NVDEC |
                                                       NVC637_CTRL_EXEC_PARTITIONS_SHARED_FLAG_NVENC |

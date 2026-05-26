@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2014-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2014-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -94,6 +94,9 @@ typedef struct UvmGpuMemoryInfo_tag
     // Out: Set to TRUE, if this allocation is treated as EGM.
     //      sysmem is also TRUE when egm is TRUE.
     NvBool egm;
+
+    // Out: Set to TRUE, if this allocation is treated as fabricmem.
+    NvBool fabricmem;
 
     // Out: Set to TRUE, if the allocation is a constructed
     //      under a Device or Subdevice.
@@ -394,6 +397,7 @@ typedef enum
     UVM_LINK_TYPE_NVLINK_3,
     UVM_LINK_TYPE_NVLINK_4,
     UVM_LINK_TYPE_NVLINK_5,
+    UVM_LINK_TYPE_NVLINK_6,
     UVM_LINK_TYPE_C2C,
 } UVM_LINK_TYPE;
 
@@ -564,6 +568,13 @@ typedef struct UvmPlatformInfo_tag
     // also enabled in the GPU(s); these two security features are either both
     // enabled, or both disabled.
     NvBool confComputingEnabled;
+
+    // Out: True if Coherent Driver-based Memory Management (CDMM) is enabled on
+    // the system. This implies that the per-GPU cdmmEnabled property will also
+    // be true for every coherent GPU in the system.
+    // TODO: Remove the per-GPU property and RM control once UVM has cleaned up
+    // and removed it's usage of it.
+    NvBool cdmmEnabled;
 } UvmPlatformInfo;
 
 typedef struct UvmGpuClientInfo_tag
@@ -1025,13 +1036,6 @@ typedef struct UvmGpuAccessCntrConfig_tag
     NvU32 granularity;
     NvU32 threshold;
 } UvmGpuAccessCntrConfig;
-
-typedef enum
-{
-    UVM_ACCESS_BITS_DUMP_MODE_AGGREGATE = 0,
-    UVM_ACCESS_BITS_DUMP_MODE_DIFF = 1,
-    UVM_ACCESS_BITS_DUMP_MODE_CURRENT = 2,
-} UVM_ACCESS_BITS_DUMP_MODE;
 
 typedef struct UvmGpuAccessBitsBufferAlloc_tag
 {

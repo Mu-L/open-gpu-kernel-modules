@@ -23,6 +23,7 @@
 
 #include "nvidia-3d-types-priv.h"
 #include "nvidia-3d-fermi.h"
+#include "nvidia-3d-turing.h"
 #include "nvidia-3d.h"
 #include "nvidia-3d-imports.h"
 #include "nvidia-3d-constant-buffers.h"
@@ -32,6 +33,8 @@
 
 #include <class/cl9097.h>
 #include <class/cla06fsubch.h>
+#include <class/cla097.h>
+#include <class/clc397.h>
 
 #include <xz.h>
 
@@ -154,7 +157,6 @@ static NvBool UploadPrograms(Nv3dChannelPtr p3dChannel, const void *programCode)
 NvBool nv3dInitChannel(Nv3dChannelPtr p3dChannel)
 {
     NvPushChannelPtr p = p3dChannel->pPushChannel;
-    const Nv3dDeviceCapsRec *pCaps = &p3dChannel->p3dDevice->caps;
     const Nv3dHal *pHal = p3dChannel->p3dDevice->hal;
     const NvU64 tex0GpuAddress = nv3dGetTextureGpuAddress(p3dChannel, 0);
     NvU64 gpuAddress;
@@ -232,8 +234,8 @@ NvBool nv3dInitChannel(Nv3dChannelPtr p3dChannel)
     for (i = 0; i < 16; i++) {
         nvPushMethod(p, NVA06F_SUBCHANNEL_3D,
             NV9097_SET_VIEWPORT_CLIP_HORIZONTAL(i), 2);
-        nvPushSetMethodData(p, pCaps->maxDim << 16);
-        nvPushSetMethodData(p, pCaps->maxDim << 16);
+        nvPushSetMethodData(p, NV3D_MAX_RENDER_DIMENSIONS << 16);
+        nvPushSetMethodData(p, NV3D_MAX_RENDER_DIMENSIONS << 16);
     }
 
     nvPushImmed(p, NVA06F_SUBCHANNEL_3D, NV9097_SET_PROVOKING_VERTEX, LAST);
@@ -263,11 +265,11 @@ NvBool nv3dInitChannel(Nv3dChannelPtr p3dChannel)
     // is no space in BAR1 for the mapping), then fall back to uploading inline
     // through the pushbuffer.
     if (!UploadPrograms(p3dChannel, programCode)) {
-        pHal->uploadDataInline(p3dChannel,
-                               nv3dGetProgramGpuAddress(p3dChannel),
-                               0,
-                               programCode,
-                               p3dChannel->programs.code.decompressedSize);
+        _nv3dUploadDataInlineTuring(p3dChannel,
+                                    nv3dGetProgramGpuAddress(p3dChannel),
+                                    0,
+                                    programCode,
+                                    p3dChannel->programs.code.decompressedSize);
     }
 
     nv3dImportFree(programCode);
@@ -277,11 +279,11 @@ NvBool nv3dInitChannel(Nv3dChannelPtr p3dChannel)
         const Nv3dShaderConstBufInfo *pInfo =
             &p3dChannel->programs.constants.info[i];
 
-        pHal->uploadDataInline(p3dChannel,
-                               nv3dGetProgramConstantsGpuAddress(p3dChannel),
-                               pInfo->offset,
-                               pInfo->data,
-                               pInfo->size);
+        _nv3dUploadDataInlineTuring(p3dChannel,
+                                    nv3dGetProgramConstantsGpuAddress(p3dChannel),
+                                    pInfo->offset,
+                                    pInfo->data,
+                                    pInfo->size);
     }
 
     nvPushMethod(p, NVA06F_SUBCHANNEL_3D, NV9097_INVALIDATE_SHADER_CACHES, 1);
@@ -315,7 +317,15 @@ NvBool nv3dInitChannel(Nv3dChannelPtr p3dChannel)
         NV3D_C(9097, SET_ZCULL_BOUNDS, Z_MIN_UNBOUNDED_ENABLE, FALSE) |
         NV3D_C(9097, SET_ZCULL_BOUNDS, Z_MAX_UNBOUNDED_ENABLE, FALSE));
 
-    pHal->setSpaVersion(p3dChannel);
+    // Tell AModel or fmodel what shader model version to use.  This has no
+    // effect on real hardware.  The SM version (the "hardware revision" of the
+    // SM block) does not always match the SPA version (the ISA version).
+    nvPushMethod(p, NVA06F_SUBCHANNEL_3D, NVA097_SET_SPA_VERSION, 1);
+    nvPushSetMethodData(p,
+        NV3D_V(A097, SET_SPA_VERSION, MAJOR,
+            p3dChannel->p3dDevice->spaVersion.major) |
+        NV3D_V(A097, SET_SPA_VERSION, MINOR,
+            p3dChannel->p3dDevice->spaVersion.minor));
 
     pHal->initChannel(p3dChannel);
 
@@ -328,7 +338,6 @@ void nv3dLoadProgram(
     Nv3dChannelRec *p3dChannel,
     int programIndex)
 {
-    const Nv3dHal *pHal = p3dChannel->p3dDevice->hal;
     const Nv3dProgramInfo *pgm = &p3dChannel->programs.info[programIndex];
     NvPushChannelPtr p = p3dChannel->pPushChannel;
 
@@ -347,7 +356,10 @@ void nv3dLoadProgram(
         NV3D_C(9097, SET_PIPELINE_SHADER, ENABLE, TRUE) |
         NV3D_V(9097, SET_PIPELINE_SHADER, TYPE, pgm->type));
 
-    pHal->setProgramOffset(p3dChannel, pgm->stage, pgm->offset);
+    nvPushMethod(p, NVA06F_SUBCHANNEL_3D,
+        NVC397_SET_PIPELINE_PROGRAM_ADDRESS_A(pgm->stage), 2);
+    nvPushSetMethodDataU64(p,
+        nv3dGetProgramGpuAddress(p3dChannel) + pgm->offset);
 
     nvPushMethod(p, NVA06F_SUBCHANNEL_3D,
         NV9097_SET_PIPELINE_REGISTER_COUNT(pgm->stage), 2);

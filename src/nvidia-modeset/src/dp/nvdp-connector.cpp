@@ -180,25 +180,25 @@ static DisplayPort::Group* CreateGroup(
 }
 
 static NvU32 GetColorDepth(
-    const enum NvKmsDpyAttributeCurrentColorSpaceValue colorSpace,
+    const enum NvKmsDpyAttributeCurrentColorFormatValue colorFormat,
     const enum NvKmsDpyAttributeColorBpcValue colorBpc)
 {
-    switch (colorSpace) {
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr420:
+    switch (colorFormat) {
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr420:
             /*
-             * In YUV420, HW is programmed with RGB color space and full color
+             * In YUV420, HW is programmed with RGB color format and full color
              * range.  The color space conversion and color range compression
              * happen in a headSurface composite shader.
              */
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr444:
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_RGB:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr444:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_RGB:
             /*
              * For RGB/YCbCr444, each pixel is always 3 components.  For
              * YCbCr/YUV420, we currently always scan out from the headSurface
              * as RGB.
              */
             return colorBpc * 3;
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr422:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr422:
             return colorBpc * 2;
     }
 
@@ -217,13 +217,12 @@ static void SetDPMSATiming(const NVDispEvoRec *pDispEvo,
     nvkms_memset(msaParams, 0, sizeof(*msaParams));
 
     /*
-     * Fill in displayId and subDeviceInstance unconditionally.
+     * Fill in displayId unconditionally.
      * From CL#27980662, dplib started passing the client provided displayId
      * to RM for setting MSA properties.
      * Default value of displayId is 0, leading to RMControl failure in
      * the displayport library.
      */
-    msaParams->subDeviceInstance = pDispEvo->displayOwner;
     msaParams->displayId = displayId;
 
     if ((displayId == 0x0) ||
@@ -261,7 +260,7 @@ static void InitDpModesetParams(
     const NvU32 head,
     const NvU32 displayId,
     const NVHwModeTimingsEvo *pTimings,
-    const enum NvKmsDpyAttributeCurrentColorSpaceValue colorSpace,
+    const enum NvKmsDpyAttributeCurrentColorFormatValue colorFormat,
     const enum NvKmsDpyAttributeColorBpcValue colorBpc,
     DisplayPort::DpModesetParams *pParams)
 {
@@ -274,24 +273,24 @@ static void InitDpModesetParams(
     pParams->modesetInfo.surfaceHeight = nvEvoVisibleHeight(pTimings);
 
     pParams->modesetInfo.depth =
-        GetColorDepth(colorSpace, colorBpc);
+        GetColorDepth(colorFormat, colorBpc);
     pParams->modesetInfo.bitsPerComponent = colorBpc;
 
     pParams->colorFormat = dpColorFormat_Unknown;
-    switch (colorSpace) {
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr420:
+    switch (colorFormat) {
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr420:
             /* HW YUV420 mode is only supported for HDMI, not DP */
             nvAssert(pTimings->yuv420Mode == NV_YUV420_MODE_SW);
             pParams->modesetInfo.pixelClockHz *= 2;
             pParams->colorFormat = dpColorFormat_YCbCr420;
             break;
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr444:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr444:
             pParams->colorFormat = dpColorFormat_YCbCr444;
             break;
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr422:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr422:
             pParams->colorFormat = dpColorFormat_YCbCr422;
             break;
-        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_RGB:
+        case NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_RGB:
             pParams->colorFormat = dpColorFormat_RGB;
             break;
     }
@@ -306,7 +305,7 @@ NVDPLibModesetStatePtr nvDPLibCreateModesetState(
     const NvU32 head,
     const NvU32 displayId,
     const NVDpyIdList dpyIdList,
-    const enum NvKmsDpyAttributeCurrentColorSpaceValue colorSpace,
+    const enum NvKmsDpyAttributeCurrentColorFormatValue colorFormat,
     const enum NvKmsDpyAttributeColorBpcValue colorBpc,
     const NVHwModeTimingsEvo *pTimings,
     const NVDscInfoEvoRec *pDscInfo)
@@ -341,7 +340,7 @@ NVDPLibModesetStatePtr nvDPLibCreateModesetState(
                         head,
                         displayId,
                         pTimings,
-                        colorSpace,
+                        colorFormat,
                         colorBpc,
                         &pDpLibModesetState->modesetParams);
     if (pDscInfo->type == NV_DSC_INFO_EVO_TYPE_DP) {
@@ -405,7 +404,7 @@ static NvBool ConstructDpLibIsModesetPossibleParamsOneHead(
     const NvU32 head,
     const NvU32 displayId,
     const NVDpyIdList dpyIdList,
-    const enum NvKmsDpyAttributeCurrentColorSpaceValue colorSpace,
+    const enum NvKmsDpyAttributeCurrentColorFormatValue colorFormat,
     const enum NvKmsDpyAttributeColorBpcValue colorBpc,
     const struct NvKmsModeValidationParams *pModeValidationParams,
     const NVHwModeTimingsEvo *pTimings,
@@ -460,7 +459,7 @@ static NvBool ConstructDpLibIsModesetPossibleParamsOneHead(
                         head,
                         displayId,
                         pTimings,
-                        colorSpace,
+                        colorFormat,
                         colorBpc,
                         pParams->head[head].pModesetParams);
 
@@ -619,7 +618,7 @@ NvBool nvDPLibIsModePossible(const NVDPLibConnectorRec *pDpLibConnector,
                 head,
                 pParams->head[head].displayId,
                 pParams->head[head].dpyIdList,
-                pParams->head[head].colorSpace,
+                pParams->head[head].colorFormat,
                 pParams->head[head].colorBpc,
                 pParams->head[head].pModeValidationParams,
                 pParams->head[head].pTimings,
@@ -743,7 +742,7 @@ NvBool nvDPValidateModeForDpyEvo(
 
     pParams->head[head].displayId = 0;
     pParams->head[head].dpyIdList = nvAddDpyIdToEmptyDpyIdList(pDpyEvo->id);
-    pParams->head[head].colorSpace = pDpyColor->format;
+    pParams->head[head].colorFormat = pDpyColor->format;
     pParams->head[head].colorBpc = pDpyColor->bpc;
     pParams->head[head].pModeValidationParams = pModeValidationParams;
     pParams->head[head].pTimings = pTimings;
@@ -931,7 +930,6 @@ void nvDPPause(NVDPLibConnectorPtr pNVDpLibConnector)
 
         NV0073_CTRL_CMD_DP_CONFIG_RAD_SCRATCH_REG_PARAMS params = {0};
 
-        params.subDeviceInstance = pDispEvo->displayOwner;
         params.displayId = nvDpyIdToNvU32(pConnectorEvo->displayId);
 
         nvAssert(pConnectorEvo->or.protocol ==

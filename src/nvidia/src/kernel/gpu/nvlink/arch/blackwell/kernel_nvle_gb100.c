@@ -34,8 +34,6 @@
 #include "nvlink_inband_msg.h"
 #include "nvrm_registry.h"
 
-ct_assert(NV2080_CTRL_NVLINK_MAX_REMAP_TABLE_ENTRIES == NVLINK_NVLE_MAX_REMAP_TABLE_ENTRIES);
-
 /*!
  * Gets the alid of the GPU, and gets the alids and updates the clids in the remap table
  *
@@ -58,8 +56,9 @@ knvlinkEncryptionGetUpdateGpuIdentifiers_GB100
     {
         OBJSYS    *pSys    = SYS_GET_INSTANCE();
         OBJGPUMGR *pGpuMgr = SYS_GET_GPUMGR(pSys);
+        NvU32      clid;
 
-        NV2080_CTRL_NVLINK_GET_UPDATE_NVLE_LIDS_PARAMS lidParams;
+        NV2080_CTRL_NVLINK_GET_UPDATE_NVLE_LIDS_V2_PARAMS lidParams;
         GPU_FABRIC_PROBE_INFO_KERNEL *pGpuFabricProbeInfoKernel = pGpu->pGpuFabricProbeInfoKernel;
 
         if (pGpuFabricProbeInfoKernel == NULL)
@@ -81,42 +80,67 @@ knvlinkEncryptionGetUpdateGpuIdentifiers_GB100
         {
             NV_CHECK_OK_OR_RETURN(LEVEL_ERROR,
                                   knvlinkExecGspRmRpc(pGpu, pKernelNvlink,
-                                                      NV2080_CTRL_NVLINK_GET_UPDATE_NVLE_LIDS,
+                                                      NV2080_CTRL_NVLINK_GET_UPDATE_NVLE_LIDS_V2,
                                                       (void *)&lidParams, sizeof(lidParams)));
 
-            // Cache the ALID, CLID for the GPU
+            // Cache the ALID, CLID for the GPU and the ALID-CLID mappings into GPUMGR
             pKernelNvlink->alid         = lidParams.alid;
             pKernelNvlink->clid         = lidParams.clid;
             pKernelNvlink->bClidUpdated = lidParams.bClidUpdated;
 
-            // Check if the ALID is present in the ALID-CLID map
-            if (!gpuMgrIsNvleAlidPresent(pGpuMgr, pKernelNvlink->alid))
+            if (!pKernelNvlink->bClidUpdated)
             {
-                NV_CHECK_OR_RETURN(LEVEL_ERROR,
-                    (gpuMgrCacheNvleAlidClid(pGpuMgr, pKernelNvlink->alid, pKernelNvlink->clid) == NV_TRUE),
-                    NV_ERR_INVALID_STATE);
+                //
+                // Multi-node setup:
+                // We should never reach here on multi-node setups where NVLE LIDs get and update are first
+                // triggered by direct NV2080_CTRL_NVLINK_GET_UPDATE_NVLE_LIDS calls. Subsequently, if this
+                // function gets called, CLIDs would have been updated and bClidUpdated should be true.
+                //
+                // Single-node setup:
+                // On single node setups, however, GPUMGR acts as a temporary storage for the ALID-CLID map
+                // while the map is being constructed and it finally gets copied over to each GPU's Kernel
+                // Nvlink object after the CLIDs are updated.
+                //
+                if (!gpuMgrIsNvleAlidPresent(pGpuMgr, pKernelNvlink->alid, &clid))
+                {
+                    NV_CHECK_OR_RETURN(LEVEL_ERROR,
+                        (gpuMgrCacheNvleAlidClid(pGpuMgr, pKernelNvlink->alid, pKernelNvlink->clid) == NV_TRUE),
+                        NV_ERR_INVALID_STATE);
+                }
             }
         }
         else
         {
-            NvU32 idx;
-
-            // Construct the lidList with CLIDs for updating the LID fields. Initialize all entries to invalid
-            for (idx = 0; idx < pGpuMgr->alidClidTable.numEntries; idx++)
-            {
-                lidParams.alidClidTable.alidClidMap[idx].alid = pGpuMgr->alidClidTable.alidClidMap[idx].alid;
-                lidParams.alidClidTable.alidClidMap[idx].clid = pGpuMgr->alidClidTable.alidClidMap[idx].clid;
-                lidParams.alidClidTable.numEntries++;
-            }
+            //
+            // Construct the lidList with CLIDs for updating the LID fields. Initialize all entries to invalid.
+            // Note: This path is taken only on single node setups. On multi-node setups, the ALID-CLID map is
+            // passed in through direct calls to NV2080_CTRL_NVLINK_GET_UPDATE_NVLE_LIDS from client.
+            //
+            lidParams.alidClidTable.numEntries = NV2080_CTRL_NVLINK_MAX_ALID_CLID_TABLE_ENTRIES;
+            portMemCopy(lidParams.alidClidTable.alidClidMap,
+                        NV2080_CTRL_NVLINK_MAX_ALID_CLID_TABLE_ENTRIES * sizeof(ALID_CLID_MAP),
+                        pGpuMgr->alidClidTable.alidClidMap,
+                        NV2080_CTRL_NVLINK_MAX_ALID_CLID_TABLE_ENTRIES * sizeof(ALID_CLID_MAP));
 
             NV_CHECK_OK_OR_RETURN(LEVEL_ERROR,
                                   knvlinkExecGspRmRpc(pGpu, pKernelNvlink,
-                                                      NV2080_CTRL_NVLINK_GET_UPDATE_NVLE_LIDS,
+                                                      NV2080_CTRL_NVLINK_GET_UPDATE_NVLE_LIDS_V2,
                                                       (void *)&lidParams, sizeof(lidParams)));
-            // Cache the ALID, CLID for the GPU
+
+            // Cache the ALID, CLID for the GPU and the ALID-CLID mappings into KernelNvlink
             pKernelNvlink->alid         = lidParams.alid;
             pKernelNvlink->clid         = lidParams.clid;
             pKernelNvlink->bClidUpdated = lidParams.bClidUpdated;
+        }
+
+        if (pKernelNvlink->bClidUpdated)
+        {
+            // CLIDs are updated for this GPU's remap table. Copy the ALID-CLID map to KernelNvlink
+            pKernelNvlink->alidClidTable.numEntries = pGpuMgr->alidClidTable.numEntries;
+            portMemCopy(pKernelNvlink->alidClidTable.alidClidMap,
+                        NVLINK_NVLE_MAX_ALID_CLID_TABLE_ENTRIES * sizeof(ALID_CLID_MAP),
+                        pGpuMgr->alidClidTable.alidClidMap,
+                        NVLINK_NVLE_MAX_ALID_CLID_TABLE_ENTRIES * sizeof(ALID_CLID_MAP));
         }
     }
     else // Direct connect system

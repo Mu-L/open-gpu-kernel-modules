@@ -32,12 +32,13 @@
 #include "nvrm_registry.h"
 #include "class/cl00de.h"
 #include "class/cl003e.h" // NV01_MEMORY_SYSTEM
-#include "class/cl00de.h"
 #include "ctrl/ctrl2080/ctrl2080gpu.h"
 #include "gpu_mgr/gpu_db.h"
 #include "gpu_mgr/gpu_mgr.h"
 #include "core/locks.h"
 #include "nvctassert.h"
+#include "gpu/conf_compute/conf_compute.h"
+
 
 #include "gpu/mig_mgr/kernel_mig_manager.h"
 
@@ -57,13 +58,27 @@ _rusdSupported
     OBJGPU *pGpu
 )
 {
+    NvBool bCCFeatureEnabled = NV_FALSE;
+    NvBool bTdispGpuTrusted = NV_FALSE;
+
+    ConfidentialCompute *pCC = GPU_GET_CONF_COMPUTE(pGpu);
+    if (pCC != NULL)
+    {
+        bCCFeatureEnabled = pCC->getProperty(pCC, PDB_PROP_CONFCOMPUTE_ENABLED);
+    }
 
     if (IS_VIRTUAL(pGpu))
         return NV_FALSE;
 
-    // RUSD is not yet supported when CPU CC is enabled. See bug 4148522.
-    if ((sysGetStaticConfig(SYS_GET_INSTANCE()))->bOsCCEnabled)
+    //
+    // RUSD is not yet supported when CPU CC is enabled (see bug 4148522, 5651236),
+    // but it is supported with TDISP CC.
+    //
+    if (((sysGetStaticConfig(SYS_GET_INSTANCE()))->bOsCCEnabled || bCCFeatureEnabled)
+        && (!bTdispGpuTrusted))
+    {
         return NV_FALSE;
+    }
 
     return NV_TRUE;
 }
@@ -215,7 +230,7 @@ NV00DE_SHARED_DATA * gpushareddataWriteStart_INTERNAL(OBJGPU *pGpu, NvU64 offset
     {
         pSharedData = &pGpu->userSharedData.data;
     }
-    
+
     _gpushareddataUpdateSeqOpen((PORT_ATOMIC NvU64*)(((NvU8*)pSharedData) + offset));
 
     return pSharedData;
@@ -377,10 +392,24 @@ gpuCreateRusdMemory_IMPL
 {
     NV_STATUS            status   = NV_OK;
     MEMORY_DESCRIPTOR  **ppMemDesc = &(pGpu->userSharedData.pMemDesc);
+    NvBool               bCCFeatureEnabled = NV_FALSE;
+    NvBool               bTdispGpuTrusted = NV_FALSE;
 
-    // RUSD is not yet supported when CPU CC is enabled. See bug 4148522.
-    if ((sysGetStaticConfig(SYS_GET_INSTANCE()))->bOsCCEnabled)
+    ConfidentialCompute *pCC = GPU_GET_CONF_COMPUTE(pGpu);
+    if (pCC != NULL)
+    {
+        bCCFeatureEnabled = pCC->getProperty(pCC, PDB_PROP_CONFCOMPUTE_ENABLED);
+    }
+
+    //
+    // RUSD is not yet supported when CPU CC is enabled (see bug 4148522, 5651236),
+    // but it is supported with TDISP CC when the GPU is trusted.
+    //
+    if (((sysGetStaticConfig(SYS_GET_INSTANCE()))->bOsCCEnabled || bCCFeatureEnabled)
+        && (!bTdispGpuTrusted))
+    {
         return NV_OK;
+    }
 
     ct_assert(NV00DE_RUSD_POLLING_INTERVAL_MIN == NV_REG_STR_RM_RUSD_POLLING_INTERVAL_MIN);
 

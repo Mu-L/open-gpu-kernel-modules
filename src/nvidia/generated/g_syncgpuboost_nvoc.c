@@ -31,7 +31,7 @@ void __nvoc_init__SyncGpuBoost(SyncGpuBoost*);
 void __nvoc_init_funcTable_SyncGpuBoost(SyncGpuBoost*);
 NV_STATUS __nvoc_ctor_SyncGpuBoost(SyncGpuBoost*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_SyncGpuBoost(SyncGpuBoost*);
-void __nvoc_dtor_SyncGpuBoost(SyncGpuBoost*);
+void __nvoc_dtor_SyncGpuBoost(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__SyncGpuBoost;
@@ -89,7 +89,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_SyncGpuBoost =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "SyncGpuBoost",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_SyncGpuBoost,
+    .objCreatefn =        &__nvoc_objCreateDynamic_SyncGpuBoost,
     .pCastInfo =          &__nvoc_castinfo__SyncGpuBoost,
     .pExportInfo =        &__nvoc_export_info__SyncGpuBoost
 };
@@ -98,7 +98,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_SyncGpuBoost =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__SyncGpuBoost __nvoc_metadata__SyncGpuBoost = {
     .rtti.pClassDef = &__nvoc_class_def_SyncGpuBoost,    // (syncgpuboost) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_SyncGpuBoost,
+    .rtti.dtor      = &__nvoc_dtor_SyncGpuBoost,
     .rtti.offset    = 0,
     .metadata__RmResource.rtti.pClassDef = &__nvoc_class_def_RmResource,    // (rmres) super
     .metadata__RmResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -305,16 +305,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__SyncGpuBoost =
 
 // Destruct SyncGpuBoost object.
 void __nvoc_syncgpuboostDestruct(SyncGpuBoost*);
-void __nvoc_dtor_RmResource(RmResource*);
-void __nvoc_dtor_SyncGpuBoost(SyncGpuBoost* pThis) {
+void __nvoc_dtor_RmResource(Dynamic*);
+void __nvoc_dtor_SyncGpuBoost(Dynamic* pThis) {
+
+    SyncGpuBoost *__nvoc_this = (SyncGpuBoost *) pThis;
 
 // Call destructor.
-    __nvoc_syncgpuboostDestruct(pThis);
+    __nvoc_syncgpuboostDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RmResource(&pThis->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *) &__nvoc_this->__nvoc_base_RmResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_SyncGpuBoost(SyncGpuBoost *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -340,7 +342,7 @@ NV_STATUS __nvoc_ctor_SyncGpuBoost(SyncGpuBoost *pResource, struct CALL_CONTEXT 
 
     // Unwind on error.
 __nvoc_ctor_SyncGpuBoost_fail__init:
-    __nvoc_dtor_RmResource(&pResource->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *)&pResource->__nvoc_base_RmResource);
 __nvoc_ctor_SyncGpuBoost_fail_RmResource:
 __nvoc_ctor_SyncGpuBoost_exit:
     return status;
@@ -450,13 +452,10 @@ __nvoc_objCreate_SyncGpuBoost_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_SyncGpuBoost(SyncGpuBoost **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_SyncGpuBoost(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_SyncGpuBoost(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_SyncGpuBoost((SyncGpuBoost **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

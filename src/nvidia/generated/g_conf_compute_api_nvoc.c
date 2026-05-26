@@ -31,7 +31,7 @@ void __nvoc_init__ConfidentialComputeApi(ConfidentialComputeApi*);
 void __nvoc_init_funcTable_ConfidentialComputeApi(ConfidentialComputeApi*);
 NV_STATUS __nvoc_ctor_ConfidentialComputeApi(ConfidentialComputeApi*, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_ConfidentialComputeApi(ConfidentialComputeApi*);
-void __nvoc_dtor_ConfidentialComputeApi(ConfidentialComputeApi*);
+void __nvoc_dtor_ConfidentialComputeApi(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__ConfidentialComputeApi;
@@ -89,7 +89,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ConfidentialComputeApi =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "ConfidentialComputeApi",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_ConfidentialComputeApi,
+    .objCreatefn =        &__nvoc_objCreateDynamic_ConfidentialComputeApi,
     .pCastInfo =          &__nvoc_castinfo__ConfidentialComputeApi,
     .pExportInfo =        &__nvoc_export_info__ConfidentialComputeApi
 };
@@ -99,6 +99,73 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ConfidentialComputeApi =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS confComputeApiCtrlCmdSystemGetCapabilities__EXPORT(void *pConfComputeApi, void *pParams) {
+    return confComputeApiCtrlCmdSystemGetCapabilities_IMPL(pConfComputeApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS confComputeApiCtrlCmdSystemGetGpusState__EXPORT(void *pConfComputeApi, void *pParams) {
+    return confComputeApiCtrlCmdSystemGetGpusState_IMPL(pConfComputeApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+static NV_STATUS confComputeApiCtrlCmdSystemSetGpusState__EXPORT(void *pConfComputeApi, void *pParams) {
+    return confComputeApiCtrlCmdSystemSetGpusState_IMPL(pConfComputeApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS confComputeApiCtrlCmdGpuGetVidmemSize__EXPORT(void *pConfComputeApi, void *pParams) {
+    return confComputeApiCtrlCmdGpuGetVidmemSize_IMPL(pConfComputeApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+static NV_STATUS confComputeApiCtrlCmdGpuSetVidmemSize__EXPORT(void *pConfComputeApi, void *pParams) {
+    return confComputeApiCtrlCmdGpuSetVidmemSize_IMPL(pConfComputeApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS confComputeApiCtrlCmdGetGpuCertificate__EXPORT(void *pConfComputeApi, void *pParams) {
+    return confComputeApiCtrlCmdGetGpuCertificate_IMPL(pConfComputeApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS confComputeApiCtrlCmdGetGpuAttestationReport__EXPORT(void *pConfComputeApi, void *pParams) {
+    return confComputeApiCtrlCmdGetGpuAttestationReport_IMPL(pConfComputeApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS confComputeApiCtrlCmdGpuGetNumSecureChannels__EXPORT(void *pConfComputeApi, void *pParams) {
+    return confComputeApiCtrlCmdGpuGetNumSecureChannels_IMPL(pConfComputeApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS confComputeApiCtrlCmdSystemGetSecurityPolicy__EXPORT(void *pConfComputeApi, void *pParams) {
+    return confComputeApiCtrlCmdSystemGetSecurityPolicy_IMPL(pConfComputeApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+static NV_STATUS confComputeApiCtrlCmdSystemSetSecurityPolicy__EXPORT(void *pConfComputeApi, void *pParams) {
+    return confComputeApiCtrlCmdSystemSetSecurityPolicy_IMPL(pConfComputeApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS confComputeApiCtrlCmdGpuGetKeyRotationState__EXPORT(void *pConfComputeApi, void *pParams) {
+    return confComputeApiCtrlCmdGpuGetKeyRotationState_IMPL(pConfComputeApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ConfidentialComputeApi[] = 
 {
@@ -106,7 +173,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Confiden
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdSystemSetSecurityPolicy_IMPL,
+        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdSystemSetSecurityPolicy__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*flags=*/      0x4u,
         /*accessRight=*/0x0u,
@@ -121,7 +188,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Confiden
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdSystemGetSecurityPolicy_IMPL,
+        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdSystemGetSecurityPolicy__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -136,7 +203,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Confiden
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdSystemGetCapabilities_IMPL,
+        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdSystemGetCapabilities__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -151,7 +218,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Confiden
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdSystemGetGpusState_IMPL,
+        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdSystemGetGpusState__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -166,7 +233,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Confiden
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdSystemSetGpusState_IMPL,
+        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdSystemSetGpusState__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*flags=*/      0x4u,
         /*accessRight=*/0x0u,
@@ -181,7 +248,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Confiden
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdGpuGetVidmemSize_IMPL,
+        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdGpuGetVidmemSize__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -196,7 +263,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Confiden
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdGpuSetVidmemSize_IMPL,
+        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdGpuSetVidmemSize__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*flags=*/      0x4u,
         /*accessRight=*/0x0u,
@@ -211,7 +278,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Confiden
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdGetGpuCertificate_IMPL,
+        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdGetGpuCertificate__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -226,7 +293,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Confiden
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdGetGpuAttestationReport_IMPL,
+        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdGetGpuAttestationReport__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -241,7 +308,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Confiden
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdGpuGetNumSecureChannels_IMPL,
+        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdGpuGetNumSecureChannels__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -256,7 +323,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Confiden
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdGpuGetKeyRotationState_IMPL,
+        /*pFunc=*/      (void (*)(void)) &confComputeApiCtrlCmdGpuGetKeyRotationState__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -273,7 +340,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_Confiden
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__ConfidentialComputeApi __nvoc_metadata__ConfidentialComputeApi = {
     .rtti.pClassDef = &__nvoc_class_def_ConfidentialComputeApi,    // (confComputeApi) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_ConfidentialComputeApi,
+    .rtti.dtor      = &__nvoc_dtor_ConfidentialComputeApi,
     .rtti.offset    = 0,
     .metadata__RmResource.rtti.pClassDef = &__nvoc_class_def_RmResource,    // (rmres) super
     .metadata__RmResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -480,16 +547,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__ConfidentialComputeApi =
 
 // Destruct ConfidentialComputeApi object.
 void __nvoc_confComputeApiDestruct(ConfidentialComputeApi*);
-void __nvoc_dtor_RmResource(RmResource*);
-void __nvoc_dtor_ConfidentialComputeApi(ConfidentialComputeApi* pThis) {
+void __nvoc_dtor_RmResource(Dynamic*);
+void __nvoc_dtor_ConfidentialComputeApi(Dynamic* pThis) {
+
+    ConfidentialComputeApi *__nvoc_this = (ConfidentialComputeApi *) pThis;
 
 // Call destructor.
-    __nvoc_confComputeApiDestruct(pThis);
+    __nvoc_confComputeApiDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RmResource(&pThis->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *) &__nvoc_this->__nvoc_base_RmResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_ConfidentialComputeApi(ConfidentialComputeApi *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -515,7 +584,7 @@ NV_STATUS __nvoc_ctor_ConfidentialComputeApi(ConfidentialComputeApi *pConfComput
 
     // Unwind on error.
 __nvoc_ctor_ConfidentialComputeApi_fail__init:
-    __nvoc_dtor_RmResource(&pConfComputeApi->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *)&pConfComputeApi->__nvoc_base_RmResource);
 __nvoc_ctor_ConfidentialComputeApi_fail_RmResource:
 __nvoc_ctor_ConfidentialComputeApi_exit:
     return status;
@@ -625,13 +694,10 @@ __nvoc_objCreate_ConfidentialComputeApi_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_ConfidentialComputeApi(ConfidentialComputeApi **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_ConfidentialComputeApi(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_ConfidentialComputeApi(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_ConfidentialComputeApi((ConfidentialComputeApi **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

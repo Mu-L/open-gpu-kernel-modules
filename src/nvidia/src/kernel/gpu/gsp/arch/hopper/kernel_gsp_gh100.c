@@ -36,7 +36,6 @@
 #include "gpu/sec2/kernel_sec2.h"
 #include "gpu/mem_sys/kern_mem_sys.h"
 #include "gsp/gspifpub.h"
-#include "gsp/gsp_fmc_error_code_formatting.h"
 #include "vgpu/rpc.h"
 #include "os/os.h"
 
@@ -163,7 +162,10 @@ kgspAllocBootArgs_GH100
     NV_STATUS nvStatus = NV_OK;
     NvU64 flags = MEMDESC_FLAGS_NONE;
 
-    flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    if (confComputeForceUnprotAlloc(pGpu))
+    {
+        flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    }
 
     // Allocate GSP-FMC arguments
     NV_ASSERT_OK_OR_GOTO(nvStatus,
@@ -732,7 +734,7 @@ _kgspBootstrapGspFmc_GH100
 
     // CC needs additional "regkeys" stuffed in a separate mailbox for the init partition
     ConfidentialCompute *pConfCompute =  GPU_GET_CONF_COMPUTE(pGpu);
-    GPU_REG_WR32(pGpu, NV_PGSP_MAILBOX(0), pConfCompute->gspProxyRegkeys);
+    GPU_REG_WR32(pGpu, NV_PGSP_MAILBOX(NV_PGSP_MAILBOX_REGISTER_CC_REGKEYS), pConfCompute->gspProxyRegkeys);
 
     // Bootstrap the GSP-FMC by pointing the GSP's BootROM at it
     RM_RISCV_UCODE_DESC *pRiscvDesc = pKernelGsp->pGspRmBootUcodeDesc;
@@ -828,90 +830,6 @@ kgspPrepareForBootstrap_GH100
     return NV_OK;
 }
 
-void kgspFmcResetErrorCode_GH100
-(
-    OBJGPU *pGpu,
-    KernelGsp *pKernelGsp
-)
-{
-    GPU_REG_WR32(pGpu, NV_PBUS_SW_SCRATCH_GSP_FMC_ERROR, 0);
-}
-
-NvBool kgspFmcCheckForErrorCode_GH100
-(
-    OBJGPU *pGpu,
-    KernelGsp *pKernelGsp
-)
-{
-    NvU32 errorCode = GPU_REG_RD32(pGpu, NV_PBUS_SW_SCRATCH_GSP_FMC_ERROR);
-    if (errorCode == 0)
-    {
-        return NV_FALSE;
-    }
-    return NV_TRUE;
-}
-
-
-void kgspFmcReportErrorCode_GH100
-(
-    OBJGPU *pGpu,
-    KernelGsp *pKernelGsp
-)
-{
-    NvU32 errorCode = GPU_REG_RD32(pGpu, NV_PBUS_SW_SCRATCH_GSP_FMC_ERROR);
-    if (errorCode == 0)
-    {
-        return;
-    }
-
-    // Decode the formatted error code
-    NvU32 version = DRF_VAL(_PBUS, _SW_SCRATCH_GSP_FMC_ERROR, _VARIANT, errorCode);
-    NvU32 encodedPartitionID = DRF_VAL(_PBUS, _SW_SCRATCH_GSP_FMC_ERROR, _PARTITION, errorCode);
-
-    if (encodedPartitionID > GSP_FMC_ERROR_CODES_LATEST_IMPL_PART_ID)
-    {
-        return;
-    }
-
-    // Reverse the transformation to get the original partition ID
-    NvU32 partitionID = (encodedPartitionID - 1) & GSP_FMC_PARTITION_ID_MASK;
-
-    switch (version)
-    {
-        case GSP_FMC_ERROR_VARIANT_SK:
-        {
-            // Extract subdivided fields directly from the full error code.
-            NvU32 sk_phase = DRF_VAL(_PBUS, _SW_SCRATCH_GSP_FMC_ERROR, _SK_PHASE, errorCode);
-            NvU32 sk_error = DRF_VAL(_PBUS, _SW_SCRATCH_GSP_FMC_ERROR, _SK_ERROR, errorCode);
-
-            {
-            NV_PRINTF(LEVEL_ERROR,
-                      "Fatal GSP-FMC Error: SK error code =0x%x, phase 0x%x\n",
-                      sk_error, sk_phase);
-            }
-            break;
-        }
-        case GSP_FMC_ERROR_VARIANT_GENERIC:
-        {
-            NvU32 err  = DRF_VAL(_PBUS, _SW_SCRATCH_GSP_FMC_ERROR, _GENERIC_ERROR_CODE, errorCode);
-            NvU32 info = DRF_VAL(_PBUS, _SW_SCRATCH_GSP_FMC_ERROR, _GENERIC_ADDITIONAL_INFO, errorCode);
-
-            {
-                NV_PRINTF(LEVEL_ERROR,
-                          "Fatal GSP-FMC Error: version=0x%x, partition=0x%x, error code=0x%x, additional info=0x%x\n",
-                          version, partitionID, err, info);
-            }
-            break;
-        }
-        default:
-        {
-            NV_PRINTF(LEVEL_ERROR,
-                      "Fatal GSP-FMC Error: Unknown version (0x%x). Full error code: 0x%x\n",
-                      version, errorCode);
-            break;
-        }
-    }
-}
 /*!
  * Boot GSP-RM.
  *
@@ -946,7 +864,7 @@ kgspBootstrap_GH100
     NvU32         mailbox0;
 
     // Reset the GSP-FMC error code register to prevent reporting stale data
-    kgspFmcResetErrorCode_HAL(pGpu, pKernelGsp);
+    gpuResetGspFmcErrorCode_HAL(pGpu);
 
     //
     // Hopper+ GSP always boots in RISC-V mode. The GSP-FMC blocks RISCV_BCR_CTRL reads via PLM,
@@ -990,7 +908,7 @@ kgspBootstrap_GH100
                       "This error may be caused by several reasons: Bootrom may have failed, "
                       "GSP init code may have failed or ACR failed to release target mask. "
                       "RM does not have access to information on which of those conditions happened.\n");
-            kgspFmcReportErrorCode_HAL(pGpu, pKernelGsp);
+            gpuReportGspFmcErrorCode_HAL(pGpu);
             if (pKernelFsp->getProperty(pKernelFsp, PDB_PROP_KFSP_GSP_MODE_GSPRM))
             {
                 kfspDumpDebugState_HAL(pGpu, pKernelFsp);
@@ -1010,7 +928,7 @@ kgspBootstrap_GH100
                       "This error may be caused by several reasons: Bootrom may have failed, "
                       "GSP init code may have failed or ACR failed to release target mask. "
                       "RM does not have access to information on which of those conditions happened.\n");
-            kgspFmcReportErrorCode_HAL(pGpu, pKernelGsp);
+            gpuReportGspFmcErrorCode_HAL(pGpu);
             return status;
         }
     }
@@ -1053,7 +971,7 @@ kgspBootstrap_GH100
         NV_PRINTF(LEVEL_ERROR, "Timeout waiting for lockdown release. It's also "
                 "possible that bootrom may have failed. RM may not have access to "
                 "the BR status to be able to say for sure what failed.\n");
-        kgspFmcReportErrorCode_HAL(pGpu, pKernelGsp);
+        gpuReportGspFmcErrorCode_HAL(pGpu);
         if (pKernelFsp != NULL && pKernelFsp->getProperty(pKernelFsp, PDB_PROP_KFSP_GSP_MODE_GSPRM))
         {
             kfspDumpDebugState_HAL(pGpu, pKernelFsp);
@@ -1065,9 +983,9 @@ kgspBootstrap_GH100
                   kflcnRegRead_HAL(pGpu, pKernelFalcon, NV_PFALCON_FALCON_MAILBOX1));
         return status;
     }
-    else if (kgspFmcCheckForErrorCode_HAL(pGpu, pKernelGsp) == NV_TRUE)
+    else if (gpuCheckGspFmcErrorCode_HAL(pGpu))
     {
-        kgspFmcReportErrorCode_HAL(pGpu, pKernelGsp);
+        gpuReportGspFmcErrorCode_HAL(pGpu);
         return NV_ERR_NOT_READY;
     }
     else if ((mailbox0 = kflcnRegRead_HAL(pGpu, pKernelFalcon, NV_PFALCON_FALCON_MAILBOX0)) != 0)
@@ -1089,7 +1007,7 @@ kgspBootstrap_GH100
     else
     {
         NV_ASSERT_FAILED("Failed to boot GSP");
-        kgspFmcReportErrorCode_HAL(pGpu, pKernelGsp);
+        gpuReportGspFmcErrorCode_HAL(pGpu);
         return NV_ERR_NOT_READY;
     }
 

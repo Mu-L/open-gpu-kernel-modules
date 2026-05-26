@@ -35,7 +35,7 @@ void __nvoc_init__ChannelDescendant(ChannelDescendant*, RmHalspecOwner *pRmhalsp
 void __nvoc_init_funcTable_ChannelDescendant(ChannelDescendant*, RmHalspecOwner *pRmhalspecowner);
 NV_STATUS __nvoc_ctor_ChannelDescendant(ChannelDescendant*, RmHalspecOwner *pRmhalspecowner, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams, PARAM_TO_ENGDESC_FUNCTION *pParamToEngDescFn);
 void __nvoc_init_dataField_ChannelDescendant(ChannelDescendant*, RmHalspecOwner *pRmhalspecowner);
-void __nvoc_dtor_ChannelDescendant(ChannelDescendant*);
+void __nvoc_dtor_ChannelDescendant(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__ChannelDescendant;
@@ -128,7 +128,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ChannelDescendant =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "ChannelDescendant",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_ChannelDescendant,
+    .objCreatefn =        &__nvoc_objCreateDynamic_ChannelDescendant,
     .pCastInfo =          &__nvoc_castinfo__ChannelDescendant,
     .pExportInfo =        &__nvoc_export_info__ChannelDescendant
 };
@@ -137,7 +137,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ChannelDescendant =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__ChannelDescendant __nvoc_metadata__ChannelDescendant = {
     .rtti.pClassDef = &__nvoc_class_def_ChannelDescendant,    // (chandes) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_ChannelDescendant,
+    .rtti.dtor      = &__nvoc_dtor_ChannelDescendant,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -450,18 +450,20 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__ChannelDescendant =
 
 // Destruct ChannelDescendant object.
 void __nvoc_chandesDestruct(ChannelDescendant*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_Notifier(Notifier*);
-void __nvoc_dtor_ChannelDescendant(ChannelDescendant* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_Notifier(Dynamic*);
+void __nvoc_dtor_ChannelDescendant(Dynamic* pThis) {
+
+    ChannelDescendant *__nvoc_this = (ChannelDescendant *) pThis;
 
 // Call destructor.
-    __nvoc_chandesDestruct(pThis);
+    __nvoc_chandesDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
-    __nvoc_dtor_Notifier(&pThis->__nvoc_base_Notifier);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
+    __nvoc_dtor_Notifier((Dynamic *) &__nvoc_this->__nvoc_base_Notifier);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_ChannelDescendant(ChannelDescendant *pThis, RmHalspecOwner *pRmhalspecowner) {
     RmVariantHal *rmVariantHal = &pRmhalspecowner->rmVariantHal;
@@ -495,9 +497,9 @@ NV_STATUS __nvoc_ctor_ChannelDescendant(ChannelDescendant *pChannelDescendant, R
 
     // Unwind on error.
 __nvoc_ctor_ChannelDescendant_fail__init:
-    __nvoc_dtor_Notifier(&pChannelDescendant->__nvoc_base_Notifier);
+    __nvoc_dtor_Notifier((Dynamic *)&pChannelDescendant->__nvoc_base_Notifier);
 __nvoc_ctor_ChannelDescendant_fail_Notifier:
-    __nvoc_dtor_GpuResource(&pChannelDescendant->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pChannelDescendant->__nvoc_base_GpuResource);
 __nvoc_ctor_ChannelDescendant_fail_GpuResource:
 __nvoc_ctor_ChannelDescendant_exit:
     return status;
@@ -628,14 +630,11 @@ __nvoc_objCreate_ChannelDescendant_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_ChannelDescendant(ChannelDescendant **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_ChannelDescendant(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
     PARAM_TO_ENGDESC_FUNCTION *pParamToEngDescFn = va_arg(__nvoc_args, PARAM_TO_ENGDESC_FUNCTION *);
 
-    __nvoc_status = __nvoc_objCreate_ChannelDescendant(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams, pParamToEngDescFn);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_ChannelDescendant((ChannelDescendant **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams, pParamToEngDescFn);
 }
 

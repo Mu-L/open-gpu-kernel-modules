@@ -264,7 +264,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_PrereqTracker;
     ((PrereqTracker*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(PrereqTracker)))
 #endif //__nvoc_prereq_tracker_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_PrereqTracker(PrereqTracker**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_PrereqTracker(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_PrereqTracker(PrereqTracker**, Dynamic*, NvU32, struct OBJGPU *pParent, GpuPrereqDeferralCheckCallback *pCallback);
 #define __objCreate_PrereqTracker(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pParent, pCallback) \

@@ -35,4 +35,7 @@
 #define NV_RAMFC_DEBUG_STATE_RAMFC_INDEX_gp_peek                        0x00000001 /*       */
 #define NV_RAMFC_DEBUG_STATE_RAMFC_INDEX_gp_fetch                       0x00000002 /*       */
 #define NV_RAMFC_DEBUG_STATE_RAMFC_INDEX_hdr_shadow                     0x00000003 /*       */
+#define NV_RAMFC_SIGNATURE                                              (14*32+31):(14*32+0) /* RW-UF */
+#define NV_RAMFC_PB_HEADER                       (8*32+31):(8*32+0) /* RW-UF */
+#define NV_RAMFC_MISC_FETCH_STATE                (45*32+31):(45*32+0) /* RW-UF */
 #endif // __gb100_dev_ram_h__

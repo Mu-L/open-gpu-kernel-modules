@@ -195,8 +195,7 @@ NV_STATUS uvm_va_space_mm_register(uvm_va_space_t *va_space)
     va_space_mm->mm = current->mm;
     uvm_mmgrab(va_space_mm->mm);
 
-    if ((UVM_IS_CONFIG_HMM() || UVM_HMM_RANGE_FAULT_SUPPORTED()) &&
-        uvm_va_space_pageable_mem_access_supported(va_space)) {
+    if ((UVM_IS_CONFIG_HMM() || UVM_HMM_RANGE_FAULT_SUPPORTED()) && va_space->pageable.access_enabled) {
 
         #if UVM_CAN_USE_MMU_NOTIFIERS()
             int ret;

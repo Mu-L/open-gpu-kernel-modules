@@ -146,7 +146,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelCtxShare;
     ((KernelCtxShare*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(KernelCtxShare)))
 #endif //__nvoc_kernel_ctxshare_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_KernelCtxShare(KernelCtxShare**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelCtxShare(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelCtxShare(KernelCtxShare**, Dynamic*, NvU32);
 #define __objCreate_KernelCtxShare(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -317,7 +317,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelCtxShareApi;
     ((KernelCtxShareApi*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(KernelCtxShareApi)))
 #endif //__nvoc_kernel_ctxshare_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_KernelCtxShareApi(KernelCtxShareApi**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelCtxShareApi(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelCtxShareApi(KernelCtxShareApi**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_KernelCtxShareApi(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

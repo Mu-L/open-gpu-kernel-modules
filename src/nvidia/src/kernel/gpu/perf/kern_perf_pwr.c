@@ -84,6 +84,8 @@ subdeviceCtrlCmdPerfRatedTdpSetControl_KERNEL
     if ((pControlParams->vPstateType == NV2080_CTRL_PERF_VPSTATE_TURBO_BOOST)
         && !isAdmin && gpuIsRmProfilingPrivileged(pGpu)
         && !osCheckAccess(RS_ACCESS_PERFMON)
+        && !rmclientIsCapable(pRmClient, NV_RM_CAP_SYS_TRACE_DEVICE)
+        && !rmclientIsCapable(pRmClient, NV_RM_CAP_SYS_PROFILER_DEVICE)
         )
 
     {

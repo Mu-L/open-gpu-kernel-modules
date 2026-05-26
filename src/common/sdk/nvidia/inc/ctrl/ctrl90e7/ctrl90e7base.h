@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -39,6 +39,7 @@
 #define NV90E7_CTRL_BBX_LEGACY_PRIVILEGED       (0xc1) /* finn: Evaluated from "(NV90E7_CTRL_BBX | NVxxxx_CTRL_LEGACY_PRIVILEGED)" */
 #define NV90E7_CTRL_BBX                         (0x01)
 #define NV90E7_CTRL_RPR                         (0x02)
+#define NV90E7_CTRL_RPR_LEGACY_PRIVILEGED       (0xc2) /* finn: Evaluated from "(NV90E7_CTRL_RPR | NVxxxx_CTRL_LEGACY_PRIVILEGED)" */
 #define NV90E7_CTRL_PREDICTIVE                  (0x03)
 
 /*

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2006-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2006-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -48,4 +48,7 @@
 #include "ctrl208f/ctrl208fucodeinstrumentation.h"
 #include "ctrl208f/ctrl208fnvlink.h"
 #include "ctrl208f/ctrl208fpmu.h"
+#include "ctrl208f/ctrl208fsec2.h"
 
+
+#include "ctrl208f/ctrl208fce.h"

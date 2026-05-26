@@ -151,7 +151,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_RmDebuggerSession;
     ((RmDebuggerSession*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(RmDebuggerSession)))
 #endif //__nvoc_kernel_sm_debugger_session_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_RmDebuggerSession(RmDebuggerSession**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_RmDebuggerSession(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_RmDebuggerSession(RmDebuggerSession**, Dynamic*, NvU32);
 #define __objCreate_RmDebuggerSession(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -307,7 +307,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelSMDebuggerSession;
     ((KernelSMDebuggerSession*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(KernelSMDebuggerSession)))
 #endif //__nvoc_kernel_sm_debugger_session_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_KernelSMDebuggerSession(KernelSMDebuggerSession**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelSMDebuggerSession(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelSMDebuggerSession(KernelSMDebuggerSession**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_KernelSMDebuggerSession(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \
@@ -661,6 +661,14 @@ static inline NV_STATUS ksmdbgssnCtrlCmdDebugGetModeErrbarDebug_fcf1ac(struct Ke
 
 static inline NV_STATUS ksmdbgssnCtrlCmdDebugSetExceptionMask_fcf1ac(struct KernelSMDebuggerSession *pKernelSMDebuggerSession, NV83DE_CTRL_DEBUG_SET_EXCEPTION_MASK_PARAMS *pParams){
     return ksmdbgssnInternalControlForward(pKernelSMDebuggerSession, (2212365317U), pParams, sizeof (*pParams));
+}
+
+static inline NV_STATUS ksmdbgssnCtrlCmdDebugSetNonPreemptableDebuggerContext_fcf1ac(struct KernelSMDebuggerSession *pKernelSMDebuggerSession, NV83DE_CTRL_DEBUG_SET_NON_PREEMPTABLE_DEBUGGER_CONTEXT_PARAMS *pParams){
+    return ksmdbgssnInternalControlForward(pKernelSMDebuggerSession, (2212364827U), pParams, sizeof (*pParams));
+}
+
+static inline NV_STATUS ksmdbgssnCtrlCmdDebugSetRecoverySuppressionTimeout_fcf1ac(struct KernelSMDebuggerSession *pKernelSMDebuggerSession, NV83DE_CTRL_DEBUG_SET_RECOVERY_SUPPRESSION_TIMEOUT_PARAMS *pParams){
+    return ksmdbgssnInternalControlForward(pKernelSMDebuggerSession, (2212364828U), pParams, sizeof (*pParams));
 }
 
 static inline NV_STATUS ksmdbgssnCtrlCmdDebugReadSingleSmErrorState_fcf1ac(struct KernelSMDebuggerSession *pKernelSMDebuggerSession, NV83DE_CTRL_DEBUG_READ_SINGLE_SM_ERROR_STATE_PARAMS *pParams){

@@ -32,7 +32,7 @@ void __nvoc_init__StandardMemory(StandardMemory*);
 void __nvoc_init_funcTable_StandardMemory(StandardMemory*);
 NV_STATUS __nvoc_ctor_StandardMemory(StandardMemory*, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_StandardMemory(StandardMemory*);
-void __nvoc_dtor_StandardMemory(StandardMemory*);
+void __nvoc_dtor_StandardMemory(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__StandardMemory;
@@ -116,7 +116,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_StandardMemory =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "StandardMemory",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_StandardMemory,
+    .objCreatefn =        &__nvoc_objCreateDynamic_StandardMemory,
     .pCastInfo =          &__nvoc_castinfo__StandardMemory,
     .pExportInfo =        &__nvoc_export_info__StandardMemory
 };
@@ -125,7 +125,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_StandardMemory =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__StandardMemory __nvoc_metadata__StandardMemory = {
     .rtti.pClassDef = &__nvoc_class_def_StandardMemory,    // (stdmem) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_StandardMemory,
+    .rtti.dtor      = &__nvoc_dtor_StandardMemory,
     .rtti.offset    = 0,
     .metadata__Memory.rtti.pClassDef = &__nvoc_class_def_Memory,    // (mem) super
     .metadata__Memory.rtti.dtor      = &__nvoc_destructFromBase,
@@ -394,13 +394,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__StandardMemory =
 
 
 // Destruct StandardMemory object.
-void __nvoc_dtor_Memory(Memory*);
-void __nvoc_dtor_StandardMemory(StandardMemory* pThis) {
+void __nvoc_dtor_Memory(Dynamic*);
+void __nvoc_dtor_StandardMemory(Dynamic* pThis) {
+
+    StandardMemory *__nvoc_this = (StandardMemory *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Memory(&pThis->__nvoc_base_Memory);
+    __nvoc_dtor_Memory((Dynamic *) &__nvoc_this->__nvoc_base_Memory);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_StandardMemory(StandardMemory *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -426,7 +428,7 @@ NV_STATUS __nvoc_ctor_StandardMemory(StandardMemory *pStandardMemory, CALL_CONTE
 
     // Unwind on error.
 __nvoc_ctor_StandardMemory_fail__init:
-    __nvoc_dtor_Memory(&pStandardMemory->__nvoc_base_Memory);
+    __nvoc_dtor_Memory((Dynamic *)&pStandardMemory->__nvoc_base_Memory);
 __nvoc_ctor_StandardMemory_fail_Memory:
 __nvoc_ctor_StandardMemory_exit:
     return status;
@@ -538,13 +540,10 @@ __nvoc_objCreate_StandardMemory_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_StandardMemory(StandardMemory **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_StandardMemory(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_StandardMemory(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_StandardMemory((StandardMemory **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

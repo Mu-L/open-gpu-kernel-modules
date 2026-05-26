@@ -127,6 +127,8 @@ kceMapAsyncLceDefault_GB202
     NvU32         lceIndex, pceIndex, i, j;
     NvBool        bPceAssigned;
 
+    NV2080_CTRL_CE_SHIM_PREFERENCE shimPreference;
+
     // Set PCIe capabilities
     ceCapsForLce[0] = NVBIT32(CE_CAPS_SYSMEM_READ);
     ceCapsForLce[1] = NVBIT32(CE_CAPS_SYSMEM_WRITE);
@@ -139,7 +141,8 @@ kceMapAsyncLceDefault_GB202
         &numLces,
         &supportedPceMask,
         &supportedLceMask,
-        &pcesPerHshub);
+        &pcesPerHshub,
+        &shimPreference);
 
     NV_ASSERT_OR_RETURN(numLces <= 2, NV_ERR_INVALID_STATE);
     lceMask = supportedLceMask

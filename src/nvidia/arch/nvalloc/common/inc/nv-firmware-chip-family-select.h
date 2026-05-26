@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -67,6 +67,8 @@ static inline nv_firmware_chip_family_t nv_firmware_get_chip_family(
             else
                 return NV_FIRMWARE_CHIP_FAMILY_GB20X;
 
+        case GPU_ARCHITECTURE_RUBIN_GR1XX:
+            return NV_FIRMWARE_CHIP_FAMILY_GR10X;
     }
 
     return NV_FIRMWARE_CHIP_FAMILY_NULL;
@@ -165,6 +167,9 @@ const nv_firmware_kernel_log_info_t *nv_firmware_get_kernel_log_infos(unsigned *
 {
     const static nv_firmware_kernel_log_info_t infos[] =
     {
+        {".fwlogging_kernel_gr10x",
+         {GPU_ARCHITECTURE_RUBIN_GR1XX}, // gr10x...
+        },
         {".fwlogging_kernel_gb20y",
         {GPU_ARCHITECTURE_BLACKWELL_GB2XX, GPU_ARCHITECTURE_BLACKWELL_GB2XX}, // gb20y
         {GPU_IMPLEMENTATION_GB20B, 0}

@@ -79,6 +79,8 @@ kceMapAsyncLceDefault_GB10B
     NvU32   maxPceCount = 0;
     NvU32   lceIndex, pceIndex, i, j;
 
+    NV2080_CTRL_CE_SHIM_PREFERENCE shimPreference;
+
     kceGetPceConfigForLceType(
         pGpu,
         pKCe,
@@ -87,7 +89,8 @@ kceMapAsyncLceDefault_GB10B
         &numLces,
         &supportedPceMask,
         &supportedLceMask,
-        &pcesPerHshub);
+        &pcesPerHshub,
+        &shimPreference);
 
     // To catch error scenario with lceIndex
     maxLceCount = supportedLceMask;
@@ -163,6 +166,8 @@ kceMapPceLceForGRCE_GB10B
     NvU32       pcesPerHshub = 0;
     NvU32       maxPceCount = 0;
 
+    NV2080_CTRL_CE_SHIM_PREFERENCE shimPreference;
+
     kceGetPceConfigForLceType(
         pGpu,
         pKCe,
@@ -171,7 +176,8 @@ kceMapPceLceForGRCE_GB10B
         &numLces,
         &supportedPceMask,
         &supportedLceMask,
-        &pcesPerHshub);
+        &pcesPerHshub,
+        &shimPreference);
 
     // To catch error scenario with pceIndex
     maxPceCount = supportedPceMask;

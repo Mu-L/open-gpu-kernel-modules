@@ -33,7 +33,7 @@
 #include <linux/nodemask.h>
 
 // UVM_VA_BLOCK_BITS is 21, meaning the maximum block size is 2MB. Rationale:
-// - 2MB matches the largest Pascal GPU page size so it's a natural fit
+// - 2MB matches the largest Turing GPU page size so it's a natural fit
 // - 2MB won't span more than one PDE on any chip, so the VA blocks never need
 //   to track more than a single GPU PDE.
 // - 2MB is a decent tradeoff between memory overhead and serialization
@@ -122,7 +122,6 @@ typedef enum
     UVM_MAKE_RESIDENT_CAUSE_EVICTION,
     UVM_MAKE_RESIDENT_CAUSE_API_TOOLS,
     UVM_MAKE_RESIDENT_CAUSE_API_MIGRATE,
-    UVM_MAKE_RESIDENT_CAUSE_API_SET_RANGE_GROUP,
     UVM_MAKE_RESIDENT_CAUSE_API_HINT,
 
     UVM_MAKE_RESIDENT_CAUSE_MAX

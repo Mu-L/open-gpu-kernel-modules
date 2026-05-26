@@ -150,7 +150,8 @@ typedef enum {
 
 typedef struct
 {
-    NvU32  remoteScfDcfGpuId;
+    NvU32  remoteGpuClid;
+    NvU32  remoteGpuAlid;
     NvU32  key[RM_GSP_NVLE_AES_256_GCM_KEY_SIZE_DWORDS];
     //
     // Epoch will inform which keyslot<0,1> is spare in case of refreshRxKeySlot stage and the epoch to which

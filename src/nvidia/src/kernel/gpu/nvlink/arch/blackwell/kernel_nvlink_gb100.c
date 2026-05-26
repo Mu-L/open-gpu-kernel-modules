@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -35,6 +35,13 @@
 static void _knvlinkP2PIdleCallback(OBJGPU *pGpu, void *pArgs);
 void knvlinkABM_WORKITEM(OBJGPU *pGpu, void *pArgs);
 
+/*!
+ * @brief Get the supported counters for the given NVLink instance
+ *
+ * @param[in]  pGpu      OBJGPU pointer
+ * @param[in]  pKernelNvlink   KernelNvlink pointer
+ * @param[out] pParams   NV2080_CTRL_NVLINK_GET_SUPPORTED_COUNTERS_PARAMS pointer
+ */
 NV_STATUS
 knvlinkGetSupportedCounters_GB100
 (
@@ -43,97 +50,11 @@ knvlinkGetSupportedCounters_GB100
     NV2080_CTRL_NVLINK_GET_SUPPORTED_COUNTERS_PARAMS *pParams
 )
 {
-    portMemSet(pParams->counterMask, 0x0, sizeof(pParams->counterMask));
+    NV_ASSERT_OR_RETURN((pParams != NULL), NV_ERR_INVALID_ARGUMENT);
 
-#define SET_COUNTER_MASK(masks, bit)                                                                                            \
-    (masks)[NV2080_CTRL_NVLINK_COUNTER_V2_GROUP(bit)] |= NV2080_CTRL_NVLINK_COUNTER_V2_COUNTER_MASK(bit);                       \
-
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_XMIT_PACKETS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_XMIT_BYTES);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_RCV_PACKETS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_RCV_BYTES);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_LINK_ERROR_RECOVERY_COUNTER);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_LINK_DOWNED_COUNTER);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_LINK_RECOVERY_SUCCESSFUL_COUNTER);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_RCV_ERRORS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_RCV_REMOTE_ERRORS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_RCV_GENERAL_ERRORS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_RCV_MALFORMED_PKT_ERROR);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_RCV_BUFFER_OVERRUN_ERROR);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_RCV_VL15DROPPED_ERROR);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_LINK_INTEGRITY_ERRORS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_BUFFER_OVERRUN_ERRORS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_XMIT_WAIT_TIME);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_XMIT_ERRORS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_SINGLE_ERROR_BLOCKS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_CORRECTED_BLOCKS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_UNCORRECTED_BLOCKS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_CORRECTED_SYMBOLS_LANE_0);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_CORRECTED_SYMBOLS_LANE_1);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_CORRECTED_SYMBOLS_TOTAL);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_RAW_ERRORS_LANE_0);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_RAW_ERRORS_LANE_1);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_CORRECTED_BITS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_RAW_BER_LANE_0);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_RAW_BER_LANE_1);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_RAW_BER_TOTAL);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_NO_ERROR_BLOCKS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_EFFECTIVE_ERRORS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_EFFECTIVE_BER);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_SYMBOL_ERRORS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_SYMBOL_BER);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_RECEIVED_BITS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_SYNC_HEADER_ERRORS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_PLR_RCV_BLOCKS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_PLR_RCV_BLOCKS_WITH_UNCORRECTABLE_ERRORS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_PLR_RCV_BLOCKS_WITH_ERRORS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_PLR_XMIT_BLOCKS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_PLR_XMIT_RETRY_BLOCKS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_PLR_XMIT_RETRY_EVENTS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_PLR_BW_LOSS);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_NVLE_RX_GOOD);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_NVLE_RX_ERROR);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_NVLE_RX_AUTH);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_NVLE_TX_GOOD);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_NVLE_TX_ERROR);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_HISTORY_0);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_HISTORY_1);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_HISTORY_2);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_HISTORY_3);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_HISTORY_4);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_HISTORY_5);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_HISTORY_6);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_HISTORY_7);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_HISTORY_8);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_HISTORY_9);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_HISTORY_10);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_HISTORY_11);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_HISTORY_12);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_HISTORY_13);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_HISTORY_14);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_HISTORY_15);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_TP_RX_DATA);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_TP_TX_DATA);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_TP_RX_RAW);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_TP_TX_RAW);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_L1_ENTRY);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_L1_ENTRY_FORCE);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_L1_EXIT);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_L1_EXIT_RECAL);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_L1_EXIT_REMOTE);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_L1_LP_STEADY_STATE_TIME);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_L1_HIGH_SPEED_STEADY_STATE_TIME);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_L1_OTHER_STATE_TIME);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_LP_LOCAL_ENTRY_TIME);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_LP_LOCAL_EXIT_TIME);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_LP_LOCAL_FULL_BW_ENTRY_TIME);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_LP_LOCAL_FULL_BW_EXIT_TIME);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_LP_REMOTE_ENTRY_TIME);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_LP_REMOTE_EXIT_TIME);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_LP_REMOTE_FULL_BW_ENTRY_TIME);
-    SET_COUNTER_MASK(pParams->counterMask, NV2080_CTRL_NVLINK_COUNTER_LP_REMOTE_FULL_BW_EXIT_TIME);
-
-#undef SET_COUNTER_MASK
+    portMemCopy(pParams, sizeof(*pParams),
+                &pKernelNvlink->supportedCounterMask,
+                sizeof(NV2080_CTRL_NVLINK_GET_SUPPORTED_COUNTERS_PARAMS));
 
     return NV_OK;
 }
@@ -363,7 +284,7 @@ knvlinkGetEffectivePeerLinkMask_GB100
     NVLINK_BIT_VECTOR *pPeerLinkMask
 )
 {
-    NvU32 linkMaskToBeReduced;
+    NVLINK_BIT_VECTOR linkMaskToBeReduced;
     NV_STATUS status = NV_OK;
 
     if (knvlinkIsGpuConnectedToNvswitch(pGpu, pKernelNvlink))
@@ -371,19 +292,15 @@ knvlinkGetEffectivePeerLinkMask_GB100
         if (gpuFabricProbeGetlinkMaskToBeReduced(pGpu->pGpuFabricProbeInfoKernel,
                                                  &linkMaskToBeReduced) == NV_OK)
         {
-            NVLINK_BIT_VECTOR linkMaskToBeReducedVec;
             NVLINK_BIT_VECTOR complementLinkMaskToBeReducedVec;
             NV_CHECK_OK_OR_ELSE(status, LEVEL_ERROR,
-                convertMaskToBitVector(linkMaskToBeReduced, &linkMaskToBeReducedVec),
-                return; );
-            NV_CHECK_OK_OR_ELSE(status, LEVEL_ERROR,
-                bitVectorComplement(&complementLinkMaskToBeReducedVec, &linkMaskToBeReducedVec),
+                bitVectorComplement(&complementLinkMaskToBeReducedVec, &linkMaskToBeReduced),
                 return; );
             NV_CHECK_OK_OR_ELSE(status, LEVEL_ERROR,
                 bitVectorAnd(pPeerLinkMask, pPeerLinkMask, &complementLinkMaskToBeReducedVec),
                 return; );
             NV_PRINTF(LEVEL_INFO, "Reducing nvlinkMask from "NV_BITVECTOR_INLINE_FMTX" to updated "NV_BITVECTOR_INLINE_FMTX"\n", 
-                NV_BITVECTOR_INLINE_PRINTF_ARG(&linkMaskToBeReducedVec), NV_BITVECTOR_INLINE_PRINTF_ARG(pPeerLinkMask));
+                NV_BITVECTOR_INLINE_PRINTF_ARG(&linkMaskToBeReduced), NV_BITVECTOR_INLINE_PRINTF_ARG(pPeerLinkMask));
         }
     }
 }
@@ -467,6 +384,9 @@ knvlinkABMIdle_WORKITEM
 {
     OBJGPU *pGpu = gpumgrGetGpu(gpuInstance);
     KernelNvlink *pKernelNvlink = GPU_GET_KERNEL_NVLINK(pGpu);
+    NVLINK_BIT_VECTOR linkMask;
+
+    NVLINK_BIT_VECTOR *pEnabledLinksVec = knvlinkGetEnabledLinkMask(pGpu, pKernelNvlink);
 
     if (knvlinkIsP2PActive_IMPL(pGpu, pKernelNvlink))
     {
@@ -476,7 +396,12 @@ knvlinkABMIdle_WORKITEM
         return;
     }
 
-    NV_PRINTF(LEVEL_INFO, "Detected fabric idle. Setting requested adaptive bandwidth mode.\n");
+    bitVectorAnd(&linkMask, pEnabledLinksVec, &pKernelNvlink->pendingAbmLinkMaskToBeReduced);
+    NV_PRINTF(LEVEL_NOTICE, "GPU%u Detected fabric idle. Applying linkMask "NV_BITVECTOR_INLINE_FMTX" and Unmarking Drain P2P.\n", 
+                gpuInstance, NV_BITVECTOR_INLINE_PRINTF_ARG(&linkMask));
+
+    // Reuse linkMaskToBeReduced so RBM/ABM flows are the same
+    gpuFabricProbeSetlinkMaskToBeReduced(pGpu->pGpuFabricProbeInfoKernel, &pKernelNvlink->pendingAbmLinkMaskToBeReduced);
 
     pGpu->setProperty(pGpu, PDB_PROP_GPU_RECOVERY_SQUASH_XID154, NV_TRUE);
     gpuUnmarkDeviceForDrainP2P(pGpu);
@@ -619,10 +544,10 @@ knvlinkIsNvleEnabled_GB100
     if (pKernelNvlink->getProperty(pKernelNvlink, PDB_PROP_KNVLINK_ENCRYPTION_ENABLED))
     {
         //
-        // On MODS, just check PDB_PROP_KNVLINK_ENCRYPTION_ENABLED, on non-MODS platforms, check
-        // the following settings as well
+        // On MODS and for NVLE Qual mode verification, just check for PDB_PROP_KNVLINK_ENCRYPTION_ENABLED,
+        // for other use-cases, check the following settings as well
         //
-        if (!RMCFG_FEATURE_MODS_FEATURES)
+        if (!RMCFG_FEATURE_MODS_FEATURES && !pKernelNvlink->bNvleQualModeRegkey)
         {
             //
             // Disable Nvlink encryption if :
@@ -794,6 +719,33 @@ knvlinkTriggerProbeRequest_GB100
 )
 {
     (void)osSchedule1HzCallback(pGpu, _knvlinkP2PIdleCallback, NULL, NV_OS_1HZ_REPEAT);
+
+    return NV_OK;
+}
+
+/*!
+ * Gets the platform info for the GPU, this is needed while getting port mappings
+ *
+ * @param[in] pGpu           OBJGPU pointer
+ * @param[in] pKernelNvlink  KernelNvlink pointer
+ */
+NV_STATUS
+knvlinkGetPlatformInfo_GB100
+(
+    OBJGPU       *pGpu,
+    KernelNvlink *pKernelNvlink
+)
+{
+    NV2080_CTRL_NVLINK_GET_PLATFORM_INFO_PARAMS params;
+    portMemSet(&params, 0, sizeof(params));
+
+    NV_CHECK_OK_OR_RETURN(LEVEL_ERROR,
+                          knvlinkExecGspRmRpc(pGpu, pKernelNvlink,
+                                              NV2080_CTRL_CMD_NVLINK_GET_PLATFORM_INFO,
+                                              (void *)&params, sizeof(params)));
+
+    portMemCopy(&pKernelNvlink->platformInfo, sizeof(NV2080_CTRL_NVLINK_GET_PLATFORM_INFO_PARAMS),
+                &params, sizeof(NV2080_CTRL_NVLINK_GET_PLATFORM_INFO_PARAMS));
 
     return NV_OK;
 }

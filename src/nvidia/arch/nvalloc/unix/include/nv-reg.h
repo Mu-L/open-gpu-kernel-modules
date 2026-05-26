@@ -258,36 +258,6 @@
 #define NV_RM_MSG NV_REG_STRING(__NV_RM_MSG)
 
 /*
- * Option: UsePageAttributeTable
- *
- * Description:
- *
- * Enable/disable use of the page attribute table (PAT) available in
- * modern x86/x86-64 processors to set the effective memory type of memory
- * mappings to write-combining (WC).
- *
- * If enabled, an x86 processor with PAT support is present and the host
- * system's Linux kernel did not configure one of the PAT entries to
- * indicate the WC memory type, the driver will change the second entry in
- * the PAT from its default (write-through (WT)) to WC at module load
- * time. If the kernel did update one of the PAT entries, the driver will
- * not modify the PAT.
- *
- * In both cases, the driver will honor attempts to map memory with the WC
- * memory type by selecting the appropriate PAT entry using the correct
- * set of PTE flags.
- *
- * Possible values:
- *
- * ~0 = use the NVIDIA driver's default logic (default)
- *  1 = enable use of the PAT for WC mappings.
- *  0 = disable use of the PAT for WC mappings.
- */
-
-#define __NV_USE_PAGE_ATTRIBUTE_TABLE UsePageAttributeTable
-#define NV_USE_PAGE_ATTRIBUTE_TABLE NV_REG_STRING(__NV_USE_PAGE_ATTRIBUTE_TABLE)
-
-/*
  * Option: EnableMSI
  *
  * Description:
@@ -550,6 +520,23 @@
 #define __NV_RM_PROFILING_ADMIN_ONLY RmProfilingAdminOnly
 #define __NV_RM_PROFILING_ADMIN_ONLY_PARAMETER RestrictProfilingToAdminUsers
 #define NV_REG_RM_PROFILING_ADMIN_ONLY NV_REG_STRING(__NV_RM_PROFILING_ADMIN_ONLY)
+
+
+/*
+* Option: EnableDebuggerInterface
+* 
+* Description:
+*
+* When this option is enabled, the NVIDIA kernel module will allow non-administrator users to 
+* create a non-preemptable debugger session for non-CILP contexts.
+*
+* Possible Values:
+*
+*  0: Do not allow non-administrator users to create non-preemptable debugger sessions (default)
+*  1: Allow non-administrator users to create non-preemptable debugger sessions
+*/
+#define __NV_ENABLE_NON_PREEMTABLE_DEBUGGER_SESSION EnableDebuggerInterface
+#define NV_REG_ENABLE_NON_PREEMTABLE_DEBUGGER_SESSION NV_REG_STRING(__NV_ENABLE_NON_PREEMTABLE_DEBUGGER_SESSION)
 
 /*
  * Option: TemporaryFilePath
@@ -976,25 +963,6 @@
 #define NV_CREATE_IMEX_CHANNEL_0 NV_REG_STRING(__CREATE_IMEX_CHANNEL_0)
 
 /*
- * Option: NVreg_GrdmaPciTopoCheckOverride
- *
- * Description:
- *
- * This option allows users to override the PCI topology validation enforced by
- * the GPU driver's dma-buf and nv-p2p subsystems.
- *
- * Possible values:
- * 0 - Driver's topology check to allow or deny access (default).
- * 1 - Override driver's topology check to allow access.
- * 2 - Override driver's topology check to deny access.
- */
-#define __NV_GRDMA_PCI_TOPO_CHECK_OVERRIDE GrdmaPciTopoCheckOverride
-#define NV_GRDMA_PCI_TOPO_CHECK_OVERRIDE NV_REG_STRING(__NV_GRDMA_PCI_TOPO_CHECK_OVERRIDE)
-#define NV_REG_GRDMA_PCI_TOPO_CHECK_OVERRIDE_DEFAULT       0
-#define NV_REG_GRDMA_PCI_TOPO_CHECK_OVERRIDE_ALLOW_ACCESS  1
-#define NV_REG_GRDMA_PCI_TOPO_CHECK_OVERRIDE_DENY_ACCESS   2
-
-/*
  * Option: NVreg_EnableSystemMemoryPools
  *
  * Description:
@@ -1012,6 +980,25 @@
 #define NV_ENABLE_SYSTEM_MEMORY_POOLS NV_REG_STRING(__NV_ENABLE_SYSTEM_MEMORY_POOLS)
 #define NV_ENABLE_SYSTEM_MEMORY_POOLS_DEFAULT 0x00000211
 #define NV_ENABLE_SYSTEM_MEMORY_POOLS_SHIFT 12
+
+/*
+ * Option: NVreg_OsEnableCxlSupport
+ *
+ * Description:
+ *
+ * When this option is enabled, the driver will enable support for
+ * CXL at the OS layer.
+ *
+ * This option has no effect on platforms that do not support CXL or on
+ * GPUs without CXL capability.
+ *
+ * Possible Values:
+ *
+ *  0: disable CXL support
+ *  1: enable CXL support (default)
+ */
+#define __NV_OS_ENABLE_CXL_SUPPORT OsEnableCxlSupport
+#define NV_REG_OS_ENABLE_CXL_SUPPORT NV_REG_STRING(__NV_OS_ENABLE_CXL_SUPPORT)
 
 /*
  * Option: NVreg_GpuInitOnProbe
@@ -1041,7 +1028,6 @@ NV_DEFINE_REG_ENTRY(__NV_DEVICE_FILE_UID, 0);
 NV_DEFINE_REG_ENTRY(__NV_DEVICE_FILE_GID, 0);
 NV_DEFINE_REG_ENTRY(__NV_DEVICE_FILE_MODE, 0666);
 NV_DEFINE_REG_ENTRY(__NV_INITIALIZE_SYSTEM_MEMORY_ALLOCATIONS, 1);
-NV_DEFINE_REG_ENTRY(__NV_USE_PAGE_ATTRIBUTE_TABLE, ~0);
 NV_DEFINE_REG_ENTRY(__NV_ENABLE_PCIE_GEN3, 0);
 NV_DEFINE_REG_ENTRY(__NV_ENABLE_MSI, 1);
 NV_DEFINE_REG_ENTRY(__NV_ENABLE_STREAM_MEMOPS, 0);
@@ -1067,7 +1053,7 @@ NV_DEFINE_REG_ENTRY_GLOBAL(__NV_REGISTER_PCI_DRIVER, 1);
 NV_DEFINE_REG_ENTRY_GLOBAL(__NV_REGISTER_PLATFORM_DEVICE_DRIVER, 1);
 NV_DEFINE_REG_ENTRY_GLOBAL(__NV_ENABLE_RESIZABLE_BAR, 0);
 NV_DEFINE_REG_ENTRY_GLOBAL(__NV_ENABLE_DBG_BREAKPOINT, 0);
-NV_DEFINE_REG_ENTRY_GLOBAL(__NV_TEGRA_GPU_PG_MASK, ~0);
+NV_DEFINE_REG_ENTRY_GLOBAL(__NV_TEGRA_GPU_PG_MASK, 0);
 NV_DEFINE_REG_ENTRY_GLOBAL(__NV_ENABLE_NONBLOCKING_OPEN, 1);
 NV_DEFINE_REG_ENTRY_GLOBAL(__NV_EXCLUDE_ALL_GPUS, NV_EXCLUDE_ALL_GPUS_DEFAULT);
 NV_DEFINE_REG_ENTRY_GLOBAL(__NV_GPU_INIT_ON_PROBE, NV_GPU_INIT_ON_PROBE_DEFAULT);
@@ -1084,11 +1070,10 @@ NV_DEFINE_REG_STRING_ENTRY(__NV_RM_NVLINK_BW, NULL);
 NV_DEFINE_REG_ENTRY(__NV_RM_NVLINK_BW_LINK_COUNT, 0);
 NV_DEFINE_REG_ENTRY_GLOBAL(__NV_IMEX_CHANNEL_COUNT, 2048);
 NV_DEFINE_REG_ENTRY_GLOBAL(__NV_CREATE_IMEX_CHANNEL_0, 0);
-NV_DEFINE_REG_ENTRY_GLOBAL(__NV_GRDMA_PCI_TOPO_CHECK_OVERRIDE,
-                           NV_REG_GRDMA_PCI_TOPO_CHECK_OVERRIDE_DEFAULT);
 NV_DEFINE_REG_ENTRY_GLOBAL(__NV_ENABLE_SYSTEM_MEMORY_POOLS, NV_ENABLE_SYSTEM_MEMORY_POOLS_DEFAULT);
+NV_DEFINE_REG_ENTRY_GLOBAL(__NV_OS_ENABLE_CXL_SUPPORT, 1);
 NV_DEFINE_REG_ENTRY_GLOBAL(__NV_USE_KERNEL_SUSPEND_NOTIFIERS, 0);
-
+NV_DEFINE_REG_ENTRY(__NV_ENABLE_NON_PREEMTABLE_DEBUGGER_SESSION, 0);
 /*
  *----------------registry database definition----------------------
  */
@@ -1108,7 +1093,6 @@ nv_parm_t nv_parms[] = {
     NV_DEFINE_PARAMS_TABLE_ENTRY(__NV_DEVICE_FILE_GID),
     NV_DEFINE_PARAMS_TABLE_ENTRY(__NV_DEVICE_FILE_MODE),
     NV_DEFINE_PARAMS_TABLE_ENTRY(__NV_INITIALIZE_SYSTEM_MEMORY_ALLOCATIONS),
-    NV_DEFINE_PARAMS_TABLE_ENTRY(__NV_USE_PAGE_ATTRIBUTE_TABLE),
     NV_DEFINE_PARAMS_TABLE_ENTRY(__NV_ENABLE_MSI),
     NV_DEFINE_PARAMS_TABLE_ENTRY(__NV_ENABLE_PCIE_GEN3),
     NV_DEFINE_PARAMS_TABLE_ENTRY(__NV_MEMORY_POOL_SIZE),
@@ -1138,8 +1122,9 @@ nv_parm_t nv_parms[] = {
     NV_DEFINE_PARAMS_TABLE_ENTRY(__NV_DMA_REMAP_PEER_MMIO),
     NV_DEFINE_PARAMS_TABLE_ENTRY(__NV_IMEX_CHANNEL_COUNT),
     NV_DEFINE_PARAMS_TABLE_ENTRY(__NV_CREATE_IMEX_CHANNEL_0),
-    NV_DEFINE_PARAMS_TABLE_ENTRY(__NV_GRDMA_PCI_TOPO_CHECK_OVERRIDE),
     NV_DEFINE_PARAMS_TABLE_ENTRY(__NV_ENABLE_SYSTEM_MEMORY_POOLS),
+    NV_DEFINE_PARAMS_TABLE_ENTRY(__NV_OS_ENABLE_CXL_SUPPORT),
+    NV_DEFINE_PARAMS_TABLE_ENTRY(__NV_ENABLE_NON_PREEMTABLE_DEBUGGER_SESSION),
     {NULL, NULL}
 };
 

@@ -29,7 +29,7 @@ void __nvoc_init__OBJDCECLIENTRM(OBJDCECLIENTRM*);
 void __nvoc_init_funcTable_OBJDCECLIENTRM(OBJDCECLIENTRM*);
 NV_STATUS __nvoc_ctor_OBJDCECLIENTRM(OBJDCECLIENTRM*);
 void __nvoc_init_dataField_OBJDCECLIENTRM(OBJDCECLIENTRM*);
-void __nvoc_dtor_OBJDCECLIENTRM(OBJDCECLIENTRM*);
+void __nvoc_dtor_OBJDCECLIENTRM(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJDCECLIENTRM;
@@ -62,7 +62,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJDCECLIENTRM =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJDCECLIENTRM",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_OBJDCECLIENTRM,
+    .objCreatefn =        &__nvoc_objCreateDynamic_OBJDCECLIENTRM,
     .pCastInfo =          &__nvoc_castinfo__OBJDCECLIENTRM,
     .pExportInfo =        &__nvoc_export_info__OBJDCECLIENTRM
 };
@@ -71,7 +71,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJDCECLIENTRM =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__OBJDCECLIENTRM __nvoc_metadata__OBJDCECLIENTRM = {
     .rtti.pClassDef = &__nvoc_class_def_OBJDCECLIENTRM,    // (dceclient) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJDCECLIENTRM,
+    .rtti.dtor      = &__nvoc_dtor_OBJDCECLIENTRM,
     .rtti.offset    = 0,
     .metadata__OBJENGSTATE.rtti.pClassDef = &__nvoc_class_def_OBJENGSTATE,    // (engstate) super
     .metadata__OBJENGSTATE.rtti.dtor      = &__nvoc_destructFromBase,
@@ -206,16 +206,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJDCECLIENTRM =
 
 // Destruct OBJDCECLIENTRM object.
 void __nvoc_dceclientDestruct(OBJDCECLIENTRM*);
-void __nvoc_dtor_OBJENGSTATE(OBJENGSTATE*);
-void __nvoc_dtor_OBJDCECLIENTRM(OBJDCECLIENTRM* pThis) {
+void __nvoc_dtor_OBJENGSTATE(Dynamic*);
+void __nvoc_dtor_OBJDCECLIENTRM(Dynamic* pThis) {
+
+    OBJDCECLIENTRM *__nvoc_this = (OBJDCECLIENTRM *) pThis;
 
 // Call destructor.
-    __nvoc_dceclientDestruct(pThis);
+    __nvoc_dceclientDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_OBJENGSTATE(&pThis->__nvoc_base_OBJENGSTATE);
+    __nvoc_dtor_OBJENGSTATE((Dynamic *) &__nvoc_this->__nvoc_base_OBJENGSTATE);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJDCECLIENTRM(OBJDCECLIENTRM *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -341,11 +343,8 @@ __nvoc_objCreate_OBJDCECLIENTRM_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_OBJDCECLIENTRM(OBJDCECLIENTRM **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_OBJDCECLIENTRM(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_OBJDCECLIENTRM(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_OBJDCECLIENTRM((OBJDCECLIENTRM **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

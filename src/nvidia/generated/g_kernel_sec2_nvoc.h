@@ -101,7 +101,7 @@ struct KernelSec2 {
     struct KernelFalcon *__nvoc_pbase_KernelFalcon;    // kflcn super
     struct KernelSec2 *__nvoc_pbase_KernelSec2;    // ksec2
 
-    // Vtable with 37 per-object function pointers
+    // Vtable with 35 per-object function pointers
     NV_STATUS (*__ksec2ConfigureFalcon__)(struct OBJGPU *, struct KernelSec2 * /*this*/);  // halified (4 hals) body
     NV_STATUS (*__ksec2ResetHw__)(struct OBJGPU *, struct KernelSec2 * /*this*/);  // virtual halified (3 hals) override (kflcn) base (kflcn) body
     NV_STATUS (*__ksec2StateLoad__)(struct OBJGPU *, struct KernelSec2 * /*this*/, NvU32);  // virtual halified (3 hals) override (engstate) base (engstate) body
@@ -117,8 +117,6 @@ struct KernelSec2 {
     NV_STATUS (*__ksec2PrepareAndSendBootCommands__)(struct OBJGPU *, struct KernelSec2 * /*this*/);  // halified (3 hals) body
     NvBool (*__ksec2CanSendPacket__)(struct OBJGPU *, struct KernelSec2 * /*this*/);  // halified (2 hals) body
     NvU32 (*__ksec2GetMaxSendPacketSize__)(struct OBJGPU *, struct KernelSec2 * /*this*/);  // halified (2 hals) body
-    NvU32 (*__ksec2CreateNvdmHeader__)(struct OBJGPU *, struct KernelSec2 * /*this*/, NvU32);  // halified (2 hals) body
-    NvU32 (*__ksec2CreateMctpHeader__)(struct OBJGPU *, struct KernelSec2 * /*this*/, NvU8, NvU8, NvU8, NvU8);  // halified (3 hals) body
     NV_STATUS (*__ksec2SendPacket__)(struct OBJGPU *, struct KernelSec2 * /*this*/, NvU8 *, NvU32);  // halified (2 hals) body
     NV_STATUS (*__ksec2WaitForGspTargetMaskReleased__)(struct OBJGPU *, struct KernelSec2 * /*this*/);  // halified (2 hals) body
     NV_STATUS (*__ksec2ReadPacket__)(struct OBJGPU *, struct KernelSec2 * /*this*/, NvU8 *, NvU32, NvU32 *);  // halified (2 hals) body
@@ -234,7 +232,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelSec2;
 #define PDB_PROP_KSEC2_RM_BOOT_GSP_BASE_NAME PDB_PROP_KSEC2_RM_BOOT_GSP
 
 
-NV_STATUS __nvoc_objCreateDynamic_KernelSec2(KernelSec2**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelSec2(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelSec2(KernelSec2**, Dynamic*, NvU32);
 #define __objCreate_KernelSec2(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -361,12 +359,6 @@ static inline NV_STATUS ksec2SendMessage(struct OBJGPU *pGpu, struct KernelSec2 
 #define ksec2GetMaxSendPacketSize_FNPTR(pKernelSec2) pKernelSec2->__ksec2GetMaxSendPacketSize__
 #define ksec2GetMaxSendPacketSize(pGpu, pKernelSec2) ksec2GetMaxSendPacketSize_DISPATCH(pGpu, pKernelSec2)
 #define ksec2GetMaxSendPacketSize_HAL(pGpu, pKernelSec2) ksec2GetMaxSendPacketSize_DISPATCH(pGpu, pKernelSec2)
-#define ksec2CreateNvdmHeader_FNPTR(pKernelSec2) pKernelSec2->__ksec2CreateNvdmHeader__
-#define ksec2CreateNvdmHeader(pGpu, pKernelSec2, nvdmType) ksec2CreateNvdmHeader_DISPATCH(pGpu, pKernelSec2, nvdmType)
-#define ksec2CreateNvdmHeader_HAL(pGpu, pKernelSec2, nvdmType) ksec2CreateNvdmHeader_DISPATCH(pGpu, pKernelSec2, nvdmType)
-#define ksec2CreateMctpHeader_FNPTR(pKernelSec2) pKernelSec2->__ksec2CreateMctpHeader__
-#define ksec2CreateMctpHeader(pGpu, pKernelSec2, som, eom, seid, seq) ksec2CreateMctpHeader_DISPATCH(pGpu, pKernelSec2, som, eom, seid, seq)
-#define ksec2CreateMctpHeader_HAL(pGpu, pKernelSec2, som, eom, seid, seq) ksec2CreateMctpHeader_DISPATCH(pGpu, pKernelSec2, som, eom, seid, seq)
 #define ksec2SendPacket_FNPTR(pKernelSec2) pKernelSec2->__ksec2SendPacket__
 #define ksec2SendPacket(pGpu, pKernelSec2, pPacket, packetSize) ksec2SendPacket_DISPATCH(pGpu, pKernelSec2, pPacket, packetSize)
 #define ksec2SendPacket_HAL(pGpu, pKernelSec2, pPacket, packetSize) ksec2SendPacket_DISPATCH(pGpu, pKernelSec2, pPacket, packetSize)
@@ -478,7 +470,7 @@ static inline NV_STATUS ksec2ConstructEngine_DISPATCH(struct OBJGPU *pGpu, struc
     return pKernelSec2->__nvoc_metadata_ptr->vtable.__ksec2ConstructEngine__(pGpu, pKernelSec2, arg3);
 }
 
-static inline void ksec2RegisterIntrService_DISPATCH(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2, IntrServiceRecord pRecords[180]) {
+static inline void ksec2RegisterIntrService_DISPATCH(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2, IntrServiceRecord pRecords[181]) {
     pKernelSec2->__nvoc_metadata_ptr->vtable.__ksec2RegisterIntrService__(pGpu, pKernelSec2, pRecords);
 }
 
@@ -548,14 +540,6 @@ static inline NvBool ksec2CanSendPacket_DISPATCH(struct OBJGPU *pGpu, struct Ker
 
 static inline NvU32 ksec2GetMaxSendPacketSize_DISPATCH(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2) {
     return pKernelSec2->__ksec2GetMaxSendPacketSize__(pGpu, pKernelSec2);
-}
-
-static inline NvU32 ksec2CreateNvdmHeader_DISPATCH(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2, NvU32 nvdmType) {
-    return pKernelSec2->__ksec2CreateNvdmHeader__(pGpu, pKernelSec2, nvdmType);
-}
-
-static inline NvU32 ksec2CreateMctpHeader_DISPATCH(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2, NvU8 som, NvU8 eom, NvU8 seid, NvU8 seq) {
-    return pKernelSec2->__ksec2CreateMctpHeader__(pGpu, pKernelSec2, som, eom, seid, seq);
 }
 
 static inline NV_STATUS ksec2SendPacket_DISPATCH(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2, NvU8 *pPacket, NvU32 packetSize) {
@@ -733,7 +717,7 @@ NV_STATUS ksec2StateUnload_IMPL(struct OBJGPU *pGpu, struct KernelSec2 *pKernelS
 // HAL method declarations without bodies
 NV_STATUS ksec2ConstructEngine_IMPL(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2, ENGDESCRIPTOR arg3);
 
-void ksec2RegisterIntrService_IMPL(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2, IntrServiceRecord pRecords[180]);
+void ksec2RegisterIntrService_IMPL(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2, IntrServiceRecord pRecords[181]);
 
 NV_STATUS ksec2ServiceNotificationInterrupt_IMPL(struct OBJGPU *arg1, struct KernelSec2 *arg_this, IntrServiceServiceNotificationInterruptArguments *arg3);
 
@@ -782,10 +766,6 @@ NV_STATUS ksec2PrepareAndSendBootCommands_GB20B(struct OBJGPU *pGpu, struct Kern
 NvBool ksec2CanSendPacket_GB10B(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2);
 
 NvU32 ksec2GetMaxSendPacketSize_GB10B(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2);
-
-NvU32 ksec2CreateNvdmHeader_GB10B(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2, NvU32 nvdmType);
-
-NvU32 ksec2CreateMctpHeader_GB20B(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2, NvU8 som, NvU8 eom, NvU8 seid, NvU8 seq);
 
 NV_STATUS ksec2SendPacket_GB10B(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2, NvU8 *pPacket, NvU32 packetSize);
 
@@ -882,18 +862,6 @@ static inline NvBool ksec2CanSendPacket_d69453(struct OBJGPU *pGpu, struct Kerne
 }
 
 static inline NvU32 ksec2GetMaxSendPacketSize_b2b553(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2){
-    return 0;
-}
-
-static inline NvU32 ksec2CreateNvdmHeader_b2b553(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2, NvU32 nvdmType){
-    return 0;
-}
-
-static inline NvU32 ksec2CreateMctpHeader_245b9d(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2, NvU8 som, NvU8 eom, NvU8 seid, NvU8 seq){
-    return 1;
-}
-
-static inline NvU32 ksec2CreateMctpHeader_b2b553(struct OBJGPU *pGpu, struct KernelSec2 *pKernelSec2, NvU8 som, NvU8 eom, NvU8 seid, NvU8 seq){
     return 0;
 }
 

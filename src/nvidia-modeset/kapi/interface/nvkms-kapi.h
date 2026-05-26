@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2015-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2015-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -304,11 +304,13 @@ struct NvKmsKapiLayerConfig {
     NvBool cscUseMain;
 
     struct {
+        struct NvKmsCscMatrix fmtCtm;
         struct NvKmsCscMatrix lmsCtm;
         struct NvKmsCscMatrix lmsToItpCtm;
         struct NvKmsCscMatrix itpToLmsCtm;
         struct NvKmsCscMatrix blendCtm;
         struct {
+            NvBool fmtCtm      : 1;
             NvBool lmsCtm      : 1;
             NvBool lmsToItpCtm : 1;
             NvBool itpToLmsCtm : 1;
@@ -409,6 +411,11 @@ struct NvKmsKapiHeadModeSetConfig {
     } olut;
 
     NvU32 olutFpNormScale;
+
+    struct {
+        enum NvKmsDpyAttributeRequestedDitheringValue state;
+        enum NvKmsDpyAttributeRequestedDitheringModeValue mode;
+    } dithering;
 };
 
 struct NvKmsKapiHeadRequestedConfig {
@@ -423,6 +430,7 @@ struct NvKmsKapiHeadRequestedConfig {
         NvBool legacyOlutChanged      : 1;
         NvBool olutChanged            : 1;
         NvBool olutFpNormScaleChanged : 1;
+        NvBool ditheringChanged       : 1;
     } flags;
 
     struct NvKmsKapiCursorRequestedConfig cursorRequestedConfig;
@@ -1044,6 +1052,19 @@ struct NvKmsKapiFunctionsTable {
     );
 
     /*!
+     * Check if memory object allocated is guaranteed to be physically
+     * contiguous.
+     *
+     * \param [in]  memory           Memory allocated using allocateMemory()
+     *
+     * \return NV_TRUE if memory is guaranteed to be physically contiguous,
+     * NV_FALSE otherwise.
+     */
+    NvBool (*isContiguous)(
+        const struct NvKmsKapiMemory *memory
+    );
+
+    /*!
      * Increment the GC6 blocker reference count to prevent the GPU from
      * entering GC6 power state.
      *
@@ -1614,6 +1635,46 @@ struct NvKmsKapiFunctionsTable {
     (
         struct NvKmsKapiDevice *device
     );
+
+
+    /*
+     * Register a VBlank interrupt callback for a specific head.
+     *
+     * This function registers a callback that will be invoked on every VBlank
+     * interrupt for the specified head.
+     *
+     * \param[in]  device     The NVKMS-KAPI device handle.
+     *
+     * \param[in]  head       The head number (0-based) to monitor for VBlank.
+     *
+     * \param[in]  pCallback  The callback function to be invoked on VBlank.
+     *
+     * \param[in]  param      User-defined parameter passed to the callback.
+     *
+     */
+    struct NvKmsKapiVblankIntrCallback*
+    (*registerVblankIntrCallback)(struct NvKmsKapiDevice *device,
+                                  const NvU32 head,
+                                  NVRgInterruptCallbackProc pCallback,
+                                  NvU64 param);
+
+    /*
+     * Unregister a VBlank interrupt callback.
+     *
+     * This function removes a previously registered VBlank interrupt callback
+     * and releases associated resources.
+     *
+     * \param[in]  device     The NVKMS-KAPI device handle.
+     *
+     * \param[in]  head       The head number that the callback was registered for.
+     *
+     * \param[in]  pCallback  The callback handle returned by a previous
+     *                        RegisterVblankIntrCallback() call.
+     */
+    void (*unregisterVblankIntrCallback)(
+        struct NvKmsKapiDevice *device,
+        const NvU32 head,
+        struct NvKmsKapiVblankIntrCallback *pCallback);
 };
 
 /** @} */

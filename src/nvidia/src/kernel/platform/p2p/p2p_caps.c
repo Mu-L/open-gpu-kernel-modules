@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -555,18 +555,16 @@ _kp2pCapsGetStatusOverPcie
     gpuInstance = 0;
     while ((pGpu = gpumgrGetNextGpu(gpuMask, &gpuInstance)) != NULL)
     {
-        RM_API *pRmApi = GPU_GET_PHYSICAL_RMAPI(pGpu);
-        NV2080_CTRL_INTERNAL_GET_PCIE_P2P_CAPS_PARAMS p2pCapsParams = {0};
-
-        p2pCapsParams.bCommonPciSwitchFound = bCommonPciSwitchFound;
-
-        NV_ASSERT_OK_OR_GOTO(status, pRmApi->Control(pRmApi,
-            pGpu->hInternalClient,
-            pGpu->hInternalSubdevice,
-            NV2080_CTRL_CMD_INTERNAL_GET_PCIE_P2P_CAPS,
-           &p2pCapsParams,
-            sizeof(NV2080_CTRL_INTERNAL_GET_PCIE_P2P_CAPS_PARAMS)),
-            done);
+        //
+        // If the chipset is not capable AND there is no common PCIe switch,
+        // then P2P is not supported.
+        //
+        if ((!pCl->bPciePeerReadCapable || !pCl->bPciePeerWriteCapable) &&
+            (!bCommonPciSwitchFound))
+        {
+            *pP2PReadCapStatus = NV0000_P2P_CAPS_STATUS_CHIPSET_NOT_SUPPORTED;
+            *pP2PWriteCapStatus = NV0000_P2P_CAPS_STATUS_CHIPSET_NOT_SUPPORTED;
+        }
 
         // GPU specific P2P caps
         pKernelBif = GPU_GET_KERNEL_BIF(pGpu);
@@ -581,9 +579,16 @@ _kp2pCapsGetStatusOverPcie
         // Do not override status from not OK to OK
         //
         if (*pP2PReadCapStatus == NV0000_P2P_CAPS_STATUS_OK)
-            *pP2PReadCapStatus = (p2pCapsParams.p2pReadCapsStatus == NV0000_P2P_CAPS_STATUS_OK ? gpuP2PReadCapsStatus : p2pCapsParams.p2pReadCapsStatus);
+        {
+            *pP2PReadCapStatus = (gpuGetPcieP2PReadCaps(pGpu) == NV0000_P2P_CAPS_STATUS_OK) ?
+                                    gpuP2PReadCapsStatus : gpuGetPcieP2PReadCaps(pGpu);
+        }
+
         if (*pP2PWriteCapStatus == NV0000_P2P_CAPS_STATUS_OK)
-            *pP2PWriteCapStatus =  (p2pCapsParams.p2pWriteCapsStatus == NV0000_P2P_CAPS_STATUS_OK ? gpuP2PWriteCapsStatus : p2pCapsParams.p2pWriteCapsStatus);
+        {
+            *pP2PWriteCapStatus =  (gpuGetPcieP2PWriteCaps(pGpu) == NV0000_P2P_CAPS_STATUS_OK ?
+                                    gpuP2PWriteCapsStatus : gpuGetPcieP2PWriteCaps(pGpu));
+        }
 
         // No need to continue if P2P is not supported
         if ((*pP2PReadCapStatus != NV0000_P2P_CAPS_STATUS_OK) &&

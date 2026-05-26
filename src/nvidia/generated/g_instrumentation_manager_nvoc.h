@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -49,7 +49,7 @@ extern "C" {
 
 #define GFID_TASK_RM                            0
 #define BULLSEYE_TASK_VGPU_COVERAGE_SIZE        (32 << 10)
-#define BULLSEYE_TASK_RM_COVERAGE_SIZE          (3 << 20)
+#define BULLSEYE_TASK_RM_COVERAGE_SIZE          (8 << 20)
 #define MAX_PARTITIONS_WITH_CODE_COVERAGE       (32)
 #define BULLSEYE_GSP_RM_COVERAGE_SIZE           \
             (BULLSEYE_TASK_RM_COVERAGE_SIZE) + (MAX_PARTITIONS_WITH_CODE_COVERAGE * BULLSEYE_TASK_VGPU_COVERAGE_SIZE)
@@ -132,7 +132,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_InstrumentationManager;
     ((InstrumentationManager*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(InstrumentationManager)))
 #endif //__nvoc_instrumentation_manager_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_InstrumentationManager(InstrumentationManager**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_InstrumentationManager(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_InstrumentationManager(InstrumentationManager**, Dynamic*, NvU32);
 #define __objCreate_InstrumentationManager(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -166,13 +166,13 @@ static inline NvU8 * instrumentationmanagerGetBuffer(struct InstrumentationManag
 #define instrumentationmanagerGetBuffer(pInstrumentationManager, gfid, gpuInstance) instrumentationmanagerGetBuffer_IMPL(pInstrumentationManager, gfid, gpuInstance)
 #endif // __nvoc_instrumentation_manager_h_disabled
 
-void instrumentationmanagerMerge_IMPL(struct InstrumentationManager *pInstrumentationMgr, NvU32 gfid, NvU32 gpuInstance, NvU8 *pSysmemBuffer);
+void instrumentationmanagerMerge_IMPL(struct InstrumentationManager *pInstrumentationMgr, NvU32 gfid, NvU32 gpuInstance, NvU8 *pData, NvU32 offset, NvU32 size);
 #ifdef __nvoc_instrumentation_manager_h_disabled
-static inline void instrumentationmanagerMerge(struct InstrumentationManager *pInstrumentationMgr, NvU32 gfid, NvU32 gpuInstance, NvU8 *pSysmemBuffer) {
+static inline void instrumentationmanagerMerge(struct InstrumentationManager *pInstrumentationMgr, NvU32 gfid, NvU32 gpuInstance, NvU8 *pData, NvU32 offset, NvU32 size) {
     NV_ASSERT_FAILED_PRECOMP("InstrumentationManager was disabled!");
 }
 #else // __nvoc_instrumentation_manager_h_disabled
-#define instrumentationmanagerMerge(pInstrumentationMgr, gfid, gpuInstance, pSysmemBuffer) instrumentationmanagerMerge_IMPL(pInstrumentationMgr, gfid, gpuInstance, pSysmemBuffer)
+#define instrumentationmanagerMerge(pInstrumentationMgr, gfid, gpuInstance, pData, offset, size) instrumentationmanagerMerge_IMPL(pInstrumentationMgr, gfid, gpuInstance, pData, offset, size)
 #endif // __nvoc_instrumentation_manager_h_disabled
 
 void instrumentationmanagerReset_IMPL(struct InstrumentationManager *pInstrumentationMgr, NvU32 gfid, NvU32 gpuInstance);

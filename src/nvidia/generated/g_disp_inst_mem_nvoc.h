@@ -163,7 +163,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_DisplayInstanceMemory;
     ((DisplayInstanceMemory*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(DisplayInstanceMemory)))
 #endif //__nvoc_disp_inst_mem_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_DisplayInstanceMemory(DisplayInstanceMemory**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_DisplayInstanceMemory(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_DisplayInstanceMemory(DisplayInstanceMemory**, Dynamic*, NvU32);
 #define __objCreate_DisplayInstanceMemory(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

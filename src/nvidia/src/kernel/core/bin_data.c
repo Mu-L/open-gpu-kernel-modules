@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2016-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2016-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -98,7 +98,7 @@ _bindataWriteStorageToBuffer
 
     pData = _bindataGetBindataPtr(pBinStoragePvt);
 
-    if (pBinStoragePvt->bCompressed)
+    if (pBinStoragePvt->flags & BINDATA_FLAG_COMPRESSED)
     {
         if ((nBytesInflated = utilGzGetData(pData,
                                             bufferSize,
@@ -250,7 +250,7 @@ void bindataMarkReferenced(const BINDATA_STORAGE *pBinStorage)
         // Cast away the constness
         BINDATA_STORAGE_PVT *pMutablePvt = (BINDATA_STORAGE_PVT *)pBinStorage;
         NV_ASSERT(pMutablePvt->pData != NULL || pMutablePvt->actualSize != 0);
-        pMutablePvt->bReferenced = NV_TRUE;
+        pMutablePvt->flags |= BINDATA_FLAG_REFERENCED;
     }
 }
 
@@ -270,7 +270,7 @@ void* bindataGetNextUnreferencedStorage(NvU32 *pIdx, NvU32 *pDataSize)
     (*pIdx)++;
     while (*pIdx < g_bindata_pvt_count)
     {
-        if (!g_bindata_pvt[*pIdx].bReferenced && g_bindata_pvt[*pIdx].pData != NULL)
+        if (!(g_bindata_pvt[*pIdx].flags & BINDATA_FLAG_REFERENCED) && g_bindata_pvt[*pIdx].pData != NULL)
         {
             *pDataSize = g_bindata_pvt[*pIdx].compressedSize;
             return (void*)g_bindata_pvt[*pIdx].pData;
@@ -289,3 +289,4 @@ void bindataDestroyStorage(NvU32 idx)
     g_bindata_pvt[idx].actualSize = 0;
     g_bindata_pvt[idx].compressedSize = 0;
 }
+

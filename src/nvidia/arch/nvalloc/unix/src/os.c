@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1999-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1999-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -64,6 +64,7 @@
 #include "os/dce_rm_client_ipc.h"
 #include "mem_mgr/mem.h"
 #include "gpu/mem_mgr/virt_mem_allocator_common.h"
+#include "nvrm_registry.h"
 
 #include "vgpu/vgpu_util.h"
 
@@ -120,11 +121,6 @@ NV_STATUS osGetDriverBlock
 NvU64 osGetMonotonicTimeNs(void)
 {
     return os_get_monotonic_time_ns();
-}
-
-NvU64 osGetMonotonicTickResolutionNs(void)
-{
-    return os_get_monotonic_tick_resolution_ns();
 }
 
 NV_STATUS osGetPerformanceCounter(NvU64 *pTimeInNs)
@@ -792,6 +788,7 @@ NV_STATUS osQueueWorkItem(
     pWi->flags.bLockGpuGroupSubdevice  = flags.bLockGpuGroupSubdevice;
     pWi->flags.bFullGpuSanity          = flags.bFullGpuSanity;
     pWi->flags.bDropOnUnloadQueueFlush = flags.bDropOnUnloadQueueFlush;
+    pWi->flags.bSetExpandedGpuVisibility = flags.bSetExpandedGpuVisibility;
 
     pWi->flags.bRequiresGpu = NV_TRUE;
     pWi->gpuInstance = gpuGetInstance(pGpu);
@@ -1088,19 +1085,16 @@ NV_STATUS osAllocPagesInternal(
         goto done;
     }
 
-    // Associate pMemData with pMemDesc immediately to ensure cleanup on error
-    memdescSetMemData(pMemDesc, pMemData, NULL);
-
     // Guest allocated memory is already initialized
     if (!memdescGetFlag(pMemDesc, MEMDESC_FLAGS_GUEST_ALLOCATED))
     {
         if (IS_DISCONTIG_AND_DYNGRAN_ENABLED(pMemDesc))
         {
-            NV_ASSERT_OK_OR_GOTO(status, memdescSetAllocSizeFields(pMemDesc, osPageCount * os_page_size, os_page_size), done);
+            NV_ASSERT_OK_OR_RETURN(memdescSetAllocSizeFields(pMemDesc, osPageCount * os_page_size, os_page_size));
         }
         else
         {
-            NV_ASSERT_OK_OR_GOTO(status, memdescSetAllocSizeFields(pMemDesc, rmPageCount * RM_PAGE_SIZE, RM_PAGE_SIZE), done);
+            NV_ASSERT_OK_OR_RETURN(memdescSetAllocSizeFields(pMemDesc, rmPageCount * RM_PAGE_SIZE, RM_PAGE_SIZE));
         }
     }
 
@@ -1110,7 +1104,7 @@ NV_STATUS osAllocPagesInternal(
     //
     if (IS_DISCONTIG_AND_DYNGRAN_ENABLED(pMemDesc))
     {
-        NV_ASSERT_TRUE_OR_GOTO(status, pMemDesc->pageArrayGranularity == os_page_size, NV_ERR_INVALID_ARGUMENT, done);
+        NV_ASSERT_OR_RETURN(pMemDesc->pageArrayGranularity == os_page_size, NV_ERR_INVALID_ARGUMENT);
     }
     else if (NV_RM_PAGE_SIZE < os_page_size &&
             !memdescGetContiguity(pMemDesc, AT_CPU))
@@ -1119,8 +1113,10 @@ NV_STATUS osAllocPagesInternal(
                                 pMemDesc->PageCount);
     }
 
+    memdescSetMemData(pMemDesc, pMemData, NULL);
+
     if ((pGpu != NULL) && IS_VIRTUAL(pGpu))
-        NV_ASSERT_OK_OR_GOTO(status, vgpuUpdateGuestSysmemPfnBitMap(pGpu, pMemDesc, NV_TRUE), done);
+        NV_ASSERT_OK_OR_RETURN(vgpuUpdateGuestSysmemPfnBitMap(pGpu, pMemDesc, NV_TRUE));
 done:
     return status;
 }
@@ -1460,14 +1456,27 @@ static void postEvent(
     NvU32 notifyIndex,
     NvU32 info32,
     NvU16 info16,
-    NvBool dataValid
+    NvBool dataValid,
+    NvBool bDoRefCount
 )
 {
-    if (osReferenceObjectCount(event) != NV_OK)
-        return;
+    if (bDoRefCount)
+    {
+        if (osReferenceObjectCount(event) != NV_OK)
+            return;
+    }
+    else
+    {
+        // Best effort. Can be changed in parallel by free_os_event.
+        if (event->active == 0)
+            return;
+    }
+
     nv_post_event(event, hEvent, notifyIndex,
                   info32, info16, dataValid);
-    osDereferenceObjectCount(event);
+
+    if (bDoRefCount)
+        osDereferenceObjectCount(event);
 }
 
 NvU32 osSetEvent
@@ -1477,7 +1486,7 @@ NvU32 osSetEvent
 )
 {
     nv_event_t *event = NvP64_VALUE(eventID);
-    postEvent(event, 0, 0, 0, 0, NV_FALSE);
+    postEvent(event, 0, 0, 0, 0, NV_FALSE, NV_TRUE);
     return 1;
 }
 
@@ -1486,7 +1495,8 @@ NV_STATUS osNotifyEvent(
     PEVENTNOTIFICATION  NotifyEvent,
     NvU32               Method,
     NvU32               Data,
-    NV_STATUS           Status
+    NV_STATUS           Status,
+    NvBool              bDoRefCount
 )
 {
     NV_STATUS rmStatus = NV_OK;
@@ -1501,7 +1511,8 @@ NV_STATUS osNotifyEvent(
                       NotifyEvent->hEvent,
                       NotifyEvent->NotifyIndex,
                       0, 0,
-                      NotifyEvent->bEventDataRequired);
+                      NotifyEvent->bEventDataRequired,
+                      bDoRefCount);
             break;
         }
 
@@ -1567,6 +1578,14 @@ NV_STATUS osEventNotificationWithInfo
 )
 {
     NV_STATUS rmStatus = NV_OK;
+    NvBool bMatchSubdev = NV_FALSE;
+
+    if ((notifyIndex != OS_EVENT_NOTIFICATION_INDEX_ALL) &&
+        (OS_EVENT_NOTIFICATION_INDEX_MATCH_SUBDEV & notifyIndex))
+    {
+        bMatchSubdev = NV_TRUE;
+        notifyIndex &= ~OS_EVENT_NOTIFICATION_INDEX_MATCH_SUBDEV;
+    }
 
     // walk this object's event list and find any matches for this specific notify
     for (; pNotifyEvent; pNotifyEvent = pNotifyEvent->Next)
@@ -1578,6 +1597,9 @@ NV_STATUS osEventNotificationWithInfo
             continue;
         }
 
+        if (bMatchSubdev && (pGpu->subdeviceInstance != pNotifyEvent->subdeviceInst))
+            continue;
+
         switch (pNotifyEvent->NotifyType)
         {
             case NV_EVENT_BUFFER_BIND:
@@ -1588,7 +1610,8 @@ NV_STATUS osEventNotificationWithInfo
                           pNotifyEvent->hEvent,
                           pNotifyEvent->NotifyIndex,
                           info32, info16,
-                          pNotifyEvent->bEventDataRequired);
+                          pNotifyEvent->bEventDataRequired,
+                          NV_TRUE);
                 break;
             }
 
@@ -1657,7 +1680,8 @@ NV_STATUS osObjectEventNotification
                           pNotifyEvent->hEvent,
                           pNotifyEvent->NotifyIndex,
                           0, 0,
-                          pNotifyEvent->bEventDataRequired);
+                          pNotifyEvent->bEventDataRequired,
+                          NV_TRUE);
                 break;
             }
 
@@ -1687,7 +1711,7 @@ NV_STATUS osReferenceObjectCount(void *pEvent)
 
     portSyncSpinlockAcquire(nv->event_spinlock);
     // If event->active is false, don't allow any more reference
-    if (!event->active)
+    if (event->active == 0)
     {
         portSyncSpinlockRelease(nv->event_spinlock);
         return NV_ERR_INVALID_EVENT;
@@ -2037,6 +2061,56 @@ NvU32 osGetCpuCount(void)
 NvU32 osGetCurrentProcessorNumber(void)
 {
     return os_get_cpu_number();
+}
+
+ClientGroupID osClientGroupID(NvU64 process, void *pidInfo)
+{
+    return os_cgroup_for_pid(process, pidInfo);
+}
+
+NvCgroupImpl osCgroupImplementation(void)
+{
+    switch (os_cgroup_implementation())
+    {
+    case OS_CGROUP_IMPL_DMEM: return CGROUP_IMPL_OS;
+    case OS_CGROUP_IMPL_MISC: return CGROUP_IMPL_FALLBACK;
+    default:                  return CGROUP_IMPL_NONE;
+    }
+}
+
+void *osCgroupRegisterRegion(OBJGPU *pGpu, NvU64 size)
+{
+    char name[32];
+    nvDbgSnprintf(name, sizeof name, "nvidia/%04x:%02x:%02x/vidmem",
+        gpuGetDomain(pGpu),
+        gpuGetBus(pGpu),
+        gpuGetDevice(pGpu));
+    return os_dmem_cgroup_register_region(size, name);
+}
+
+void osCgroupUnregisterRegion(void *region)
+{
+    os_dmem_cgroup_unregister_region(region);
+}
+
+NV_STATUS osMemacctTryCharge(void *pRegion, NvLength size, void **ppPool)
+{
+    return os_dmem_cgroup_try_charge(pRegion, size, ppPool, NULL);
+}
+
+void osMemacctReleaseCharge(void *pool, NvLength size)
+{
+    os_dmem_cgroup_uncharge(pool, size);
+}
+
+void *osCgroupGetFromFd(NvS32 fd)
+{
+    return os_cgroup_get_from_fd(fd);
+}
+
+void osCgroupPut(void *cgroup)
+{
+    os_cgroup_put(cgroup);
 }
 
 void osGetTimeoutParams(OBJGPU *pGpu, NvU32 *pTimeoutUs, NvU32 *pScale, NvU32 *pFlags)
@@ -2738,6 +2812,64 @@ done:
     return status;
 }
 
+NV_STATUS
+cliresCtrlCmdOsUnixMemacctSetLimits_IMPL
+(
+    RmClientResource *pRmCliRes,
+    NV0000_CTRL_OS_UNIX_MEMACCT_SET_LIMITS_PARAMS *pParams
+)
+{
+    void *cgroup = osCgroupGetFromFd(pParams->cgroupFd);
+    if (cgroup == NULL)
+    {
+        return NV_ERR_INVALID_ARGUMENT;
+    }
+
+    NV_STATUS status = memacctSetLimits((ClientGroupID)cgroup, pParams->gpuId, pParams->softLimit, pParams->hardLimit);
+    osCgroupPut(cgroup);
+    return status;
+}
+
+NV_STATUS
+cliresCtrlCmdOsUnixMemacctGetLimits_IMPL
+(
+    RmClientResource *pRmCliRes,
+    NV0000_CTRL_OS_UNIX_MEMACCT_GET_LIMITS_PARAMS *pParams
+)
+{
+    NvU32     gpuMask        = 0;
+    NvU32     gpuIdx         = 0;
+    OBJGPU   *pGpu           = NULL;
+    NV_STATUS status         = NV_OK;
+
+    pParams->count = 0;
+    NV_ASSERT_OK_OR_RETURN(gpumgrGetGpuAttachInfo(NULL, &gpuMask));
+
+    void *cgroup = osCgroupGetFromFd(pParams->cgroupFd);
+    if (cgroup == NULL)
+    {
+        return NV_ERR_INVALID_ARGUMENT;
+    }
+
+    NvU32 i = 0;
+    while ((i < NV0000_CTRL_GPU_MAX_ATTACHED_GPUS) &&
+        ((pGpu = gpumgrGetNextGpu(gpuMask, &gpuIdx)) != NULL))
+    {
+        NV_CHECK_OK_OR_GOTO(status, LEVEL_ERROR,
+            memacctGetLimits((ClientGroupID)cgroup, pGpu->gpuId,
+                &pParams->limits[i].soft,
+                &pParams->limits[i].hard,
+                &pParams->limits[i].current),
+            out);
+        pParams->limits[i].gpuId = pGpu->gpuId;
+        i++;
+    }
+    pParams->count = i;
+out:
+    osCgroupPut(cgroup);
+    return status;
+}
+
 /*!
  * osAcpiDsm
  *
@@ -3231,6 +3363,7 @@ i2cSwPortMapping(
      *  same.
      */
     if ((nv->disp_sw_soc_chip_id == NV_CHIP_ID_T234)
+        || (nv->disp_sw_soc_chip_id == NV_CHIP_ID_T239)
         )
     {
         linuxI2CSwPort = physicalI2CPort - 1;
@@ -4954,6 +5087,9 @@ osRmCapRelease
 #define OS_RM_CAP_SYS_SMC_CONFIG_FILE           1
 #define OS_RM_CAP_SYS_SMC_MONITOR_FILE          2
 #define OS_RM_CAP_SYS_FABRIC_IMEX_MGMT_FILE     3
+#define OS_RM_CAP_SYS_PROFILER_DEVICE_FILE      4
+#define OS_RM_CAP_SYS_PROFILER_CONTEXT_FILE     5
+#define OS_RM_CAP_SYS_TRACE_DEVICE_FILE         6
 #define OS_RM_CAP_SYS_COUNT                     7
 
 NV_STATUS
@@ -5014,6 +5150,33 @@ osRmCapRegisterSys
         goto failed;
     }
     ppCaps[OS_RM_CAP_SYS_FABRIC_IMEX_MGMT_FILE] = cap;
+
+    cap = os_nv_cap_create_file_entry(nvidia_caps_root, "profiler-device", OS_RUSR);
+    if (cap == NULL)
+    {
+        NV_PRINTF(LEVEL_ERROR, "Failed to create profiler-device file\n");
+        status = NV_ERR_OPERATING_SYSTEM;
+        goto failed;
+    }
+    ppCaps[OS_RM_CAP_SYS_PROFILER_DEVICE_FILE] = cap;
+
+    cap = os_nv_cap_create_file_entry(nvidia_caps_root, "profiler-context", OS_RUSR);
+    if (cap == NULL)
+    {
+        NV_PRINTF(LEVEL_ERROR, "Failed to create profiler-context file\n");
+        status = NV_ERR_OPERATING_SYSTEM;
+        goto failed;
+    }
+    ppCaps[OS_RM_CAP_SYS_PROFILER_CONTEXT_FILE] = cap;
+
+    cap = os_nv_cap_create_file_entry(nvidia_caps_root, "trace-device", OS_RUSR);
+    if (cap == NULL)
+    {
+        NV_PRINTF(LEVEL_ERROR, "Failed to create trace-device file\n");
+        status = NV_ERR_OPERATING_SYSTEM;
+        goto failed;
+    }
+    ppCaps[OS_RM_CAP_SYS_TRACE_DEVICE_FILE] = cap;
 
     return NV_OK;
 
@@ -5086,6 +5249,21 @@ osRmCapAcquire
         case NV_RM_CAP_SYS_FABRIC_IMEX_MGMT:
         {
             index = OS_RM_CAP_SYS_FABRIC_IMEX_MGMT_FILE;
+            break;
+        }
+        case NV_RM_CAP_SYS_PROFILER_DEVICE:
+        {
+            index = OS_RM_CAP_SYS_PROFILER_DEVICE_FILE;
+            break;
+        }
+        case NV_RM_CAP_SYS_PROFILER_CONTEXT:
+        {
+            index = OS_RM_CAP_SYS_PROFILER_CONTEXT_FILE;
+            break;
+        }
+        case NV_RM_CAP_SYS_TRACE_DEVICE:
+        {
+            index = OS_RM_CAP_SYS_TRACE_DEVICE_FILE;
             break;
         }
         default:
@@ -5689,6 +5867,18 @@ osDestroyNanoTimer
     return NV_OK;
 }
 
+
+NvBool osIsNonPreemptableDebuggerSessionActive(OBJGPU *pGpu)
+{
+    NvU32 data = 0;
+    if ((osReadRegistryDword(pGpu, NV_REG_STR_RM_NON_PREEMTABLE_DEBUGGER_SESSION_ACTIVE, &data) == NV_OK) && (data == NV_REG_STR_RM_NON_PREEMTABLE_DEBUGGER_SESSION_ACTIVE_ENABLE)) 
+    {
+        return NV_TRUE;
+    }
+
+    return NV_FALSE;
+}
+
 /*!
  * @brief Get number of dpAux instances.
  * It is wrapper function to call unix/linux layer.
@@ -6065,3 +6255,39 @@ osDisableConsoleManagement
 
     nv->client_managed_console = NV_TRUE;
 }
+
+/*
+ * @brief Return NV_TRUE if GPU is configured as CXL device.
+ *
+ * @param[in]   pGpu             GPU object pointer
+ */
+NvBool
+osGpuIsCxlDevice
+(
+    OBJGPU *pGpu
+)
+{
+    nv_state_t *nv = NV_GET_NV_STATE(pGpu);
+
+    return nv->is_cxl_dev;
+}
+
+/*
+ * @brief Disabel CXL cache and perform writeback and invalidate for CXL device.
+ *
+ * @param[in]   pGpu             GPU object pointer
+ * @param[in]   bEnableCache     Enable/Disable flag
+ */
+void
+osCxlSetCaching
+(
+    OBJGPU *pGpu,
+    NvBool  bEnableCache
+)
+{
+
+    nv_state_t *nv = NV_GET_NV_STATE(pGpu);
+
+    nv_pci_cxl_set_caching(nv, bEnableCache);
+}
+

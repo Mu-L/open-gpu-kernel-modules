@@ -22,10 +22,12 @@
  */
 
 #include "nvidia-3d.h"
+#include "nvidia-3d-constant-buffers.h"
+#include "nvidia-3d-shader-constants.h"
 #include "nvidia-3d-types-priv.h"
 #include "nvos.h"
 #include "nvidia-3d-fermi.h"
-#include "nvidia-3d-kepler.h"
+#include "nvidia-3d-turing.h"
 #include "nvidia-push-utils.h"
 
 NvBool nv3dAllocChannelObject(
@@ -92,9 +94,7 @@ void nv3dUploadDataInline(
     const void *data,
     size_t bytes)
 {
-    const Nv3dHal *pHal = p3dChannel->p3dDevice->hal;
-
-    pHal->uploadDataInline(p3dChannel, gpuBaseAddress, offset, data, bytes);
+    _nv3dUploadDataInlineTuring(p3dChannel, gpuBaseAddress, offset, data, bytes);
 }
 
 void nv3dClearProgramCache(Nv3dChannelRec *p3dChannel)
@@ -153,10 +153,33 @@ void nv3dLoadTextures(
 
 void nv3dBindTextures(
     Nv3dChannelPtr p3dChannel,
-    int programIndex,
     const int *textureBindingIndices)
 {
-    nvAssert(programIndex < p3dChannel->programs.num);
+    const NvU16 numTextureBindings = p3dChannel->numTextureBindings;
+    NvPushChannelUnion *remappedBinding = NULL;
+    NvU8 slot;
+    const NvU64 gpuAddress =
+        nv3dGetBindlessTextureConstantBufferGpuAddress(p3dChannel);
 
-    _nv3dBindTexturesKepler(p3dChannel, programIndex, textureBindingIndices);
+    nv3dSelectCbAddress(p3dChannel, gpuAddress, NV3D_CONSTANT_BUFFER_SIZE);
+    nv3dBindCb(p3dChannel, NV3D_HW_BIND_GROUP_FRAGMENT,
+               NV3D_CB_SLOT_BINDLESS_TEXTURE, TRUE);
+    /*
+     * Set up the header in the pushbuffer for the LOAD_CONSTANTS method.  The
+     * below loop will write the data to upload directly into the pushbuffer.
+     */
+    remappedBinding = nv3dLoadConstantsHeader(p3dChannel, 0,
+                                              numTextureBindings);
+
+    for (slot = 0; slot < numTextureBindings; slot++) {
+        int tex = textureBindingIndices[slot];
+
+        /*
+         * Bindless texture packed pointers.  Technically, these consist of
+         * a header at bits 19:0 and a sampler in 32:20, but we don't need
+         * to set a separate header because we enabled
+         * SET_SAMPLER_BINDING_VIA_HEADER_BINDING.
+         */
+        remappedBinding[slot].u = tex * 2;
+    }
 }

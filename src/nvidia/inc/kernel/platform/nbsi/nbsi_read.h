@@ -24,6 +24,7 @@
 #ifndef NBSI_READ_H
 #define NBSI_READ_H
 
+#include "nvstatus.h"
 #include "platform/nbsi/nbsi_table.h"
 
 typedef enum _NBSI_VALIDATE

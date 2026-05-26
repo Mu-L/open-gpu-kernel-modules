@@ -167,7 +167,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJGPUBOOSTMGR;
     ((OBJGPUBOOSTMGR*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(OBJGPUBOOSTMGR)))
 #endif //__nvoc_gpu_boost_mgr_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_OBJGPUBOOSTMGR(OBJGPUBOOSTMGR**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJGPUBOOSTMGR(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJGPUBOOSTMGR(OBJGPUBOOSTMGR**, Dynamic*, NvU32);
 #define __objCreate_OBJGPUBOOSTMGR(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

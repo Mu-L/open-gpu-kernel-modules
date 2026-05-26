@@ -104,12 +104,12 @@
 #include "nvstatus.h"
 
 #ifndef NVGZ_USER
-#define __DRIVER_BUILD__
-// driver build
-#include "os/os.h"
+#define DRIVER_BUILD
 #endif /* NVGZ_USER */
 
-#ifndef __DRIVER_BUILD__
+#ifdef DRIVER_BUILD
+#include "nvport/nvport.h"
+#else
 // user build : NVGZ_USER
 #include <sys/types.h>
 #include <stdlib.h>
@@ -120,7 +120,7 @@
 #define portMemSet memset
 #define portMemAllocNonPaged malloc
 #define portMemFree free
-#define NV_PRINTF(a,b) printf(b)
+#define portDbgPrintf(fmt, ...) printf(fmt, ##__VA_ARGS__)
 #define portMemExAllocStack_SUPPORTED 0
 #endif
 
@@ -954,7 +954,7 @@ static NvU32 dynamic_huft_build(PGZ_INFLATE_STATE pGzState)
     if ((i = huft_build(ll, nl, 257, cplens, cplext, &pGzState->tl, &pGzState->bl)) != 0)
     {
         if (i == GZ_STATE_HUFT_INCOMP) {
-            NV_PRINTF(LEVEL_ERROR, "dload, incomplete literal tree\n");
+            portDbgPrintf("dload, incomplete literal tree\n");
             huft_free(pGzState->tl);
         }
         return i;                   /* incomplete code set */
@@ -963,7 +963,7 @@ static NvU32 dynamic_huft_build(PGZ_INFLATE_STATE pGzState)
     if ((i = huft_build(ll + nl, nd, 0, cpdist, cpdext, &pGzState->td, &pGzState->bd)) != 0)
     {
         if (i == GZ_STATE_HUFT_INCOMP) {
-            NV_PRINTF(LEVEL_ERROR, "dload, incomplete distance tree\n");
+            portDbgPrintf("dload, incomplete distance tree\n");
 #ifdef PKZIP_BUG_WORKAROUND
             i = GZ_STATE_HUFT_OK;
         }
@@ -1223,7 +1223,7 @@ NvU32 utilGzGetData(const NvU8 *zArray, NvU32 numTotalBytes,
 
     if (window == NULL)
     {
-        NV_PRINTF(LEVEL_ERROR, "utilGzGetData: failed to allocate slide window\n");
+        portDbgPrintf("utilGzGetData: failed to allocate slide window\n");
         return 0;
     }
 

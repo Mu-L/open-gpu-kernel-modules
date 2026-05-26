@@ -93,6 +93,9 @@
 #define NV_PRIMARY_HEAD_INDEX_2                         2
 #define NV_SECONDARY_HEAD_INDEX_3                       3
 
+// Size of the overall LTTPR caps data in bytes (0xF0000 ~ 0xF0009)
+#define LTTPR_CAPS_DATA_SIZE                           10
+
 typedef enum
 {
     displayPort_Lane0              = 0,

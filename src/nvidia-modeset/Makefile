@@ -15,6 +15,19 @@ include srcs.mk
 GET_COMPILER_TYPE = \
   $(shell $(VERSION_MK_DIR)/nv-compiler.sh type $(1))
 ##############################################################################
+# Test if the linker supports --force-group-allocation.
+#
+# This creates a minimal dummy object file in OUTPUTDIR, attempts a relocatable
+# link with the flag, and returns "1" if successful, empty string otherwise.
+##############################################################################
+
+LD_HAS_FORCE_GROUP_ALLOCATION = \
+  $(shell $(MKDIR) $(OUTPUTDIR) && \
+    $(CC) -c -x c /dev/null -o $(OUTPUTDIR)/nv_ld_test_$$$$.o 2>/dev/null && \
+    $(LD) -r $(OUTPUTDIR)/nv_ld_test_$$$$.o --force-group-allocation -o /dev/null 2>/dev/null && \
+    $(ECHO) 1; \
+    $(RM) -f $(OUTPUTDIR)/nv_ld_test_$$$$.o)
+##############################################################################
 
 # The source files for nv-modeset-kernel.o are all SRCS and SRCS_CXX defined in
 # srcs.mk, and the NVIDIA ID string
@@ -114,8 +127,6 @@ CFLAGS += -fno-pic
 CFLAGS += -fno-common
 CFLAGS += -fomit-frame-pointer
 CFLAGS += -fno-strict-aliasing
-CFLAGS += -ffunction-sections
-CFLAGS += -fdata-sections
 CFLAGS += -ffreestanding
 CFLAGS += -fno-stack-protector
 
@@ -205,6 +216,34 @@ $(eval $(call COMPRESS_SHADERS,gb20x))
 OBJS = $(call BUILD_OBJECT_LIST,$(ALL_SRCS))
 OBJS += $(SHADER_OBJS)
 
+
+# Check if the linker supports --force-group-allocation by testing it directly.
+# This handles GNU ld, GNU gold, lld (19.1+), and any future linkers that may
+# add support for this flag.
+
+FORCE_ALLOC_SUPPORTED := $(LD_HAS_FORCE_GROUP_ALLOCATION)
+
+EXTRA_LINKER_ARGS =
+LINKER_DEPS =
+
+# enable dead code elimination only when linker supports
+# --force-group-allocation
+ifeq ($(FORCE_ALLOC_SUPPORTED),1)
+  # Define how to perform dead code elimination: place each symbol in its own
+  # section at compile time, and garbage collect unreachable sections at link
+  # time.  exports_link_command.txt tells the linker which symbols need to be
+  # exported from nv-modeset-kernel.o so the linker can determine which symbols
+  # are unreachable.
+  CFLAGS += -ffunction-sections
+  CFLAGS += -fdata-sections
+  EXPORTS_LINK_COMMAND = exports_link_command.txt
+  NVKMS_LD_SCRIPT = nvkms.ld
+  EXTRA_LINKER_ARGS += -T $(NVKMS_LD_SCRIPT) --gc-sections \
+		       --force-group-allocation \
+                       @$(EXPORTS_LINK_COMMAND)
+  LINKER_DEPS += $(EXPORTS_LINK_COMMAND) $(NVKMS_LD_SCRIPT)
+endif
+
 # Define how to generate the NVIDIA ID string
 $(eval $(call GENERATE_NVIDSTRING, \
   NV_KMS_ID, \
@@ -218,8 +257,10 @@ NV_MODESET_KERNEL_O = $(OUTPUTDIR)/nv-modeset-kernel.o
 .PHONY: all
 all: $(NV_MODESET_KERNEL_O)
 
-$(NV_MODESET_KERNEL_O): $(OBJS)
-	$(call quiet_cmd,LD) -r -o $(NV_MODESET_KERNEL_O) $(OBJS)
+$(NV_MODESET_KERNEL_O): $(OBJS) $(LINKER_DEPS)
+	$(call quiet_cmd,LD) $(LDFLAGS) $(EXTRA_LINKER_ARGS) -r \
+	  -o $(NV_MODESET_KERNEL_O) \
+	  $(OBJS)
 
 .PHONY: clean
 clean:

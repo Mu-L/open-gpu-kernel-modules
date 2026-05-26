@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2019-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -52,6 +52,8 @@
 #define NV208F_CTRL_UCODE_INSTRUMENTATION (0x19)
 #define NV208F_CTRL_NVLINK                (0x1A)
 #define NV208F_CTRL_PROFILING             (0x1B)
+#define NV208F_CTRL_CE                    (0x1C)
+#define NV208F_CTRL_SEC2                  (0x1D)
 
 /*
  * NV208F_CTRL_CMD_NULL

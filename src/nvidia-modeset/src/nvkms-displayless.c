@@ -194,8 +194,7 @@ static NvU32 GetSemaphoreIndex(
     const NVFlipNIsoSurfaceEvoHwState *pSemaSurface)
 {
     const NvU32 offsetInBytes = pSemaSurface->offsetInWords * 4;
-    const enum NvKmsNIsoFormat format = pSemaSurface->format;
-    const NvU32 sizeOfSemaphore = nvKmsSizeOfSemaphore(format);
+    const NvU32 sizeOfSemaphore = nvKmsSizeOfSemaphore();
 
     nvAssert(sizeOfSemaphore > 0);
     nvAssert((offsetInBytes % sizeOfSemaphore) == 0);
@@ -223,9 +222,8 @@ static void ReleaseLastSemaphore(NVDevEvoPtr pDevEvo, NvU32 apiHead)
     if (pLastSemaSurface->pSurfaceEvo != NULL) {
         void *pCpuAddress = pLastSemaSurface->pSurfaceEvo->cpuAddress[0];
         const NvU32 semaIndex = GetSemaphoreIndex(pLastSemaSurface);
-        const enum NvKmsNIsoFormat format = pLastSemaSurface->format;
 
-        nvKmsResetSemaphore(format, semaIndex, pCpuAddress, *pLastReleaseValue);
+        nvKmsResetSemaphore(semaIndex, pCpuAddress, *pLastReleaseValue);
         nvEvoDecrementSurfaceRefCnts(pDevEvo, pLastSemaSurface->pSurfaceEvo);
     }
 }
@@ -261,11 +259,10 @@ static NvBool ProcessPendingFlips(
                 nvSendFlipOccurredEventEvo(pDispEvo, apiHead, NVKMS_MAIN_LAYER);
             } else {
                 void *pCpuAddress = pFlip->semaSurface.pSurfaceEvo->cpuAddress[0];
-                const enum NvKmsNIsoFormat format = pFlip->semaSurface.format;
                 const NvU32 semaIndex = GetSemaphoreIndex(&pFlip->semaSurface);
                 struct nvKmsParsedSemaphore parsedSema = { };
 
-                nvKmsParseSemaphore(format, semaIndex, pCpuAddress, &parsedSema);
+                nvKmsParseSemaphore(semaIndex, pCpuAddress, &parsedSema);
 
                 if (skipWaitingForSema || parsedSema.payload == pFlip->acquireValue) {
                     /*
@@ -679,15 +676,6 @@ static void DisplaylessSetDscParams(
 {
 }
 
-static void DisplaylessEnableMidFrameAndDWCFWatermark(
-    NVDevEvoPtr pDevEvo,
-    NvU32 sd,
-    NvU32 head,
-    NvBool enable,
-    NVEvoUpdateState *pUpdateState)
-{
-}
-
 static NvU32 DisplaylessGetActiveViewportOffset(
     NVDispEvoRec *pDispEvo, NvU32 head)
 {
@@ -841,7 +829,7 @@ NVEvoHAL nvDisplayless = {
     DisplaylessGetScanLine,                             /* GetScanLine */
     DisplaylessConfigureVblankSyncObject,               /* ConfigureVblankSyncObject */
     DisplaylessSetDscParams,                            /* SetDscParams */
-    DisplaylessEnableMidFrameAndDWCFWatermark,          /* EnableMidFrameAndDWCFWatermark */
+    NULL,                                               /* EnableMidFrameAndDWCFWatermark */
     DisplaylessGetActiveViewportOffset,                 /* GetActiveViewportOffset */
     DisplaylessClearSurfaceUsage,                       /* ClearSurfaceUsage */
     DisplaylessComputeWindowScalingTaps,                /* ComputeWindowScalingTaps */
@@ -850,6 +838,7 @@ NVEvoHAL nvDisplayless = {
     DisplaylessSendHdmiInfoFrame,                       /* SendHdmiInfoFrame */
     DisplaylessDisableHdmiInfoFrame,                    /* DisableHdmiInfoFrame */
     DisplaylessSendDpInfoFrameSdp,                      /* SendDpInfoFrameSdp */
+    NULL,                                               /* DisableAdaptiveSyncSdp */
     NULL,                                               /* SetDpVscSdp */
     NULL,                                               /* InitHwHeadMultiTileConfig */
     NULL,                                               /* SetMultiTileConfig */
@@ -863,6 +852,7 @@ NVEvoHAL nvDisplayless = {
     DisplaylessSetWinNotifierSurfaceAddressAndControl,  /* SetWinNotifierSurfaceAddressAndControl */
     DisplaylessSetSemaphoreSurfaceAddressAndControl,    /* SetSemaphoreSurfaceAddressAndControl */
     DisplaylessSetAcqSemaphoreSurfaceAddressAndControl, /* SetAcqSemaphoreSurfaceAddressAndControl */
+    NULL,                                               /* SetupVBlankRgSemaphoreInterrupt */
     {                                                   /* caps */
         FALSE,                                          /* supportsHDMIFRL */
         FALSE,                                          /* supportsSetStorageMemoryLayout */
@@ -876,12 +866,12 @@ NVEvoHAL nvDisplayless = {
     },
 };
 
-static void DisplaylessMoveCursor(NVDevEvoPtr pDevEvo, NvU32 sd, NvU32 head,
+static void DisplaylessMoveCursor(NVDevEvoPtr pDevEvo, NvU32 head,
                                   NvS16 x, NvS16 y)
 {
 }
 
-static void DisplaylessReleaseElv(NVDevEvoPtr pDevEvo, NvU32 sd, NvU32 head)
+static void DisplaylessReleaseElv(NVDevEvoPtr pDevEvo, NvU32 head)
 {
 }
 

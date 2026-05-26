@@ -665,6 +665,7 @@ knvlinkStateLoad_IMPL
           pKernelNvlink->getProperty(pKernelNvlink,
                                      PDB_PROP_KNVLINK_MINION_FORCE_ALI_TRAINING)))
     {
+        NVLINK_BIT_VECTOR linkMaskVec;
         status = knvlinkPreTrainLinksToActiveAli(pGpu, pKernelNvlink,
                                                  KNVLINK_BITVECTOR_TO_MASK(pKernelNvlink, enabledLinks, 32), NV_TRUE);
         if (status != NV_OK)
@@ -680,7 +681,9 @@ knvlinkStateLoad_IMPL
         //
         FOR_EACH_IN_BITVECTOR(&pKernelNvlink->enabledLinks, i)
         {
-            status = knvlinkTrainLinksToActiveAli(pGpu, pKernelNvlink, NVBIT(i), NV_FALSE);
+            bitVectorClrAll(&linkMaskVec);
+            bitVectorSet(&linkMaskVec, i);
+            status = knvlinkTrainLinksToActiveAli(pGpu, pKernelNvlink, &linkMaskVec, NV_FALSE);
             if (status != NV_OK)
             {
                 NV_PRINTF(LEVEL_ERROR,
@@ -827,7 +830,7 @@ knvlinkStatePostLoad_IMPL
     }
 
     // We check for NVLE enablement here for the production/non-MODS case
-    if (pKernelNvlink->bNvleModeRegkey)
+    if (pKernelNvlink->bNvleModeRegkey || pKernelNvlink->bNvleQualModeRegkey)
     {
         //
         // On new firmware, CC enabled implies NVLE enabled, which is not true on older
@@ -835,7 +838,8 @@ knvlinkStatePostLoad_IMPL
         //
         NV_ASSERT_OK_OR_RETURN(knvlinkGetEncryptionBits_HAL(pGpu, pKernelNvlink));
 
-        if (RMCFG_FEATURE_MODS_FEATURES || pKernelNvlink->bMmuNvlinkEncryptEn)
+        if (RMCFG_FEATURE_MODS_FEATURES || pKernelNvlink->bNvleQualModeRegkey ||
+            pKernelNvlink->bMmuNvlinkEncryptEn)
         {
             if (!knvlinkIsNvleEnabled_HAL(pGpu, pKernelNvlink))
             {

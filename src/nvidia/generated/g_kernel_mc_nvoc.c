@@ -29,7 +29,7 @@ void __nvoc_init__KernelMc(KernelMc*, GpuHalspecOwner *pGpuhalspecowner);
 void __nvoc_init_funcTable_KernelMc(KernelMc*, GpuHalspecOwner *pGpuhalspecowner);
 NV_STATUS __nvoc_ctor_KernelMc(KernelMc*, GpuHalspecOwner *pGpuhalspecowner);
 void __nvoc_init_dataField_KernelMc(KernelMc*, GpuHalspecOwner *pGpuhalspecowner);
-void __nvoc_dtor_KernelMc(KernelMc*);
+void __nvoc_dtor_KernelMc(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__KernelMc;
@@ -62,7 +62,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelMc =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "KernelMc",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_KernelMc,
+    .objCreatefn =        &__nvoc_objCreateDynamic_KernelMc,
     .pCastInfo =          &__nvoc_castinfo__KernelMc,
     .pExportInfo =        &__nvoc_export_info__KernelMc
 };
@@ -71,7 +71,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelMc =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__KernelMc __nvoc_metadata__KernelMc = {
     .rtti.pClassDef = &__nvoc_class_def_KernelMc,    // (kmc) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_KernelMc,
+    .rtti.dtor      = &__nvoc_dtor_KernelMc,
     .rtti.offset    = 0,
     .metadata__OBJENGSTATE.rtti.pClassDef = &__nvoc_class_def_OBJENGSTATE,    // (engstate) super
     .metadata__OBJENGSTATE.rtti.dtor      = &__nvoc_destructFromBase,
@@ -205,13 +205,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__KernelMc =
 
 
 // Destruct KernelMc object.
-void __nvoc_dtor_OBJENGSTATE(OBJENGSTATE*);
-void __nvoc_dtor_KernelMc(KernelMc* pThis) {
+void __nvoc_dtor_OBJENGSTATE(Dynamic*);
+void __nvoc_dtor_KernelMc(Dynamic* pThis) {
+
+    KernelMc *__nvoc_this = (KernelMc *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_OBJENGSTATE(&pThis->__nvoc_base_OBJENGSTATE);
+    __nvoc_dtor_OBJENGSTATE((Dynamic *) &__nvoc_this->__nvoc_base_OBJENGSTATE);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_KernelMc(KernelMc *pThis, GpuHalspecOwner *pGpuhalspecowner) {
     ChipHal *chipHal = &pGpuhalspecowner->chipHal;
@@ -266,7 +268,7 @@ static void __nvoc_init_funcTable_KernelMc_1(KernelMc *pThis, GpuHalspecOwner *p
     }
 
     // kmcPrepareForXVEReset -- halified (2 hals) body
-    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000a000UL) )) /* ChipHal: T234D | T264D */ 
+    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000e000UL) )) /* ChipHal: T234D | T239D | T264D */ 
     {
         pThis->__kmcPrepareForXVEReset__ = &kmcPrepareForXVEReset_ac1694;
     }
@@ -276,7 +278,7 @@ static void __nvoc_init_funcTable_KernelMc_1(KernelMc *pThis, GpuHalspecOwner *p
     }
 
     // kmcGetMcBar0MapInfo -- halified (3 hals) body
-    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000a000UL) )) /* ChipHal: T234D | T264D */ 
+    if (( ((chipHal_HalVarIdx >> 5) == 3UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x0000e000UL) )) /* ChipHal: T234D | T239D | T264D */ 
     {
         pThis->__kmcGetMcBar0MapInfo__ = &kmcGetMcBar0MapInfo_395e98;
     }
@@ -295,7 +297,7 @@ static void __nvoc_init_funcTable_KernelMc_1(KernelMc *pThis, GpuHalspecOwner *p
         pThis->__kmcReadPmcBoot0__ = &kmcReadPmcBoot0_GM107;
     }
     else if (( ((chipHal_HalVarIdx >> 5) == 1UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0xb8000000UL) ) ||
-             ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000003f9UL) )) /* ChipHal: GB100 | GB102 | GB10B | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C */ 
+             ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000030ffUL) )) /* ChipHal: GB100 | GB102 | GB10B | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C | GR100 | GR102 */ 
     {
         pThis->__kmcReadPmcBoot0__ = &kmcReadPmcBoot0_GB100;
     }
@@ -412,11 +414,8 @@ __nvoc_objCreate_KernelMc_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_KernelMc(KernelMc **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_KernelMc(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_KernelMc(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_KernelMc((KernelMc **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

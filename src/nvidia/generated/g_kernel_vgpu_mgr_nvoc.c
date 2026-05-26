@@ -28,7 +28,7 @@ void __nvoc_init__KernelVgpuMgr(KernelVgpuMgr*);
 void __nvoc_init_funcTable_KernelVgpuMgr(KernelVgpuMgr*);
 NV_STATUS __nvoc_ctor_KernelVgpuMgr(KernelVgpuMgr*);
 void __nvoc_init_dataField_KernelVgpuMgr(KernelVgpuMgr*);
-void __nvoc_dtor_KernelVgpuMgr(KernelVgpuMgr*);
+void __nvoc_dtor_KernelVgpuMgr(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__KernelVgpuMgr;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelVgpuMgr =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "KernelVgpuMgr",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_KernelVgpuMgr,
+    .objCreatefn =        &__nvoc_objCreateDynamic_KernelVgpuMgr,
     .pCastInfo =          &__nvoc_castinfo__KernelVgpuMgr,
     .pExportInfo =        &__nvoc_export_info__KernelVgpuMgr
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelVgpuMgr =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__KernelVgpuMgr __nvoc_metadata__KernelVgpuMgr = {
     .rtti.pClassDef = &__nvoc_class_def_KernelVgpuMgr,    // (kvgpumgr) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_KernelVgpuMgr,
+    .rtti.dtor      = &__nvoc_dtor_KernelVgpuMgr,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -82,16 +82,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__KernelVgpuMgr =
 
 // Destruct KernelVgpuMgr object.
 void __nvoc_kvgpumgrDestruct(KernelVgpuMgr*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_KernelVgpuMgr(KernelVgpuMgr* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_KernelVgpuMgr(Dynamic* pThis) {
+
+    KernelVgpuMgr *__nvoc_this = (KernelVgpuMgr *) pThis;
 
 // Call destructor.
-    __nvoc_kvgpumgrDestruct(pThis);
+    __nvoc_kvgpumgrDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_KernelVgpuMgr(KernelVgpuMgr *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -117,7 +119,7 @@ NV_STATUS __nvoc_ctor_KernelVgpuMgr(KernelVgpuMgr *pKernelVgpuMgr) {
 
     // Unwind on error.
 __nvoc_ctor_KernelVgpuMgr_fail__init:
-    __nvoc_dtor_Object(&pKernelVgpuMgr->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&pKernelVgpuMgr->__nvoc_base_Object);
 __nvoc_ctor_KernelVgpuMgr_fail_Object:
 __nvoc_ctor_KernelVgpuMgr_exit:
     return status;
@@ -221,11 +223,8 @@ __nvoc_objCreate_KernelVgpuMgr_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_KernelVgpuMgr(KernelVgpuMgr **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_KernelVgpuMgr(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_KernelVgpuMgr(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_KernelVgpuMgr((KernelVgpuMgr **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

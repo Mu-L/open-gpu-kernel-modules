@@ -462,7 +462,7 @@ RmLogGpuCrash(OBJGPU *pGpu)
 
 static void free_os_event_under_lock(nv_event_t *event)
 {
-    event->active = NV_FALSE;
+    portAtomicSetS32(&event->active, 0);
 
     // If refcount > 0, event will be freed by osDereferenceObjectCount
     // when the last associated RM event is freed.
@@ -614,7 +614,7 @@ static NV_STATUS allocate_os_event(
     new_event->hParent  = hParent;
     new_event->nvfp     = nvfp;
     new_event->fd       = fd;
-    new_event->active   = NV_TRUE;
+    portAtomicSetS32(&new_event->active, 1);
     new_event->refcount = 0;
 
     portSyncSpinlockAcquire(nv->event_spinlock);
@@ -1341,6 +1341,35 @@ static void RmHandleDNotifierEvent(
                   "%s: Failed to handle ACPI D-Notifier event, status=0x%x\n",
                   __FUNCTION__, rmStatus);
     }
+}
+
+static NvU32 RmDmabufMmapGetCpuCacheType(
+    OBJGPU            *pGpu,
+    MEMORY_DESCRIPTOR *pMemDesc,
+    NvU8               mappingType
+)
+{
+    if (pGpu->pGpuArch->bGpuArchIsZeroFb)
+    {
+        return memdescGetCpuCacheAttrib(pMemDesc);
+    }
+
+#if defined(NVCPU_X86_64)
+    return NV_MEMORY_WRITECOMBINED;
+#elif defined(NVCPU_AARCH64)
+    if ((pGpu->getProperty(pGpu, PDB_PROP_GPU_COHERENT_CPU_MAPPING)) &&
+        (mappingType == NV_DMABUF_EXPORT_MAPPING_TYPE_DEFAULT))
+    {
+        return NV_MEMORY_CACHED;
+    }
+    else
+    {
+        return NV_MEMORY_UNCACHED;
+    }
+#else
+    // Default to uncached for other platforms for now
+    return NV_MEMORY_UNCACHED;
+#endif
 }
 
 static NV_STATUS
@@ -5546,6 +5575,7 @@ NV_STATUS NV_API_CALL rm_dma_buf_dup_mem_handle(
     NvHandle          hMemory,
     NvU64             offset,
     NvU64             size,
+    NvU8              mappingType,
     NvHandle         *phMemoryDuped,
     void            **ppMemInfo,
     NvBool           *pbCanMmap,
@@ -5607,7 +5637,7 @@ NV_STATUS NV_API_CALL rm_dma_buf_dup_mem_handle(
         }
         *ppMemInfo = (void *) pMemDesc;
 
-        *pCacheType    = memdescGetCpuCacheAttrib(pMemDesc);
+        *pCacheType    = RmDmabufMmapGetCpuCacheType(pGpu, pMemDesc, mappingType);
         *pbReadOnlyMem = memdescGetFlag(pMemDesc, MEMDESC_FLAGS_USER_READ_ONLY);
 
         if (memdescGetFlag(pMemDesc, MEMDESC_FLAGS_PEER_IO_MEM))
@@ -5625,8 +5655,9 @@ NV_STATUS NV_API_CALL rm_dma_buf_dup_mem_handle(
             *pMemoryType = NV_MEMORY_TYPE_FRAMEBUFFER;
         }
 
-        // mmap is allowed only for 0FB chips (iGPU)
-        *pbCanMmap = pGpu->pGpuArch->bGpuArchIsZeroFb;
+        // mmap is allowed on 0FB chips(iGPU) for sysmem and on dGPU for vidmem only
+        *pbCanMmap = (pGpu->pGpuArch->bGpuArchIsZeroFb ||
+                      (memdescGetAddressSpace(pMemDesc) == ADDR_FBMEM));
     }
 
     threadStateFree(&threadState, THREAD_STATE_FLAGS_NONE);

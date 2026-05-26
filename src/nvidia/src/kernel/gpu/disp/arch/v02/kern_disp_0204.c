@@ -217,3 +217,21 @@ kdispComputeDpModeSettings_v02_04
 
     return NV_OK;
 }
+
+/*!
+ * @brief Get display MMIO aperture length for v02_01
+ *
+ * @param[in]  pGpu            GPU object pointer
+ * @param[in]  pKernelDisplay  KernelDisplay pointer
+ *
+ * @return Display MMIO range size in bytes
+ */
+NvU32
+kdispGetDisplayApertureLength_v02_01
+(
+    OBJGPU        *pGpu,
+    KernelDisplay *pKernelDisplay
+)
+{
+    return DRF_SIZE(NV_PDISP);
+}

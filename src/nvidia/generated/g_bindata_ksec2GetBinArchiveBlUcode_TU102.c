@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2016-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2016-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -36,6 +36,7 @@
 // COMPLEX_STRUCT: NO
 // DATA SIZE (bytes): 768
 // COMPRESSED SIZE (bytes): 303
+// EXTERNAL: NO
 //
 static BINDATA_CONST NV_DECLARE_ALIGNED(NvU8, 8) ksec2BinArchiveBlUcode_TU102_BINDATA_LABEL_UCODE_IMAGE_data[] = 
 {
@@ -70,9 +71,8 @@ BINDATA_STORAGE_PVT ksec2BinArchiveBlUcode_TU102_BINDATA_LABEL_UCODE_IMAGE_stora
     768,                                                               // uncompressed data size (bytes)
     303,                                                               // compressed data size (bytes)
     ksec2BinArchiveBlUcode_TU102_BINDATA_LABEL_UCODE_IMAGE_data,       // compressed data pointer
-    NV_TRUE,                                                           // is pData compressed?
-    NV_TRUE,                                                           // contain information for file overriding?
-    NV_FALSE,                                                          // is the data referenced during load? (Only valid when BINDATA_IS_MUTABLE is true)
+    BINDATA_FLAG_COMPRESSED | BINDATA_FLAG_EXTERNAL_VMWARE,            // u32 flags (see bin_data_pvt.h)
+    0,                                                                 // Unused
 },
 #endif // defined(BINDATA_INCLUDE_STORAGE_PVT_DEFN)
 
@@ -87,6 +87,7 @@ BINDATA_STORAGE_PVT ksec2BinArchiveBlUcode_TU102_BINDATA_LABEL_UCODE_IMAGE_stora
 // COMPLEX_STRUCT: YES
 // DATA SIZE (bytes): sizeof(ksec2BinArchiveBlUcode_TU102_BINDATA_LABEL_UCODE_DESC_data)
 // COMPRESSED SIZE (bytes): N/A
+// EXTERNAL: NO
 //
 static const RM_FLCN_BL_DESC ksec2BinArchiveBlUcode_TU102_BINDATA_LABEL_UCODE_DESC_data = {
     0xfd, 
@@ -109,9 +110,8 @@ BINDATA_STORAGE_PVT ksec2BinArchiveBlUcode_TU102_BINDATA_LABEL_UCODE_DESC_storag
     sizeof(ksec2BinArchiveBlUcode_TU102_BINDATA_LABEL_UCODE_DESC_data), // uncompressed data size (bytes)
     sizeof(ksec2BinArchiveBlUcode_TU102_BINDATA_LABEL_UCODE_DESC_data), // compressed data size (bytes)
     &ksec2BinArchiveBlUcode_TU102_BINDATA_LABEL_UCODE_DESC_data,       // compressed data pointer
-    NV_FALSE,                                                          // is pData compressed?
-    NV_TRUE,                                                           // contain information for file overriding?
-    NV_FALSE,                                                          // is the data referenced during load? (Only valid when BINDATA_IS_MUTABLE is true)
+    0,                                                                 // u32 flags (see bin_data_pvt.h)
+    0,                                                                 // Unused
 },
 #endif // defined(BINDATA_INCLUDE_STORAGE_PVT_DEFN)
 

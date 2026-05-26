@@ -36,7 +36,7 @@
 
 #include "nvkms-rmapi.h"
 
-#include <class/cl917a.h> /* sizeof(GK104DispCursorControlPio) */
+#include <class/clc57a.h> /* sizeof(NVC57ADispCursorImmControlPio) */
 #include <class/cla083.h> /* NVA083_GRID_DISPLAYLESS */
 
 #include <nvos.h> /* NV50VAIO_CHANNELPIO_ALLOCATION_PARAMETERS */
@@ -127,14 +127,12 @@ SetCursorImageOneHead(NVDispEvoPtr pDispEvo,
     }
 
     if (changed) {
-        nvPushEvoSubDevMaskDisp(pDispEvo);
         pDevEvo->hal->SetCursorImage(
             pDevEvo,
             head,
             pDevEvo->gpus[sd].headState[head].cursor.pSurfaceEvo,
             pUpdateState,
             &pDevEvo->gpus[sd].headState[head].cursor.cursorCompParams);
-        nvPopEvoSubDevMask(pDevEvo);
     }
 }
 
@@ -270,7 +268,7 @@ void nvEvoMoveCursorInternal(NVDispEvoPtr pDispEvo,
     const NvU32 sd = pDispEvo->displayOwner;
     NVEvoSubDevPtr pEvoSubDev = &pDevEvo->gpus[sd];
 
-    pDevEvo->cursorHal->MoveCursor(pDevEvo, sd, head, x, y);
+    pDevEvo->cursorHal->MoveCursor(pDevEvo, head, x, y);
 
     /* If the cursor is visible, trigger VRR unstall to display the
      * cursor at the new postion */
@@ -329,8 +327,8 @@ NvBool nvAllocCursorEvo(NVDevEvoPtr pDevEvo)
 
     for (head = 0; head < pDevEvo->numHeads; head++) {
         NV50VAIO_CHANNELPIO_ALLOCATION_PARAMETERS PioChannelAllocParams = { 0 };
-        NVDispEvoPtr pDispEvo;
-        NvU32 sd;
+        void *pPioDisplayChannel;
+        NvU32 status;
 
         PioChannelAllocParams.channelInstance = head;
         // No notifiers in cursor channel
@@ -351,28 +349,22 @@ NvBool nvAllocCursorEvo(NVDevEvoPtr pDevEvo)
             return FALSE;
         }
 
-        FOR_ALL_EVO_DISPLAYS(pDispEvo, sd, pDevEvo) {
-            NVEvoSubDevPtr pEvoSubDev = &pDevEvo->gpus[sd];
-            void *pPioDisplayChannel;
-            NvU32 status;
-
-            status = nvRmApiMapMemory(
-                        nvEvoGlobal.clientHandle,
-                        pDevEvo->pSubDevices[sd]->handle,
-                        pDevEvo->cursorHandle[head],
-                        0,
-                        sizeof(GK104DispCursorControlPio),
-                        &pPioDisplayChannel,
-                        0);
-            if (status != NVOS_STATUS_SUCCESS) {
-                nvEvoLogDispDebug(pDispEvo, EVO_LOG_ERROR,
-                                  "Failed to map CURSOR PIO for head %d",
-                                  head);
-                nvFreeCursorEvo(pDevEvo);
-                return FALSE;
-            }
-            pEvoSubDev->cursorPio[head] = pPioDisplayChannel;
+        status = nvRmApiMapMemory(
+                    nvEvoGlobal.clientHandle,
+                    pDevEvo->pSubDevices[0]->handle,
+                    pDevEvo->cursorHandle[head],
+                    0,
+                    sizeof(NVC57ADispCursorImmControlPio),
+                    &pPioDisplayChannel,
+                    0);
+        if (status != NVOS_STATUS_SUCCESS) {
+            nvEvoLogDevDebug(pDevEvo, EVO_LOG_ERROR,
+                             "Failed to map CURSOR PIO for head %d",
+                             head);
+            nvFreeCursorEvo(pDevEvo);
+            return FALSE;
         }
+        pDevEvo->cursorPio[head] = pPioDisplayChannel;
     }
 
     return TRUE;
@@ -384,34 +376,26 @@ void nvFreeCursorEvo(NVDevEvoPtr pDevEvo)
     NvU32 head;
 
     for (head = 0; head < pDevEvo->numHeads; head++) {
-        NVDispEvoPtr pDispEvo;
-        NvU32 sd;
         NvU32 status;
 
         if (pDevEvo->cursorHandle[head] == 0) {
             continue;
         }
 
-        FOR_ALL_EVO_DISPLAYS(pDispEvo, sd, pDevEvo) {
-            NVEvoSubDevPtr pEvoSubDev = &pDevEvo->gpus[sd];
-            NvU32 status;
-
-            if (pEvoSubDev->cursorPio[head] == NULL) {
-                continue;
-            }
+        if (pDevEvo->cursorPio[head] != NULL) {
 
             status = nvRmApiUnmapMemory(
                         nvEvoGlobal.clientHandle,
-                        pDevEvo->pSubDevices[sd]->handle,
+                        pDevEvo->pSubDevices[0]->handle,
                         pDevEvo->cursorHandle[head],
-                        pEvoSubDev->cursorPio[head],
+                        pDevEvo->cursorPio[head],
                         0);
 
             if (status != NVOS_STATUS_SUCCESS) {
-                nvEvoLogDispDebug(pDispEvo, EVO_LOG_ERROR,
-                                  "Failed to unmap cursor channel memory");
+                nvEvoLogDevDebug(pDevEvo, EVO_LOG_ERROR,
+                                 "Failed to unmap cursor channel memory");
             }
-            pEvoSubDev->cursorPio[head] = NULL;
+            pDevEvo->cursorPio[head] = NULL;
         }
 
         status = nvRmApiFree(

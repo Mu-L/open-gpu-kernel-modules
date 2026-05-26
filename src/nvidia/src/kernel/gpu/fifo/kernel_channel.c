@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -3188,16 +3188,14 @@ kchannelCtrlCmdGpfifoGetWorkSubmitToken_IMPL
     KernelFifo   *pKernelFifo   = GPU_GET_KERNEL_FIFO(pGpu);
     CALL_CONTEXT *pCallContext  = resservGetTlsCallContext();
     RmCtrlParams *pRmCtrlParams = pCallContext->pControlParams;
-    NvBool bIsMIGEnabled        = IS_MIG_ENABLED(pGpu);
+    NvBool bIsVgpuRpcNeeded = NV_FALSE;
 
-    NvBool bIsModsVgpu          = NV_FALSE;
-
-    NvBool bIsVgpuRpcNeeded     = (bIsModsVgpu || (IS_VIRTUAL(pGpu) &&
-                                  !(IS_VIRTUAL_WITH_SRIOV(pGpu) && !bIsMIGEnabled &&
-                                    kfifoIsPerRunlistChramEnabled(pKernelFifo)))) &&
-                                    (!pKernelFifo->bGuestGenenratesWorkSubmitToken);
-
-    NvBool bGenerateWorkSubmitToken = !bIsModsVgpu || pKernelFifo->bGuestGenenratesWorkSubmitToken;
+    if (IS_VIRTUAL(pGpu))
+    {
+        bIsVgpuRpcNeeded = !(IS_VIRTUAL_WITH_SRIOV(pGpu) && !(IS_MIG_ENABLED(pGpu)) &&
+                             kfifoIsPerRunlistChramEnabled(pKernelFifo)) &&
+                            (!pKernelFifo->bGuestGenenratesWorkSubmitToken);
+    }
 
     //
     // vGPU:
@@ -3229,8 +3227,6 @@ kchannelCtrlCmdGpfifoGetWorkSubmitToken_IMPL
             return rmStatus;
         }
     }
-
-    if (bGenerateWorkSubmitToken)
     {
         NV_ASSERT_OR_RETURN(pKernelChannel->pKernelChannelGroupApi != NULL, NV_ERR_INVALID_STATE);
 

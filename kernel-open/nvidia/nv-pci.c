@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2019-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -77,8 +77,15 @@
 #if NV_IS_EXPORT_SYMBOL_GPL_pci_ats_supported
 #include <linux/pci-ats.h>
 #endif
+#include <uapi/linux/pci_regs.h>
 
-extern int NVreg_GrdmaPciTopoCheckOverride;
+/*
+ * Set the default devfreq suspend frequency to 315 MHz
+ * considering the balance between power consumption
+ * and performance based on various scenarios.
+ */
+#define NV_PCI_TEGRA_DEVFREQ_SUSPEND_FREQ 315000000
+
 extern int NVreg_ExcludeAllGpus;
 
 static void
@@ -119,6 +126,144 @@ nv_check_and_exclude_gpu(
 
 done:
     os_free_mem(uuid_str);
+}
+
+static int
+nv_cxl_get_hdm_base_addr
+(
+    struct pci_dev *pdev,
+    NvU64 *hdm_base_addr,
+    NvU64 *hdm_size
+)
+{
+#if NV_IS_EXPORT_SYMBOL_GPL_pci_find_dvsec_capability
+#if defined(PCI_VENDOR_ID_CXL)
+#if defined(PCI_DVSEC_CXL_REG_LOCATOR)
+    void __iomem *comp_base = NULL, *hdm_base = NULL;
+    u32 reg_lo, reg_hi, cap_array, cap_count, hdr, cap_id, offset;
+    u32 hdm_cap, base_low, base_high, size_low, size_high, ctrl_reg;
+    u64 base_addr, size;
+    int dvsec_pos, regloc, bar, i;
+    bool committed;
+
+    /* Find CXL Register Locator DVSEC */
+    dvsec_pos = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
+                                          PCI_DVSEC_CXL_REG_LOCATOR);
+
+    if (!dvsec_pos)
+        return -ENXIO;
+
+    u32 dvsec_hdr;
+    pci_read_config_dword(pdev, dvsec_pos + PCI_DVSEC_HEADER1, &dvsec_hdr);
+
+    if (((dvsec_hdr >> 16) & 0xFFFF) == PCI_VENDOR_ID_CXL &&
+        (dvsec_hdr & 0xFFFF) == PCI_DVSEC_CXL_REG_LOCATOR)
+    {
+        nv_printf(NV_DBG_INFO, "NVRM: Found CXL Register Locator DVSEC at 0x%x\n", dvsec_pos);
+    }
+
+    /* Find component register block in DVSEC */
+    regloc = dvsec_pos + PCI_DVSEC_CXL_REG_LOCATOR_BLOCK1;
+
+    /* Read first register block entry */
+    pci_read_config_dword(pdev, regloc, &reg_lo);
+    pci_read_config_dword(pdev, regloc + 4, &reg_hi);
+
+    /* Check if it's a component register block */
+    if (((reg_lo & PCI_DVSEC_CXL_REG_LOCATOR_BLOCK_ID) >> 8) != CXL_REGLOC_RBI_COMPONENT)
+    {
+        nv_printf(NV_DBG_INFO, "NVRM: First register block is not component type\n");
+        return -ENODEV;
+    }
+
+    /* Extract BAR and offset */
+    bar = reg_lo & PCI_DVSEC_CXL_REG_LOCATOR_BIR;
+    offset = ((u64)reg_hi << 32) | (reg_lo & PCI_DVSEC_CXL_REG_LOCATOR_BLOCK_OFF_LOW);
+
+    /* Map component registers */
+    comp_base = ioremap(pci_resource_start(pdev, bar) + offset, pci_resource_len(pdev, bar) - offset);
+
+    if (!comp_base)
+    {
+        nv_printf(NV_DBG_INFO, "NVRM: Failed to map component registers\n");
+        return -ENOMEM;
+    }
+
+    /* Find HDM capability in component registers */
+    cap_array = readl(comp_base + CXL_CM_OFFSET + CXL_CM_CAP_HDR_OFFSET);
+
+    /* Validate capability header */
+    if ((cap_array & CXL_CM_CAP_HDR_ID_MASK) != CM_CAP_HDR_CAP_ID)
+    {
+        nv_printf(NV_DBG_INFO, "NVRM: Invalid component capability header\n");
+        goto err_unmap;
+    }
+
+    cap_count = (cap_array & CXL_CM_CAP_HDR_ARRAY_SIZE_MASK) >> 24;
+    nv_printf(NV_DBG_INFO, "NVRM: Found %u component capabilities\n", cap_count);
+
+    /* Search for HDM capability */
+    hdm_base = NULL;
+    for (i = 1; i <= cap_count; i++)
+    {
+        hdr = readl(comp_base + CXL_CM_OFFSET + i * 0x4);
+        cap_id = hdr & CXL_CM_CAP_HDR_ID_MASK;
+        offset = (hdr & CXL_CM_CAP_PTR_MASK) >> 20;
+
+        if (cap_id == CXL_CM_CAP_CAP_ID_HDM)
+        {
+            hdm_base = comp_base + CXL_CM_OFFSET + offset;
+            nv_printf(NV_DBG_INFO, "NVRM: Found HDM capability at offset 0x%x\n", offset);
+            break;
+        }
+    }
+
+    if (!hdm_base)
+    {
+        nv_printf(NV_DBG_INFO, "NVRM: HDM capability not found\n");
+        goto err_unmap;
+    }
+
+    /* Read HDM capability register */
+    hdm_cap = readl(hdm_base + CXL_HDM_DECODER_CAP_OFFSET);
+    dev_info(&pdev->dev, "HDM capability register: 0x%08x\n", hdm_cap);
+
+    /* Read HDM decoder 0 registers */
+    base_low = readl(hdm_base + CXL_HDM_DECODER0_BASE_LOW_OFFSET(0));
+    base_high = readl(hdm_base + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(0));
+    size_low = readl(hdm_base + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(0));
+    size_high = readl(hdm_base + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(0));
+    ctrl_reg = readl(hdm_base + CXL_HDM_DECODER0_CTRL_OFFSET(0));
+
+    base_addr = ((u64)base_high << 32) | base_low;
+    size = ((u64)size_high << 32) | size_low;
+
+    nv_printf(NV_DBG_INFO, "HDM Decoder 0 base : 0x%llx\n", base_addr);
+    nv_printf(NV_DBG_INFO, "HDM Decoder 0 size : 0x%llx\n", size);
+
+    committed = !!(ctrl_reg & CXL_HDM_DECODER0_CTRL_COMMITTED);
+
+    if (committed)
+    {
+        nv_printf(NV_DBG_INFO, "NVRM: HDM Decoder 0 is active and configured\n");
+        *hdm_base_addr = base_addr;
+        *hdm_size = size;
+    }
+    else
+    {
+        nv_printf(NV_DBG_INFO, "NVRM: HDM Decoder 0 is not active\n");
+        goto err_unmap;
+    }
+
+    iounmap(comp_base);
+    return 0;
+
+err_unmap:
+    iounmap(comp_base);
+#endif
+#endif
+#endif
+    return -ENODEV;
 }
 
 static NvBool nv_treat_missing_irq_as_error(void)
@@ -314,7 +459,7 @@ resize:
  * Parse the SRAT table to look for numa node associated with the GPU.
  *
  * find_gpu_numa_nodes_in_srat() is strongly associated with
- * nv_init_coherent_link_info(). Hence matching the conditions wrapping.
+ * nv_init_coherent_gpu_info(). Hence matching the conditions wrapping.
  */
 static NvU32 find_gpu_numa_nodes_in_srat(nv_linux_state_t *nvl)
 {
@@ -418,7 +563,7 @@ exit:
 #endif // defined(CONFIG_ACPI_NUMA) && NV_IS_EXPORT_SYMBOL_PRESENT_pxm_to_node
 
 static void
-nv_init_coherent_link_info
+nv_init_coherent_gpu_info
 (
     nv_state_t *nv
 )
@@ -446,14 +591,24 @@ nv_init_coherent_link_info
 
     if (device_property_read_u64(nvl->dev, "nvidia,gpu-mem-base-pa", &pa) == 0)
     {
+        NvU64 gpu_mem_size;
+
         nvl->coherent_link_info.gpu_mem_pa = pa;
 
-        NvU64 gpu_mem_size;
         if (device_property_read_u64(nvl->dev, "nvidia,gpu-mem-size", &gpu_mem_size) == 0)
         {
             nvl->coherent_link_info.gpu_mem_size = gpu_mem_size;
         }
     }
+#ifdef NV_PCIE_IS_CXL_PRESENT
+    else if (pcie_is_cxl(nvl->pci_dev))
+    {
+        NV_DEV_PRINTF(NV_DBG_INFO, nv, "Detected as a CXL device\n");
+        nv->is_cxl_dev = NV_TRUE;
+        if (nv_cxl_get_hdm_base_addr(nvl->pci_dev, &nvl->coherent_link_info.gpu_mem_pa, &nvl->coherent_link_info.gpu_mem_size) != 0)
+            goto failed;
+    }
+#endif
     else
     {
         unsigned int gpu_bar1_offset, gpu_bar2_offset;
@@ -669,13 +824,20 @@ nv_pci_gb10b_devfreq_target(struct device *dev, unsigned long *freq, u32 flags)
     u32 kBps;
 #endif
 
-    /*
-     * If the device is suspended, skip the frequency scaling
-     * because the clocks may be unavailable.
-     * Otherwise, set the clocks to the target frequency.
-     */
+    //
+    // When GPU is suspended(railgated), the PM runtime suspend callback should
+    // suspend all devfreq devices, and devfreq cycle should not be triggered.
+    //
+    // However, users are still able to change the devfreq governor from the
+    // sysfs interface and indirectly invoke the update_devfreq function, which
+    // will further call the target callback function.
+    //
+    // Early stop the process here before clk_set_rate/clk_get_rate, since these
+    // calls served by BPMP will awake the GPU.
+    //
     if (pm_runtime_suspended(&pdev->dev))
     {
+        *freq = tdev->devfreq->scaling_min_freq;
         return 0;
     }
 
@@ -750,17 +912,10 @@ nv_pci_tegra_devfreq_get_cur_freq(struct device *dev, unsigned long *freq)
 {
     struct nv_pci_tegra_devfreq_dev *tdev = to_tegra_devfreq_dev(dev);
 
-    //
-    // Clock frequency reported from CCF is only valid when GPU is active.
-    // If GPU is suspended, return 0 frequency because whole GPU is powered off.
-    // Otherwise, return the last frequency step saved in devfreq.
-    //
-    if (pm_runtime_active(dev->parent))
+    if (!pm_runtime_suspended(dev->parent))
         *freq = clk_get_rate(tdev->clk);
-    else if (pm_runtime_suspended(dev->parent))
-        *freq = 0;
     else
-        *freq = tdev->devfreq->previous_freq;
+        *freq = tdev->devfreq->scaling_min_freq;
 
     return 0;
 }
@@ -779,19 +934,18 @@ nv_pci_tegra_devfreq_get_dev_status(struct device *dev,
     NV_STATUS status;
 
     //
-    // GPU can be under suspending/suspended/resuming state defined the runtime
-    // PM (RPM) framework. When device is under either of these states, DVFS based
-    // on GPU load information should be disabled.
+    // When GPU is suspended(railgated), the PM runtime suspend callback should
+    // suspend all devfreq devices, and devfreq cycle should not be triggered.
     //
-    // Complete load-based DVFS cycle involve GPU load query through rmapi and
-    // clock scaling through BPMP MRQ_CLK mailbox request, which will awake the
-    // GPU and contradict the suspended state.
+    // However, users are still able to change the devfreq governor from the
+    // sysfs interface and indirectly invoke the update_devfreq function, which
+    // will further call the get_dev_status callback function.
     //
-    if (!pm_runtime_active(&pdev->dev))
+    if (pm_runtime_suspended(&pdev->dev))
     {
         stat->total_time = 100;
         stat->busy_time = 0;
-        stat->current_frequency = tdev->devfreq->previous_freq;
+        stat->current_frequency = tdev->devfreq->scaling_min_freq;
         return 0;
     }
 
@@ -1092,9 +1246,7 @@ nv_pci_gb10b_register_devfreq(struct pci_dev *pdev)
 #endif
     struct clk *clk;
     int i, err, node;
-    resource_size_t bar0_addr, bar0_size;
-    void *bar0_map;
-    u32 gpc_fuse_mask;
+    u32 gpu_pg_mask;
 
     while (pbus->parent != NULL)
     {
@@ -1103,26 +1255,21 @@ nv_pci_gb10b_register_devfreq(struct pci_dev *pdev)
 
     node = max(0, dev_to_node(to_pci_host_bridge(pbus->bridge)->dev.parent));
 
-    bar0_addr = (resource_size_t)nv->bars[NV_GPU_BAR_INDEX_REGS].cpu_address;
-    bar0_size = (resource_size_t)nv->bars[NV_GPU_BAR_INDEX_REGS].size;
-    bar0_map = devm_ioremap(&pdev->dev, bar0_addr, bar0_size);
-
-    if (bar0_map == NULL)
+    if (nv->tegra_pci_igpu_pg_mask == NV_TEGRA_PCI_IGPU_PG_MASK_DEFAULT)
     {
-        gpc_fuse_mask = 0;
+        gpu_pg_mask = 0;
     }
     else
     {
-        gpc_fuse_mask = readl(bar0_map + nv->gpc_fuse_status_offset);
+        gpu_pg_mask = nv->tegra_pci_igpu_pg_mask;
+        nv_printf(NV_DBG_INFO, "NVRM: devfreq register receives gpu_pg_mask = %u\n", gpu_pg_mask);
     }
-
-    nv_printf(NV_DBG_INFO, "NVRM: devfreq registration detects gpc_fuse_mask = %u\n", gpc_fuse_mask);
 
     for (i = 0; i < nvl->devfreq_table_size; i++)
     {
         tdata = &nvl->devfreq_table[i];
 
-        if (gpc_fuse_mask && (gpc_fuse_mask & tdata->gpc_fuse_field))
+        if (gpu_pg_mask && (gpu_pg_mask & tdata->gpc_fuse_field))
         {
             continue;
         }
@@ -1210,6 +1357,14 @@ nv_pci_gb10b_register_devfreq(struct pci_dev *pdev)
             nvl->gpc_devfreq_dev->devfreq = NULL;
             goto error_slave_teardown;
         }
+#if defined(NV_DEVFREQ_HAS_SUSPEND_FREQ)
+        else
+        {
+            // Set the devfreq suspend frequency for the GPC devfreq device.
+            nvl->gpc_devfreq_dev->devfreq->suspend_freq = nvl->tegra_suspend_freq;
+        }
+#endif
+
         if (nvl->sys_devfreq_dev != NULL)
         {
             list_add_tail(&nvl->sys_devfreq_dev->gpc_cluster, &nvl->gpc_devfreq_dev->gpc_cluster);
@@ -1231,6 +1386,14 @@ nv_pci_gb10b_register_devfreq(struct pci_dev *pdev)
             nvl->nvd_devfreq_dev->devfreq = NULL;
             goto error_slave_teardown;
         }
+#if defined(NV_DEVFREQ_HAS_SUSPEND_FREQ)
+        else
+        {
+            // Set the devfreq suspend frequency for the NVD devfreq device.
+            nvl->nvd_devfreq_dev->devfreq->suspend_freq = nvl->tegra_suspend_freq;
+        }
+#endif
+
         if (nvl->sys_devfreq_dev != NULL)
         {
             list_add_tail(&nvl->sys_devfreq_dev->nvd_cluster, &nvl->nvd_devfreq_dev->nvd_cluster);
@@ -1283,12 +1446,6 @@ nv_pci_gb10b_suspend_devfreq(struct device *dev)
 
     if (nvl->gpc_devfreq_dev != NULL && nvl->gpc_devfreq_dev->devfreq != NULL)
     {
-#if defined(NV_DEVFREQ_HAS_SUSPEND_FREQ)
-        mutex_lock(&nvl->gpc_devfreq_dev->devfreq->lock);
-        nvl->gpc_devfreq_dev->devfreq->suspend_freq = nvl->gpc_devfreq_dev->devfreq->previous_freq;
-        mutex_unlock(&nvl->gpc_devfreq_dev->devfreq->lock);
-#endif
-
         err = devfreq_suspend_device(nvl->gpc_devfreq_dev->devfreq);
         if (err)
         {
@@ -1305,12 +1462,6 @@ nv_pci_gb10b_suspend_devfreq(struct device *dev)
 
     if (nvl->nvd_devfreq_dev != NULL && nvl->nvd_devfreq_dev->devfreq != NULL)
     {
-#if defined(NV_DEVFREQ_HAS_SUSPEND_FREQ)
-        mutex_lock(&nvl->nvd_devfreq_dev->devfreq->lock);
-        nvl->nvd_devfreq_dev->devfreq->suspend_freq = nvl->nvd_devfreq_dev->devfreq->previous_freq;
-        mutex_unlock(&nvl->nvd_devfreq_dev->devfreq->lock);
-#endif
-
         err = devfreq_suspend_device(nvl->nvd_devfreq_dev->devfreq);
         if (err)
         {
@@ -1342,19 +1493,6 @@ nv_pci_gb10b_resume_devfreq(struct device *dev)
         {
             return err;
         }
-#if defined(NV_UPDATE_DEVFREQ_PRESENT)
-        /*
-         * During GPU runtime suspended state, switching the devfreq governor
-         * which doesn't poll for GPU utilization could lead to devfreq
-         * frequency not being updated after runtime resume.
-         *
-         * Manually trigger the devfreq update here to ensure the
-         * frequency is compliant with the devfreq governor.
-         */
-        mutex_lock(&nvl->gpc_devfreq_dev->devfreq->lock);
-        update_devfreq(nvl->gpc_devfreq_dev->devfreq);
-        mutex_unlock(&nvl->gpc_devfreq_dev->devfreq->lock);
-#endif
     }
 
     if (nvl->nvd_devfreq_dev != NULL && nvl->nvd_devfreq_dev->devfreq != NULL)
@@ -1364,11 +1502,6 @@ nv_pci_gb10b_resume_devfreq(struct device *dev)
         {
             return err;
         }
-#if defined(NV_UPDATE_DEVFREQ_PRESENT)
-        mutex_lock(&nvl->nvd_devfreq_dev->devfreq->lock);
-        update_devfreq(nvl->nvd_devfreq_dev->devfreq);
-        mutex_unlock(&nvl->nvd_devfreq_dev->devfreq->lock);
-#endif
     }
 
     return err;
@@ -1622,6 +1755,10 @@ nv_pci_tegra_register_devfreq(struct pci_dev *pdev)
     nv_linux_state_t *nvl = pci_get_drvdata(pdev);
     const struct nv_pci_tegra_data *tegra_data = NULL;
     int err;
+#if defined(NV_DEVFREQ_HAS_SUSPEND_FREQ)
+    struct device_node *np = pdev->dev.of_node;
+    NvU32 suspend_freq = 0;
+#endif
 
     tegra_data = nv_pci_get_tegra_igpu_data(pdev);
 
@@ -1636,6 +1773,15 @@ nv_pci_tegra_register_devfreq(struct pci_dev *pdev)
     nvl->devfreq_resume = tegra_data->devfreq_resume;
     nvl->devfreq_enable_boost = tegra_data->devfreq_enable_boost;
     nvl->devfreq_disable_boost = tegra_data->devfreq_disable_boost;
+
+#if defined(NV_DEVFREQ_HAS_SUSPEND_FREQ)
+    of_property_read_u32(np, "nvidia,suspend-freq", &suspend_freq);
+    if (suspend_freq == 0)
+    {
+        suspend_freq = NV_PCI_TEGRA_DEVFREQ_SUSPEND_FREQ;
+    }
+    nvl->tegra_suspend_freq = suspend_freq;
+#endif
 
     err = tegra_data->devfreq_register(pdev);
     if (err != 0)
@@ -1697,13 +1843,6 @@ static void nv_init_tegra_gpu_pg_mask(nvidia_stack_t *sp, struct pci_dev *pci_de
     }
 
     nv_set_gpu_pg_mask(nv);
-
-    /*
-     * Trigger GPU reset to make new value of static TPC/GPC/FBP
-     * power-gating mask effective in BPMP-FW. Otherwise, the BPMP-FW
-     * may just save the mask in SW variable until next GPU reset.
-     */
-    nv_trigger_gpu_flr(nv);
 }
 
 static NvBool
@@ -2027,7 +2166,17 @@ nv_pci_probe
 
     if (pci_devid_is_self_hosted(pci_dev->device))
     {
-        nv_init_coherent_link_info(nv);
+        // Any self hosted Rubin GPU will cause CMM to be enabled
+        if (pci_devid_is_self_hosted_rubin(pci_dev->device))
+        {
+            nv_enable_cdmm_mode(sp);
+        }
+        // Enable CDMM mode for Galaxy Workstations
+        if (nv_is_galaxy_workstation())
+        {
+            nv_enable_cdmm_mode(sp);
+        }
+        nv_init_coherent_gpu_info(nv);
     }
 
     nv_ats_supported |= nv->ats_support;
@@ -2035,6 +2184,9 @@ nv_pci_probe
     nv_clk_get_handles(nv);
 
     pci_set_master(pci_dev);
+
+    nv->primary_vga = ((NV_PCI_RESOURCE_FLAGS(pci_dev, PCI_ROM_RESOURCE) &
+                        IORESOURCE_ROM_SHADOW) == IORESOURCE_ROM_SHADOW);
 
 #if defined(CONFIG_VGA_ARB)
 #if defined(VGA_DEFAULT_DEVICE)
@@ -2246,7 +2398,6 @@ static void nv_pci_remove_helper(struct pci_dev *pci_dev, bool block_if_gpu_in_u
     NvU8 regs_bar_index = nv_bar_index_to_os_bar_index(pci_dev,
                                                        NV_GPU_BAR_INDEX_REGS);
 
-
 #ifdef NV_PCI_SRIOV_SUPPORT
     if (pci_dev->is_virtfn)
     {
@@ -2377,12 +2528,7 @@ static void nv_pci_remove_helper(struct pci_dev *pci_dev, bool block_if_gpu_in_u
 
     nv_clk_clear_handles(nv);
 
-    rm_cleanup_dynamic_power_management(sp, nv);
-
-    /*
-     * Stop device if it was initialized on probe but only after dynamic power
-     * management is disabled
-     */
+    /* Stop device if it was initialized on probe */
     if (nvl->init_on_probe && !(nv->flags & NV_FLAG_EXCLUDE))
     {
         nv_printf(NV_DBG_SETUP, "NVRM: Stopping device %04x:%02x:%02x.%x\n",
@@ -2390,6 +2536,8 @@ static void nv_pci_remove_helper(struct pci_dev *pci_dev, bool block_if_gpu_in_u
               NV_PCI_SLOT_NUMBER(pci_dev), PCI_FUNC(pci_dev->devfn));
         nv_stop_device(nv, sp);
     }
+
+    rm_cleanup_dynamic_power_management(sp, nv);
 
     nv_linux_remove_minor_locked(nvl);
     nv->removed = NV_TRUE;
@@ -2469,7 +2617,7 @@ static void
 nv_pci_shutdown(struct pci_dev *pci_dev)
 {
     nv_linux_state_t *nvl = pci_get_drvdata(pci_dev);
-    
+
     if (!nvl || (nvl->pci_dev != pci_dev))
     {
         return;
@@ -2603,6 +2751,82 @@ static void check_for_bound_driver(struct pci_dev *pci_dev)
     }
 }
 
+void NV_API_CALL nv_pci_cxl_set_caching(nv_state_t *nv, NvBool cache_enable)
+{
+#if defined(PCI_DVSEC_CXL_DEVCAP_CACHE_CAPABLE)
+    //
+    // TODO: Bug 4921794, add proper conftest once these macros are added to upstream kernel
+    // currently CXL headers are not present in upstream
+    //
+    u16 dvsec = 0;
+    u16 cap;
+    u16 reg;
+    u16 rc;
+    nv_linux_state_t *nvl = NV_GET_NVL_FROM_NV_STATE(nv);
+    struct pci_dev *pci_dev = nvl->pci_dev;
+
+#if NV_IS_EXPORT_SYMBOL_GPL_pci_find_dvsec_capability
+#if defined(PCI_VENDOR_ID_CXL) 
+    dvsec = pci_find_dvsec_capability(pci_dev, PCI_VENDOR_ID_CXL,
+                                      PCI_DVSEC_CXL_DEV);
+#endif
+#endif
+
+    if (!dvsec)
+    {
+        nv_printf(NV_DBG_ERRORS, "NVRM: Invalid CXL DVSEC\n");
+        return;
+    }
+
+    rc = pci_read_config_word(pci_dev, dvsec + PCI_DVSEC_CXL_DEVCAP, &cap);
+
+    if (rc)
+    {
+        nv_printf(NV_DBG_ERRORS, "NVRM: failed to read PCI_DVSEC_CXL_DEVCAP rc 0x%x\n", rc);
+        return;
+    }
+
+    if (!(cap & PCI_DVSEC_CXL_DEVCAP_CACHE_CAPABLE))
+    {
+        nv_printf(NV_DBG_ERRORS, "NVRM: CXL device not CACHE capable\n");
+        return;
+    }
+
+    rc = pci_read_config_word(pci_dev, dvsec + PCI_DVSEC_CXL_DEVCTL2, &reg);
+
+    if (rc)
+    {
+        nv_printf(NV_DBG_ERRORS, "NVRM: failed to read PCI_DVSEC_CXL_DEVCTL2 rc 0x%x\n", rc);
+        return;
+    }
+
+    // Disable caching and do WB &I
+    if (!cache_enable)
+    {
+        nv_printf(NV_DBG_INFO, "NVRM: WB+I and Disabling CXL caching\n");
+
+        reg |= PCI_DVSEC_CXL_DEVCTL2_DISABLE_CACHING;
+        pci_write_config_word(pci_dev, dvsec + PCI_DVSEC_CXL_DEVCTL2, reg);
+
+        if (cap & PCI_DVSEC_CXL_DEVCAP_CACHE_WB_INVALIDATE)
+        {
+            reg |= PCI_DVSEC_CXL_DEVCTL2_INIT_CACHE_WB_INVALIDATE;
+            pci_write_config_word(pci_dev, dvsec + PCI_DVSEC_CXL_DEVCTL2, reg);
+        }
+    }
+    // Enable caching
+    else
+    {
+        nv_printf(NV_DBG_INFO, "NVRM: Enabling CXL caching\n");
+
+        reg &= ~PCI_DVSEC_CXL_DEVCTL2_DISABLE_CACHING;
+        pci_write_config_word(pci_dev, dvsec + PCI_DVSEC_CXL_DEVCTL2, reg);
+    }
+
+#endif
+    return;
+}
+
 /* make sure the pci_driver called probe for all of our devices.
  * we've seen cases where rivafb claims the device first and our driver
  * doesn't get called.
@@ -2660,7 +2884,9 @@ nv_pci_count_devices(void)
 /*
  * On coherent platforms that support BAR1 mappings for GPUDirect RDMA,
  * dma-buf and nv-p2p subsystems need to ensure the 2 devices belong to
- * the same IOMMU group.
+ * the same IOMMU group. If the importer device doesn't have an IOMMU
+ * group assigned, at least check if the GPU and importer are under the same
+ * root port.
  */
 NvBool nv_pci_is_valid_topology_for_direct_pci(
     nv_state_t     *nv,
@@ -2675,7 +2901,13 @@ NvBool nv_pci_is_valid_topology_for_direct_pci(
         return NV_FALSE;
     }
 
-    return (pdev0->dev.iommu_group == pdev1->dev.iommu_group);
+    if (pdev0->dev.iommu_group == pdev1->dev.iommu_group)
+        return NV_TRUE;
+
+    if (pdev1->dev.iommu_group == NULL)
+        return nv_pci_has_common_pci_switch(nv, peer);
+
+    return NV_FALSE;
 }
 
 NvBool nv_pci_has_common_pci_switch(
@@ -2717,16 +2949,6 @@ NvBool NV_API_CALL nv_grdma_pci_topology_supported(
     if (nv->coherent)
     {
         return NV_TRUE;
-    }
-
-    switch (NVreg_GrdmaPciTopoCheckOverride)
-    {
-        case NV_REG_GRDMA_PCI_TOPO_CHECK_OVERRIDE_ALLOW_ACCESS:
-            return NV_TRUE;
-        case NV_REG_GRDMA_PCI_TOPO_CHECK_OVERRIDE_DENY_ACCESS:
-            return NV_FALSE;
-        default:
-            break;
     }
 
     // Allow RDMA by default on passthrough VMs.

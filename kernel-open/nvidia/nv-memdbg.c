@@ -31,6 +31,7 @@
 #define NV_MEM_LOGGER_STACK_TRACE 0
 
 #if defined(NV_STACK_TRACE_PRESENT) && defined(NV_MEM_LOGGER) && defined(DEBUG)
+#undef NV_MEM_LOGGER_STACK_TRACE
 #define NV_MEM_LOGGER_STACK_TRACE 1
 #endif
 

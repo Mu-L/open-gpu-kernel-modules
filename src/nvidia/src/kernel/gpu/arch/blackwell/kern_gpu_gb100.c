@@ -1168,16 +1168,9 @@ gpuIsMultiGpuNvleEnabledInHw_GB100
     OBJGPU *pGpu
 )
 {
-    NvU32 data;
-
-    //
-    // NVLink Multi-GPU mode is set when it is enabled via a regkey or when NVLE mode bit is set in HW.
-    // TODO : Nvlink multiGPU regkey to be removed once we have stable vbios, BUG 5178914
-    //
-    if (((osReadRegistryDword(pGpu, NV_REG_STR_RM_CC_MULTI_GPU_NVLE_MODE_ENABLED, &data) == NV_OK) &&
-            (data == NV_REG_STR_RM_CC_MULTI_GPU_NVLE_MODE_ENABLED_YES)) ||
-            gpuIsNvleModeEnabledInHw_HAL(pGpu) ||
-            (!RMCFG_FEATURE_MODS_FEATURES && gpuIsCCEnabledInHw_HAL(pGpu)))
+    // NVLink Multi-GPU mode is set when NVLE mode bit is set in HW or CC mode bit is set in HW.
+    if (gpuIsNvleModeEnabledInHw_HAL(pGpu) ||
+        (!RMCFG_FEATURE_MODS_FEATURES && gpuIsCCEnabledInHw_HAL(pGpu)))
     {
         return NV_TRUE;
     }
@@ -1378,6 +1371,19 @@ gpuMnocMboxRecv_GB100
     offset = 0;
     while (recvMsgSize > 0)
     {
+        // Check if there was any error while receiving the message or if _MESSAGE_READY went low
+        regVal = REG_RD32(pMboxAperture, NV_MNOC_ZB_PRI_MESSAGE_INFO_0_SENDMBOX(port));
+
+        if (FLD_TEST_DRF(_MNOC_ZB_PRI, _MESSAGE_INFO_0_SENDMBOX, _ERR, _TRUE, regVal))
+        {
+            return NV_ERR_GENERIC;
+        }
+        if (FLD_TEST_DRF(_MNOC_ZB_PRI, _MESSAGE_INFO_0_SENDMBOX, _MESSAGE_READY, _FALSE, regVal))
+        {
+            NV_PRINTF(LEVEL_ERROR, "AC-DEBUG: message ready went low offset %d msgLeft %d\n", offset, recvMsgSize); 
+            break;
+        }
+
         // Reading received message from the mailbox receive port
         regVal = REG_RD32(pMboxAperture, NV_MNOC_ZB_PRI_RDATA_0_SENDMBOX(port));
         copyDataSize = NV_MIN(sizeof(NvU32), recvMsgSize);
@@ -1392,13 +1398,8 @@ gpuMnocMboxRecv_GB100
     // Updating how many bytes received
     *pMsgSize = offset;
 
-    regVal = REG_RD32(pMboxAperture, NV_MNOC_ZB_PRI_MESSAGE_INFO_0_SENDMBOX(port));
     // Check if there was any error while receiving mailbox message
-    if (FLD_TEST_DRF(_MNOC_ZB_PRI, _MESSAGE_INFO_0_SENDMBOX, _ERR, _TRUE, regVal))
-    {
-        return NV_ERR_GENERIC;
-    }
-    else if (offset < DRF_VAL(_MNOC_ZB_PRI, _MESSAGE_INFO_0_SENDMBOX, _MESSAGE_SIZE, regVal))
+    if (recvMsgSize > 0)
     {
         return NV_ERR_OUT_OF_RANGE;
     }
@@ -1807,6 +1808,11 @@ gpuGetRegBaseOffset_GB100(OBJGPU *pGpu, NvU32 regBase, NvU32 *pOffset)
         case NV_REG_BASE_USERMODE:
         {
             *pOffset = GPU_GET_VREG_OFFSET(pGpu, DRF_BASE(NV_VIRTUAL_FUNCTION));
+            return NV_OK;
+        }
+        case NV_REG_BASE_TIMER:
+        {
+            *pOffset = NV_PTIMER0_PRI_BASE;
             return NV_OK;
         }
         default:

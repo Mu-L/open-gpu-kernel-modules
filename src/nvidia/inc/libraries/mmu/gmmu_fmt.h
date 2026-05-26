@@ -631,8 +631,9 @@ typedef enum
  * Get the PTE physical address field format for a given aperture.
  */
 const GMMU_FIELD_ADDRESS *gmmuFmtPtePhysAddrFld(
-                        const GMMU_FMT_PTE *pPte,
-                        const GMMU_APERTURE aperture,
+                        const GMMU_FMT_PTE  *pPte,
+                        const MMU_FMT_LEVEL *pLevel,
+                        const GMMU_APERTURE  aperture,
                         const GMMU_PEER_TYPE peerType);
 
 /*!

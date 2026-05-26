@@ -282,22 +282,6 @@ typedef struct
 
 #endif
 
-#define UVM_CREATE_RANGE_GROUP                                        UVM_IOCTL_BASE(23)
-
-typedef struct
-{
-    NvU64     rangeGroupId NV_ALIGN_BYTES(8); // OUT
-    NV_STATUS rmStatus;                       // OUT
-} UVM_CREATE_RANGE_GROUP_PARAMS;
-
-#define UVM_DESTROY_RANGE_GROUP                                       UVM_IOCTL_BASE(24)
-
-typedef struct
-{
-    NvU64     rangeGroupId NV_ALIGN_BYTES(8); // IN
-    NV_STATUS rmStatus;                      // OUT
-} UVM_DESTROY_RANGE_GROUP_PARAMS;
-
 //
 // UvmRegisterGpuVaSpace
 //
@@ -376,19 +360,6 @@ typedef struct
 } UVM_DISABLE_PEER_ACCESS_PARAMS;
 
 //
-// UvmSetRangeGroup
-//
-#define UVM_SET_RANGE_GROUP                                           UVM_IOCTL_BASE(31)
-
-typedef struct
-{
-    NvU64     rangeGroupId  NV_ALIGN_BYTES(8); // IN
-    NvU64     requestedBase NV_ALIGN_BYTES(8); // IN
-    NvU64     length        NV_ALIGN_BYTES(8); // IN
-    NV_STATUS rmStatus;                        // OUT
-} UVM_SET_RANGE_GROUP_PARAMS;
-
-//
 // UvmMapExternalAllocation
 //
 #define UVM_MAP_EXTERNAL_ALLOCATION                                   UVM_IOCTL_BASE(33)
@@ -462,49 +433,6 @@ typedef struct
     NvBool    pageableMemAccess; // OUT
     NV_STATUS rmStatus;          // OUT
 } UVM_PAGEABLE_MEM_ACCESS_PARAMS;
-
-//
-// Due to limitations in how much we want to send per ioctl call, the numGroupIds
-// member must be less than or equal to about 250. That's an upper limit.
-//
-// However, from a typical user-space driver's point of view (for example, the
-// CUDA driver), a vast majority of the time, we expect there to be only one
-// range group passed in. The second most common case is something like atmost 32
-// range groups being passed in. The cases where there are more than 32 range
-// groups are the most rare. So we might want to optimize the ioctls accordingly
-// so that we don't always copy a 250 * sizeof(NvU64) sized array when there's
-// only one or a few range groups.
-//
-// For that reason, UVM_MAX_RANGE_GROUPS_PER_IOCTL_CALL is set to 32.
-//
-// If the higher-level (uvm.h) call requires more range groups than
-// this value, then multiple ioctl calls should be made.
-//
-#define UVM_MAX_RANGE_GROUPS_PER_IOCTL_CALL 32
-
-//
-// UvmPreventMigrationRangeGroups
-//
-#define UVM_PREVENT_MIGRATION_RANGE_GROUPS                            UVM_IOCTL_BASE(40)
-
-typedef struct
-{
-    NvU64     rangeGroupIds[UVM_MAX_RANGE_GROUPS_PER_IOCTL_CALL] NV_ALIGN_BYTES(8); // IN
-    NvU64     numGroupIds                                        NV_ALIGN_BYTES(8); // IN
-    NV_STATUS rmStatus;                                                             // OUT
-} UVM_PREVENT_MIGRATION_RANGE_GROUPS_PARAMS;
-
-//
-// UvmAllowMigrationRangeGroups
-//
-#define UVM_ALLOW_MIGRATION_RANGE_GROUPS                              UVM_IOCTL_BASE(41)
-
-typedef struct
-{
-    NvU64     rangeGroupIds[UVM_MAX_RANGE_GROUPS_PER_IOCTL_CALL] NV_ALIGN_BYTES(8); // IN
-    NvU64     numGroupIds                                        NV_ALIGN_BYTES(8); // IN
-    NV_STATUS rmStatus;                                                             // OUT
-} UVM_ALLOW_MIGRATION_RANGE_GROUPS_PARAMS;
 
 //
 // UvmSetPreferredLocation
@@ -685,14 +613,6 @@ typedef struct
     NvU64           userSpaceLength    NV_ALIGN_BYTES(8); // OUT
     NV_STATUS       rmStatus;                             // OUT
 } UVM_MIGRATE_PARAMS;
-
-#define UVM_MIGRATE_RANGE_GROUP                                       UVM_IOCTL_BASE(53)
-typedef struct
-{
-    NvU64           rangeGroupId       NV_ALIGN_BYTES(8); // IN
-    NvProcessorUuid destinationUuid;                      // IN
-    NV_STATUS       rmStatus;                             // OUT
-} UVM_MIGRATE_RANGE_GROUP_PARAMS;
 
 //
 // Initialize any tracker object such as a queue or counter
@@ -1012,6 +932,28 @@ typedef struct
     NvU64           flags                                   NV_ALIGN_BYTES(8); // IN
     NV_STATUS       rmStatus;                                                  // OUT
 } UVM_DISCARD_PARAMS;
+
+//
+// UvmQueryResidency
+//
+#define UVM_QUERY_RESIDENCY                                           UVM_IOCTL_BASE(81)
+typedef struct
+{
+    NvU64           base                                    NV_ALIGN_BYTES(8); // IN
+    NvU64           length                                  NV_ALIGN_BYTES(8); // IN
+    NvU64           samplingStride                          NV_ALIGN_BYTES(8); // IN
+    NvBool          isManagedMemory;                                           // IN
+
+    // Results from move_pages() call (userland passes these to kernel)
+    NvU64           numSamples                              NV_ALIGN_BYTES(8); // IN
+    NvU64           pageAddresses                           NV_ALIGN_BYTES(8); // IN (void** array)
+    NvU64           pageStatus                              NV_ALIGN_BYTES(8); // IN/OUT (int* array)
+
+    // Outputs
+    NvProcessorUuid residency;                                                 // OUT
+    NvS32           resident_nid;                                              // OUT
+    NV_STATUS       rmStatus;                                                  // OUT
+} UVM_QUERY_RESIDENCY_PARAMS;
 
 //
 // Temporary ioctls which should be removed before UVM 8 release

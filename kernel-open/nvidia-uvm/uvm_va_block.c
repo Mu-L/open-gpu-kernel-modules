@@ -1,5 +1,5 @@
 /*******************************************************************************
-    Copyright (c) 2015-2025 NVIDIA Corporation
+    Copyright (c) 2015-2026 NVIDIA Corporation
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
@@ -21,6 +21,7 @@
 
 *******************************************************************************/
 
+#include "uvm_extern_decl.h"
 #include "uvm_linux.h"
 #include "uvm_common.h"
 #include "uvm_api.h"
@@ -1031,7 +1032,7 @@ size_t uvm_va_block_gpu_chunk_index_range(NvU64 start,
     // may have PTEs mapping pages smaller than that).
     UVM_ASSERT(uvm_chunk_find_first_size(chunk_sizes) == PAGE_SIZE);
 
-    // Optimize the ideal Pascal+ case: the whole block is covered by a single
+    // Optimize the ideal Turing+ case: the whole block is covered by a single
     // 2M page.
     if ((chunk_sizes & UVM_CHUNK_SIZE_2M) && size == UVM_CHUNK_SIZE_2M) {
         UVM_ASSERT(IS_ALIGNED(start, UVM_CHUNK_SIZE_2M));
@@ -1065,7 +1066,7 @@ size_t uvm_va_block_gpu_chunk_index_range(NvU64 start,
     // aligned. Skip it and handle that specially after the loop.
     //
     // Note that since we removed 2M already above, this loop will only iterate
-    // once on x86 Pascal+ since only 64K is left.
+    // once on x86 Turing+ since only 64K is left.
     chunk_sizes &= ~PAGE_SIZE;
 
     // This loop calculates the number of chunks between start and addr by
@@ -1864,7 +1865,7 @@ static NV_STATUS block_populate_pages_cpu(uvm_va_block_t *block,
     // pages. Therefore, we have to remove the discarded pages from it.
     uvm_page_mask_andnot(resident_mask, resident_mask, &block_context->discard.discarded_pages);
 
-    // HMM va_blocks also require PAGE_SIZE allocations.
+    // HMM va_blocks require PAGE_SIZE allocations.
     // TODO: Bug 3368756: add support for HMM transparent huge page (THP)
     // migrations.
     if (uvm_va_block_is_hmm(block))
@@ -2559,7 +2560,7 @@ uvm_processor_id_t uvm_va_block_page_get_closest_resident(uvm_va_block_t *va_blo
 
 // We don't track the specific aperture of each mapped page. Instead, we assume
 // that each virtual mapping from a given processor always targets the closest
-// processor on which that page is resident (with special rules for UVM-Lite).
+// processor on which that page is resident.
 //
 // This function verifies that assumption: before a page becomes resident on a
 // new location, assert that no processor has a valid mapping to a farther
@@ -3925,15 +3926,12 @@ static NV_STATUS block_copy_resident_pages_between(uvm_va_block_t *block,
     uvm_page_index_t page_index;
     uvm_page_index_t contig_start_index = region.outer;
     uvm_page_index_t last_index = region.outer;
-    uvm_range_group_range_t *rgr = NULL;
-    bool rgr_has_changed = false;
     uvm_make_resident_cause_t cause = block_context->make_resident.cause;
     uvm_make_resident_cause_t contig_cause = cause;
     const bool may_prefetch = (cause == UVM_MAKE_RESIDENT_CAUSE_REPLAYABLE_FAULT ||
                                cause == UVM_MAKE_RESIDENT_CAUSE_NON_REPLAYABLE_FAULT ||
                                cause == UVM_MAKE_RESIDENT_CAUSE_ACCESS_COUNTER) && !!prefetch_page_mask;
     block_copy_state_t copy_state = {0};
-    uvm_va_range_managed_t *managed_range = block->managed_range;
     uvm_va_space_t *va_space = uvm_va_block_get_va_space(block);
     uvm_va_block_region_t contig_region = {0};
     NvU64 cpu_migration_begin_timestamp = 0;
@@ -3966,17 +3964,6 @@ static NV_STATUS block_copy_resident_pages_between(uvm_va_block_t *block,
     if (status != NV_OK)
         return status;
 
-
-    // uvm_range_group_range_iter_first should only be called when the va_space
-    // lock is held, which is always the case unless an eviction is taking
-    // place.
-    if (cause != UVM_MAKE_RESIDENT_CAUSE_EVICTION) {
-        rgr = uvm_range_group_range_iter_first(va_space,
-                                               uvm_va_block_region_start(block, region),
-                                               uvm_va_block_region_end(block, region));
-        rgr_has_changed = true;
-    }
-
     // TODO: Bug 3745051: This function is complicated and needs refactoring
     for_each_va_block_page_in_region_mask(page_index, copy_mask, region) {
         NvU64 page_start = uvm_va_block_cpu_page_address(block, page_index);
@@ -3986,41 +3973,6 @@ static NV_STATUS block_copy_resident_pages_between(uvm_va_block_t *block,
 
         UVM_ASSERT(block_check_resident_proximity(block, block_context, page_index, dst_id));
         UVM_ASSERT(block_processor_page_is_populated(block, dst_id, page_index));
-
-        // If we're not evicting and we're migrating away from the preferred
-        // location, then we should add the range group range to the list of
-        // migrated ranges in the range group. It's safe to skip this because
-        // the use of range_group's migrated_ranges list is a UVM-Lite
-        // optimization - eviction is not supported on UVM-Lite GPUs.
-        if (cause != UVM_MAKE_RESIDENT_CAUSE_EVICTION && !uvm_va_block_is_hmm(block) &&
-            uvm_va_policy_preferred_location_equal(&managed_range->policy, src_id, src_nid)) {
-            // rgr_has_changed is used to minimize the number of times the
-            // migrated_ranges_lock is taken. It is set to false when the range
-            // group range pointed by rgr is added to the migrated_ranges list,
-            // and it is just set back to true when we move to a different
-            // range group range.
-
-            // The current page could be after the end of rgr. Iterate over the
-            // range group ranges until rgr's end location is greater than or
-            // equal to the current page.
-            while (rgr && rgr->node.end < page_start) {
-                rgr = uvm_range_group_range_iter_next(va_space, rgr, uvm_va_block_region_end(block, region));
-                rgr_has_changed = true;
-            }
-
-            // Check whether the current page lies within rgr. A single page
-            // must entirely reside within a range group range. Since we've
-            // incremented rgr until its end is higher than page_start, we now
-            // check if page_start lies within rgr.
-            if (rgr && rgr_has_changed && page_start >= rgr->node.start && page_start <= rgr->node.end) {
-                uvm_spin_lock(&rgr->range_group->migrated_ranges_lock);
-                if (list_empty(&rgr->range_group_migrated_list_node))
-                    list_move_tail(&rgr->range_group_migrated_list_node, &rgr->range_group->migrated_ranges);
-                uvm_spin_unlock(&rgr->range_group->migrated_ranges_lock);
-
-                rgr_has_changed = false;
-            }
-        }
 
         if (last_index == region.outer) {
             // Record all processors involved in the copy.
@@ -4881,8 +4833,7 @@ static void block_make_resident_update_state(uvm_va_block_t *va_block,
                      &va_block_context->make_resident.pages_changed_residency,
                      copy_mask);
 
-    // Any move operation implies that mappings have been removed from all
-    // non-UVM-Lite GPUs.
+    // Any move operation implies that mappings have been removed from all GPUs.
     if (!uvm_va_block_is_hmm(va_block))
         uvm_page_mask_andnot(&va_block->maybe_mapped_pages, &va_block->maybe_mapped_pages, copy_mask);
 
@@ -4924,7 +4875,6 @@ void uvm_va_block_make_resident_finish(uvm_va_block_t *va_block,
     // Revoke discard status of all pages that were migrated.
     // Status is revoked only if the migration was a result of an API call.
     if (va_block_context->make_resident.cause == UVM_MAKE_RESIDENT_CAUSE_API_MIGRATE ||
-        va_block_context->make_resident.cause == UVM_MAKE_RESIDENT_CAUSE_API_SET_RANGE_GROUP ||
         va_block_context->make_resident.cause == UVM_MAKE_RESIDENT_CAUSE_API_TOOLS) {
         uvm_page_mask_andnot(&va_block->discarded_pages,
                              &va_block->discarded_pages,
@@ -5756,6 +5706,13 @@ static bool block_check_mappings(uvm_va_block_t *block, uvm_va_block_context_t *
     uvm_page_index_t page_index;
     uvm_processor_id_t id;
 
+    // HMM va_blocks may not always pass these checks. This is because CPU
+    // mapping information in particular is unreliable as the OS kernel, not
+    // UVM, is in control of CPU mappings and does not always inform UVM when
+    // they change.
+    if (uvm_va_block_is_hmm(block))
+        return true;
+
     // Verify the master masks, since block_check_mappings_page relies on them
     for_each_id(id) {
         const uvm_page_mask_t *resident_mask, *map_mask;
@@ -5788,7 +5745,8 @@ static bool block_check_mappings(uvm_va_block_t *block, uvm_va_block_context_t *
 
     // Check that every page has coherent mappings
     for_each_va_block_page(page_index, block)
-        block_check_mappings_page(block, block_context, page_index);
+        if (!block_check_mappings_page(block, block_context, page_index))
+            return false;
 
     for_each_gpu_id(id) {
         if (uvm_va_block_gpu_state_get(block, id)) {
@@ -5819,13 +5777,6 @@ static void block_unmap_cpu(uvm_va_block_t *block,
         (unmap_pages && !uvm_page_mask_intersects(unmap_pages, &block->cpu.pte_bits[UVM_PTE_BITS_CPU_READ])))
         return;
 
-    // We can't actually unmap HMM ranges from the CPU here.
-    // Unmapping happens as part of migrate_vma_setup().
-    if (uvm_va_block_is_hmm(block)) {
-        UVM_ASSERT(!uvm_va_block_is_hmm(block));
-        return;
-    }
-
     num_mapped_processors = uvm_processor_mask_get_count(&block->mapped);
 
     // If we are unmapping a page which we are tracking due to CPU faults with
@@ -5839,9 +5790,13 @@ static void block_unmap_cpu(uvm_va_block_t *block,
         if (!block_has_valid_mapping_cpu(block, subregion))
             continue;
 
-        unmap_mapping_range(va_space->mapping,
-                            uvm_va_block_region_start(block, subregion),
-                            uvm_va_block_region_size(subregion), 1);
+        // We can't actually unmap HMM ranges from the CPU here. Unmapping
+        // happens as part of migrate_vma_setup(), but we need to record the
+        // updated CPU mapping information in the va_block.
+        if (!uvm_va_block_is_hmm(block))
+            unmap_mapping_range(va_space->mapping,
+                                uvm_va_block_region_start(block, subregion),
+                                uvm_va_block_region_size(subregion), 1);
 
         for (pte_bit = 0; pte_bit < UVM_PTE_BITS_CPU_MAX; pte_bit++)
             uvm_page_mask_region_clear(&block->cpu.pte_bits[pte_bit], subregion);
@@ -5863,7 +5818,8 @@ static void block_unmap_cpu(uvm_va_block_t *block,
         uvm_processor_mask_clear(&block->mapped, UVM_ID_CPU);
     }
 
-    UVM_ASSERT(block_check_mappings(block, block_context));
+    if (!uvm_va_block_is_hmm(block))
+        UVM_ASSERT(block_check_mappings(block, block_context));
 }
 
 // Given a mask of mapped pages, returns true if any of the pages in the mask
@@ -7508,7 +7464,7 @@ static NV_STATUS block_alloc_pt_range_with_retry(uvm_va_block_t *va_block,
         status = NV_ERR_NO_MEMORY;
     }
     else if (use_alloc_table) {
-        // Pascal+: 4k/64k tables under a 2M entry
+        // Turing+: 4k/64k tables under a 2M entry
         UVM_ASSERT(gpu_state->page_table_range_2m.table);
         status = uvm_page_tree_alloc_table(page_tables,
                                            page_size,
@@ -7517,7 +7473,7 @@ static NV_STATUS block_alloc_pt_range_with_retry(uvm_va_block_t *va_block,
                                            page_table_range);
     }
     else {
-        // 4k/big tables on pre-Pascal, and the 2M entry on Pascal+
+        // 2M entry on Turing+
         status = uvm_page_tree_get_ptes(page_tables,
                                         page_size,
                                         start,
@@ -7726,7 +7682,7 @@ static NV_STATUS block_pre_populate_pde1_all_gpus(uvm_va_block_t *block, uvm_tra
 
     // Pre-populate PDEs down to PDE1 for all GPU VA spaces on ATS systems. See
     // comments in block_pre_populate_pde1_gpu.
-    if (g_uvm_global.ats.enabled && !block->cpu.ever_mapped) {
+    if (g_uvm_global.ats.enabled && !block->cpu.ever_mapped && !uvm_va_block_is_hmm(block)) {
         uvm_gpu_va_space_t *gpu_va_space;
 
         for_each_gpu_va_space(gpu_va_space, va_space) {
@@ -7881,6 +7837,7 @@ static NV_STATUS uvm_cpu_insert_page(struct vm_area_struct *vma,
     unsigned long target_flags;
     pgprot_t target_pgprot;
     int ret;
+    NV_STATUS status;
 
     UVM_ASSERT(vma);
     UVM_ASSERT(vma->vm_private_data);
@@ -7908,8 +7865,19 @@ static NV_STATUS uvm_cpu_insert_page(struct vm_area_struct *vma,
         uvm_downgrade_write(&vma_wrapper->lock);
     }
 
+    // CDMM pages require an extra ref, before vm_insert_page() can be called.
+    // This ref needs to be dropped right after, because vm_insert_page() takes
+    // its own reference to the page. This entire workflow is different from NUMA
+    // systems, where the allocator holds the reference.
+    //
+    // Only acquire a reference if the page is a ZONE_DEVICE coherent page
+    status = uvm_devmem_get_page_ref_if_device_coherent(page);
+    if (status != NV_OK)
+        return status;
+
     ret = vm_insert_page(vma, addr, page);
     uvm_up_read(&vma_wrapper->lock);
+    uvm_devmem_put_page_ref_if_device_coherent(page);
     if (ret) {
         UVM_ASSERT_MSG(ret == -ENOMEM, "ret: %d\n", ret);
         return errno_to_nv_status(ret);
@@ -7967,7 +7935,11 @@ static struct page *block_page_get(uvm_va_block_t *block, block_phys_page_t bloc
 
         UVM_ASSERT(gpu);
         UVM_ASSERT(uvm_id_equal(gpu->id, block_page.processor));
-        UVM_ASSERT(gpu->mem_info.numa.enabled);
+        // A struct page is present for CDMM with devmem present or NUMA mode. If CDMM
+        // is enabled without devmem present, then we do not enable accessible_from
+        // or can_access relations between the CPU and GPU and block_page_get() should
+        // not be called in that case.
+        UVM_ASSERT(gpu->mem_info.numa.enabled || uvm_devmem_cdmm_present(gpu->parent));
         page = uvm_gpu_chunk_to_page(&gpu->pmm, chunk) + chunk_offset / PAGE_SIZE;
     }
 
@@ -8043,18 +8015,6 @@ static NV_STATUS block_map_cpu_page_to(uvm_va_block_t *block,
     UVM_ASSERT(managed_range);
 
     if (UVM_ID_IS_CPU(resident_id)) {
-        if (UVM_ID_IS_CPU(managed_range->policy.preferred_location)) {
-            // Add the page's range group range to the range group's migrated list.
-            uvm_range_group_range_t *rgr = uvm_range_group_range_find(va_space,
-                                                                      uvm_va_block_cpu_page_address(block, page_index));
-            if (rgr != NULL) {
-                uvm_spin_lock(&rgr->range_group->migrated_ranges_lock);
-                if (list_empty(&rgr->range_group_migrated_list_node))
-                    list_move_tail(&rgr->range_group_migrated_list_node, &rgr->range_group->migrated_ranges);
-                uvm_spin_unlock(&rgr->range_group->migrated_ranges_lock);
-            }
-        }
-
         nid = block_get_page_node_residency(block, page_index);
         UVM_ASSERT(nid != NUMA_NO_NODE);
     }
@@ -8212,6 +8172,11 @@ static NV_STATUS block_map_gpu_to(uvm_va_block_t *va_block,
     uvm_va_block_new_pte_state_t *new_pte_state = &block_context->mapping.new_pte_state;
     block_pte_op_t pte_op;
 
+    // Don't create GMMU mappings if the GPU supports ATS. We assume the caller
+    // will create CPU mappings which the GPU will then look up with ATS HW.
+    if (gpu->parent->ats_supported && uvm_va_block_is_hmm(va_block))
+        return NV_OK;
+
     UVM_ASSERT(map_page_mask);
     UVM_ASSERT(uvm_processor_mask_test(&va_space->accessible_from[uvm_id_value(resident_id)], gpu->id));
 
@@ -8312,8 +8277,11 @@ static NV_STATUS block_map_gpu_to(uvm_va_block_t *va_block,
         uvm_va_block_size(va_block) == UVM_CHUNK_SIZE_MAX) {
         uvm_va_block_gpu_state_t *gpu_state = uvm_va_block_gpu_state_get(va_block, gpu->id);
 
-        if (gpu_state && gpu_state->chunks[0])
+        if (gpu_state && gpu_state->chunks[0]) {
+            // Integrated GPUs do not have vidmem.
+            UVM_ASSERT(!gpu->parent->is_integrated_gpu);
             uvm_pmm_gpu_mark_root_chunk_discarded(&gpu->pmm, gpu_state->chunks[0]);
+        }
     }
 
     // If we are mapping a HMM va_block, do not update maybe_mapped_pages.
@@ -8390,7 +8358,7 @@ NV_STATUS uvm_va_block_map(uvm_va_block_t *va_block,
     UVM_ASSERT(new_prot < UVM_PROT_MAX);
     uvm_assert_mutex_locked(&va_block->lock);
 
-    if (g_uvm_global.ats.enabled && uvm_va_space_ats_unset(va_space))
+    if (g_uvm_global.ats.enabled && uvm_va_space_ats_unset(va_space) && !g_uvm_global.cdmm_enabled)
         uvm_va_space_ats_set(va_space, UVM_ATS_VA_SPACE_ATS_SUPPORTED);
 
     // Mapping is not supported on the eviction path that doesn't hold the VA
@@ -9020,7 +8988,7 @@ NV_STATUS uvm_va_block_add_gpu_va_space(uvm_va_block_t *va_block, uvm_gpu_va_spa
 {
     uvm_assert_mutex_locked(&va_block->lock);
 
-    if (!gpu_va_space->ats.enabled || !va_block->cpu.ever_mapped)
+    if (!gpu_va_space->ats.enabled || !va_block->cpu.ever_mapped || uvm_va_block_is_hmm(va_block))
         return NV_OK;
 
     // Pre-populate PDEs down to PDE1 for all GPU VA spaces on ATS systems. See
@@ -10914,8 +10882,13 @@ NV_STATUS uvm_va_block_add_mappings_after_migration(uvm_va_block_t *va_block,
     // automatic mapping should be determined by the resident NUMA node
     // rather than system wide.
     if (uvm_va_space_has_integrated_gpu(va_space)) {
-        uvm_processor_mask_or(map_other_processors, map_other_processors, &va_space->registered_gpus);
-        uvm_processor_mask_set(map_other_processors, UVM_ID_CPU);
+        if (UVM_ID_IS_CPU(processor_id) || uvm_processor_mask_test(&va_space->integrated_gpus, processor_id)) {
+            uvm_processor_mask_t *mask = &va_space->scratch_processor_mask;
+
+            uvm_processor_mask_and(mask, &va_space->integrated_gpus, &va_space->registered_gpu_va_spaces);
+            uvm_processor_mask_or(map_other_processors, map_other_processors, mask);
+            uvm_processor_mask_set(map_other_processors, UVM_ID_CPU);
+        }
     }
 
     // Only processors that can access the new location must be considered
@@ -10932,33 +10905,6 @@ NV_STATUS uvm_va_block_add_mappings_after_migration(uvm_va_block_t *va_block,
         !uvm_id_equal(new_residency, preferred_location) &&
         uvm_processor_has_memory(preferred_location)) {
         uvm_processor_mask_clear(map_other_processors, preferred_location);
-    }
-
-    // We can't map non-migratable pages to the CPU. If we have any, build a
-    // new mask of migratable pages and map the CPU separately.
-    if (uvm_processor_mask_test(map_other_processors, UVM_ID_CPU) &&
-        !uvm_range_group_all_migratable(va_space,
-                                        uvm_va_block_region_start(va_block, region),
-                                        uvm_va_block_region_end(va_block, region))) {
-        uvm_page_mask_t *migratable_mask = &va_block_context->mapping.migratable_mask;
-
-        uvm_range_group_migratable_page_mask(va_block, region, migratable_mask);
-        if (uvm_page_mask_and(migratable_mask, migratable_mask, final_page_mask)) {
-            status = do_block_add_mappings_after_migration(va_block,
-                                                           va_block_context,
-                                                           new_residency,
-                                                           processor_id,
-                                                           &g_uvm_processor_mask_cpu,
-                                                           region,
-                                                           migratable_mask,
-                                                           max_prot,
-                                                           thrashing_processors,
-                                                           &local_tracker);
-            if (status != NV_OK)
-                goto out;
-        }
-
-        uvm_processor_mask_clear(map_other_processors, UVM_ID_CPU);
     }
 
     status = do_block_add_mappings_after_migration(va_block,
@@ -11090,20 +11036,13 @@ NV_STATUS uvm_va_block_add_mappings(uvm_va_block_t *va_block,
                                     UvmEventMapRemoteCause cause)
 {
     uvm_va_range_managed_t *managed_range = va_block->managed_range;
-    uvm_va_space_t *va_space = uvm_va_block_get_va_space(va_block);
     NV_STATUS status = NV_OK;
     uvm_page_index_t page_index;
-    uvm_range_group_range_iter_t iter;
     uvm_prot_t prot_to_map;
 
     if (UVM_ID_IS_CPU(processor_id) && !uvm_va_block_is_hmm(va_block)) {
         if (!uvm_va_range_vma_check(managed_range, va_block_context->mm))
             return NV_OK;
-
-        uvm_range_group_range_migratability_iter_first(va_space,
-                                                       uvm_va_block_region_start(va_block, region),
-                                                       uvm_va_block_region_end(va_block, region),
-                                                       &iter);
     }
 
     for (prot_to_map = UVM_PROT_READ_ONLY; prot_to_map <= UVM_PROT_READ_WRITE_ATOMIC; ++prot_to_map)
@@ -11121,17 +11060,6 @@ NV_STATUS uvm_va_block_add_mappings(uvm_va_block_t *va_block,
                                                                    page_index);
         if (prot_to_map == UVM_PROT_NONE)
             continue;
-
-        if (UVM_ID_IS_CPU(processor_id) && !uvm_va_block_is_hmm(va_block)) {
-            while (uvm_va_block_cpu_page_index(va_block, iter.end) < page_index) {
-                uvm_range_group_range_migratability_iter_next(va_space,
-                                                              &iter,
-                                                              uvm_va_block_region_end(va_block, region));
-            }
-
-            if (!iter.migratable)
-                continue;
-        }
 
         if (va_block_context->mask_by_prot[prot_to_map - 1].count++ == 0)
             uvm_page_mask_zero(&va_block_context->mask_by_prot[prot_to_map - 1].page_mask);
@@ -11489,10 +11417,25 @@ static void uvm_va_block_get_prefetch_hint(uvm_va_block_t *va_block,
                                            uvm_service_block_context_t *service_context)
 {
     uvm_processor_id_t new_residency;
+    struct vm_area_struct *hmm_vma = NULL;
+
+    if (uvm_va_block_is_hmm(va_block)) {
+        hmm_vma = service_context->block_context->hmm.vma;
+        UVM_ASSERT(hmm_vma);
+        UVM_ASSERT(va_block->hmm.va_space->va_space_mm.mm == hmm_vma->vm_mm);
+        uvm_assert_mmap_lock_locked(va_block->hmm.va_space->va_space_mm.mm);
+    }
 
     // Performance heuristics policy: we only consider prefetching when there
     // are migrations to a single processor, only.
-    if (uvm_processor_mask_get_count(&service_context->resident_processors) == 1) {
+    // Don't consider prefetching if the va_block is HMM and is backed by a
+    // non-anonymous VMA. Otherwise, since truncation calls on the file changes
+    // inode->i_size but doesn't change the VMA boundaries, hmm_range_fault()
+    // would fail if the faulting region expands beyond i_size but still within
+    // the VMA bounds.
+    if ((!hmm_vma || vma_is_anonymous(hmm_vma)) &&
+        uvm_processor_mask_get_count(&service_context->resident_processors) == 1) {
+
         uvm_page_index_t page_index;
         uvm_page_mask_t *new_residency_mask;
 
@@ -11982,8 +11925,7 @@ NV_STATUS uvm_va_block_service_finish(uvm_processor_id_t processor_id,
     if (status != NV_OK)
         return status;
 
-    // 4- If pages did migrate, map SetAccessedBy processors, except for
-    // UVM-Lite
+    // 4- If pages did migrate, map SetAccessedBy processors
     status = block_service_finish_map_accessed_by(va_block,
                                                   processor_id,
                                                   caller_page_mask,
@@ -12007,23 +11949,29 @@ NV_STATUS uvm_va_block_service_finish(uvm_processor_id_t processor_id,
     // call must have been mapped with RO permission.
     // Otherwise, uvm_va_block_make_resident_finish() has already put it on
     // the used list.
-    if (UVM_ID_IS_GPU(processor_id) && uvm_page_mask_full(&va_block->discarded_pages)) {
+    if (UVM_ID_IS_GPU(processor_id) && uvm_page_mask_full(&va_block->discarded_pages) &&
+        !uvm_va_block_is_hmm(va_block) &&
+        uvm_va_block_size(va_block) == UVM_CHUNK_SIZE_MAX) {
         uvm_gpu_t *gpu = uvm_gpu_get(processor_id);
+        uvm_va_block_gpu_state_t *gpu_state = uvm_va_block_gpu_state_get(va_block, gpu->id);
 
-        if (!uvm_va_block_is_hmm(va_block) && uvm_va_block_size(va_block) == UVM_CHUNK_SIZE_MAX) {
-            uvm_pmm_gpu_mark_root_chunk_discarded(&gpu->pmm, uvm_va_block_gpu_state_get(va_block, gpu->id)->chunks[0]);
+        if (gpu_state && gpu_state->chunks[0]) {
+            // Integrated GPUs do not have vidmem.
+            UVM_ASSERT(!gpu->parent->is_integrated_gpu);
+            uvm_pmm_gpu_mark_root_chunk_discarded(&gpu->pmm, gpu_state->chunks[0]);
         }
     }
 
     return NV_OK;
 }
 
-NV_STATUS uvm_va_block_service_locked(uvm_processor_id_t processor_id,
+NV_STATUS uvm_va_block_service_locked(uvm_gpu_t *gpu,
                                       uvm_va_block_t *va_block,
                                       uvm_va_block_retry_t *block_retry,
                                       uvm_service_block_context_t *service_context)
 {
     uvm_va_space_t *va_space = uvm_va_block_get_va_space(va_block);
+    uvm_processor_id_t processor_id = gpu ? gpu->id : UVM_ID_CPU;
     uvm_processor_id_t new_residency;
     NV_STATUS status = NV_OK;
 
@@ -12049,7 +11997,7 @@ NV_STATUS uvm_va_block_service_locked(uvm_processor_id_t processor_id,
 
     for_each_id_in_mask(new_residency, &service_context->resident_processors) {
         if (uvm_va_block_is_hmm(va_block)) {
-            status = uvm_hmm_va_block_service_locked(processor_id,
+            status = uvm_hmm_va_block_service_locked(gpu,
                                                      new_residency,
                                                      va_block,
                                                      block_retry,
@@ -12464,7 +12412,7 @@ static NV_STATUS block_cpu_fault_locked(uvm_va_block_t *va_block,
 
     service_context->region = uvm_va_block_region_for_page(page_index);
 
-    status = uvm_va_block_service_locked(UVM_ID_CPU, va_block, va_block_retry, service_context);
+    status = uvm_va_block_service_locked(NULL, va_block, va_block_retry, service_context);
     UVM_ASSERT(status != NV_WARN_MISMATCHED_TARGET);
 
 out:
@@ -12996,6 +12944,18 @@ NV_STATUS uvm_va_block_evict_chunks(uvm_va_block_t *va_block,
                                                pages_to_evict,
                                                uvm_va_block_region_from_block(va_block),
                                                &accessed_by_set);
+
+        // Device page free callbacks (device_coherent_page_free,
+        // devmem_page_free) add GPU chunks to va_block_lazy_free rather than
+        // freeing them directly. During HMM eviction the callbacks fire from
+        // migrate_device_finalize(), leaving chunks on va_block_lazy_free.
+        //
+        // Drain that list now so that evict_root_chunk's subsequent
+        // merge_gpu_chunk() call finds list_empty(&subchunk->list). When the
+        // root chunk is in_eviction, chunk_free_locked() treats TEMP_PINNED
+        // chunks as a no-op, so each chunk ends up TEMP_PINNED with an empty
+        // list as merge_gpu_chunk() requires.
+        uvm_pmm_gpu_process_lazy_free(&gpu->pmm);
     }
     else {
         const uvm_va_policy_t *policy = &va_block->managed_range->policy;
@@ -13380,7 +13340,7 @@ NV_STATUS uvm_test_va_residency_info(UVM_TEST_VA_RESIDENCY_INFO_PARAMS *params, 
             goto out;
         }
         // Update current CPU mapping information.
-        status = uvm_hmm_va_block_update_residency_info(block, mm, addr, false);
+        status = uvm_hmm_va_block_update_residency_info_unlocked(block, mm, addr, false);
         if (status != NV_OK) {
             block = NULL;
             goto out;

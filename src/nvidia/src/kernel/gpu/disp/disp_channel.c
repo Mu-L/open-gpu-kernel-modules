@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -124,7 +124,7 @@ dispchnConstruct_IMPL
     DISPCHNCLASS    internalDispChnClass;
     void           *pAllocParams = pParams->pAllocParams;
     RsResourceRef  *pParentRef = RES_GET_REF(pDispChannel)->pParentRef;
-    DispObject     *pDispObject = dynamicCast(pParentRef->pResource, DispObject);
+    NvDispApi      *pNvDispApi = dynamicCast(pParentRef->pResource, NvDispApi);
     ContextDma     *pBufferContextDma = NULL;
     NvU32           hClass = RES_GET_EXT_CLASS_ID(pDispChannel);
     ChannelPBSize   channelPBSize;
@@ -135,7 +135,7 @@ dispchnConstruct_IMPL
 
     NvU32 prevGpuInst = gpumgrSetCurrentGpuInstance(pGpu->gpuInstance);
 
-    NV_ASSERT_TRUE_OR_GOTO(rmStatus, pDispObject != NULL, NV_ERR_INVALID_OBJECT_HANDLE, done);
+    NV_ASSERT_TRUE_OR_GOTO(rmStatus, pNvDispApi != NULL, NV_ERR_INVALID_OBJECT_HANDLE, done);
 
     if (pParams->pSecInfo->privLevel < RS_PRIV_LEVEL_USER_ROOT)
     {
@@ -167,7 +167,7 @@ dispchnConstruct_IMPL
     }
 
     // Move params into RM's address space
-    pDispChannel->pDispObject = pDispObject;
+    pDispChannel->pNvDispApi = pNvDispApi;
     pDispChannel->bIsDma = bIsDma;
     dispchnParseAllocParams(pDispChannel, pAllocParams,
                             &channelInstance,
@@ -535,7 +535,7 @@ dispchnDestruct_IMPL
             {
                 RS_ITERATOR    dispIt;
                 RsResourceRef *pResourceRef;
-                DispObject    *pDispObject;
+                NvDispApi     *pNvDispApi;
 
                 pDevice = dynamicCast(it.pResourceRef->pResource, Device);
 
@@ -543,11 +543,11 @@ dispchnDestruct_IMPL
                 if (pTmpGpu != pGpu)
                     continue;
 
-                rmStatus = dispobjGetByDevice(pRsClient, pDevice, &pDispObject);
+                rmStatus = nvdispapiGetByDevice(pRsClient, pDevice, &pNvDispApi);
                 if (rmStatus != NV_OK)
                     continue;
 
-                pResourceRef = RES_GET_REF(pDispObject);
+                pResourceRef = RES_GET_REF(pNvDispApi);
 
                 dispIt = clientRefIter(pRsClient, pResourceRef, classId(DispChannel), RS_ITERATE_CHILDREN, NV_FALSE);
 

@@ -159,7 +159,7 @@ static unsigned schedule_access_counters_handler(uvm_parent_gpu_t *parent_gpu, N
     uvm_assert_spinlock_locked(&parent_gpu->isr.interrupts_lock);
     UVM_ASSERT(notif_buf_index < parent_gpu->rm_info.accessCntrBufferCount);
 
-    // On Volta, accessCntrBufferCount is > 0, but we don't support access
+    // If accessCntrBufferCount is > 0, but we don't support access
     // counters in UVM (access_counters_supported is cleared during HAL
     // initialization.) This check prevents the top-half from accessing
     // unallocated memory.

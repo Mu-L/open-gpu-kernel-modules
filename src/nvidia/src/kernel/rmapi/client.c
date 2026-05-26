@@ -45,9 +45,9 @@ RmClientList g_clientListBehindGpusLock; // RS-TODO remove this WAR
 #define RS_FW_UNIQUE_HANDLE_BASE  (0xc9f00000)
 
 static NV_STATUS _registerUserInfo(PUID_TOKEN *ppUidToken, UserInfo **ppUserInfo);
-static NV_STATUS _unregisterUserInfo(UserInfo *pUserInfo);
+static void      _unregisterUserInfo(UserInfo *pUserInfo);
 static NV_STATUS _registerOSInfo(RmClient *pClient, void *pOSInfo);
-static NV_STATUS _unregisterOSInfo(RmClient *pClient, void *pOSInfo);
+static void      _unregisterOSInfo(RmClient *pClient, void *pOSInfo);
 
 NV_STATUS
 rmclientConstruct_IMPL
@@ -730,7 +730,7 @@ _registerUserInfo
  *
  * @param[in] pUserInfo
  */
-static NV_STATUS
+static void
 _unregisterUserInfo
 (
     UserInfo *pUserInfo
@@ -741,7 +741,7 @@ _unregisterUserInfo
     {
         listRemoveFirstByValue(&g_userInfoList, (void*)&pUserInfo);
     }
-    return serverFreeShare(&g_resServ, staticCast(pUserInfo, RsShared));
+    serverFreeShare(&g_resServ, staticCast(pUserInfo, RsShared));
 }
 
 NV_STATUS userinfoConstruct_IMPL
@@ -906,6 +906,24 @@ static NvBool _rmclientIsCapable
             internalClassId = classId(MIGMonitorSession);
             break;
         }
+        case NV_RM_CAP_SYS_PROFILER_DEVICE:
+        {
+            internalClassId = classId(ProfilerDeviceEvent);
+            bSearchDescenants = NV_TRUE;
+            break;
+        }
+        case NV_RM_CAP_SYS_PROFILER_CONTEXT:
+        {
+            internalClassId = classId(ProfilerContextEvent);
+            bSearchDescenants = NV_TRUE;
+            break;
+        }
+        case NV_RM_CAP_SYS_TRACE_DEVICE:
+        {
+            internalClassId = classId(TraceDeviceEvent);
+            bSearchDescenants = NV_TRUE;
+            break;
+        }
         default:
         {
             NV_ASSERT(0);
@@ -1016,7 +1034,7 @@ _registerOSInfo
  * @param[in] pClient
  * @param[in] pOSInfo
  */
-static NV_STATUS
+static void
 _unregisterOSInfo
 (
     RmClient *pClient,
@@ -1034,9 +1052,7 @@ _unregisterOSInfo
 
      pSubmap = multimapFindSubmap(&g_osInfoList, key1);
      if (pSubmap == NULL || multimapCountSubmapItems(&g_osInfoList, pSubmap) > 0)
-         return NV_OK;
+         return;
 
      multimapRemoveSubmap(&g_osInfoList, pSubmap);
-
-     return NV_OK;
 }

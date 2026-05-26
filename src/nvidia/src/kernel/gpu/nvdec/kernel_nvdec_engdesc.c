@@ -42,6 +42,7 @@
 #include "class/clceb0.h" // NVCEB0_VIDEO_DECODER
 #include "class/clcfb0.h" // NVCFB0_VIDEO_DECODER
 #include "class/cld1b0.h" // NVD1B0_VIDEO_DECODER
+#include "class/cld2b0.h" // NVD2B0_VIDEO_DECODER
 /*
  * This function returns an engine descriptor corresponding to the class
  * and engine instance passed in.
@@ -94,6 +95,7 @@ nvdecGetEngineDescFromAllocParams
         case NVCFB0_VIDEO_DECODER:
         case NVB8B0_VIDEO_DECODER:
         case NVD1B0_VIDEO_DECODER:
+        case NVD2B0_VIDEO_DECODER:
             engineInstance = pNvdecAllocParams->engineInstance;
             break;
         default:

@@ -711,7 +711,7 @@ _kdispHandleAwakenChnMask
     }
 }
 
-NvU32
+void
 kdispServiceAwakenIntr_v03_00
 (
     OBJGPU             *pGpu,
@@ -747,6 +747,43 @@ kdispServiceAwakenIntr_v03_00
         // HW reported AWAKEN interrupt, we should not end up with no channel having AWAKEN pending
         NV_ASSERT(bAwakenIntrPending);
     }
+}
 
-    return awakenWinChannelNumMask;
+/*!
+ * @brief Get display MMIO aperture length for v03_00
+ *
+ * @param[in]  pGpu            GPU object pointer
+ * @param[in]  pKernelDisplay  KernelDisplay pointer
+ *
+ * @return Display MMIO range size in bytes
+ */
+NvU32
+kdispGetDisplayApertureLength_v03_00
+(
+    OBJGPU        *pGpu,
+    KernelDisplay *pKernelDisplay
+)
+{
+    return DRF_SIZE(NV_PDISP);
+}
+
+/*!
+ * @brief Reads interrupt dispatch register for pending interrupts
+ *
+ * @param[in]  pGpu             OBJGPU pointer
+ * @param[in]  pKernelDisplay   KernelDisplay pointer
+ * @param[out] pIntrDispatch    Pointer to store interrupt dispatch value
+ */
+void
+kdispGetPendingInterrupts_v03_00
+(
+    OBJGPU        *pGpu,
+    KernelDisplay *pKernelDisplay,
+    NvU32         *pIntrDispatch
+)
+{
+    if (pIntrDispatch != NULL)
+    {
+        *pIntrDispatch = REG_RD32(pKernelDisplay->pAperture, DISP_INTR_REG(DISPATCH));
+    }
 }

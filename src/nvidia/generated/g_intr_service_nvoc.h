@@ -143,7 +143,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_IntrService;
     ((IntrService*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(IntrService)))
 #endif //__nvoc_intr_service_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_IntrService(IntrService**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_IntrService(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_IntrService(IntrService**, Dynamic*, NvU32);
 #define __objCreate_IntrService(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \
@@ -163,7 +163,7 @@ NV_STATUS __nvoc_objCreate_IntrService(IntrService**, Dynamic*, NvU32);
 #define intrservServiceNotificationInterrupt(pGpu, pIntrService, pParams) intrservServiceNotificationInterrupt_DISPATCH(pGpu, pIntrService, pParams)
 
 // Dispatch functions
-static inline void intrservRegisterIntrService_DISPATCH(struct OBJGPU *pGpu, struct IntrService *pIntrService, IntrServiceRecord pRecords[180]) {
+static inline void intrservRegisterIntrService_DISPATCH(struct OBJGPU *pGpu, struct IntrService *pIntrService, IntrServiceRecord pRecords[181]) {
     pIntrService->__nvoc_metadata_ptr->vtable.__intrservRegisterIntrService__(pGpu, pIntrService, pRecords);
 }
 
@@ -180,7 +180,7 @@ static inline NV_STATUS intrservServiceNotificationInterrupt_DISPATCH(struct OBJ
 }
 
 // Virtual method declarations and/or inline definitions
-void intrservRegisterIntrService_IMPL(struct OBJGPU *pGpu, struct IntrService *pIntrService, IntrServiceRecord pRecords[180]);
+void intrservRegisterIntrService_IMPL(struct OBJGPU *pGpu, struct IntrService *pIntrService, IntrServiceRecord pRecords[181]);
 
 NvBool intrservClearInterrupt_IMPL(struct OBJGPU *pGpu, struct IntrService *pIntrService, IntrServiceClearInterruptArguments *pParams);
 

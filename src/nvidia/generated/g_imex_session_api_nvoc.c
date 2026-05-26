@@ -31,7 +31,7 @@ void __nvoc_init__ImexSessionApi(ImexSessionApi*);
 void __nvoc_init_funcTable_ImexSessionApi(ImexSessionApi*);
 NV_STATUS __nvoc_ctor_ImexSessionApi(ImexSessionApi*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_ImexSessionApi(ImexSessionApi*);
-void __nvoc_dtor_ImexSessionApi(ImexSessionApi*);
+void __nvoc_dtor_ImexSessionApi(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__ImexSessionApi;
@@ -89,7 +89,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ImexSessionApi =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "ImexSessionApi",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_ImexSessionApi,
+    .objCreatefn =        &__nvoc_objCreateDynamic_ImexSessionApi,
     .pCastInfo =          &__nvoc_castinfo__ImexSessionApi,
     .pExportInfo =        &__nvoc_export_info__ImexSessionApi
 };
@@ -99,6 +99,25 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_ImexSessionApi =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0000010bu)
+static NV_STATUS imexsessionapiCtrlCmdGetFabricEvents__EXPORT(void *pImexSessionApi, void *pParams) {
+    return imexsessionapiCtrlCmdGetFabricEvents_IMPL(pImexSessionApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0000010bu)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0000010bu)
+static NV_STATUS imexsessionapiCtrlCmdFinishMemUnimport__EXPORT(void *pImexSessionApi, void *pParams) {
+    return imexsessionapiCtrlCmdFinishMemUnimport_IMPL(pImexSessionApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0000010bu)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS imexsessionapiCtrlCmdDisableImporters__EXPORT(void *pImexSessionApi, void *pParams) {
+    return imexsessionapiCtrlCmdDisableImporters_IMPL(pImexSessionApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ImexSessionApi[] = 
 {
@@ -106,7 +125,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ImexSess
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10bu)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &imexsessionapiCtrlCmdGetFabricEvents_IMPL,
+        /*pFunc=*/      (void (*)(void)) &imexsessionapiCtrlCmdGetFabricEvents__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10bu)
         /*flags=*/      0x10bu,
         /*accessRight=*/0x0u,
@@ -121,7 +140,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ImexSess
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10bu)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &imexsessionapiCtrlCmdFinishMemUnimport_IMPL,
+        /*pFunc=*/      (void (*)(void)) &imexsessionapiCtrlCmdFinishMemUnimport__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10bu)
         /*flags=*/      0x10bu,
         /*accessRight=*/0x0u,
@@ -136,7 +155,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ImexSess
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &imexsessionapiCtrlCmdDisableImporters_IMPL,
+        /*pFunc=*/      (void (*)(void)) &imexsessionapiCtrlCmdDisableImporters__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -153,7 +172,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_ImexSess
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__ImexSessionApi __nvoc_metadata__ImexSessionApi = {
     .rtti.pClassDef = &__nvoc_class_def_ImexSessionApi,    // (imexsessionapi) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_ImexSessionApi,
+    .rtti.dtor      = &__nvoc_dtor_ImexSessionApi,
     .rtti.offset    = 0,
     .metadata__RmResource.rtti.pClassDef = &__nvoc_class_def_RmResource,    // (rmres) super
     .metadata__RmResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -360,16 +379,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__ImexSessionApi =
 
 // Destruct ImexSessionApi object.
 void __nvoc_imexsessionapiDestruct(ImexSessionApi*);
-void __nvoc_dtor_RmResource(RmResource*);
-void __nvoc_dtor_ImexSessionApi(ImexSessionApi* pThis) {
+void __nvoc_dtor_RmResource(Dynamic*);
+void __nvoc_dtor_ImexSessionApi(Dynamic* pThis) {
+
+    ImexSessionApi *__nvoc_this = (ImexSessionApi *) pThis;
 
 // Call destructor.
-    __nvoc_imexsessionapiDestruct(pThis);
+    __nvoc_imexsessionapiDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_RmResource(&pThis->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *) &__nvoc_this->__nvoc_base_RmResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_ImexSessionApi(ImexSessionApi *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -395,7 +416,7 @@ NV_STATUS __nvoc_ctor_ImexSessionApi(ImexSessionApi *pImexSessionApi, struct CAL
 
     // Unwind on error.
 __nvoc_ctor_ImexSessionApi_fail__init:
-    __nvoc_dtor_RmResource(&pImexSessionApi->__nvoc_base_RmResource);
+    __nvoc_dtor_RmResource((Dynamic *)&pImexSessionApi->__nvoc_base_RmResource);
 __nvoc_ctor_ImexSessionApi_fail_RmResource:
 __nvoc_ctor_ImexSessionApi_exit:
     return status;
@@ -505,13 +526,10 @@ __nvoc_objCreate_ImexSessionApi_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_ImexSessionApi(ImexSessionApi **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_ImexSessionApi(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_ImexSessionApi(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_ImexSessionApi((ImexSessionApi **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

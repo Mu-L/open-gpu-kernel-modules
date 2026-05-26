@@ -1,5 +1,5 @@
 /*******************************************************************************
-    Copyright (c) 2024-2025 NVIDIA Corporation
+    Copyright (c) 2024-2026 NVIDIA Corporation
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
@@ -324,7 +324,8 @@ uvm_hal_blackwell_access_counter_query_clear_op_gb100(uvm_parent_gpu_t *parent_g
                                                       uvm_access_counter_buffer_entry_t **buffer_entries,
                                                       NvU32 num_entries)
 {
-    if (parent_gpu->rm_info.accessCntrBufferCount > 1) {
+    if (parent_gpu->rm_info.gpuArch == NV2080_CTRL_MC_ARCH_INFO_ARCHITECTURE_GB100 &&
+        parent_gpu->rm_info.accessCntrBufferCount > 1) {
         NvU32 i;
 
         for (i = 0; i < num_entries; i++) {
@@ -366,16 +367,19 @@ void uvm_hal_blackwell_host_l2_invalidate(uvm_push_t *push, uvm_aperture_t apert
 
     // First sysmembar
     uvm_hal_membar(gpu, push, UVM_MEMBAR_SYS);
+
     // Flush dirty
     NV_PUSH_4U(C96F, MEM_OP_A, 0,
                      MEM_OP_B, 0,
                      MEM_OP_C, 0,
                      MEM_OP_D, HWCONST(C96F, MEM_OP_D, OPERATION, L2_FLUSH_DIRTY));
+
     // Invalidate
     NV_PUSH_4U(C96F, MEM_OP_A, 0,
-               MEM_OP_B, 0,
-               MEM_OP_C, 0,
-               MEM_OP_D, aperture_value);
+                     MEM_OP_B, 0,
+                     MEM_OP_C, 0,
+                     MEM_OP_D, aperture_value);
+
     // Final sysmembar
     uvm_hal_membar(gpu, push, UVM_MEMBAR_SYS);
 }

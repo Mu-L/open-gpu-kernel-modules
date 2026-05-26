@@ -28,7 +28,7 @@ void __nvoc_init__OBJHAL(OBJHAL*);
 void __nvoc_init_funcTable_OBJHAL(OBJHAL*);
 NV_STATUS __nvoc_ctor_OBJHAL(OBJHAL*);
 void __nvoc_init_dataField_OBJHAL(OBJHAL*);
-void __nvoc_dtor_OBJHAL(OBJHAL*);
+void __nvoc_dtor_OBJHAL(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJHAL;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJHAL =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJHAL",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_OBJHAL,
+    .objCreatefn =        &__nvoc_objCreateDynamic_OBJHAL,
     .pCastInfo =          &__nvoc_castinfo__OBJHAL,
     .pExportInfo =        &__nvoc_export_info__OBJHAL
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJHAL =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__OBJHAL __nvoc_metadata__OBJHAL = {
     .rtti.pClassDef = &__nvoc_class_def_OBJHAL,    // (objhal) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJHAL,
+    .rtti.dtor      = &__nvoc_dtor_OBJHAL,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -81,13 +81,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJHAL =
 
 
 // Destruct OBJHAL object.
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_OBJHAL(OBJHAL* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_OBJHAL(Dynamic* pThis) {
+
+    OBJHAL *__nvoc_this = (OBJHAL *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJHAL(OBJHAL *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -211,11 +213,8 @@ __nvoc_objCreate_OBJHAL_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_OBJHAL(OBJHAL **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_OBJHAL(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_OBJHAL(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_OBJHAL((OBJHAL **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

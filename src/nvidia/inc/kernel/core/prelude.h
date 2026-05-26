@@ -87,8 +87,6 @@ typedef struct THREAD_STATE_NODE THREAD_STATE_NODE; // FW declare thread state
                                          (((a) & 0x00ff0000)>>8)  |  \
                                          (((a) & 0x0000ff00)<<8)  |  \
                                          (((a) & 0x000000ff)<<24))
-#define NV_TO_LOWER(c)                  (((c)>='A'&&(c)<='Z')?(c)+('a'-'A'):(c))
-#define NV_TO_UPPER(c)                  (((c)>='a'&&(c)<='z')?((c)-'a'+'A'):(c))
 
 /*!
  *  Creates a byte mask for a word at given offset.

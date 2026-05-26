@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2022, NVIDIA CORPORATION. All rights reserved.
+ * Copyright (c) 2015-2025, NVIDIA CORPORATION. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -84,7 +84,18 @@
 enum nv_drm_input_color_space {
     NV_DRM_INPUT_COLOR_SPACE_NONE,
     NV_DRM_INPUT_COLOR_SPACE_SCRGB_LINEAR,
-    NV_DRM_INPUT_COLOR_SPACE_BT2100_PQ
+    NV_DRM_INPUT_COLOR_SPACE_BT2100_PQ,
+    NV_DRM_INPUT_COLOR_SPACE_MAX
+};
+
+enum nv_drm_dithering_mode {
+    NV_DRM_DITHERING_MODE_AUTO = 0,
+    NV_DRM_DITHERING_MODE_OFF,
+    NV_DRM_DITHERING_MODE_STATIC_2X2,
+    NV_DRM_DITHERING_MODE_DYNAMIC_2X2,
+    NV_DRM_DITHERING_MODE_TEMPORAL,
+    NV_DRM_DITHERING_MODE_ON,
+    NV_DRM_DITHERING_MODE_MAX
 };
 
 struct nv_drm_device {
@@ -178,10 +189,14 @@ struct nv_drm_device {
     struct drm_property *nv_crtc_regamma_lut_size_property;
     struct drm_property *nv_crtc_regamma_divisor_property;
 
+    struct drm_property *nv_connector_dithering_mode_property;
+
     struct nv_drm_device *next;
 
     NvU64 vtFbBaseAddress;
     NvU64 vtFbSize;
+
+    nv_drm_workthread vblank_worker;
 };
 
 static inline NvU32 nv_drm_next_display_semaphore(

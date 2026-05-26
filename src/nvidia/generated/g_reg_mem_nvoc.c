@@ -32,7 +32,7 @@ void __nvoc_init__RegisterMemory(RegisterMemory*);
 void __nvoc_init_funcTable_RegisterMemory(RegisterMemory*);
 NV_STATUS __nvoc_ctor_RegisterMemory(RegisterMemory*, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_RegisterMemory(RegisterMemory*);
-void __nvoc_dtor_RegisterMemory(RegisterMemory*);
+void __nvoc_dtor_RegisterMemory(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__RegisterMemory;
@@ -116,7 +116,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RegisterMemory =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "RegisterMemory",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_RegisterMemory,
+    .objCreatefn =        &__nvoc_objCreateDynamic_RegisterMemory,
     .pCastInfo =          &__nvoc_castinfo__RegisterMemory,
     .pExportInfo =        &__nvoc_export_info__RegisterMemory
 };
@@ -125,7 +125,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_RegisterMemory =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__RegisterMemory __nvoc_metadata__RegisterMemory = {
     .rtti.pClassDef = &__nvoc_class_def_RegisterMemory,    // (regmem) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_RegisterMemory,
+    .rtti.dtor      = &__nvoc_dtor_RegisterMemory,
     .rtti.offset    = 0,
     .metadata__Memory.rtti.pClassDef = &__nvoc_class_def_Memory,    // (mem) super
     .metadata__Memory.rtti.dtor      = &__nvoc_destructFromBase,
@@ -394,13 +394,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__RegisterMemory =
 
 
 // Destruct RegisterMemory object.
-void __nvoc_dtor_Memory(Memory*);
-void __nvoc_dtor_RegisterMemory(RegisterMemory* pThis) {
+void __nvoc_dtor_Memory(Dynamic*);
+void __nvoc_dtor_RegisterMemory(Dynamic* pThis) {
+
+    RegisterMemory *__nvoc_this = (RegisterMemory *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Memory(&pThis->__nvoc_base_Memory);
+    __nvoc_dtor_Memory((Dynamic *) &__nvoc_this->__nvoc_base_Memory);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_RegisterMemory(RegisterMemory *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -426,7 +428,7 @@ NV_STATUS __nvoc_ctor_RegisterMemory(RegisterMemory *pRegisterMemory, CALL_CONTE
 
     // Unwind on error.
 __nvoc_ctor_RegisterMemory_fail__init:
-    __nvoc_dtor_Memory(&pRegisterMemory->__nvoc_base_Memory);
+    __nvoc_dtor_Memory((Dynamic *)&pRegisterMemory->__nvoc_base_Memory);
 __nvoc_ctor_RegisterMemory_fail_Memory:
 __nvoc_ctor_RegisterMemory_exit:
     return status;
@@ -538,13 +540,10 @@ __nvoc_objCreate_RegisterMemory_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_RegisterMemory(RegisterMemory **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_RegisterMemory(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_RegisterMemory(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_RegisterMemory((RegisterMemory **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

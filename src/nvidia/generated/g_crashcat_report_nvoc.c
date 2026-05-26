@@ -48,7 +48,7 @@ void __nvoc_init__CrashCatReport(CrashCatReport*,
 void __nvoc_init_funcTable_CrashCatReport(CrashCatReport*);
 NV_STATUS __nvoc_ctor_CrashCatReport(CrashCatReport*, void **ppReportBytes, NvLength bytesRemaining);
 void __nvoc_init_dataField_CrashCatReport(CrashCatReport*);
-void __nvoc_dtor_CrashCatReport(CrashCatReport*);
+void __nvoc_dtor_CrashCatReport(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__CrashCatReport;
@@ -67,7 +67,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_CrashCatReport =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "CrashCatReport",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_CrashCatReport,
+    .objCreatefn =        &__nvoc_objCreateDynamic_CrashCatReport,
     .pCastInfo =          &__nvoc_castinfo__CrashCatReport,
     .pExportInfo =        &__nvoc_export_info__CrashCatReport
 };
@@ -76,7 +76,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_CrashCatReport =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__CrashCatReport __nvoc_metadata__CrashCatReport = {
     .rtti.pClassDef = &__nvoc_class_def_CrashCatReport,    // (crashcatReport) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_CrashCatReport,
+    .rtti.dtor      = &__nvoc_dtor_CrashCatReport,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -102,16 +102,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__CrashCatReport =
 
 // Destruct CrashCatReport object.
 void __nvoc_crashcatReportDestruct(CrashCatReport*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_CrashCatReport(CrashCatReport* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_CrashCatReport(Dynamic* pThis) {
+
+    CrashCatReport *__nvoc_this = (CrashCatReport *) pThis;
 
 // Call destructor.
-    __nvoc_crashcatReportDestruct(pThis);
+    __nvoc_crashcatReportDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_CrashCatReport(CrashCatReport *pThis) {
     CrashCatReportHal *reportHal = &pThis->reportHal;
@@ -141,7 +143,7 @@ NV_STATUS __nvoc_ctor_CrashCatReport(CrashCatReport *arg_this, void **ppReportBy
 
     // Unwind on error.
 __nvoc_ctor_CrashCatReport_fail__init:
-    __nvoc_dtor_Object(&arg_this->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&arg_this->__nvoc_base_Object);
 __nvoc_ctor_CrashCatReport_fail_Object:
 __nvoc_ctor_CrashCatReport_exit:
     return status;
@@ -308,15 +310,12 @@ __nvoc_objCreate_CrashCatReport_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_CrashCatReport(CrashCatReport **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_CrashCatReport(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     NV_CRASHCAT_PACKET_FORMAT_VERSION CrashCatReportHal_version = va_arg(__nvoc_args, NV_CRASHCAT_PACKET_FORMAT_VERSION);
     CrashCatImplementer CrashCatReportHal_implementer = va_arg(__nvoc_args, CrashCatImplementer);
     void **ppReportBytes = va_arg(__nvoc_args, void **);
     NvLength bytesRemaining = va_arg(__nvoc_args, NvLength);
 
-    __nvoc_status = __nvoc_objCreate_CrashCatReport(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, CrashCatReportHal_version, CrashCatReportHal_implementer, ppReportBytes, bytesRemaining);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_CrashCatReport((CrashCatReport **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, CrashCatReportHal_version, CrashCatReportHal_implementer, ppReportBytes, bytesRemaining);
 }
 

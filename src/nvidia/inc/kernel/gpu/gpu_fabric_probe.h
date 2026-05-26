@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -27,6 +27,7 @@
 
 #include "nvlink_inband_msg.h"
 #include "ctrl/ctrl2080/ctrl2080nvlink.h"
+#include "kernel/gpu/nvlink/bitvector_nvlink.h"
 
 #define GPU_FABRIC_PROBE_SEC_TO_NS 1000000000ULL
 
@@ -42,8 +43,10 @@ NV_STATUS gpuFabricProbeStart(OBJGPU *pGpu,
 void gpuFabricProbeStop(GPU_FABRIC_PROBE_INFO_KERNEL *pGpuFabricProbeInfoKernel);
 void gpuFabricProbeStopPhysical(GPU_FABRIC_PROBE_INFO_PHYSICAL *pGpuFabricProbeInfoPhysical,
                                 NvU32 gfId);
-NV_STATUS gpuFabricProbeSuspendPhysical(GPU_FABRIC_PROBE_INFO_PHYSICAL *pGpuFabricProbeInfoPhysical, NvU32 *pPrevBwMode, NvU32 *pPrevRbmLinkCount);
-NV_STATUS gpuFabricProbeResumePhysical(GPU_FABRIC_PROBE_INFO_PHYSICAL *pGpuFabricProbeInfoPhysical, NvU32 newBwMode, NvU32 newRbmLinkCount);
+NV_STATUS gpuFabricProbeSuspendPhysical(GPU_FABRIC_PROBE_INFO_PHYSICAL *pGpuFabricProbeInfoPhysical, NvU32 *pPrevBwMode,
+    NvU32 *pPrevRbmLinkCount);
+NV_STATUS gpuFabricProbeResumePhysical(GPU_FABRIC_PROBE_INFO_PHYSICAL *pGpuFabricProbeInfoPhysical, NvU32 newBwMode,
+    NvU32 newRbmLinkCount);
 
 void gpuFabricProbeSuspend(GPU_FABRIC_PROBE_INFO_KERNEL *pGpuFabricProbeInfoKernel);
 void gpuFabricProbeInvalidate(GPU_FABRIC_PROBE_INFO_KERNEL *pGpuFabricProbeInfoKernel);
@@ -68,10 +71,13 @@ NvBool gpuFabricProbeIsReceived(GPU_FABRIC_PROBE_INFO_KERNEL *pGpuFabricProbeInf
 NvBool gpuFabricProbeIsSuccess(GPU_FABRIC_PROBE_INFO_KERNEL *pGpuFabricProbeInfoKernel);
 NV_STATUS gpuFabricProbeGetFmStatus(GPU_FABRIC_PROBE_INFO_KERNEL *pGpuFabricProbeInfoKernel);
 NvBool gpuFabricProbeIsSupported(OBJGPU *pGpu);
-NV_STATUS gpuFabricProbeSetBwMode(NvU16 mode);
-NV_STATUS gpuFabricProbeSetBwModePerGpu(OBJGPU *pGpu, NvU16 mode);
+NV_STATUS gpuFabricProbeSetBwMode(NvU16 mode, NvBool bSync);
+NV_STATUS gpuFabricProbeSetBwModePerGpu(OBJGPU *pGpu, NvU16 mode, NvBool bSync);
+
 NV_STATUS gpuFabricProbeGetlinkMaskToBeReduced(GPU_FABRIC_PROBE_INFO_KERNEL *pGpuFabricProbeInfoKernel,
-                                               NvU32 *linkMaskToBeReduced);
+                                               NVLINK_BIT_VECTOR *pLinkMaskToBeReduced);
+NV_STATUS gpuFabricProbeSetlinkMaskToBeReduced(GPU_FABRIC_PROBE_INFO_KERNEL *pGpuFabricProbeInfoKernel,
+                                               NVLINK_BIT_VECTOR *pLinkMaskToBeReduced);
 NV_STATUS gpuFabricProbeReceiveUpdateKernelCallback(NvU32 gpuInstance, NvU64 *pNotifyGfIdMask,
             NV2080_CTRL_NVLINK_INBAND_RECEIVED_DATA_PARAMS *pInbandRcvParams);
 NV_STATUS gpuFabricProbeReceiveKernelCallback(NvU32 gpuInstance, NvU64 *pNotifyGfIdMask,

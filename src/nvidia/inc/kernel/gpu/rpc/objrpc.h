@@ -37,6 +37,7 @@
 #include "ctrl/ctrl2080/ctrl2080perf.h" // rmcontrol params (from hal)
 #include "ctrl/ctrl0080/ctrl0080fb.h" // rmcontrol params (from hal)
 #include "ctrl/ctrl0080/ctrl0080dma.h" // rmcontrol params (from hal)
+#include "alloc/alloc_channel.h" // rmalloc params (from hal)
 #include "gpu/gsp/message_queue.h"
 #include "libraries/utils/nvbitvector.h"
 
@@ -106,9 +107,10 @@ struct OBJRPC{
 // A message has a fixed-format header and optionally a variable length
 // parameter after the header.
 //
-
-#define vgpu_rpc_message_header_v  ((rpc_message_header_v*)(pRpc->message_buffer))
-#define rpc_message                (vgpu_rpc_message_header_v->rpc_message_data)
+// NOTE: Macros instead of inline functions so we don't have to pull in the two
+//       generated headers each time this header is included. 
+#define rpcGetVgpuMessageHeader(pRpc) ((rpc_message_header_v*)(pRpc->message_buffer))
+#define rpcGetVgpuMessageData(pRpc)   (rpcGetVgpuMessageHeader(pRpc)->rpc_message_data)
 
 static inline void _objrpcStructureCopyAssignIpVersion(struct OBJRPCSTRUCTURECOPY* pRpcStructureCopy, NvU32 ipVersion)
 {

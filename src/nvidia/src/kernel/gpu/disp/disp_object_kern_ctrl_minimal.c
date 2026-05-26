@@ -146,17 +146,19 @@ nvdispapiCtrlCmdChannelCancelFlip_IMPL
     status = kdispGetIntChnClsForHwCls(pKernelDisplay, pParams->channelClass, &internalChnClass);
     if (status != NV_OK)
     {
+        NV_PRINTF(LEVEL_NOTICE, "kdispGetIntChnClsForHwCls failed!\n");
         return status;
     }
 
     if (kdispGetChannelNum_HAL(pKernelDisplay, internalChnClass, pParams->channelInstance, &dispChannelNum) != NV_OK)
     {
+        NV_PRINTF(LEVEL_NOTICE, "kdispGetChannelNum_HAL failed!\n");
         return NV_ERR_INVALID_CHANNEL;
     }
 
     if (pKernelDisplay->pClientChannelTable[dispChannelNum].bInUse != NV_TRUE)
     {
-        NV_PRINTF(LEVEL_WARNING, "disp Channel not allocated by RM yet!\n");
+        NV_PRINTF(LEVEL_NOTICE, "disp Channel not allocated by RM yet!\n");
         return NV_ERR_INVALID_CHANNEL;
     }
     else
@@ -164,7 +166,7 @@ nvdispapiCtrlCmdChannelCancelFlip_IMPL
         // Does HW also think the same
         if (!kdispIsChannelAllocatedHw_HAL(pGpu, pKernelDisplay, internalChnClass, pParams->channelInstance))
         {
-            NV_PRINTF(LEVEL_WARNING, "disp Channel not allocated by HW yet!\n");
+            NV_PRINTF(LEVEL_NOTICE, "disp Channel not allocated by HW yet!\n");
             return NV_ERR_INVALID_CHANNEL;
         }
     }
@@ -174,20 +176,39 @@ nvdispapiCtrlCmdChannelCancelFlip_IMPL
         // Ensure that only core channel owner can touch it.
         if (pKernelDisplay->pClientChannelTable[dispChannelNum].pClient->hClient != hClient)
         {
+            NV_PRINTF(LEVEL_NOTICE, "hClient mismatch\n");
             NV_ASSERT(0);
             return NV_ERR_INVALID_OWNER;
         }
+    }
+
+    if (kdispIsChannelBusyForCheckPendingLoadV_HAL(pGpu, pKernelDisplay, internalChnClass, pParams->channelInstance))
+    {
+        return NV_WARN_MORE_PROCESSING_REQUIRED;
     }
 
     kdispSetChannelTrashAndAbortAccel_HAL(pGpu, pKernelDisplay, internalChnClass, pParams->channelInstance, NV_TRUE);
 
     if (!kdispIsChannelIdle_HAL(pGpu, pKernelDisplay, internalChnClass, pParams->channelInstance))
     {
-        NV_PRINTF(LEVEL_WARNING, "disp channel not in idle state! %u %u\n", internalChnClass, pParams->channelInstance);
+        NV_PRINTF(LEVEL_ERROR, "disp channel not in idle state! %u %u\n", internalChnClass, pParams->channelInstance);
         NV_ASSERT(0);
+        status = NV_ERR_TIMEOUT;
     }
 
     kdispSetChannelTrashAndAbortAccel_HAL(pGpu, pKernelDisplay, internalChnClass, pParams->channelInstance, NV_FALSE);
 
     return status;
+}
+
+NV_STATUS
+nvdispapiCtrlCmdEventSetNotification_IMPL
+(
+    NvDispApi *pNvDispApi,
+    NVC370_CTRL_EVENT_SET_NOTIFICATION_PARAMS *pSetEventParams
+)
+{
+    DisplayApi *pDisplayApi = staticCast(pNvDispApi, DisplayApi);
+
+    return dispapiCtrlCmdEventSetNotification(pDisplayApi, pSetEventParams);
 }

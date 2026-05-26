@@ -170,8 +170,7 @@ static NVSurfaceEvoPtr AllocLutSurfaceEvoInVidmem(NVDevEvoPtr pDevEvo)
      */
     if (!nvRmEvoMapVideoMemory(pDevEvo,
                                pSurfEvo->planes[0].rmHandle,
-                               size, pSurfEvo->cpuAddress,
-                               SUBDEVICE_MASK_ALL)) {
+                               size, &pSurfEvo->cpuAddress[0])) {
         goto fail;
     }
 

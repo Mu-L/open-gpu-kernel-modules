@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2014-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2014-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -197,7 +197,7 @@ typedef struct NV2080_CTRL_CE_GET_CE_PCE_MASK_PARAMS {
 
 #define NV2080_CTRL_CMD_CE_SET_PCE_LCE_CONFIG (0x20802a04) /* finn: Evaluated from "(FINN_NV20_SUBDEVICE_0_CE_INTERFACE_ID << 8) | NV2080_CTRL_CE_SET_PCE_LCE_CONFIG_PARAMS_MESSAGE_ID" */
 
-#define NV2080_CTRL_MAX_PCES                  32
+#define NV2080_CTRL_MAX_PCES                  64
 #define NV2080_CTRL_MAX_GRCES                 4
 
 #define NV2080_CTRL_CE_SET_PCE_LCE_CONFIG_PARAMS_MESSAGE_ID (0x4U)
@@ -432,6 +432,11 @@ typedef enum NV2080_CTRL_CE_LCE_TYPE {
     NV2080_CTRL_CE_LCE_TYPE_CC_WORK_SUBMIT = 10,
 } NV2080_CTRL_CE_LCE_TYPE;
 
+typedef enum NV2080_CTRL_CE_SHIM_PREFERENCE {
+    NV2080_CTRL_CE_SHIM_PREFERENCE_SAME_SHIM = 1,
+    NV2080_CTRL_CE_SHIM_PREFERENCE_DIFFERENT_SHIM = 2,
+} NV2080_CTRL_CE_SHIM_PREFERENCE;
+
 /*
  * NV2080_CTRL_CMD_INTERNAL_CE_GET_PCE_CONFIG_FOR_LCE_TYPE
  *
@@ -451,6 +456,8 @@ typedef enum NV2080_CTRL_CE_LCE_TYPE {
  *      The mask of the LCEs that support the specified LCE type.
  *  [out] pcePerHshub
  *      Numbers of PCEs from any given HSHUB that can be assigned to this LCE type.
+ *  [out] multipleLceShimPreference
+ *      Shim selection preference in case there are multiple LCEs
  *
  *  @return NV_OK
  */
@@ -460,13 +467,14 @@ typedef enum NV2080_CTRL_CE_LCE_TYPE {
 #define NV2080_CTRL_INTERNAL_CE_GET_PCE_CONFIG_FOR_LCE_TYPE_PARAMS_MESSAGE_ID (0xfU)
 
 typedef struct NV2080_CTRL_INTERNAL_CE_GET_PCE_CONFIG_FOR_LCE_TYPE_PARAMS {
-    NV2080_CTRL_CE_LCE_TYPE lceType;
-    NvU32                   metadataForLceType;
-    NvU32                   numPces;
-    NvU32                   numLces;
-    NvU32                   supportedPceMask;
-    NvU32                   supportedLceMask;
-    NvU32                   pcePerHshub;
+    NV2080_CTRL_CE_LCE_TYPE        lceType;
+    NvU32                          metadataForLceType;
+    NvU32                          numPces;
+    NvU32                          numLces;
+    NvU32                          supportedPceMask;
+    NvU32                          supportedLceMask;
+    NvU32                          pcePerHshub;
+    NV2080_CTRL_CE_SHIM_PREFERENCE multipleLceShimPreference;
 } NV2080_CTRL_INTERNAL_CE_GET_PCE_CONFIG_FOR_LCE_TYPE_PARAMS;
 
 /*

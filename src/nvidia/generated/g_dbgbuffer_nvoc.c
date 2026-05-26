@@ -32,7 +32,7 @@ void __nvoc_init__DebugBufferApi(DebugBufferApi*);
 void __nvoc_init_funcTable_DebugBufferApi(DebugBufferApi*);
 NV_STATUS __nvoc_ctor_DebugBufferApi(DebugBufferApi*, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_DebugBufferApi(DebugBufferApi*);
-void __nvoc_dtor_DebugBufferApi(DebugBufferApi*);
+void __nvoc_dtor_DebugBufferApi(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__DebugBufferApi;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_DebugBufferApi =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "DebugBufferApi",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_DebugBufferApi,
+    .objCreatefn =        &__nvoc_objCreateDynamic_DebugBufferApi,
     .pCastInfo =          &__nvoc_castinfo__DebugBufferApi,
     .pExportInfo =        &__nvoc_export_info__DebugBufferApi
 };
@@ -124,7 +124,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_DebugBufferApi =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__DebugBufferApi __nvoc_metadata__DebugBufferApi = {
     .rtti.pClassDef = &__nvoc_class_def_DebugBufferApi,    // (dbgbuf) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_DebugBufferApi,
+    .rtti.dtor      = &__nvoc_dtor_DebugBufferApi,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -387,16 +387,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__DebugBufferApi =
 
 // Destruct DebugBufferApi object.
 void __nvoc_dbgbufDestruct(DebugBufferApi*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_DebugBufferApi(DebugBufferApi* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_DebugBufferApi(Dynamic* pThis) {
+
+    DebugBufferApi *__nvoc_this = (DebugBufferApi *) pThis;
 
 // Call destructor.
-    __nvoc_dbgbufDestruct(pThis);
+    __nvoc_dbgbufDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_DebugBufferApi(DebugBufferApi *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -422,7 +424,7 @@ NV_STATUS __nvoc_ctor_DebugBufferApi(DebugBufferApi *pDebugBufferApi, CALL_CONTE
 
     // Unwind on error.
 __nvoc_ctor_DebugBufferApi_fail__init:
-    __nvoc_dtor_GpuResource(&pDebugBufferApi->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pDebugBufferApi->__nvoc_base_GpuResource);
 __nvoc_ctor_DebugBufferApi_fail_GpuResource:
 __nvoc_ctor_DebugBufferApi_exit:
     return status;
@@ -534,13 +536,10 @@ __nvoc_objCreate_DebugBufferApi_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_DebugBufferApi(DebugBufferApi **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_DebugBufferApi(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_DebugBufferApi(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_DebugBufferApi((DebugBufferApi **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

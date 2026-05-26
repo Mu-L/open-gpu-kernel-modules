@@ -145,7 +145,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_KernelCcuApi;
     ((KernelCcuApi*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(KernelCcuApi)))
 #endif //__nvoc_kernel_ccu_api_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_KernelCcuApi(KernelCcuApi**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_KernelCcuApi(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_KernelCcuApi(KernelCcuApi**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_KernelCcuApi(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

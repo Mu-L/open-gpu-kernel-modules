@@ -159,7 +159,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_UvmSwObject;
     ((UvmSwObject*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(UvmSwObject)))
 #endif //__nvoc_uvm_sw_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_UvmSwObject(UvmSwObject**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_UvmSwObject(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_UvmSwObject(UvmSwObject**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_UvmSwObject(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -29,11 +29,13 @@
   */
 #include "gpu/gpu.h"
 #include "gpu/fsp/kern_fsp.h"
+#include "cper/gpu_cper.h"
+#include "diagnostics/op_event_log.h"
 #include "os/os.h"
 #include "nvrm_registry.h"
 #include "gpu_mgr/gpu_mgr.h"
+#include "mctp_format.h"
 #include "fsp/fsp_clock_boost_rpc.h"
-#include "fsp/fsp_nvdm_format.h"
 
 #if RMCFG_MODULE_ENABLED (GSP)
 #include "gpu/gsp/gsp.h"
@@ -52,6 +54,8 @@
 #define HEADER_DWORD_MCTP 0
 #define HEADER_DWORD_NVDM 1
 #define HEADER_DWORD_MAX  2
+
+#define KFSP_GPU_INIT_CPER_BUFFER_SIZE 1024
 
 /*!
 * Local object related functions
@@ -517,10 +521,13 @@ kfspSendMessage
     pHeader = (NvU32*)pBuffer;
     // First packet
     seid = kfspNvdmToSeid_HAL(pGpu, pKernelFsp, nvdmType);
-    // SOM=1,EOM=?,SEID,SEQ=0
-    pHeader[HEADER_DWORD_MCTP] = kfspCreateMctpHeader_HAL(pGpu, pKernelFsp, 1,
-                                                     (NvU8)bSinglePacket, seid, seq);
-    pHeader[HEADER_DWORD_NVDM] = kfspCreateNvdmHeader_HAL(pGpu, pKernelFsp, nvdmType);
+    pHeader[HEADER_DWORD_MCTP] = mctpCreateTransportHeader(
+        1,               // SOM = 1 (start of message)
+        !!bSinglePacket, // EOM = 1 if single packet, 0 if multi-packet
+        seid,            // Source endpoint ID
+        0,               // DEID = 0 (unused)
+        seq);            // Sequence number
+    pHeader[HEADER_DWORD_NVDM] = mctpCreateNvdmHeader((NvU8)nvdmType);
 
     curPayloadSize = NV_MIN(size, packetPayloadCapacity);
     portMemCopy(pBuffer + headerSize, packetPayloadCapacity, pPayload, curPayloadSize);
@@ -543,9 +550,12 @@ kfspSendMessage
             NvBool bLastPacket = (dataRemaining <= packetPayloadCapacity);
             curPayloadSize = (bLastPacket) ? dataRemaining : packetPayloadCapacity;
 
-            pHeader[HEADER_DWORD_MCTP] = kfspCreateMctpHeader_HAL(pGpu, pKernelFsp, 0,
-                                                             (NvU8)bLastPacket, seid,
-                                                             (++seq) % 4);
+            pHeader[HEADER_DWORD_MCTP] = mctpCreateTransportHeader(
+                0,             // SOM = 0 (continuation packet)
+                !!bLastPacket, // EOM = 1 if last packet, 0 otherwise
+                seid,          // Source endpoint ID
+                0,             // DEID = 0 (unused)
+                (++seq) % 4);  // Sequence number
             portMemCopy(pBuffer + headerSize, packetPayloadCapacity,
                         pPayload + dataSent, curPayloadSize);
 
@@ -985,4 +995,84 @@ kfspClearAsyncResponseState
     pKernelFsp->rpcState.pCallbackArgs = NULL;
     pKernelFsp->rpcState.pResponseBuffer = NULL;
     pKernelFsp->rpcState.responseBufferSize = 0;
+}
+
+void
+kfspEmitGpuInitErrorCper_IMPL
+(
+    OBJGPU              *pGpu,
+    KernelFsp           *pKernelFsp,
+    const NV_CPER_GUID  *pNotifyType,
+    NvU16                eventSubType,
+    const char          *pXidMessage
+)
+{
+    NvU8 *pCperBytes;
+    const NvU32 cperBufferSize = KFSP_GPU_INIT_CPER_BUFFER_SIZE;
+    NV_STATUS cperStatus;
+    NV_CPER_GUID fruId;
+    NvU32 recordSize = 0;
+    const NV_CPER_GUID *pFruId = NULL;
+    static const NV_CPER_GUID creatorId = NV_CPER_CREATOR_NVIDIA_GPU_PF_DRIVER_GUID;
+
+    if (pGpu == NULL || pNotifyType == NULL || pXidMessage == NULL)
+        return;
+
+    pCperBytes = (NvU8 *)portMemAllocNonPaged(cperBufferSize);
+    if (pCperBytes == NULL)
+        return;
+
+    if (pGpu->gpuUuid.isInitialized && cperGuidFromUuidBytes(pGpu->gpuUuid.uuid, &fruId))
+        pFruId = &fruId;
+
+    NV_CPER_INIT_PARAMS initParams = {0};
+    initParams.pNotifyType = pNotifyType;
+    initParams.pCreatorId = &creatorId;
+    initParams.bTimestampPrecise = NV_FALSE;
+    initParams.sectionCount = 1;
+
+    cperStatus = cperInit(pCperBytes, cperBufferSize, &initParams);
+    if (cperStatus != NV_OK)
+        goto done;
+
+    NV_CPER_NV_EVENT_PARAMS eventParams = {0};
+    eventParams.eventLinkId =
+        cperRecordIdToSequence(((const NV_CPER_RECORD_HEADER *)pCperBytes)->recordId);
+    eventParams.severity = NV_CPER_SEVERITY_FATAL;
+    eventParams.sectionFlags = NV_CPER_SECTION_FLAG_PRIMARY;
+    eventParams.pFruId = pFruId;
+    eventParams.pFruText = NULL;
+    eventParams.eventType = 0x7FFFu;
+    eventParams.eventSubType = eventSubType;
+    eventParams.pModuleSignature = "GPU-KFSP";
+    eventParams.originator = NV_CPER_NV_GPU_ORIGINATOR_PF_DRIVER;
+    eventParams.pdi = 0;
+    eventParams.sourcePartition = 0;
+    eventParams.sourceSubPartition = 0;
+
+    NV_CPER_NV_EVENT_SECTION_STATE eventState = {0};
+    cperStatus = cperAddNvidiaEventSection(pCperBytes, cperBufferSize, &eventParams, &eventState);
+    if (cperStatus != NV_OK)
+        goto done;
+
+    cperStatus = cperNvidiaEventAddGpuLegacyXidContext(&eventState, GPU_INIT_ERROR, pXidMessage);
+    if (cperStatus != NV_OK)
+        goto done;
+
+    if (cperGetRecordSize(pCperBytes, cperBufferSize, &recordSize) != NV_OK)
+        goto done;
+
+    if (pGpu->bCperDumpEnabled)
+        cperDumpRecord(pCperBytes, recordSize, CPER_LOG_LEVEL_FW_BUG);
+
+    cperStatus = opEventLogAppend(pCperBytes, recordSize);
+    if (cperStatus != NV_OK)
+    {
+        goto done;
+    }
+
+    // Don't free pCperBytes if we're putting it in cperBufferList
+    return;
+done:
+    portMemFree(pCperBytes);
 }

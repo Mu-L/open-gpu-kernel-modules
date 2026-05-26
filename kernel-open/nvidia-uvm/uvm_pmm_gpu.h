@@ -219,70 +219,6 @@ typedef uvm_chunk_size_t uvm_chunk_sizes_mask_t;
 
 typedef struct uvm_pmm_gpu_chunk_suballoc_struct uvm_pmm_gpu_chunk_suballoc_t;
 
-#if UVM_IS_CONFIG_HMM() || defined(NV_MEMORY_DEVICE_COHERENT_PRESENT)
-typedef struct
-{
-    // For g_uvm_global.devmem_ranges
-    struct list_head list_node;
-
-    // Size that was requested when created this region. This may be less than
-    // the size actually allocated by the kernel due to alignment contraints.
-    // Figuring out the required alignment at compile time is difficult due to
-    // unexported macros, so just use the requested size as the search key.
-    unsigned long size;
-
-    struct dev_pagemap pagemap;
-} uvm_pmm_gpu_devmem_t;
-#endif
-
-#if defined(CONFIG_PCI_P2PDMA)
-typedef struct
-{
-    // For g_uvm_global.pci_p2pdma_devices
-    struct list_head list_node;
-
-    // A reference to the pci device associated with parent gpu
-    struct pci_dev *pdev;
-
-    // PCI attributes to lookup pci_dev during exit. On cleanup, this will be used to find/get a
-    // reference on pci_dev
-    unsigned int domain;
-    unsigned int bus;
-    unsigned int func;
-
-    // Starting pfn for the device, used to detect if a pgmap is already present
-    unsigned long dev_start_pfn;
-} uvm_pmm_gpu_pci_dev_list_t;
-
-#endif
-void uvm_pmm_pci_p2pdma_cache_exit(void);
-
-#if UVM_IS_CONFIG_HMM()
-typedef struct uvm_pmm_gpu_struct uvm_pmm_gpu_t;
-
-// Return the GPU chunk for a given device private struct page.
-uvm_gpu_chunk_t *uvm_pmm_devmem_page_to_chunk(struct page *page);
-
-// Return the va_space for a given device private struct page.
-uvm_va_space_t *uvm_pmm_devmem_page_to_va_space(struct page *page);
-
-// Return the GPU id for a given device private struct page.
-uvm_gpu_id_t uvm_pmm_devmem_page_to_gpu_id(struct page *page);
-
-// Return the PFN of the device private struct page for the given GPU chunk.
-unsigned long uvm_pmm_gpu_devmem_get_pfn(uvm_pmm_gpu_t *pmm, uvm_gpu_chunk_t *chunk);
-#endif
-
-// Allocate and initialise struct page data in the kernel to support HMM.
-NV_STATUS uvm_pmm_devmem_init(uvm_parent_gpu_t *gpu);
-void uvm_pmm_devmem_deinit(uvm_parent_gpu_t *parent_gpu);
-
-void uvm_pmm_gpu_device_p2p_init(uvm_parent_gpu_t *gpu);
-void uvm_pmm_gpu_device_p2p_deinit(uvm_parent_gpu_t *gpu);
-
-// Free unused ZONE_DEVICE pages.
-void uvm_pmm_devmem_exit(void);
-
 struct uvm_gpu_chunk_struct
 {
     // Physical address of GPU chunk. This may be removed to save memory
@@ -605,6 +541,25 @@ void uvm_pmm_gpu_sync(uvm_pmm_gpu_t *pmm);
 
 // Mark an allocated chunk as evicted
 void uvm_pmm_gpu_mark_chunk_evicted(uvm_pmm_gpu_t *pmm, uvm_gpu_chunk_t *chunk);
+
+// Synchronously drain the va_block_lazy_free list.
+//
+// Device page free callbacks add chunks to this list rather than calling
+// free_chunk() directly because they may run in interrupt context. When the
+// root chunk is in_eviction, chunk_free_locked() treats TEMP_PINNED chunks as
+// a no-op but still removes them from the list, leaving them TEMP_PINNED with
+// an empty list as required by merge_gpu_chunk().
+//
+// LOCKING: Must not hold pmm->lock. May be called while holding va_block->lock
+// since pmm->lock is below va_block->lock in the lock ordering.
+void uvm_pmm_gpu_process_lazy_free(uvm_pmm_gpu_t *pmm);
+
+// Pin a chunk and update its root chunk's pinned leaf chunks count if the
+// chunk is not a root chunk.
+void uvm_pmm_gpu_chunk_pin(uvm_pmm_gpu_t *pmm, uvm_gpu_chunk_t *chunk);
+
+void uvm_pmm_gpu_root_chunk_lock(uvm_pmm_gpu_t *pmm, uvm_gpu_root_chunk_t *root_chunk);
+void uvm_pmm_gpu_root_chunk_unlock(uvm_pmm_gpu_t *pmm, uvm_gpu_root_chunk_t *root_chunk);
 
 // Mark a user chunk as used
 //

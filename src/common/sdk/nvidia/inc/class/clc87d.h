@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -1329,6 +1329,11 @@ extern "C" {
 #define NVC87D_HEAD_SW_RESERVED_VALUE                                           31:0
 #define NVC87D_HEAD_SET_RG_REL_SEMAPHORE_VALUE_HI(a,b)                          (0x00002380 + (a)*0x00000400 + (b)*0x00000004)
 #define NVC87D_HEAD_SET_RG_REL_SEMAPHORE_VALUE_HI_VALUE                         31:0
+#define NVC87D_HEAD_SET_HEAD_INFOFRAME(a)                                       (0x000023A0 + (a)*0x00000400)
+#define NVC87D_HEAD_SET_HEAD_INFOFRAME_FID                                      7:0
+#define NVC87D_HEAD_SET_HEAD_INFOFRAME_EN                                       16:16
+#define NVC87D_HEAD_SET_HEAD_INFOFRAME_EN_DISABLE                               (0x00000000)
+#define NVC87D_HEAD_SET_HEAD_INFOFRAME_EN_ENABLE                                (0x00000001)
 
 #ifdef __cplusplus
 };     /* extern "C" */

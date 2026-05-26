@@ -32,7 +32,7 @@ void __nvoc_init__VgpuApi(VgpuApi*);
 void __nvoc_init_funcTable_VgpuApi(VgpuApi*);
 NV_STATUS __nvoc_ctor_VgpuApi(VgpuApi*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_VgpuApi(VgpuApi*);
-void __nvoc_dtor_VgpuApi(VgpuApi*);
+void __nvoc_dtor_VgpuApi(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__VgpuApi;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_VgpuApi =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "VgpuApi",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_VgpuApi,
+    .objCreatefn =        &__nvoc_objCreateDynamic_VgpuApi,
     .pCastInfo =          &__nvoc_castinfo__VgpuApi,
     .pExportInfo =        &__nvoc_export_info__VgpuApi
 };
@@ -125,6 +125,25 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_VgpuApi =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuapiCtrlCmdVgpuDisplaySetSurfaceProperties__EXPORT(void *pVgpuApi, void *pParams) {
+    return vgpuapiCtrlCmdVgpuDisplaySetSurfaceProperties_IMPL(pVgpuApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuapiCtrlCmdVgpuDisplayCleanupSurface__EXPORT(void *pVgpuApi, void *pParams) {
+    return vgpuapiCtrlCmdVgpuDisplayCleanupSurface_IMPL(pVgpuApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS vgpuapiCtrlCmdVGpuGetConfig__EXPORT(void *pVgpuApi, void *pParams) {
+    return vgpuapiCtrlCmdVGpuGetConfig_IMPL(pVgpuApi, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuApi[] = 
 {
@@ -132,7 +151,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuApi[
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuapiCtrlCmdVgpuDisplaySetSurfaceProperties_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuapiCtrlCmdVgpuDisplaySetSurfaceProperties__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -147,7 +166,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuApi[
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuapiCtrlCmdVgpuDisplayCleanupSurface_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuapiCtrlCmdVgpuDisplayCleanupSurface__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -162,7 +181,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuApi[
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &vgpuapiCtrlCmdVGpuGetConfig_IMPL,
+        /*pFunc=*/      (void (*)(void)) &vgpuapiCtrlCmdVGpuGetConfig__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -179,7 +198,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_VgpuApi[
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__VgpuApi __nvoc_metadata__VgpuApi = {
     .rtti.pClassDef = &__nvoc_class_def_VgpuApi,    // (vgpuapi) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_VgpuApi,
+    .rtti.dtor      = &__nvoc_dtor_VgpuApi,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -439,16 +458,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__VgpuApi =
 
 // Destruct VgpuApi object.
 void __nvoc_vgpuapiDestruct(VgpuApi*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_VgpuApi(VgpuApi* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_VgpuApi(Dynamic* pThis) {
+
+    VgpuApi *__nvoc_this = (VgpuApi *) pThis;
 
 // Call destructor.
-    __nvoc_vgpuapiDestruct(pThis);
+    __nvoc_vgpuapiDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_VgpuApi(VgpuApi *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -474,7 +495,7 @@ NV_STATUS __nvoc_ctor_VgpuApi(VgpuApi *pVgpuApi, struct CALL_CONTEXT *pCallConte
 
     // Unwind on error.
 __nvoc_ctor_VgpuApi_fail__init:
-    __nvoc_dtor_GpuResource(&pVgpuApi->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pVgpuApi->__nvoc_base_GpuResource);
 __nvoc_ctor_VgpuApi_fail_GpuResource:
 __nvoc_ctor_VgpuApi_exit:
     return status;
@@ -586,13 +607,10 @@ __nvoc_objCreate_VgpuApi_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_VgpuApi(VgpuApi **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_VgpuApi(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_VgpuApi(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_VgpuApi((VgpuApi **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

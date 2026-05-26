@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2014-2015 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2014-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -83,6 +83,15 @@ void nvApiHeadGetScanLine(const NVDispEvoRec *pDispEvo,
                           const NvU32 apiHead,
                           NvU16 *pScanLine,
                           NvBool *pInBlankingPeriod);
+
+NVRgInterruptCallbackRec*
+nvApiHeadRegisterRgInterruptCallback(NVDispEvoPtr pDispEvo,
+                                     const NvU32 apiHead,
+                                     NVRgInterruptCallbackProc pCallback,
+                                     NvU64 param);
+
+void nvApiHeadUnregisterRgInterruptCallback(NVDispEvoPtr pDispEvo,
+                                            NVRgInterruptCallbackRec *pCallback);
 
 #ifdef __cplusplus
 };

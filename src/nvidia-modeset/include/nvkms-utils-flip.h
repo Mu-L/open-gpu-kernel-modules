@@ -35,25 +35,15 @@ NvBool nvAssignSurfaceArray(
     const NvBool isUsedByLayerChannel,
     NVSurfaceEvoPtr pSurfaceEvos[NVKMS_MAX_EYES]);
 
-NvBool nvAssignNIsoEvoHwState(
-    const NVDevEvoRec *pDevEvo,
-    const NVEvoApiHandlesRec *pOpenDevSurfaceHandles,
-    const struct NvKmsNIsoSurface *pParamsNIso,
-    const NvBool notifier, /* TRUE=notifier; FALSE=semaphore */
-    const NvU32 layer,
-    NVFlipNIsoSurfaceEvoHwState *pNIsoState);
-
 NvBool nvAssignCompletionNotifierEvoHwState(
     const NVDevEvoRec *pDevEvo,
     const NVEvoApiHandlesRec *pOpenDevSurfaceHandles,
     const struct NvKmsCompletionNotifierDescription *pParamsNotif,
-    const NvU32 layer,
     NVFlipCompletionNotifierEvoHwState *pNotif);
 
 NvBool nvAssignSemaphoreEvoHwState(
     const NVDevEvoRec *pDevEvo,
     const NVEvoApiHandlesRec *pOpenDevSurfaceHandles,
-    const NvU32 layer,
     const NvU32 sd,
     const struct NvKmsChannelSyncObjects *pChannelSyncObjects,
     NVFlipSyncObjectEvoHwState *pFlipSyncObject);

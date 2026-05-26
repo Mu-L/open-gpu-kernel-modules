@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1999-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1999-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -165,7 +165,6 @@ NV_STATUS   NV_API_CALL  os_get_version_info              (os_version_info*);
 NV_STATUS   NV_API_CALL  os_get_is_openrm                 (NvBool *);
 NvBool      NV_API_CALL  os_is_bif_reset_supported        (void *);
 NvBool      NV_API_CALL  os_is_isr                        (void);
-NvBool      NV_API_CALL  os_pat_supported                 (void);
 void        NV_API_CALL  os_dump_stack                    (void);
 NvBool      NV_API_CALL  os_is_efi_enabled                (void);
 NvBool      NV_API_CALL  os_is_xen_dom0                   (void);
@@ -283,5 +282,21 @@ int  NV_API_CALL  nv_printf(NvU32 debuglevel, const char *printf_format, ...);
 #define NV_OS_TEGRA_PLATFORM_SIM        0
 #define NV_OS_TEGRA_PLATFORM_FPGA       1
 #define NV_OS_TEGRA_PLATFORM_SILICON    2
+
+/*
+ * Plumbing through cgroup dmem api
+ */
+#define OS_CGROUP_IMPL_NONE 0
+#define OS_CGROUP_IMPL_MISC 1
+#define OS_CGROUP_IMPL_DMEM 2
+NvU32 NV_API_CALL os_cgroup_implementation(void);
+void* NV_API_CALL os_dmem_cgroup_register_region(NvU64 size, const char *name);
+void NV_API_CALL os_dmem_cgroup_unregister_region(void *region);
+NV_STATUS NV_API_CALL os_dmem_cgroup_try_charge(void *region, NvU64 size, void **ret_pool, void **ret_limit_pool);
+void NV_API_CALL os_dmem_cgroup_uncharge(void *pool, NvU64 size);
+
+void* NV_API_CALL os_cgroup_for_pid(int pid, void *pidInfo);
+void* NV_API_CALL os_cgroup_get_from_fd(NvU32 fd);
+void NV_API_CALL os_cgroup_put(void *cgroup);
 
 #endif /* OS_INTERFACE_H */

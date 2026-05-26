@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2019-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -30,6 +30,7 @@
 
 #include "msgq/msgq.h"
 #include "gpu/mem_mgr/virt_mem_allocator_common.h"
+#include "gpu/conf_compute/ccsl.h"
 
 // Shared memory layout.
 //
@@ -40,14 +41,29 @@
 //   Status queue header
 //   Status queue entries
 
+typedef struct GSP_MSG_QUEUE_ENCRYPTION_TAG
+{
+    NvU32 encryptedSize;             // Size of encrypted payload
+    NvU32 reserved;                  // Padding for 8-byte alignment
+    NvU8  authTagBuffer[16];         // Authentication tag buffer
+    NvU8  aadBuffer[16];             // AAD buffer
+} GSP_MSG_QUEUE_ENCRYPTION_TAG;
+
 typedef struct GSP_MSG_QUEUE_ELEMENT
 {
-    NvU8  authTagBuffer[16];         // Authentication tag buffer.
-    NvU8  aadBuffer[16];             // AAD buffer.
+    NvU32 mctpHeader;                // MCTP transport header
+    NvU32 nvdmHeader;                // NVDM over MCTP header
+
     NvU32 checkSum;                  // Set to value needed to make checksum always zero.
     NvU32 seqNum;                    // Sequence number maintained by the message queue.
-    NvU32 elemCount;                 // Number of message queue elements this message has.
-    NV_DECLARE_ALIGNED(rpc_message_header_v rpc, 8);
+
+    //
+    // Flexible payload containing:
+    // (a) GSP_MSG_QUEUE_ENCRYPTION_TAG (if Confidential Compute is enabled)
+    // (b) rpc_message_header_v (RPC header)
+    // (c) actual payload data
+    //
+    NvU8 payload[];
 } GSP_MSG_QUEUE_ELEMENT;
 
 typedef struct _message_queue_info
@@ -76,6 +92,7 @@ typedef struct _message_queue_info
     NvU32                  txBufferFull;
     NvU32                  queueIdx;            // QueueIndex used to identify which task the message is supposed to be sent to.
     NvBool                 bErrorInjectionEnabled;
+    NvBool                 bEncryptionEnabled;
 } MESSAGE_QUEUE_INFO;
 
 typedef struct MESSAGE_QUEUE_COLLECTION
@@ -102,7 +119,75 @@ gspMsgQueueBytesToElements(NvU32 bytes, NvLength queueElementSizeMin)
 {
     return NV_DIV_AND_CEIL(bytes, queueElementSizeMin);
 }
- 
+
+static NV_INLINE GSP_MSG_QUEUE_ENCRYPTION_TAG *
+gspMsgQueueGetEncryptionTag(GSP_MSG_QUEUE_ELEMENT *pQueueElem)
+{
+    return (GSP_MSG_QUEUE_ENCRYPTION_TAG *)pQueueElem->payload;
+}
+
+static NV_INLINE rpc_message_header_v *
+gspMsgQueueGetRpcMessageHeader
+(
+    MESSAGE_QUEUE_INFO *pMQI,
+    GSP_MSG_QUEUE_ELEMENT *pQueueElem
+)
+{
+    if (pMQI->bEncryptionEnabled)
+        return (rpc_message_header_v *)(gspMsgQueueGetEncryptionTag(pQueueElem) + 1);
+
+    return (rpc_message_header_v *)pQueueElem->payload;
+}
+
+static NV_INLINE NvU32
+gspMsgQueueGetRpcMessageLength
+(
+    MESSAGE_QUEUE_INFO *pMQI,
+    GSP_MSG_QUEUE_ELEMENT *pQueueElem
+)
+{
+    rpc_message_header_v *pRpc = gspMsgQueueGetRpcMessageHeader(pMQI, pQueueElem);
+    return pRpc->length;
+}
+
+static NV_INLINE NV_STATUS
+gspMsgQueueCCEncrypt
+(
+    void *pCcslCtx,
+    MESSAGE_QUEUE_INFO *pMQI,
+    GSP_MSG_QUEUE_ELEMENT *pElement,
+    NvU32 payloadSize
+)
+{
+    GSP_MSG_QUEUE_ENCRYPTION_TAG *pCcTag = gspMsgQueueGetEncryptionTag(pElement);
+    NvU8 *pRpcPayload = (NvU8 *)gspMsgQueueGetRpcMessageHeader(pMQI, pElement);
+
+    // Use sequence number as AAD
+    portMemCopy(pCcTag->aadBuffer, sizeof(pCcTag->aadBuffer),
+                (NvU8 *)&pElement->seqNum, sizeof(pElement->seqNum));
+
+    return ccslEncryptWithRotationChecks(pCcslCtx, payloadSize, pRpcPayload,
+                                         pCcTag->aadBuffer, sizeof(pCcTag->aadBuffer),
+                                         pRpcPayload, pCcTag->authTagBuffer);
+}
+
+static NV_INLINE NV_STATUS
+gspMsgQueueCCDecrypt
+(
+    void *pCcslCtx,
+    MESSAGE_QUEUE_INFO *pMQI,
+    GSP_MSG_QUEUE_ELEMENT *pElement,
+    NvU32 payloadSize
+)
+{
+    GSP_MSG_QUEUE_ENCRYPTION_TAG *pCcTag = gspMsgQueueGetEncryptionTag(pElement);
+    NvU8 *pRpcPayload = (NvU8 *)gspMsgQueueGetRpcMessageHeader(pMQI, pElement);
+
+    return ccslDecryptWithRotationChecks(pCcslCtx, payloadSize, pRpcPayload,
+                                         NULL, pCcTag->aadBuffer, sizeof(pCcTag->aadBuffer),
+                                         pRpcPayload, pCcTag->authTagBuffer);
+}
+
 /*!
  * Calculate 32-bit checksum
  *

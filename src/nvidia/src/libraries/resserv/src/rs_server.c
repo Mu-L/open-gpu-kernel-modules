@@ -4217,7 +4217,7 @@ serverGetShareRefCount
     return pShare->refCount;
 }
 
-NV_STATUS
+void
 serverRefShare
 (
     RsServer *pServer,
@@ -4225,17 +4225,17 @@ serverRefShare
 )
 {
     portAtomicIncrementS32(&pShare->refCount);
-    return NV_OK;
 }
 
-NV_STATUS
+void
 serverFreeShare
 (
     RsServer *pServer,
     RsShared *pShare
 )
 {
-    if (portAtomicDecrementS32(&pShare->refCount) == 0)
+    if ((pShare != NULL) &&
+        portAtomicDecrementS32(&pShare->refCount) == 0)
     {
         portSyncSpinlockAcquire(pServer->pShareMapLock);
         mapRemove(&pServer->shareMap, pShare);
@@ -4243,7 +4243,6 @@ serverFreeShare
 
         objDelete(pShare);
     }
-    return NV_OK;
 }
 
 RS_SHARE_ITERATOR

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2008-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2008-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -28,7 +28,7 @@
 #include "os/os.h"
 #include "vgpu/sdk-structures.h"
 
-#include "ctrl/ctrl0080/ctrl0080msenc.h"
+#include "ctrl/ctrl0080/ctrl0080nvenc.h"
 
 NV_STATUS
 msencctxConstructHal_KERNEL

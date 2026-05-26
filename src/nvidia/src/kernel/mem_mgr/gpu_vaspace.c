@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2013-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2013-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -222,7 +222,7 @@ _gvaspacePopulatePDEentries
 );
 
 static NV_STATUS
-_gvaspaceBar1VaSpaceConstructFW
+_gvaspaceBar1VaSpaceConstruct
 (
     OBJGVASPACE *pGVAS,
     OBJGPU      *pGpu
@@ -242,7 +242,7 @@ _gvaspaceBar1VaSpaceConstructFW
 }
 
 static NV_STATUS
-_gvaspaceBar1VaSpaceConstructClient
+_gvaspaceSetSparseState
 (
     OBJGVASPACE *pGVAS,
     OBJGPU      *pGpu
@@ -252,32 +252,21 @@ _gvaspaceBar1VaSpaceConstructClient
     OBJVASPACE       *pVAS    = staticCast(pGVAS, OBJVASPACE);
     MMU_WALK_USER_CTX userCtx = {0};
 
-    if (!RMCFG_FEATURE_PLATFORM_GSP)
+    //
+    // BAR1 construction is split between GSP and CPU. Only CPU side performs the sparsification.
+    // Bail if sparsification is not requested.
+    //
+    if ((RMCFG_FEATURE_PLATFORM_GSP && (pGVAS->flags & VASPACE_FLAGS_BAR_BAR1)) ||
+        !(pGVAS->flags & VASPACE_FLAGS_SPARSIFIED))
     {
-        NV_ASSERT_OK_OR_RETURN(gvaspaceWalkUserCtxAcquire(pGVAS, pGpu, NULL, &userCtx));
-        status = mmuWalkSparsify(userCtx.pGpuState->pWalk, vaspaceGetVaStart(pVAS),
-                                 vaspaceGetVaLimit(pVAS), NV_FALSE);
-
-        gvaspaceWalkUserCtxRelease(pGVAS, &userCtx);
+        return NV_OK;
     }
 
-    return status;
-}
+    NV_ASSERT_OK_OR_RETURN(gvaspaceWalkUserCtxAcquire(pGVAS, pGpu, NULL, &userCtx));
+    status = mmuWalkSparsify(userCtx.pGpuState->pWalk, vaspaceGetVaStart(pVAS),
+                             vaspaceGetVaLimit(pVAS), NV_FALSE);
 
-static NV_STATUS
-_gvaspaceBar1VaSpaceConstruct
-(
-    OBJGVASPACE *pGVAS,
-    OBJGPU      *pGpu
-)
-{
-    NV_STATUS status = NV_OK;
-
-    status = _gvaspaceBar1VaSpaceConstructFW(pGVAS, pGpu);
-    NV_ASSERT_OR_RETURN(status == NV_OK, status);
-
-    status = _gvaspaceBar1VaSpaceConstructClient(pGVAS, pGpu);
-    NV_ASSERT_OR_RETURN(status == NV_OK, status);
+    gvaspaceWalkUserCtxRelease(pGVAS, &userCtx);
 
     return status;
 }
@@ -765,14 +754,29 @@ gvaspaceConstruct__IMPL
         }
     }
 
-    // Sparsify entire VAS for BAR1
+
     if (pGVAS->flags & VASPACE_FLAGS_BAR_BAR1)
     {
         // Loop over each GPU associated with VAS.
         FOR_EACH_GPU_IN_MASK_UC(32, pSys, pGpu, pVAS->gpuMask)
         {
             status = _gvaspaceBar1VaSpaceConstruct(pGVAS, pGpu);
-            NV_ASSERT(NV_OK == status);
+            NV_ASSERT_OR_GOTO(NV_OK == status, catch);
+        }
+        FOR_EACH_GPU_IN_MASK_UC_END
+    }
+
+    //
+    // Sparsify entire VAS when requested.
+    // VA Spaces constructed in this mode will have their free range configured to sparse.
+    //
+    if (pGVAS->flags & VASPACE_FLAGS_SPARSIFIED)
+    {
+        // Loop over each GPU associated with VAS.
+        FOR_EACH_GPU_IN_MASK_UC(32, pSys, pGpu, pVAS->gpuMask)
+        {
+            status = _gvaspaceSetSparseState(pGVAS, pGpu);
+            NV_ASSERT_OR_GOTO(NV_OK == status, catch);
         }
         FOR_EACH_GPU_IN_MASK_UC_END
     }
@@ -787,7 +791,7 @@ catch:
 }
 
 static void
-_gvaspaceBar1VaSpaceDestructFW
+_gvaspaceBar1VaSpaceDestruct
 (
     OBJGVASPACE *pGVAS,
     OBJGPU      *pGpu
@@ -802,7 +806,7 @@ _gvaspaceBar1VaSpaceDestructFW
 }
 
 static NV_STATUS
-_gvaspaceBar1VaSpaceDestructClient
+_gvaspaceUnsetSparseState
 (
     OBJGVASPACE *pGVAS,
     OBJGPU      *pGpu
@@ -812,32 +816,19 @@ _gvaspaceBar1VaSpaceDestructClient
     OBJVASPACE       *pVAS    = staticCast(pGVAS, OBJVASPACE);
     MMU_WALK_USER_CTX userCtx = {0};
 
-    if (!RMCFG_FEATURE_PLATFORM_GSP)
+    //
+    // BAR1 construction is split between GSP and CPU. Only CPU side performs the sparsification.
+    // Bail if sparsification is not requested.
+    //
+    if ((RMCFG_FEATURE_PLATFORM_GSP && (pGVAS->flags & VASPACE_FLAGS_BAR_BAR1)) ||
+        !(pGVAS->flags & VASPACE_FLAGS_SPARSIFIED))
     {
-
-        NV_ASSERT_OK_OR_RETURN(gvaspaceWalkUserCtxAcquire(pGVAS, pGpu, NULL, &userCtx));
-
-        status = mmuWalkUnmap(userCtx.pGpuState->pWalk, vaspaceGetVaStart(pVAS), vaspaceGetVaLimit(pVAS));
-
-        gvaspaceWalkUserCtxRelease(pGVAS, &userCtx);
+        return NV_OK;
     }
 
-    return status;
-}
-
-static NV_STATUS
-_gvaspaceBar1VaSpaceDestruct
-(
-    OBJGVASPACE *pGVAS,
-    OBJGPU      *pGpu
-)
-{
-    NV_STATUS status = NV_OK;
-
-    _gvaspaceBar1VaSpaceDestructFW(pGVAS, pGpu);
-
-    status = _gvaspaceBar1VaSpaceDestructClient(pGVAS, pGpu);
-    NV_ASSERT_OR_RETURN(status == NV_OK, status);
+    NV_ASSERT_OK_OR_RETURN(gvaspaceWalkUserCtxAcquire(pGVAS, pGpu, NULL, &userCtx));
+    status = mmuWalkUnmap(userCtx.pGpuState->pWalk, vaspaceGetVaStart(pVAS), vaspaceGetVaLimit(pVAS));
+    gvaspaceWalkUserCtxRelease(pGVAS, &userCtx);
 
     return status;
 }
@@ -933,10 +924,15 @@ gvaspaceDestruct_IMPL(OBJGVASPACE *pGVAS)
 
         FOR_EACH_GPU_IN_MASK_UC(32, pSys, pGpu, pVAS->gpuMask)
         {
-            // Unsparsify entire VAS for BAR1.
+
             if (pGVAS->flags & VASPACE_FLAGS_BAR_BAR1)
             {
-                status = _gvaspaceBar1VaSpaceDestruct(pGVAS, pGpu);
+                _gvaspaceBar1VaSpaceDestruct(pGVAS, pGpu);
+            }
+
+            if (pGVAS->flags & VASPACE_FLAGS_SPARSIFIED)
+            {
+                status = _gvaspaceUnsetSparseState(pGVAS, pGpu);
                 NV_ASSERT(NV_OK == status);
             }
 
@@ -1399,7 +1395,7 @@ gvaspaceAlloc_IMPL
     // VA reserved as sparse is sparsified immediately, changing its
     // unmapped state from "invalid" to "zero."
     //
-    if (flags.bSparse || (pGVAS->flags & VASPACE_FLAGS_BAR_BAR1))
+    if (flags.bSparse || (pGVAS->flags & VASPACE_FLAGS_SPARSIFIED))
     {
         // Loop over each GPU associated with VAS.
         FOR_EACH_GPU_IN_MASK_UC(32, pSys, pGpu, pVAS->gpuMask)
@@ -2071,7 +2067,7 @@ gvaspaceUnmap_IMPL
 
     NV_ASSERT_OR_RETURN_VOID(gvaspaceWalkUserCtxAcquire(pGVAS, pGpu, pVASBlock, &userCtx) == NV_OK);
 
-    if (pVASBlock->flags.bSparse || (pGVAS->flags & VASPACE_FLAGS_BAR_BAR1)
+    if (pVASBlock->flags.bSparse || (pGVAS->flags & VASPACE_FLAGS_SPARSIFIED)
         ||((pMemBlock->refCount >1) && (pGVAS->flags & VASPACE_FLAGS_FLA))
        )
     {
@@ -2086,7 +2082,7 @@ gvaspaceUnmap_IMPL
     gvaspaceWalkUserCtxRelease(pGVAS, &userCtx);
 }
 
-void
+NV_STATUS
 gvaspaceInvalidateTlb_IMPL
 (
     OBJGVASPACE         *pGVAS,
@@ -2097,8 +2093,8 @@ gvaspaceInvalidateTlb_IMPL
     OBJVASPACE *pVAS = staticCast(pGVAS, OBJVASPACE);
     NvU32      gfid  = GPU_GFID_PF;
 
-    NV_ASSERT_OR_RETURN_VOID(!gpumgrGetBcEnabledStatus(pGpu));
-    NV_ASSERT_OR_RETURN_VOID(0 != (NVBIT(pGpu->gpuInstance) & pVAS->gpuMask));
+    NV_ASSERT_OR_RETURN(!gpumgrGetBcEnabledStatus(pGpu), NV_ERR_INVALID_STATE);
+    NV_ASSERT_OR_RETURN(0 != (NVBIT(pGpu->gpuInstance) & pVAS->gpuMask), NV_ERR_INVALID_ARGUMENT);
 
     GVAS_GPU_STATE    *pGpuState = gvaspaceGetGpuState(pGVAS, pGpu);
     MEMORY_DESCRIPTOR *pRootMem  = NULL;
@@ -2106,10 +2102,10 @@ gvaspaceInvalidateTlb_IMPL
     NvU32              invalidation_scope = NV_GMMU_INVAL_SCOPE_ALL_TLBS;
     NvBool             bCallingContextPlugin;
 
-    NV_ASSERT_OR_RETURN_VOID(vgpuIsCallingContextPlugin(pGpu, &bCallingContextPlugin) == NV_OK);
+    NV_ASSERT_OK_OR_RETURN(vgpuIsCallingContextPlugin(pGpu, &bCallingContextPlugin));
     if (!bCallingContextPlugin)
     {
-        NV_ASSERT_OR_RETURN_VOID(vgpuGetCallingContextGfid(pGpu, &gfid) == NV_OK);
+        NV_ASSERT_OK_OR_RETURN(vgpuGetCallingContextGfid(pGpu, &gfid));
     }
 
     if (pGVAS->flags & VASPACE_FLAGS_INVALIDATE_SCOPE_NVLINK_TLB)
@@ -2126,12 +2122,14 @@ gvaspaceInvalidateTlb_IMPL
     if (pRootMem != NULL)
     {
         KernelGmmu *pKernelGmmu = GPU_GET_KERNEL_GMMU(pGpu);
-        kgmmuInvalidateTlb_HAL(pGpu, pKernelGmmu, pRootMem,
-                              pGVAS->flags,
-                              update_type, gfid,
-                              invalidation_scope,
-                              NV_FALSE);
+        return kgmmuInvalidateTlb_HAL(pGpu, pKernelGmmu, pRootMem,
+                                      pGVAS->flags,
+                                      update_type, gfid,
+                                      invalidation_scope,
+                                      NV_FALSE);
     }
+
+    return NV_OK;
 }
 
 NV_STATUS
@@ -2461,9 +2459,10 @@ gvaspaceGetPteInfo_IMPL
         if ((NULL != pPhysAddr) &&
             nvFieldGetBool(&pFmt->pPte->fldValid, pte.v8))
         {
-            pAddrField = gmmuFmtPtePhysAddrFld(pFmt->pPte,
-                gmmuFieldGetAperture(&pFmt->pPte->fldAperture, pte.v8),
-                GMMU_PEER_TYPE_LEGACY);
+            GMMU_APERTURE aperture = gmmuFieldGetAperture(&pFmt->pPte->fldAperture, pte.v8);
+            GMMU_PEER_TYPE peerType = GMMU_PEER_TYPE_LEGACY;
+
+            pAddrField = gmmuFmtPtePhysAddrFld(pFmt->pPte, pLevelFmt, aperture, peerType);
             *pPhysAddr = (RmPhysAddr)gmmuFieldGetAddress(pAddrField, pte.v8);
         }
     }
@@ -2696,6 +2695,7 @@ gvaspaceSetPteInfo_IMPL
                     {
                         COMPR_INFO                comprInfo;
                         const GMMU_FIELD_ADDRESS *pAddrField = gmmuFmtPtePhysAddrFld(pFmt->pPte,
+                                                                                     pLevelFmt,
                                                                                      gmmuFieldGetAperture(&pFmt->pPte->fldAperture, pte.v8),
                                                                                      GMMU_PEER_TYPE_LEGACY);
                         RmPhysAddr                physAddr = (RmPhysAddr)gmmuFieldGetAddress(pAddrField, pte.v8);
@@ -4816,7 +4816,7 @@ _gvaspaceReservePageTableEntries
             break;
         }
 
-        if (pGVAS->flags & VASPACE_FLAGS_BAR_BAR1)
+        if (pGVAS->flags & VASPACE_FLAGS_SPARSIFIED)
         {
             status = mmuWalkSparsify(userCtx.pGpuState->pWalk, vaLo, vaHi, NV_FALSE);
             if (status != NV_OK)
@@ -4905,7 +4905,7 @@ _gvaspaceReleaseUnreservedPTEs
 
         if (piecewiseEnd)
         {
-            if (!(pGVAS->flags & VASPACE_FLAGS_BAR_BAR1))
+            if (!(pGVAS->flags & VASPACE_FLAGS_SPARSIFIED))
             {
                 // Clear out any mappings or sparse state.
                 status = mmuWalkUnmap(userCtx.pGpuState->pWalk,

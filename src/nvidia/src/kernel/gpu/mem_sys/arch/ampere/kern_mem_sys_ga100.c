@@ -33,6 +33,8 @@
 #include "published/ampere/ga100/dev_fuse.h"
 #include "published/ampere/ga100/hwproject.h"
 
+#include "gpu/conf_compute/conf_compute.h"
+
 /*!
  * @brief Write the sysmemFlushBuffer val into the NV_PFB_NISO_FLUSH_SYSMEM_ADDR register
  *
@@ -94,7 +96,10 @@ kmemsysInitFlushSysmemBuffer_GA100
     {
         NvU64 flags = MEMDESC_FLAGS_NONE;
 
-            flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    if (confComputeForceUnprotAlloc(pGpu))
+    {
+        flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    }
         //
         // Sysmem flush buffer
         // The sysmembar flush does a zero byte read of sysmem if there was a

@@ -163,9 +163,17 @@ ConnectorImpl::ConnectorImpl(MainLink * main, AuxBus * auxBus, Timer * timer, Co
     // Set if LTTPR training is supported per regKey
     hal->setLttprSupported(main->isLttprSupported());
 
+    // set polling enabled for detection
+    hal->setPollingEnabledForDpMstDetection(main->isPollingEnabledForDpMstDetection());
+
     const DP_REGKEY_DATABASE& dpRegkeyDatabase = main->getRegkeyDatabase();
     this->applyRegkeyOverrides(dpRegkeyDatabase);
     hal->applyRegkeyOverrides(dpRegkeyDatabase);
+
+    if (main->isDpTunnelingHwBugWarEnabled())
+    {
+        hal->setIgnoreDiaLttprInterlaneAlignStatus();
+    }
 
     hal->setConnectorTypeC(main->isConnectorUSBTypeC());
 
@@ -178,6 +186,7 @@ void ConnectorImpl::applyRegkeyOverrides(const DP_REGKEY_DATABASE& dpRegkeyDatab
               "All regkeys are invalid because dpRegkeyDatabase is not initialized!");
 
     this->bSkipAssessLinkForEDP = dpRegkeyDatabase.bAssesslinkForEdpSkipped;
+    this->bSkipPanelPowerWrite  = dpRegkeyDatabase.bSkipPanelPowerWrite; 
 
     //
     // Default bHdcpAuthOnlyOnDemand, bMstRestoreHdcpStateAtAttach are true
@@ -225,6 +234,7 @@ void ConnectorImpl::applyRegkeyOverrides(const DP_REGKEY_DATABASE& dpRegkeyDatab
     this->bEnable128b132bDSCLnkCfgReduction  = dpRegkeyDatabase.bEnable128b132bDSCLnkCfgReduction;
     this->bDisableNativeDisplayId2xSupport   = dpRegkeyDatabase.bDisableNativeDisplayId2xSupport;
     this->bIgnoreUnplugUnlessRequested       = dpRegkeyDatabase.bIgnoreUnplugUnlessRequested;
+    this->bSetConnectorHdmiForDongle         = dpRegkeyDatabase.bSetConnectorHdmiForDongle;
 }
 
 void ConnectorImpl::setPolicyModesetOrderMitigation(bool enabled)
@@ -499,6 +509,11 @@ void ConnectorImpl::processNewDevice(const ProcessNewDeviceParams &params)
         case DISPLAY_PORT_PLUSPLUS: // DP port that supports DP and TMDS
             if (existingDev &&
                 existingDev->connectorType == connectorHDMI)
+            {
+                connector = connectorHDMI;
+            }
+            else if(bSetConnectorHdmiForDongle &&
+                    device.peerDevice == Dongle)
             {
                 connector = connectorHDMI;
             }
@@ -1002,6 +1017,7 @@ ConnectorImpl::~ConnectorImpl()
     timer->cancelCallbacks(this);
     delete discoveryManager;
     pendingEdidReads.clear();
+    pendingDid2Reads.clear();
     delete messageManager;
     delete qseNonceGenerator;
     delete hal;
@@ -2936,6 +2952,11 @@ void ConnectorImpl::fireEventsInternal()
                 }
             }
 #endif
+            // Remove device from dscEnabledDevices list before deletion to prevent dangling pointer
+            if (dscEnabledDevices.contains(dev))
+            {
+                dscEnabledDevices.remove(dev);
+            }
             delete dev;
 
             // Now that the device is deleted, update the DP Tunnel BW allocation
@@ -3995,8 +4016,9 @@ void ConnectorImpl::notifyAttachEnd(bool modesetCancelled)
     // Add rest of the streams (other than primary) in notifyAE, since this can't be done
     // unless a SOR is attached to a Head (part of modeset), and trigger ACT immediate
     //
-    if ((currentModesetDeviceGroup->singleHeadMultiStreamMode == DP_SINGLE_HEAD_MULTI_STREAM_MODE_MST) &&
-        (currentModesetDeviceGroup->singleHeadMultiStreamID >    DP_SINGLE_HEAD_MULTI_STREAM_PIPELINE_ID_PRIMARY))
+    if (((currentModesetDeviceGroup->singleHeadMultiStreamMode == DP_SINGLE_HEAD_MULTI_STREAM_MODE_MST) &&
+        (currentModesetDeviceGroup->singleHeadMultiStreamID > DP_SINGLE_HEAD_MULTI_STREAM_PIPELINE_ID_PRIMARY)) ||
+        (hal->isDpInTunnelingSupported() && linkUseMultistream() && main->isDpTunnelingHwBugWarEnabled()))
     {
         DP_ASSERT(linkUseMultistream() && "it should be multistream link to configure single head MST");
         hal->payloadTableClearACT();
@@ -5519,11 +5541,10 @@ bool ConnectorImpl::isLinkLost()
 
         // update the sw cache if required
         hal->refreshLinkStatus();
-        if (!(hal->isDpInTunnelingSupported() && main->isDpTunnelingHwBugWarEnabled()))
-        {
-            if (!hal->getInterlaneAlignDone())
-                return true;
-        }
+
+        if (!hal->getInterlaneAlignDone())
+            return true;
+
 
         for (unsigned i = 0; i < activeLinkConfig.lanes; i++)
         {
@@ -5535,11 +5556,9 @@ bool ConnectorImpl::isLinkLost()
                 return true;
         }
 
-        if (!(hal->isDpInTunnelingSupported() && main->isDpTunnelingHwBugWarEnabled()))
-        {
-            if (!hal->getInterlaneAlignDone())
-                return true;
-        }
+        if (!hal->getInterlaneAlignDone())
+            return true;
+
     }
     return false;
 }
@@ -6672,6 +6691,12 @@ bool ConnectorImpl::enableFlush()
         afterDeleteStream(g);
     }
 
+    if (hal->isDpInTunnelingSupported() && linkUseMultistream() && main->isDpTunnelingHwBugWarEnabled())
+    {
+        hal->payloadAllocate(0, 0, 0x3F);
+        main->triggerACT();
+    }
+
     return true;
 }
 
@@ -7521,6 +7546,9 @@ void ConnectorImpl::notifyLongPulseInternal(bool statusConnected)
 
         DP_PRINTF(DP_NOTICE, "DP> HPD v%d.%d", hal->getRevisionMajor(), hal->getRevisionMinor());
 
+        // clear pending DEVICE_SERVICE_IRQ_VECTOR/LINK_SERVICE_IRQ_VECTOR status on long pulse interrupt
+        hal->clearPendingServiceIrqs();
+
         //
         // Handle to clear pending CP_IRQ that throw short pulse before L-HPD. There's no
         // more short pulse corresponding to CP_IRQ after HPD, but IRQ vector needs to be
@@ -7604,6 +7632,7 @@ void ConnectorImpl::notifyLongPulseInternal(bool statusConnected)
         bIsDiscoveryDetectActive = true;
 
         pendingEdidReads.clear();   // destroy any half completed requests
+        pendingDid2Reads.clear();
         delete messageManager;
         messageManager = 0;
         discoveryManager = 0;
@@ -7675,7 +7704,7 @@ void ConnectorImpl::notifyLongPulseInternal(bool statusConnected)
                                    !((GroupImpl *)firmwareGroup)->isHeadAttached() &&
                                    !bIsUefiSystem);
 
-            if (bDeleteFirmwareVC || !bAttachOnResume)
+            if (bDeleteFirmwareVC || !bAttachOnResume || (hal->isDpInTunnelingSupported()))
             {
                 deleteAllVirtualChannels();
             }
@@ -7783,6 +7812,36 @@ void ConnectorImpl::notifyLongPulseInternal(bool statusConnected)
                 dev.SDPStreamSinks = hal->getNumberOfAudioEndpoints();
                 dev.videoSink = true;
                 dev.maxTmdsClkRate = 0U;
+
+                // Send EDID to RM (SST case)
+                EvoInterface *provider = ((EvoMainLink *)main)->getProvider();
+                Buffer *edidBuf = tmpEdid.getBuffer();
+                NvU32 edidSize = tmpEdid.getEdidSize();
+                
+                if (edidBuf && edidSize > 0 && edidSize <= NV0073_CTRL_SPECIFIC_GET_EDID_MAX_EDID_BYTES)
+                {
+                    NV0073_CTRL_SPECIFIC_SET_EDID_V2_PARAMS *pEdidParams = 
+                        (NV0073_CTRL_SPECIFIC_SET_EDID_V2_PARAMS*)dpMalloc(sizeof(*pEdidParams));
+                    
+                    if (pEdidParams)
+                    {
+                        dpMemZero(pEdidParams, sizeof(*pEdidParams));
+                        pEdidParams->subDeviceInstance = provider->getSubdeviceIndex();
+                        pEdidParams->displayId = provider->getDisplayId();
+                        pEdidParams->bufferSize = edidSize;
+                        dpMemCopy(pEdidParams->edidBuffer, edidBuf->data, edidSize);
+                        
+                        NvU32 status = provider->rmControl0073(NV0073_CTRL_CMD_SPECIFIC_SET_EDID_V2, 
+                                                               pEdidParams, sizeof(*pEdidParams));
+                        if (status != NVOS_STATUS_SUCCESS)
+                        {
+                            DP_PRINTF(DP_ERROR, "DP-CONN> Failed to send EDID to RM for SST (Manuf: 0x%04X, Prod: 0x%04X, status: 0x%x)",
+                                      tmpEdid.getManufId(), tmpEdid.getProductId(), status);
+                        }
+                        
+                        dpFree(pEdidParams);
+                    }
+                }
 
                 // Apply EDID based WARs and update the WAR flags if needed
                 applyEdidWARs(tmpEdid, dev);
@@ -7892,6 +7951,7 @@ void ConnectorImpl::notifyLongPulseInternal(bool statusConnected)
         delete discoveryManager;
         isDiscoveryDetectComplete = false;
         pendingEdidReads.clear();   // destroy any half completed requests
+        pendingDid2Reads.clear();
         bDeferNotifyLostDevice = false;
 
         delete messageManager;
@@ -8814,10 +8874,24 @@ bool ConnectorImpl::updatePsrLinkState(bool bTurnOnLink)
 {
     bool bRet = true;
     bool bEnteredFlushMode = false;
+    bool bSetPanelPower = true;
 
     if (bTurnOnLink)
     {
-        hal->setPowerState(PowerStateD0);
+        //
+        // If we are skipping panel power write when the regkey is set and the
+        // panel is already in D0, then we don't need to set it to D0.
+        //
+        if (this->bSkipPanelPowerWrite &&
+            (hal->getPowerState() == PowerStateD0))
+        {
+            bSetPanelPower = false;
+        }
+        
+        if (bSetPanelPower)
+        {
+            hal->setPowerState(PowerStateD0);
+        }
 
         if (isLinkLost())
         {

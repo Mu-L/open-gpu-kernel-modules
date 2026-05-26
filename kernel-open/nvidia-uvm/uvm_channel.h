@@ -196,11 +196,6 @@ typedef struct
     // Owning channel manager
     uvm_channel_manager_t *manager;
 
-    // On Volta+ GPUs, all channels in a pool are members of the same TSG, i.e.,
-    // num_tsgs is 1. Pre-Volta GPUs also have a single TSG object, but since HW
-    // does not support TSG for CE engines, a HW TSG is not created, but a TSG
-    // object is required to allocate channels.
-    //
     // When Confidential Computing mode is enabled, the WLC and LCIC channel
     // types require one TSG for each WLC/LCIC pair of channels. In this case,
     // we do not use a TSG per channel pool, but instead a TSG per WLC/LCIC

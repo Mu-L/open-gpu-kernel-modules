@@ -190,7 +190,6 @@ nvidia_vma_access(
     {
         NvU64 idx = 0;
         NvU64 curOffs = 0;
-        
         for(; idx < mmap_context->memArea.numRanges; idx++)
         {
             NvU64 nextOffs = mmap_context->memArea.pRanges[idx].size + curOffs;
@@ -218,17 +217,10 @@ found:
     length = NV_MIN(length, (int)(PAGE_SIZE - pageOffset));
     ret = length;
 
-#if defined(NVCPU_AARCH64)
-    if (write)
-        memcpy_toio(kernel_mapping, buffer, length);
-    else
-        memcpy_fromio(buffer, kernel_mapping, length);
-#else
     if (write)
         memcpy(kernel_mapping, buffer, length);
     else
         memcpy(buffer, kernel_mapping, length);
-#endif // defined(NVCPU_AARCH64)
 
     if (at == NULL && !has_pages)
     {
@@ -382,16 +374,7 @@ int nv_encode_caching(
         case NV_MEMORY_WRITECOMBINED:
             if (NV_ALLOW_WRITE_COMBINING(memory_type))
             {
-#if defined(NVCPU_RISCV64)
-                /* 
-                 * Don't attempt to mark sysmem pages as write combined on riscv.
-                 * Bug 5404055 to clean up this check.
-                 */
-                *prot = (memory_type == NV_MEMORY_TYPE_FRAMEBUFFER) ?
-                    NV_PGPROT_WRITE_COMBINED(*prot) : *prot;
-#else
                 *prot = NV_PGPROT_WRITE_COMBINED(*prot);
-#endif
                 break;
             }
 

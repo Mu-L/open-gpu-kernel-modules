@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -173,14 +173,14 @@ fail:
 }
 
 NV_STATUS
-dispobjConstructHal_IMPL
+nvdispapiConstructHal_IMPL
 (
-    DispObject                   *pDispObject,
+    NvDispApi                    *pNvDispApi,
     CALL_CONTEXT                 *pCallContext,
     RS_RES_ALLOC_PARAMS_INTERNAL *pParams
 )
 {
-    DisplayApi  *pDisplayApi  = staticCast(pDispObject, DisplayApi);
+    DisplayApi  *pDisplayApi  = staticCast(pNvDispApi, DisplayApi);
     Device      *pDevice      = dynamicCast(pCallContext->pResourceRef->pParentRef->pResource, Device);
     GpuResource *pGpuResource = staticCast(pDevice, GpuResource);
     OBJGPU      *pGpu         = pGpuResource->pGpu;
@@ -221,72 +221,23 @@ dispobjConstructHal_IMPL
 }
 
 NV_STATUS
-dispobjConstruct_IMPL
-(
-    DispObject                   *pDispObject,
-    CALL_CONTEXT                 *pCallContext,
-    RS_RES_ALLOC_PARAMS_INTERNAL *pParams
-)
-{
-    pDispObject->rmFreeFlags = NV5070_CTRL_SET_RMFREE_FLAGS_NONE;
-
-    if (pParams->pSecInfo->privLevel < RS_PRIV_LEVEL_USER_ROOT)
-    {
-        NV_PRINTF(LEVEL_ERROR,
-                  "Failure allocating display class 0x%08x: Only root(admin)/kernel clients are allowed\n",
-                  pParams->externalClassId);
-
-        //
-        // GPUSWSEC-1560 introduced a central object privilege check in RS. Please mark derived external classes
-        // of DispObject privileged in their RS_ENTRY. Since DispObject doesn't have an external class of its own
-        // and is used as a base class, leaving this check inline to catch future derivations.
-        //
-        osAssertFailed();
-
-        return NV_ERR_INSUFFICIENT_PERMISSIONS;
-    }
-
-    return dispobjConstructHal_HAL(pDispObject, pCallContext, pParams);
-}
-
-NV_STATUS
-dispobjGetByHandle_IMPL
-(
-    RsClient    *pClient,
-    NvHandle     hDispObject,
-    DispObject **ppDispObject
-)
-{
-    NV_STATUS      status;
-    RsResourceRef *pResourceRef;
-
-    status = clientGetResourceRef(pClient, hDispObject, &pResourceRef);
-    if (status != NV_OK)
-        return status;
-
-    *ppDispObject = dynamicCast(pResourceRef->pResource, DispObject);
-
-    return (*ppDispObject) ? NV_OK : NV_ERR_INVALID_OBJECT_HANDLE;
-}
-
-NV_STATUS
-dispobjGetByDevice_IMPL
+nvdispapiGetByDevice_IMPL
 (
     RsClient    *pClient,
     Device      *pDevice,
-    DispObject **ppDispObject
+    NvDispApi  **ppNvDispApi
 )
 {
     NV_STATUS      status;
     RsResourceRef *pResourceRef;
 
-    status = refFindChildOfType(RES_GET_REF(pDevice), classId(DispObject), NV_FALSE /*bExactMatch*/, &pResourceRef);
+    status = refFindChildOfType(RES_GET_REF(pDevice), classId(NvDispApi), NV_FALSE /*bExactMatch*/, &pResourceRef);
     if (status != NV_OK)
         return status;
 
-    *ppDispObject = dynamicCast(pResourceRef->pResource, DispObject);
+    *ppNvDispApi = dynamicCast(pResourceRef->pResource, NvDispApi);
 
-    return (*ppDispObject) ? NV_OK : NV_ERR_INVALID_OBJECT_HANDLE;
+    return (*ppNvDispApi) ? NV_OK : NV_ERR_INVALID_OBJECT_HANDLE;
 }
 
 //
@@ -564,9 +515,9 @@ dispcmnGetByDevice_IMPL
  *
  * @param[in] DispObject Pointer
  */
-NvBool dispobjGetRmFreeFlags_IMPL(DispObject *pDispObject)
+NvBool nvdispapiGetRmFreeFlags_IMPL(NvDispApi *pNvDispApi)
 {
-    return !!(pDispObject->rmFreeFlags & NV5070_CTRL_SET_RMFREE_FLAGS_PRESERVE_HW);
+    return !!(pNvDispApi->rmFreeFlags & NV5070_CTRL_SET_RMFREE_FLAGS_PRESERVE_HW);
 }
 
 /**
@@ -576,20 +527,22 @@ NvBool dispobjGetRmFreeFlags_IMPL(DispObject *pDispObject)
  *
  * @return void
  */
-void dispobjClearRmFreeFlags_IMPL(DispObject *pDispObject)
+void nvdispapiClearRmFreeFlags_IMPL(NvDispApi *pNvDispApi)
 {
-    pDispObject->rmFreeFlags  = NV5070_CTRL_SET_RMFREE_FLAGS_NONE;
+    pNvDispApi->rmFreeFlags  = NV5070_CTRL_SET_RMFREE_FLAGS_NONE;
 }
 
 NV_STATUS
 nvdispapiConstruct_IMPL
 (
-    NvDispApi                    *pNvdispApi,
+    NvDispApi                    *pNvDispApi,
     CALL_CONTEXT                 *pCallContext,
     RS_RES_ALLOC_PARAMS_INTERNAL *pParams
 )
 {
-    return NV_OK;
+    pNvDispApi->rmFreeFlags = NV5070_CTRL_SET_RMFREE_FLAGS_NONE;
+
+    return nvdispapiConstructHal_HAL(pNvDispApi, pCallContext, pParams);
 }
 
 // ****************************************************************************

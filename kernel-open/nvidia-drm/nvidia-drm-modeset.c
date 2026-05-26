@@ -38,6 +38,7 @@
 #include <drm/drm_atomic.h>
 #include <drm/drm_atomic_helper.h>
 #include <drm/drm_crtc.h>
+#include <drm/drm_file.h>
 
 #if defined(NV_LINUX_NVHOST_H_PRESENT) && defined(CONFIG_TEGRA_GRHOST)
 #include <linux/nvhost.h>
@@ -440,6 +441,12 @@ nv_drm_atomic_apply_modeset_config(struct drm_device *dev,
             struct nv_drm_crtc_state *nv_new_crtc_state =
                 to_nv_crtc_state(new_crtc_state);
 
+            if (nv_drm_vblank_module_param) {
+                if (!old_crtc_state->active && new_crtc_state->active) {
+                    drm_crtc_vblank_on(crtc);
+                }
+            }
+
             nv_new_crtc_state->nv_flip->event = new_crtc_state->event;
             nv_new_crtc_state->nv_flip->pending_events = 0;
             new_crtc_state->event = NULL;
@@ -449,6 +456,10 @@ nv_drm_atomic_apply_modeset_config(struct drm_device *dev,
              * then defer flip object processing to flip event from hardware.
              */
             if (__will_generate_flip_event(crtc, old_crtc_state)) {
+                if (nv_drm_vblank_module_param && nv_new_crtc_state->nv_flip->event != NULL) {
+                    drm_crtc_vblank_get(crtc);
+                }
+
                 nv_drm_crtc_enqueue_flip(nv_crtc,
                                          nv_new_crtc_state->nv_flip);
 
@@ -489,6 +500,14 @@ nv_drm_atomic_apply_modeset_config(struct drm_device *dev,
                                    commit)) {
         if (commit || reply_config.flipResult != NV_KMS_FLIP_RESULT_IN_PROGRESS) {
             return -EINVAL;
+        }
+    }
+
+    if (commit && nv_drm_vblank_module_param) {
+        for_each_oldnew_crtc_in_state(state, crtc, old_crtc_state, new_crtc_state, i) {
+            if (old_crtc_state->active && !new_crtc_state->active) {
+                drm_crtc_vblank_off(crtc);
+            }
         }
     }
 
@@ -565,6 +584,52 @@ done:
     return ret;
 }
 
+static void nv_drm_crtc_send_vblank_event(struct drm_crtc *crtc,
+                                          struct drm_pending_vblank_event *e)
+{
+    struct drm_device *dev = crtc->dev;
+    struct nv_drm_crtc *nv_crtc = to_nv_crtc(crtc);
+
+    /*
+     * Vblank callback registration is deferred to a workqueue to avoid
+     * deadlock calling NvKms with DRM locks held. If flip completion arrives
+     * before the first vblank interrupt fires, vblank->time is stale.
+     * Use jiffies-based timestamp as fallback until vblank_intr_fired is set.
+     */
+    if (nv_drm_vblank_module_param) {
+        unsigned long flags;
+
+        spin_lock_irqsave(&dev->vblank_time_lock, flags);
+
+        if (!nv_crtc->vblank_intr_fired) {
+            /*
+             * Mimic what drm_crtc_send_vblank_event() does with current time,
+             * We call this function only for flip events, so no need to handle
+             * DRM_EVENT_CRTC_SEQUENCE here.
+             *
+             */
+            NvU64 msec = nv_drm_get_time_since_boot_ms();
+
+            e->pipe = drm_crtc_index(crtc);
+            e->event.vbl.sequence = drm_crtc_vblank_count(crtc);
+            e->event.vbl.tv_sec = msec / 1000;
+            e->event.vbl.tv_usec = (msec % 1000) * 1000;
+
+            /* Callers already hold event_lock */
+            drm_send_event_locked(dev, &e->base);
+
+#if defined(NV_DRM_CRTC_FUNCS_HAS_GET_VBLANK_TIMESTAMP)
+            nv_crtc->last_vblank_time = msec * NSEC_PER_MSEC;
+#endif
+            spin_unlock_irqrestore(&dev->vblank_time_lock, flags);
+            return;
+        }
+        spin_unlock_irqrestore(&dev->vblank_time_lock, flags);
+    }
+
+    drm_crtc_send_vblank_event(crtc, e);
+}
+
 /**
  * __nv_drm_handle_flip_event - handle flip occurred event
  * @nv_crtc: crtc on which flip has been occurred
@@ -589,7 +654,10 @@ static void __nv_drm_handle_flip_event(struct nv_drm_crtc *nv_crtc)
         struct nv_drm_flip *nv_deferred_flip, *nv_next_deferred_flip;
 
         if (nv_flip->event != NULL) {
-            drm_crtc_send_vblank_event(&nv_crtc->base, nv_flip->event);
+            nv_drm_crtc_send_vblank_event(&nv_crtc->base, nv_flip->event);
+            if (nv_drm_vblank_module_param) {
+                drm_crtc_vblank_put(&nv_crtc->base);
+            }
         }
 
         /*
@@ -601,8 +669,11 @@ static void __nv_drm_handle_flip_event(struct nv_drm_crtc *nv_crtc)
                                  &nv_flip->deferred_flip_list, list_entry) {
 
             if (nv_deferred_flip->event != NULL) {
-                drm_crtc_send_vblank_event(&nv_crtc->base,
-                                           nv_deferred_flip->event);
+                nv_drm_crtc_send_vblank_event(&nv_crtc->base,
+                                              nv_deferred_flip->event);
+                if (nv_drm_vblank_module_param) {
+                    drm_crtc_vblank_put(&nv_crtc->base);
+                }
             }
             list_del(&nv_deferred_flip->list_entry);
 
@@ -768,6 +839,10 @@ int nv_drm_atomic_commit(struct drm_device *dev,
                     list_last_entry(&nv_crtc->flip_list,
                                     struct nv_drm_flip, list_entry);
 
+                if (nv_drm_vblank_module_param && nv_new_crtc_state->nv_flip->event != NULL) {
+                    drm_crtc_vblank_get(crtc);
+                }
+
                 list_add(&nv_new_crtc_state->nv_flip->list_entry,
                     &nv_last_flip->deferred_flip_list);
 
@@ -783,7 +858,7 @@ int nv_drm_atomic_commit(struct drm_device *dev,
              */
             if (nv_new_crtc_state->nv_flip->event != NULL) {
                 spin_lock(&dev->event_lock);
-                drm_crtc_send_vblank_event(crtc,
+                nv_drm_crtc_send_vblank_event(crtc,
                                            nv_new_crtc_state->nv_flip->event);
                 spin_unlock(&dev->event_lock);
             }

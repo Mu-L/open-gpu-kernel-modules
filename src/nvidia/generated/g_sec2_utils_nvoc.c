@@ -28,7 +28,7 @@ void __nvoc_init__Sec2Utils(Sec2Utils*);
 void __nvoc_init_funcTable_Sec2Utils(Sec2Utils*);
 NV_STATUS __nvoc_ctor_Sec2Utils(Sec2Utils*, struct OBJGPU *pGpu, KERNEL_MIG_GPU_INSTANCE *pKernelMIGGPUInstance);
 void __nvoc_init_dataField_Sec2Utils(Sec2Utils*);
-void __nvoc_dtor_Sec2Utils(Sec2Utils*);
+void __nvoc_dtor_Sec2Utils(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__Sec2Utils;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_Sec2Utils =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "Sec2Utils",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_Sec2Utils,
+    .objCreatefn =        &__nvoc_objCreateDynamic_Sec2Utils,
     .pCastInfo =          &__nvoc_castinfo__Sec2Utils,
     .pExportInfo =        &__nvoc_export_info__Sec2Utils
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_Sec2Utils =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__Sec2Utils __nvoc_metadata__Sec2Utils = {
     .rtti.pClassDef = &__nvoc_class_def_Sec2Utils,    // (sec2utils) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_Sec2Utils,
+    .rtti.dtor      = &__nvoc_dtor_Sec2Utils,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -82,16 +82,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__Sec2Utils =
 
 // Destruct Sec2Utils object.
 void __nvoc_sec2utilsDestruct(Sec2Utils*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_Sec2Utils(Sec2Utils* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_Sec2Utils(Dynamic* pThis) {
+
+    Sec2Utils *__nvoc_this = (Sec2Utils *) pThis;
 
 // Call destructor.
-    __nvoc_sec2utilsDestruct(pThis);
+    __nvoc_sec2utilsDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_Sec2Utils(Sec2Utils *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -117,7 +119,7 @@ NV_STATUS __nvoc_ctor_Sec2Utils(Sec2Utils *psec2utils, struct OBJGPU *pGpu, KERN
 
     // Unwind on error.
 __nvoc_ctor_Sec2Utils_fail__init:
-    __nvoc_dtor_Object(&psec2utils->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&psec2utils->__nvoc_base_Object);
 __nvoc_ctor_Sec2Utils_fail_Object:
 __nvoc_ctor_Sec2Utils_exit:
     return status;
@@ -221,13 +223,10 @@ __nvoc_objCreate_Sec2Utils_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_Sec2Utils(Sec2Utils **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_Sec2Utils(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct OBJGPU *pGpu = va_arg(__nvoc_args, struct OBJGPU *);
     KERNEL_MIG_GPU_INSTANCE *pKernelMIGGPUInstance = va_arg(__nvoc_args, KERNEL_MIG_GPU_INSTANCE *);
 
-    __nvoc_status = __nvoc_objCreate_Sec2Utils(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pGpu, pKernelMIGGPUInstance);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_Sec2Utils((Sec2Utils **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pGpu, pKernelMIGGPUInstance);
 }
 

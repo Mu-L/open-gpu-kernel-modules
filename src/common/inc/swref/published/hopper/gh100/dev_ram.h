@@ -27,9 +27,11 @@
 #define NV_RAMRL_ENTRY_CHAN_USERD_PTR_LO      (31+0*32):(8+0*32) /* RWXUF */
 #define NV_RAMRL_ENTRY_CHAN_USERD_PTR_HI_HW   (19+1*32):(0+1*32) /* RWXUF */
 #define NV_RAMFC                                                    /* ----G */
-#define NV_RAMFC_GP_BASE                       (18*32+31):(18*32+0) /* RW-UF */
-#define NV_RAMFC_GP_BASE_HI                    (19*32+31):(19*32+0) /* RW-UF */
-#define NV_RAMFC_GP_INFO                       (41*32+31):(41*32+0) /* RW-UF */
+#define NV_RAMFC_GP_BASE                         (18*32+31):(18*32+0) /* RW-UF */
+#define NV_RAMFC_GP_BASE_HI                      (19*32+31):(19*32+0) /* RW-UF */
+#define NV_RAMFC_GP_INFO                         (41*32+31):(41*32+0) /* RW-UF */
 #define NV_RAMFC_GP_PUT                          (0*32+31):(0*32+0) /* RW-UF */
 #define NV_RAMFC_GP_GET                          (5*32+31):(5*32+0) /* RW-UF */
+#define NV_RAMIN_ENG_METHOD_BUFFER_ADDR_LO       (136*32+31):(136*32+0)  /* RWXUF */
+#define NV_RAMIN_ENG_METHOD_BUFFER_ADDR_HI       (137*32+(((57-1)-32))):(137*32+0)  /* RWXUF */
 #endif // __gh100_dev_ram_h__

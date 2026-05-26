@@ -1133,7 +1133,7 @@ static void libosPrintLogRecords(LIBOS_LOG_DECODE *logDecode, NvU64 *scratchBuff
  * @brief Fetch the correct metadata from the given index in the physical buffer.
  *        Initialize elfSectionName appropriately in case extended version of metadata is found.
  */
-static libosLogMetadata *_getLoggingMetadata(LIBOS_LOG_DECODE *logDecode, LIBOS_LOG_DECODE_LOG *pLog, NvU64 idx, const char **elfSectionName, NvU32 *logEntrySize, NvU32 *taskId)
+static libosLogMetadata *_getLoggingMetadata(LIBOS_LOG_DECODE *logDecode, LIBOS_LOG_DECODE_LOG *pLog, NvU64 idx, const char **elfSectionName, NvU32 *logEntrySize, NvU32 *taskId, NvBool *pHasPackedMeta)
 {
     libosLogMetadata *pMetadata = NULL;
     libosLogMetadata_extended *pMetadataEx = NULL;
@@ -1146,10 +1146,12 @@ static libosLogMetadata *_getLoggingMetadata(LIBOS_LOG_DECODE *logDecode, LIBOS_
     if ((pLog->libosLogNvlogBufferVersion >= LIBOS_LOG_NVLOG_BUFFER_VERSION_2) &&
         ((pLog->libosLogFlags & LIBOS_LOG_NVLOG_BUFFER_FLAG_PACKED_METADATA) != 0) &&
         (REF_VAL64(LIBOS_LOG_METADATA_TOTAL_ARGS, meta) >= LIBOS_LOG_ENTRY_MIN_SIZE) &&
-        (REF_VAL64(LIBOS_LOG_METADATA_TOTAL_ARGS, meta) <= LIBOS_LOG_ENTRY_MAX_SIZE))
+        (REF_VAL64(LIBOS_LOG_METADATA_TOTAL_ARGS, meta) <= LIBOS_LOG_ENTRY_MAX_SIZE) &&
+        (REF_VAL64(LIBOS_LOG_METADATA_TASK_ID, meta) != LIBOS_LOG_TASK_UNKNOWN))
     {
         *logEntrySize = REF_VAL64(LIBOS_LOG_METADATA_TOTAL_ARGS, meta);
         *taskId = REF_VAL64(LIBOS_LOG_METADATA_TASK_ID, meta);
+        *pHasPackedMeta = NV_TRUE;
 
 #if defined(LIBOS_LOG_OFFLINE_DECODER)
         if (pLog->libosLogFlags & LIBOS_LOG_NVLOG_BUFFER_FLAG_MERGED_NVLOG_BUFFER)
@@ -1162,17 +1164,25 @@ static libosLogMetadata *_getLoggingMetadata(LIBOS_LOG_DECODE *logDecode, LIBOS_
     {
         metadataVA = pLogLocal->physicLogBuffer[idx];
         *taskId = LIBOS_LOG_TASK_UNKNOWN;
+        *pHasPackedMeta = NV_FALSE;
     }
 
     if (metadataVA < pLogLocal->loggingBaseAddress ||
         metadataVA >= pLogLocal->loggingBaseAddress + pLogLocal->loggingSize)
     {
+        LIBOS_LOG_DECODE_PRINTF(LEVEL_ERROR,
+                "**** Meta VA out of bounds.  MetaVA: 0x%llx loggingBeginVA: 0x%llx loggingEndVA: 0x%llx ****\n",
+                metadataVA, pLogLocal->loggingBaseAddress, pLogLocal->loggingBaseAddress + pLogLocal->loggingSize);
         return NULL;
     }
 
     pMetadata = (libosLogMetadata *) LibosElfMapVirtual(&pLogLocal->elfImage, metadataVA, sizeof(libosLogMetadata));
     if (pMetadata == NULL)
+    {
+        LIBOS_LOG_DECODE_PRINTF(LEVEL_ERROR,
+                "**** Meta not found.  MetaVA: 0x%llx ****\n", metadataVA);
         return NULL;
+    }
 
     // Try to fetch filename to check if we received an extended metadata
     filename = LibosElfMapVirtualString(&pLogLocal->elfImage, (NvU64)(NvUPtr)pMetadata->filename, NV_TRUE);
@@ -1223,6 +1233,8 @@ static void libosExtractLog_ReadRecord(LIBOS_LOG_DECODE *logDecode, LIBOS_LOG_DE
     NvU64 i;
     NvU64 argCount;
     NvU64 j;
+    NvBool hasPackedMeta = NV_FALSE;
+    NvBool failed = NV_FALSE;
     const char *elfSectionName;
 
     while (1)
@@ -1271,31 +1283,48 @@ static void libosExtractLog_ReadRecord(LIBOS_LOG_DECODE *logDecode, LIBOS_LOG_DE
         if (i < previousPut + 1)
             goto buffer_wrapped;
 
-        pLog->record.meta = _getLoggingMetadata(logDecode, pLog, 1 + (--i % log_entries), &elfSectionName, &logEntrySize, &taskId);
+        pLog->record.meta = _getLoggingMetadata(logDecode, pLog, 1 + (--i % log_entries),
+            &elfSectionName, &logEntrySize, &taskId, &hasPackedMeta);
 
         pLog->record.log = pLog;
         pLog->record.taskId = taskId;
 
         // Sanity check meta data.
-        if (pLog->record.meta != NULL && 
-            pLog->record.meta->argumentCount <= LIBOS_LOG_MAX_ARGS &&
-            ((taskId == LIBOS_LOG_TASK_UNKNOWN) || (pLog->record.meta->argumentCount == logEntrySize - 2)))
+        if (pLog->record.meta == NULL)
+        {
+            failed = NV_TRUE;
+            LIBOS_LOG_DECODE_PRINTF(LEVEL_WARNING, "**** Meta not found. ****\n");
+        }
+        else if (pLog->record.meta->argumentCount > LIBOS_LOG_MAX_ARGS)
+        {
+            failed = NV_TRUE;
+            LIBOS_LOG_DECODE_PRINTF(LEVEL_WARNING, "**** Invalid args count %u ****\n",
+                pLog->record.meta->argumentCount);
+        }
+        else if (hasPackedMeta && (LIBOS_LOG_ENTRY_V2_SIZE(pLog->record.meta->argumentCount) != (NvU8) logEntrySize))
+        {
+            failed = NV_TRUE;
+            LIBOS_LOG_DECODE_PRINTF(LEVEL_WARNING, "**** Invalid entry size. actual: %u expected: %u ****\n",
+                logEntrySize, LIBOS_LOG_ENTRY_V2_SIZE(pLog->record.meta->argumentCount));
+        }
+
+        if (!failed)
         {
             // Found valid record
             break;
         }
 
-        if (logDecode->bSynchronousBuffer || (taskId == LIBOS_LOG_TASK_UNKNOWN))
+        if (logDecode->bSynchronousBuffer || !hasPackedMeta)
         {
             LIBOS_LOG_DECODE_PRINTF(LEVEL_WARNING,
-                "**** Bad metadata.  Lost %lld entries from GPU %d %s-%s. putIter: 0x%llx previousPut: 0x%llx ****\n",
+                "**** Bad metadata, FATAL!  Lost %lld entries from GPU %d %s-%s. putIter: 0x%llx previousPut: 0x%llx ****\n",
                 pLog->putIter - previousPut, pLog->gpuInstance, logDecode->sourceName,
                 pLog->taskPrefix, pLog->putIter, pLog->previousPut);
             goto error_ret;
         }
 
         LIBOS_LOG_DECODE_PRINTF(LEVEL_WARNING,
-            "**** Bad metadata.  Lost %lld entries from GPU %d %s-%s. putIter: 0x%llx previousPut: 0x%llx ****\n",
+            "**** Bad metadata.  Skipping %lld entries from GPU %d %s-%s. putIter: 0x%llx previousPut: 0x%llx ****\n",
             logEntrySize, pLog->gpuInstance, logDecode->sourceName, pLog->taskPrefix,
             pLog->putIter, pLog->previousPut);
         pLog->putIter -= logEntrySize;

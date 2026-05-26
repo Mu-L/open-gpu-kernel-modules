@@ -134,7 +134,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_RegisterAperture;
     ((RegisterAperture*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(RegisterAperture)))
 #endif //__nvoc_ioaccess_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_RegisterAperture(RegisterAperture**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_RegisterAperture(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_RegisterAperture(RegisterAperture**, Dynamic*, NvU32);
 #define __objCreate_RegisterAperture(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

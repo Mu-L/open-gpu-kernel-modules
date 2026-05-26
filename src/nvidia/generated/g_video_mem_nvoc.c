@@ -33,7 +33,7 @@ void __nvoc_init__VideoMemory(VideoMemory*);
 void __nvoc_init_funcTable_VideoMemory(VideoMemory*);
 NV_STATUS __nvoc_ctor_VideoMemory(VideoMemory*, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_VideoMemory(VideoMemory*);
-void __nvoc_dtor_VideoMemory(VideoMemory*);
+void __nvoc_dtor_VideoMemory(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__VideoMemory;
@@ -143,7 +143,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_VideoMemory =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "VideoMemory",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_VideoMemory,
+    .objCreatefn =        &__nvoc_objCreateDynamic_VideoMemory,
     .pCastInfo =          &__nvoc_castinfo__VideoMemory,
     .pExportInfo =        &__nvoc_export_info__VideoMemory
 };
@@ -152,7 +152,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_VideoMemory =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__VideoMemory __nvoc_metadata__VideoMemory = {
     .rtti.pClassDef = &__nvoc_class_def_VideoMemory,    // (vidmem) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_VideoMemory,
+    .rtti.dtor      = &__nvoc_dtor_VideoMemory,
     .rtti.offset    = 0,
     .metadata__StandardMemory.rtti.pClassDef = &__nvoc_class_def_StandardMemory,    // (stdmem) super
     .metadata__StandardMemory.rtti.dtor      = &__nvoc_destructFromBase,
@@ -452,16 +452,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__VideoMemory =
 
 // Destruct VideoMemory object.
 void __nvoc_vidmemDestruct(VideoMemory*);
-void __nvoc_dtor_StandardMemory(StandardMemory*);
-void __nvoc_dtor_VideoMemory(VideoMemory* pThis) {
+void __nvoc_dtor_StandardMemory(Dynamic*);
+void __nvoc_dtor_VideoMemory(Dynamic* pThis) {
+
+    VideoMemory *__nvoc_this = (VideoMemory *) pThis;
 
 // Call destructor.
-    __nvoc_vidmemDestruct(pThis);
+    __nvoc_vidmemDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_StandardMemory(&pThis->__nvoc_base_StandardMemory);
+    __nvoc_dtor_StandardMemory((Dynamic *) &__nvoc_this->__nvoc_base_StandardMemory);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_VideoMemory(VideoMemory *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -487,7 +489,7 @@ NV_STATUS __nvoc_ctor_VideoMemory(VideoMemory *pVideoMemory, CALL_CONTEXT *pCall
 
     // Unwind on error.
 __nvoc_ctor_VideoMemory_fail__init:
-    __nvoc_dtor_StandardMemory(&pVideoMemory->__nvoc_base_StandardMemory);
+    __nvoc_dtor_StandardMemory((Dynamic *)&pVideoMemory->__nvoc_base_StandardMemory);
 __nvoc_ctor_VideoMemory_fail_StandardMemory:
 __nvoc_ctor_VideoMemory_exit:
     return status;
@@ -601,13 +603,10 @@ __nvoc_objCreate_VideoMemory_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_VideoMemory(VideoMemory **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_VideoMemory(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_VideoMemory(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_VideoMemory((VideoMemory **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

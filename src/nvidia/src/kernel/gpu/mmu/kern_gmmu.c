@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -48,6 +48,7 @@
 #include "nv_sriov_defines.h"
 
 #include "kernel/gpu/conf_compute/ccsl.h"
+#include "gpu/conf_compute/conf_compute.h"
 
 static void _kgmmuInitRegistryOverrides(OBJGPU *pGpu, KernelGmmu *pKernelGmmu);
 
@@ -1484,8 +1485,11 @@ _kgmmuClientShadowFaultBufferQueueAllocate
     // buffers. Since GSP will be encrypting the fault packets, we don't risk
     // leaking any information
     //
-    flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
 
+    if (confComputeForceUnprotAlloc(pGpu))
+    {   
+        flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    }
     //
     // Shadow fault buffers are not implemented using circular queues when
     // Hopper CC is enabled
@@ -1587,7 +1591,10 @@ _kgmmuClientShadowFaultBufferPagesAllocate
     // buffers. Since GSP will be encrypting the fault packets, we don't risk
     // leaking any information
     //
-    flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    if (confComputeForceUnprotAlloc(pGpu))
+    {   
+        flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    }
 
     pClientShadowFaultBuffer = &pKernelGmmu->mmuFaultBuffer[GPU_GFID_PF].clientShadowFaultBuffer[index];
 
@@ -3194,7 +3201,7 @@ subdeviceCtrlCmdGmmuCommitTlbInvalidate_IMPL
 
 /**
  * @brief Check if there is a memory subsystem HW error
- * @details Check if memory subsystem HW hit an error by issuing mem operations 
+ * @details Check if memory subsystem HW hit an error by issuing mem operations
  *          through TLB invalidates and membars. More detials in function comments
  *
  * @return  Returns NV_ERR_MEMORY_ERROR if there is a memory HW error
@@ -3217,7 +3224,7 @@ kgmmuCheckMemSubsysError_IMPL
     }
 
     //
-    // 1. Issue a TLB invalidate without membar. This would ensure that GMMU is not blocked. 
+    // 1. Issue a TLB invalidate without membar. This would ensure that GMMU is not blocked.
     //    A failure at this step indicates MMU is most likely stuck in a previously issued membar.
     //
     status = kgmmuInvalidateTlb_HAL(pGpu, pKernelGmmu, NULL, VASPACE_FLAGS_NONE,

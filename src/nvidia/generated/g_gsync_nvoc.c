@@ -28,7 +28,7 @@ void __nvoc_init__OBJGSYNCMGR(OBJGSYNCMGR*);
 void __nvoc_init_funcTable_OBJGSYNCMGR(OBJGSYNCMGR*);
 NV_STATUS __nvoc_ctor_OBJGSYNCMGR(OBJGSYNCMGR*);
 void __nvoc_init_dataField_OBJGSYNCMGR(OBJGSYNCMGR*);
-void __nvoc_dtor_OBJGSYNCMGR(OBJGSYNCMGR*);
+void __nvoc_dtor_OBJGSYNCMGR(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJGSYNCMGR;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJGSYNCMGR =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJGSYNCMGR",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_OBJGSYNCMGR,
+    .objCreatefn =        &__nvoc_objCreateDynamic_OBJGSYNCMGR,
     .pCastInfo =          &__nvoc_castinfo__OBJGSYNCMGR,
     .pExportInfo =        &__nvoc_export_info__OBJGSYNCMGR
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJGSYNCMGR =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__OBJGSYNCMGR __nvoc_metadata__OBJGSYNCMGR = {
     .rtti.pClassDef = &__nvoc_class_def_OBJGSYNCMGR,    // (gsyncmgr) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJGSYNCMGR,
+    .rtti.dtor      = &__nvoc_dtor_OBJGSYNCMGR,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -82,16 +82,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJGSYNCMGR =
 
 // Destruct OBJGSYNCMGR object.
 void __nvoc_gsyncmgrDestruct(OBJGSYNCMGR*);
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_OBJGSYNCMGR(OBJGSYNCMGR* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_OBJGSYNCMGR(Dynamic* pThis) {
+
+    OBJGSYNCMGR *__nvoc_this = (OBJGSYNCMGR *) pThis;
 
 // Call destructor.
-    __nvoc_gsyncmgrDestruct(pThis);
+    __nvoc_gsyncmgrDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJGSYNCMGR(OBJGSYNCMGR *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -117,7 +119,7 @@ NV_STATUS __nvoc_ctor_OBJGSYNCMGR(OBJGSYNCMGR *pGsyncmgr) {
 
     // Unwind on error.
 __nvoc_ctor_OBJGSYNCMGR_fail__init:
-    __nvoc_dtor_Object(&pGsyncmgr->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&pGsyncmgr->__nvoc_base_Object);
 __nvoc_ctor_OBJGSYNCMGR_fail_Object:
 __nvoc_ctor_OBJGSYNCMGR_exit:
     return status;
@@ -140,7 +142,7 @@ NvBool gsyncmgrIsFirmwareGPUMismatch_STATIC_DISPATCH(struct OBJGPU *pGpu, OBJGSY
 
 
     if (( ((chipHal_HalVarIdx >> 5) == 1UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0xb8000000UL) ) ||
-        ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000003f9UL) )) /* ChipHal: GB100 | GB102 | GB10B | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C */ 
+        ( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000030ffUL) )) /* ChipHal: GB100 | GB102 | GB10B | GB110 | GB112 | GB202 | GB203 | GB205 | GB206 | GB207 | GB20B | GB20C | GR100 | GR102 */ 
     {
         return gsyncmgrIsFirmwareGPUMismatch_GB100(pGpu, pGsync);
     }
@@ -242,11 +244,8 @@ __nvoc_objCreate_OBJGSYNCMGR_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_OBJGSYNCMGR(OBJGSYNCMGR **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_OBJGSYNCMGR(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_OBJGSYNCMGR(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_OBJGSYNCMGR((OBJGSYNCMGR **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

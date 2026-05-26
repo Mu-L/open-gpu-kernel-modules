@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2023-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -961,7 +961,7 @@ channelFillSec2Pb
         NvU32 semaD = 0;
         methodIdx = 0;
         portMemSet(pMethods, 0, (sizeof(NvU32) * SEC2_WL_METHOD_ARRAY_SIZE * 2));
-        semaD |= FLD_SET_DRF(CBA2, _SEMAPHORE_D, _FLUSH_DISABLE, _FALSE, execute);
+        semaD |= FLD_SET_DRF(CBA2, _SEMAPHORE_D, _FLUSH_DISABLE, _FALSE, semaD);
         NV_ASSERT_OK_OR_GOTO(status, addMethodsToMethodBuf(NVCBA2_METHOD_STREAM_AUTH_TAG_ADDR_HI, NvU64_HI32(semaMthdAuthTagBufGpuVA + semaAuthTagBufoffset), pMethods, methodIdx++), cleanup);
         NV_ASSERT_OK_OR_GOTO(status, addMethodsToMethodBuf(NVCBA2_METHOD_STREAM_AUTH_TAG_ADDR_LO, NvU64_LO32(semaMthdAuthTagBufGpuVA + semaAuthTagBufoffset), pMethods, methodIdx++), cleanup);
         NV_ASSERT_OK_OR_GOTO(status, addMethodsToMethodBuf(NVCBA2_SEMAPHORE_A, NvU64_HI32(pChannel->pbGpuVA + pChannel->finishPayloadOffset), pMethods, methodIdx++), cleanup);
@@ -987,8 +987,7 @@ channelFillSec2Pb
 
     *pMethodLength = 0;
     NvU32 methodSize = (NvU32)((NvU8*)pPtr - (NvU8*)pStartPtr);
-    NV_ASSERT_TRUE_OR_GOTO(status, methodSize <= pChannel->methodSizePerBlock,
-        NV_ERR_INVALID_STATE, cleanup);
+    NV_ASSERT_OR_RETURN(methodSize <= pChannel->methodSizePerBlock, NV_ERR_INVALID_STATE);
     *pMethodLength = methodSize;
 
 cleanup:

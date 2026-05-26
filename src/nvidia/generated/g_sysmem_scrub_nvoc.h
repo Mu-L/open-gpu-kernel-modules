@@ -143,7 +143,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_SysmemScrubber;
     ((SysmemScrubber*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(SysmemScrubber)))
 #endif //__nvoc_sysmem_scrub_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_SysmemScrubber(SysmemScrubber**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_SysmemScrubber(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_SysmemScrubber(SysmemScrubber**, Dynamic*, NvU32, struct OBJGPU *pGpu);
 #define __objCreate_SysmemScrubber(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pGpu) \

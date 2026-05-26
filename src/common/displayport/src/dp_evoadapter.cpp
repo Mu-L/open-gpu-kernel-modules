@@ -108,6 +108,7 @@ const struct
     {NV_DP_REGKEY_DISABLE_TUNNEL_BW_ALLOCATION,           &dpRegkeyDatabase.bForceDisableTunnelBwAllocation,    DP_REG_VAL_BOOL},
     {NV_DP_REGKEY_DISABLE_DOWNSPREAD,                     &dpRegkeyDatabase.bDownspreadDisabled,                DP_REG_VAL_BOOL},
     {NV_DP_REGKEY_DISABLE_AVOID_HBR3_WAR,                 &dpRegkeyDatabase.bDisableAvoidHBR3War,               DP_REG_VAL_BOOL},
+    {NV_DP_REGKEY_DISABLE_POLLING_FOR_DP_MST_DETECTION,   &dpRegkeyDatabase.bDisablePollingForDpMstDetection,   DP_REG_VAL_BOOL},
     {NV_DP_REGKEY_SKIP_ZERO_OUI_CACHE,                    &dpRegkeyDatabase.bSkipZeroOuiCache,                  DP_REG_VAL_BOOL},
     {NV_DP_REGKEY_FORCE_HEAD_SHUTDOWN,                    &dpRegkeyDatabase.bForceHeadShutdown,                 DP_REG_VAL_BOOL},
     {NV_DP_REGKEY_EXPOSE_DSC_DEVID_WAR,                   &dpRegkeyDatabase.bEnableDevId,                       DP_REG_VAL_BOOL},
@@ -116,8 +117,10 @@ const struct
     {NV_DP_REGKEY_ENABLE_128b132b_DSC_LNK_CFG_REDUCTION,  &dpRegkeyDatabase.bEnable128b132bDSCLnkCfgReduction,  DP_REG_VAL_BOOL},
     {NV_DP_REGKEY_DISABLE_NATIVE_DISPLAYID2X_SUPPORT,     &dpRegkeyDatabase.bDisableNativeDisplayId2xSupport,   DP_REG_VAL_BOOL},
     {NV_DP_REGKEY_USE_MAX_DSC_COMPRESSION_MST,            &dpRegkeyDatabase.bUseMaxDSCCompressionMST,           DP_REG_VAL_BOOL},
+    {NV_DP_REGKEY_ENABLE_CLEAR_MSA_WHEN_NOT_USED,         &dpRegkeyDatabase.bEnableClearMSAWhenNotUsed,         DP_REG_VAL_BOOL},
     {NV_DP_REGKEY_FORCE_NLPIGNORE_DDS,                    &dpRegkeyDatabase.bIgnoreUnplugUnlessRequested,       DP_REG_VAL_BOOL},
-    {NV_DP_REGKEY_ENABLE_CLEAR_MSA_WHEN_NOT_USED,         &dpRegkeyDatabase.bEnableClearMSAWhenNotUsed,         DP_REG_VAL_BOOL}
+    {NV_DP_REGKEY_SKIP_PANEL_POWER_WRITE,                 &dpRegkeyDatabase.bSkipPanelPowerWrite,               DP_REG_VAL_BOOL},
+    {NV_DP_REGKEY_SET_CONNECTOR_HDMI_FOR_DONGLE,          &dpRegkeyDatabase.bSetConnectorHdmiForDongle,         DP_REG_VAL_BOOL}
 };
 
 EvoMainLink::EvoMainLink(EvoInterface * provider, Timer * timer) :
@@ -296,6 +299,7 @@ bool EvoMainLink::queryGPUCapability()
     _isLTPhyRepeaterSupported       = (dpParams.bIsTrainPhyRepeater == NV_TRUE) ? true : false;
     _isDownspreadSupported          = (dpParams.bSupportDPDownSpread == NV_TRUE) ? true : false;
     _bAvoidHBR3                     = (dpParams.bAvoidHBR3 == NV_TRUE) ? true : false;
+    _bPollingEnabledForDpMstDetection = (dpParams.bPollingEnabledForDpMstDetection == NV_TRUE) ? true : false;
     _bIsDpTunnelingHwBugWarEnabled  = (dpParams.bIsDpTunnelingHwBugWarEnabled == NV_TRUE) ? true : false;
 
     _gpuSupportedDpVersions         = dpParams.dpVersionsSupported;
@@ -1205,6 +1209,7 @@ void EvoMainLink::applyRegkeyOverrides()
     _isMSTPCONCapsReadDisabled           = dpRegkeyDatabase.bMSTPCONCapsReadDisabled;
     _isDownspreadDisabledByRegkey        = dpRegkeyDatabase.bDownspreadDisabled;
     _bAvoidHBR3DisabledByRegkey          = dpRegkeyDatabase.bDisableAvoidHBR3War;
+    _bPollingDpMstDisabledByRegkey       = dpRegkeyDatabase.bDisablePollingForDpMstDetection;
 }
 
 NvU32 EvoMainLink::getRegkeyValue(const char *key)

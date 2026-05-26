@@ -168,6 +168,7 @@ typedef NV_STATUS      RpcCtrlTimerSetGrTickFreq(POBJGPU, POBJRPC, NvHandle, NvH
 typedef NV_STATUS      RpcCtrlGpfifoSetWorkSubmitTokenNotifIndex(POBJGPU, POBJRPC, NvHandle, NvHandle, void*);
 typedef NV_STATUS      RpcAllocEvent(POBJGPU, POBJRPC, NvHandle, NvHandle, NvHandle,
                                     NvHandle, NvHandle, NvU32, NvU32);
+typedef NV_STATUS      RpcCtrlGpuSetMigrationBlock(POBJGPU, POBJRPC, NvHandle, NvHandle, void*);
 typedef NV_STATUS      RpcCtrlGrPcSamplingMode(POBJGPU, POBJRPC, NvHandle, NvHandle, void*);
 typedef NV_STATUS      RpcCtrlMcServiceInterrupts(POBJGPU, POBJRPC, NvHandle, NvHandle, void*);
 typedef NV_STATUS      RpcCtrlDbgReadAllSmErrorStates(POBJGPU, POBJRPC, NvHandle, NvHandle, void*);
@@ -329,6 +330,7 @@ typedef struct RPC_HAL_IFACES {
     RpcCtrlTimerSetGrTickFreq   *rpcCtrlTimerSetGrTickFreq;   /* CTRL_TIMER_SET_GR_TICK_FREQ */
     RpcCtrlGpfifoSetWorkSubmitTokenNotifIndex  *rpcCtrlGpfifoSetWorkSubmitTokenNotifIndex; /* CTRL_GPFIFO_SET_WORK_SUBMIT_TOKEN_NOTIF_INDEX */
     RpcAllocEvent               *rpcAllocEvent;               /* ALLOC_EVENT */
+    RpcCtrlGpuSetMigrationBlock  *rpcCtrlGpuSetMigrationBlock; /* CTRL_GPU_SET_MIGRATION_BLOCK */
     RpcCtrlGrPcSamplingMode     *rpcCtrlGrPcSamplingMode;     /* CTRL_GR_PC_SAMPLING_MODE */
     RpcCtrlMcServiceInterrupts  *rpcCtrlMcServiceInterrupts;  /* CTRL_MC_SERVICE_INTERRUPTS */
     RpcCtrlDbgReadAllSmErrorStates  *rpcCtrlDbgReadAllSmErrorStates; /* CTRL_DBG_READ_ALL_SM_ERROR_STATES */
@@ -579,6 +581,8 @@ typedef struct RPC_HAL_IFACES {
         (_pRpc)->_hal.rpcCtrlGpfifoSetWorkSubmitTokenNotifIndex(_pGpu, _pRpc, _arg0, _arg1, _pArg2)
 #define rpcAllocEvent_HAL(_pGpu, _pRpc, _arg0, _arg1, _arg2, _arg3, _arg4, _arg5, _arg6)  \
         (_pRpc)->_hal.rpcAllocEvent(_pGpu, _pRpc, _arg0, _arg1, _arg2, _arg3, _arg4, _arg5, _arg6)
+#define rpcCtrlGpuSetMigrationBlock_HAL(_pGpu, _pRpc, _arg0, _arg1, _pArg2)  \
+        (_pRpc)->_hal.rpcCtrlGpuSetMigrationBlock(_pGpu, _pRpc, _arg0, _arg1, _pArg2)
 #define rpcCtrlGrPcSamplingMode_HAL(_pGpu, _pRpc, _arg0, _arg1, _pArg2)  \
         (_pRpc)->_hal.rpcCtrlGrPcSamplingMode(_pGpu, _pRpc, _arg0, _arg1, _pArg2)
 #define rpcCtrlMcServiceInterrupts_HAL(_pGpu, _pRpc, _arg0, _arg1, _pArg2)  \

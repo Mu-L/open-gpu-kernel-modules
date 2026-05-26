@@ -29,7 +29,7 @@ void __nvoc_init__OBJGVASPACE(OBJGVASPACE*);
 void __nvoc_init_funcTable_OBJGVASPACE(OBJGVASPACE*);
 NV_STATUS __nvoc_ctor_OBJGVASPACE(OBJGVASPACE*);
 void __nvoc_init_dataField_OBJGVASPACE(OBJGVASPACE*);
-void __nvoc_dtor_OBJGVASPACE(OBJGVASPACE*);
+void __nvoc_dtor_OBJGVASPACE(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJGVASPACE;
@@ -55,7 +55,7 @@ NV_STATUS __nvoc_down_thunk_OBJGVASPACE_vaspaceGetPasid(struct OBJVASPACE *pVAS,
 PMEMORY_DESCRIPTOR __nvoc_down_thunk_OBJGVASPACE_vaspaceGetPageDirBase(struct OBJVASPACE *pVAS, struct OBJGPU *pGpu);    // this
 NV_STATUS __nvoc_down_thunk_OBJGVASPACE_vaspacePinRootPageDir(struct OBJVASPACE *pVAS, struct OBJGPU *pGpu);    // this
 void __nvoc_down_thunk_OBJGVASPACE_vaspaceUnpinRootPageDir(struct OBJVASPACE *pVAS, struct OBJGPU *pGpu);    // this
-void __nvoc_down_thunk_OBJGVASPACE_vaspaceInvalidateTlb(struct OBJVASPACE *pVAS, struct OBJGPU *pGpu, VAS_PTE_UPDATE_TYPE type);    // this
+NV_STATUS __nvoc_down_thunk_OBJGVASPACE_vaspaceInvalidateTlb(struct OBJVASPACE *pVAS, struct OBJGPU *pGpu, VAS_PTE_UPDATE_TYPE type);    // this
 NV_STATUS __nvoc_down_thunk_OBJGVASPACE_vaspaceGetVasInfo(struct OBJVASPACE *pVAS, NV0080_CTRL_DMA_ADV_SCHED_GET_VA_CAPS_PARAMS *pParams);    // this
 NV_STATUS __nvoc_down_thunk_OBJGVASPACE_vaspaceGetPageTableInfo(struct OBJVASPACE *pVAS, NV0080_CTRL_DMA_GET_PDE_INFO_PARAMS *pParams);    // this
 NV_STATUS __nvoc_down_thunk_OBJGVASPACE_vaspaceGetPteInfo(struct OBJVASPACE *pVAS, struct OBJGPU *pGpu, NV0080_CTRL_DMA_GET_PTE_INFO_PARAMS *pParams, RmPhysAddr *pPhysAddr);    // this
@@ -75,7 +75,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJGVASPACE =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJGVASPACE",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_OBJGVASPACE,
+    .objCreatefn =        &__nvoc_objCreateDynamic_OBJGVASPACE,
     .pCastInfo =          &__nvoc_castinfo__OBJGVASPACE,
     .pExportInfo =        &__nvoc_export_info__OBJGVASPACE
 };
@@ -84,7 +84,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJGVASPACE =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__OBJGVASPACE __nvoc_metadata__OBJGVASPACE = {
     .rtti.pClassDef = &__nvoc_class_def_OBJGVASPACE,    // (gvaspace) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJGVASPACE,
+    .rtti.dtor      = &__nvoc_dtor_OBJGVASPACE,
     .rtti.offset    = 0,
     .metadata__OBJVASPACE.rtti.pClassDef = &__nvoc_class_def_OBJVASPACE,    // (vaspace) super
     .metadata__OBJVASPACE.rtti.dtor      = &__nvoc_destructFromBase,
@@ -258,8 +258,8 @@ void __nvoc_down_thunk_OBJGVASPACE_vaspaceUnpinRootPageDir(struct OBJVASPACE *pV
 }
 
 // gvaspaceInvalidateTlb: virtual override (vaspace) base (vaspace)
-void __nvoc_down_thunk_OBJGVASPACE_vaspaceInvalidateTlb(struct OBJVASPACE *pVAS, struct OBJGPU *pGpu, VAS_PTE_UPDATE_TYPE type) {
-    gvaspaceInvalidateTlb((struct OBJGVASPACE *)(((unsigned char *) pVAS) - NV_OFFSETOF(OBJGVASPACE, __nvoc_base_OBJVASPACE)), pGpu, type);
+NV_STATUS __nvoc_down_thunk_OBJGVASPACE_vaspaceInvalidateTlb(struct OBJVASPACE *pVAS, struct OBJGPU *pGpu, VAS_PTE_UPDATE_TYPE type) {
+    return gvaspaceInvalidateTlb((struct OBJGVASPACE *)(((unsigned char *) pVAS) - NV_OFFSETOF(OBJGVASPACE, __nvoc_base_OBJVASPACE)), pGpu, type);
 }
 
 // gvaspaceGetVasInfo: virtual override (vaspace) base (vaspace)
@@ -310,16 +310,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJGVASPACE =
 
 // Destruct OBJGVASPACE object.
 void __nvoc_gvaspaceDestruct(OBJGVASPACE*);
-void __nvoc_dtor_OBJVASPACE(OBJVASPACE*);
-void __nvoc_dtor_OBJGVASPACE(OBJGVASPACE* pThis) {
+void __nvoc_dtor_OBJVASPACE(Dynamic*);
+void __nvoc_dtor_OBJGVASPACE(Dynamic* pThis) {
+
+    OBJGVASPACE *__nvoc_this = (OBJGVASPACE *) pThis;
 
 // Call destructor.
-    __nvoc_gvaspaceDestruct(pThis);
+    __nvoc_gvaspaceDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_OBJVASPACE(&pThis->__nvoc_base_OBJVASPACE);
+    __nvoc_dtor_OBJVASPACE((Dynamic *) &__nvoc_this->__nvoc_base_OBJVASPACE);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJGVASPACE(OBJGVASPACE *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -445,11 +447,8 @@ __nvoc_objCreate_OBJGVASPACE_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_OBJGVASPACE(OBJGVASPACE **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_OBJGVASPACE(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_OBJGVASPACE(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_OBJGVASPACE((OBJGVASPACE **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

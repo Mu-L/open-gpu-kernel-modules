@@ -142,6 +142,28 @@ static char* nv_get_transfer_function_name(
     }
 };
 
+static const char* nv_get_dithering_mode_name(
+    enum nv_drm_dithering_mode mode)
+{
+    switch (mode) {
+        case NV_DRM_DITHERING_MODE_AUTO:
+            return "auto";
+        case NV_DRM_DITHERING_MODE_OFF:
+            return "off";
+        case NV_DRM_DITHERING_MODE_STATIC_2X2:
+            return "static 2x2";
+        case NV_DRM_DITHERING_MODE_DYNAMIC_2X2:
+            return "dynamic 2x2";
+        case NV_DRM_DITHERING_MODE_TEMPORAL:
+            return "temporal";
+        case NV_DRM_DITHERING_MODE_ON:
+            return "on";
+        default:
+            /* We shouldn't hit this, but return a safe default */
+            return "auto";
+    }
+};
+
 #if defined(NV_DRM_OUTPUT_POLL_CHANGED_PRESENT)
 static void nv_drm_output_poll_changed(struct drm_device *dev)
 {
@@ -500,11 +522,12 @@ static void nv_drm_enumerate_encoders_and_connectors
  */
 static int nv_drm_create_properties(struct nv_drm_device *nv_dev)
 {
-    struct drm_prop_enum_list colorspace_enum_list[3] = { };
+    struct drm_prop_enum_list colorspace_enum_list[NV_DRM_INPUT_COLOR_SPACE_MAX] = { };
     struct drm_prop_enum_list tf_enum_list[NV_DRM_TRANSFER_FUNCTION_MAX] = { };
+    struct drm_prop_enum_list dithering_mode_enum_list[NV_DRM_DITHERING_MODE_MAX] = { };
     int i, len = 0;
 
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < NV_DRM_INPUT_COLOR_SPACE_MAX; i++) {
         colorspace_enum_list[len].type = i;
         colorspace_enum_list[len].name = nv_get_input_colorspace_name(i);
         len++;
@@ -513,6 +536,11 @@ static int nv_drm_create_properties(struct nv_drm_device *nv_dev)
     for (i = 0; i < NV_DRM_TRANSFER_FUNCTION_MAX; i++) {
         tf_enum_list[i].type = i;
         tf_enum_list[i].name = nv_get_transfer_function_name(i);
+    }
+
+    for (i = 0; i < NV_DRM_DITHERING_MODE_MAX; i++) {
+        dithering_mode_enum_list[i].type = i;
+        dithering_mode_enum_list[i].name = nv_get_dithering_mode_name(i);
     }
 
     if (nv_dev->supportsSyncpts) {
@@ -638,9 +666,20 @@ static int nv_drm_create_properties(struct nv_drm_device *nv_dev)
     nv_dev->nv_crtc_regamma_divisor_property =
         drm_property_create_range(nv_dev->dev, 0,
             "NV_CRTC_REGAMMA_DIVISOR",
-            (((NvU64) 1) << 32), // No values between 0 and 1
+            NV_DRM_S31_32_ONE, // No values between 0 and 1
             U64_MAX & ~(((NvU64) 1) << 63)); // No negative values
     if (nv_dev->nv_crtc_regamma_divisor_property == NULL) {
+        return -ENOMEM;
+    }
+
+    // Dithering mode property
+    nv_dev->nv_connector_dithering_mode_property =
+        drm_property_create_enum(nv_dev->dev, 0,
+                                 "dithering mode",
+                                 dithering_mode_enum_list,
+                                 NV_DRM_DITHERING_MODE_MAX);
+    if (nv_dev->nv_connector_dithering_mode_property == NULL) {
+        NV_DRM_LOG_ERR("Failed to create dithering mode property");
         return -ENOMEM;
     }
 
@@ -823,8 +862,18 @@ static int nv_drm_dev_load(struct drm_device *dev)
 
     nv_drm_enumerate_encoders_and_connectors(nv_dev);
 
+    /* Init vblank */
+    if (nv_drm_vblank_module_param) {
+        if (!nv_drm_workthread_init(&nv_dev->vblank_worker, "nvidia-drm-vblank-notification")) {
+            NV_DRM_DEV_LOG_WARN(nv_dev, "Failed to init vblank worker, vblank notification not enabled.");
+        } else {
+            drm_vblank_init(dev, dev->mode_config.num_crtc);
+        }
+    }
 #if !defined(NV_DRM_CRTC_STATE_HAS_NO_VBLANK)
-    drm_vblank_init(dev, dev->mode_config.num_crtc);
+    else {
+        drm_vblank_init(dev, dev->mode_config.num_crtc);
+    }
 #endif
 
     /*
@@ -879,6 +928,10 @@ static void nv_drm_dev_unload(struct drm_device *dev)
     /* Clean up output polling */
 
     drm_kms_helper_poll_fini(dev);
+
+    if (nv_drm_vblank_module_param) {
+        nv_drm_workthread_shutdown(&nv_dev->vblank_worker);
+    }
 
     /* Clean up mode configuration */
 

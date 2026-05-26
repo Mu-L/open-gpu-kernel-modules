@@ -59,10 +59,19 @@ typedef unsigned long long UvmStream;
 
 #define UVM_PROCESSOR_MASK_SIZE ((UVM_MAX_PROCESSORS + (sizeof(NvU64) * 8) - 1) / (sizeof(NvU64) * 8))
 
+// TODO: Remove after CUDA driver is updated to use
+// UVM_INIT_FLAGS_DISABLE_PAGEABLE_MIGRATIONS
 #define UVM_INIT_FLAGS_DISABLE_HMM                       ((NvU64)0x1)
-#define UVM_INIT_FLAGS_MULTI_PROCESS_SHARING_MODE        ((NvU64)0x2)
-#define UVM_INIT_FLAGS_MASK                              ((NvU64)0x3)
 
+#define UVM_INIT_FLAGS_DISABLE_PAGEABLE_MIGRATIONS       ((NvU64)0x1)
+#define UVM_INIT_FLAGS_MULTI_PROCESS_SHARING_MODE        ((NvU64)0x2)
+#define UVM_INIT_FLAGS_DISABLE_PAGEABLE_ACCESS           ((NvU64)0x4)
+#define UVM_INIT_FLAGS_MASK                              ((NvU64)0x7)
+
+// Although range groups are deprecated, the UvmEventMigrationInfo structure
+// still has a rangeGroupId field which will always report
+// UVM_RANGE_GROUP_ID_NONE.
+// It's not worth the effort to version the event structure just for this.
 #define UVM_RANGE_GROUP_ID_NONE        ((NvU64)0)
 
 //-----------------------------------------------------------------------------
@@ -433,8 +442,6 @@ typedef enum
     UvmEventFatalReasonInternalError      = 5,
 
     // This value is reported when a fault is triggered in an invalid context
-    // Example: CPU fault on a managed allocation while a kernel is running on a
-    // pre-Pascal GPU
     UvmEventFatalReasonInvalidOperation   = 6,
     // ---- Add new values above this line
     UvmEventNumFatalReasons
@@ -603,7 +610,7 @@ typedef struct
                           // - Issuing a replay for replayable faults
                           // - Re-scheduling the channel for non-replayable
                           //   faults.
-    NvU8 clientType;      // Volta+ GPUs can fault on clients other than GR.
+    NvU8 clientType;      // Turing+ GPUs can fault on clients other than GR.
                           // UvmEventFaultClientTypeGpc indicates replayable
                           // fault, while UvmEventFaultClientTypeHub indicates
                           // non-replayable fault.
@@ -654,7 +661,7 @@ typedef struct
                           // - Issuing a replay for replayable faults
                           // - Re-scheduling the channel for non-replayable
                           //   faults.
-    NvU8 clientType;      // Volta+ GPUs can fault on clients other than GR.
+    NvU8 clientType;      // Turing+ GPUs can fault on clients other than GR.
                           // UvmEventFaultClientTypeGpc indicates replayable
                           // fault, while UvmEventFaultClientTypeHub indicates
                           // non-replayable fault.

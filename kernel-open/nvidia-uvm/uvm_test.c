@@ -1,5 +1,5 @@
 /*******************************************************************************
-    Copyright (c) 2015-2025 NVIDIA Corporation
+    Copyright (c) 2015-2026 NVIDIA Corporation
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to
@@ -237,6 +237,22 @@ static NV_STATUS uvm_test_inject_nvlink_error(UVM_TEST_INJECT_NVLINK_ERROR_PARAM
     return status;
 }
 
+static NV_STATUS uvm_test_query_cdmm_devmem(UVM_TEST_QUERY_CDMM_DEVMEM_PARAMS *params, struct file *filp)
+{
+    uvm_gpu_t *gpu;
+
+    uvm_mutex_lock(&g_uvm_global.global_lock);
+
+    gpu = uvm_gpu_get_by_uuid(&params->gpu_uuid);
+    if (gpu)
+        params->cdmmDevmemEnabled = uvm_devmem_cdmm_present(gpu->parent);
+    else
+        params->cdmmDevmemEnabled = false;
+
+    uvm_mutex_unlock(&g_uvm_global.global_lock);
+    return NV_OK;
+}
+
 long uvm_test_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
     // Disable all test entry points if the module parameter wasn't provided.
@@ -294,9 +310,6 @@ long uvm_test_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_FLUSH_DEFERRED_WORK,          uvm_test_flush_deferred_work);
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_NV_KTHREAD_Q,                 uvm_test_nv_kthread_q);
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_SET_PAGE_PREFETCH_POLICY,     uvm_test_set_page_prefetch_policy);
-        UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_RANGE_GROUP_TREE,             uvm_test_range_group_tree);
-        UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_RANGE_GROUP_RANGE_INFO,       uvm_test_range_group_range_info);
-        UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_RANGE_GROUP_RANGE_COUNT,      uvm_test_range_group_range_count);
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_GET_PREFETCH_FAULTS_REENABLE_LAPSE,
                                        uvm_test_get_prefetch_faults_reenable_lapse);
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_SET_PREFETCH_FAULTS_REENABLE_LAPSE,
@@ -321,6 +334,7 @@ long uvm_test_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_GET_GPU_TIME,                 uvm_test_get_gpu_time);
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_PMM_RELEASE_FREE_ROOT_CHUNKS, uvm_test_pmm_release_free_root_chunks);
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_DRAIN_REPLAYABLE_FAULTS,      uvm_test_drain_replayable_faults);
+        UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_DRAIN_ACCESS_COUNTERS,        uvm_test_drain_access_counters);
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_PMA_GET_BATCH_SIZE,           uvm_test_pma_get_batch_size);
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_PMM_QUERY_PMA_STATS,          uvm_test_pmm_query_pma_stats);
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_NUMA_CHECK_AFFINITY,          uvm_test_numa_check_affinity);
@@ -330,7 +344,7 @@ long uvm_test_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
                                        uvm_test_va_space_remove_dummy_thread_contexts);
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_THREAD_CONTEXT_SANITY,        uvm_test_thread_context_sanity);
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_THREAD_CONTEXT_PERF,          uvm_test_thread_context_perf);
-        UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_GET_PAGEABLE_MEM_ACCESS_TYPE, uvm_test_get_pageable_mem_access_type);
+        UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_GET_PAGEABLE_MEM_TYPE,        uvm_test_get_pageable_mem_type);
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_TOOLS_FLUSH_REPLAY_EVENTS,    uvm_test_tools_flush_replay_events);
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_REGISTER_UNLOAD_STATE_BUFFER, uvm_test_register_unload_state_buffer);
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_RB_TREE_DIRECTED,             uvm_test_rb_tree_directed);
@@ -360,6 +374,7 @@ long uvm_test_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_DUMP_ACCESS_BITS,             uvm_test_dump_access_bits);
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_DEAD_CHANNEL,                 uvm_test_dead_channel);
         UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_SET_NON_REPLAYABLE_DELAY,     uvm_test_set_non_replayable_delay);
+        UVM_ROUTE_CMD_STACK_INIT_CHECK(UVM_TEST_QUERY_CDMM_DEVMEM,            uvm_test_query_cdmm_devmem);
     }
 
     return -EINVAL;

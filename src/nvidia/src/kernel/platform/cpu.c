@@ -191,6 +191,7 @@ void RmInitCpuInfo(void)
         case AARCH64_VENDOR_PART(ARM, NEOVERSE_N2):
         case AARCH64_VENDOR_PART(ARM, NEOVERSE_V2):
         case AARCH64_VENDOR_PART(ARM, NEOVERSE_V3AE):
+        case AARCH64_VENDOR_PART(NVIDIA, OLYMPUS):
             pSys->cpuInfo.type = NV0000_CTRL_SYSTEM_CPU_TYPE_ARMV9A_GENERIC;
             break;
         default:

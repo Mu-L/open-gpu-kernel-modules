@@ -34,6 +34,8 @@
 // Minimum bar size
 #define NV_PF0_PF_RESIZABLE_BAR_CONTROL_BAR_SIZE_MIN 0x6
 
+#define NV_WPR_BLOCK_GRANULARITY 0x20000ULL
+
 /*!
  * @brief Gets the P2P write mailbox address size (NV_XAL_EP_P2P_WMBOX_ADDR_ADDR)
  *
@@ -251,7 +253,7 @@ kbusCarveoutWprs_GB100
 
     data = GPU_REG_RD32(pGpu, pEntry->devicePriBase + NV_HUBMMU_PRI_MMU_WPR1_ADDR_HI);
     data = DRF_VAL(_HUBMMU, _PRI_MMU_WPR1_ADDR_HI, _VAL, data);
-    end = (NvU64)data << NV_HUBMMU_PRI_MMU_WPR1_ADDR_HI_ALIGNMENT;
+    end = ((NvU64)data << NV_HUBMMU_PRI_MMU_WPR1_ADDR_HI_ALIGNMENT) + NV_WPR_BLOCK_GRANULARITY;
 
     if (start != end && end != 0)
         pWprRegions[0] = rangeMake(start, end - 1);
@@ -264,7 +266,7 @@ kbusCarveoutWprs_GB100
 
     data = GPU_REG_RD32(pGpu, pEntry->devicePriBase + NV_HUBMMU_PRI_MMU_WPR2_ADDR_HI);
     data = DRF_VAL(_HUBMMU, _PRI_MMU_WPR2_ADDR_HI, _VAL, data);
-    end = (NvU64)data << NV_HUBMMU_PRI_MMU_WPR2_ADDR_HI_ALIGNMENT;
+    end = ((NvU64)data << NV_HUBMMU_PRI_MMU_WPR2_ADDR_HI_ALIGNMENT) + NV_WPR_BLOCK_GRANULARITY;
 
     if (start != end && end != 0)
         pWprRegions[1] = rangeMake(start, end - 1);

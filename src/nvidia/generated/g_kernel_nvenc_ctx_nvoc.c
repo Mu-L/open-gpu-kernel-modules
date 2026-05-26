@@ -35,7 +35,7 @@ void __nvoc_init__MsencContext(MsencContext*, RmHalspecOwner *pRmhalspecowner);
 void __nvoc_init_funcTable_MsencContext(MsencContext*, RmHalspecOwner *pRmhalspecowner);
 NV_STATUS __nvoc_ctor_MsencContext(MsencContext*, RmHalspecOwner *pRmhalspecowner, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_MsencContext(MsencContext*, RmHalspecOwner *pRmhalspecowner);
-void __nvoc_dtor_MsencContext(MsencContext*);
+void __nvoc_dtor_MsencContext(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__MsencContext;
@@ -160,7 +160,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_MsencContext =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "MsencContext",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_MsencContext,
+    .objCreatefn =        &__nvoc_objCreateDynamic_MsencContext,
     .pCastInfo =          &__nvoc_castinfo__MsencContext,
     .pExportInfo =        &__nvoc_export_info__MsencContext
 };
@@ -169,7 +169,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_MsencContext =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__MsencContext __nvoc_metadata__MsencContext = {
     .rtti.pClassDef = &__nvoc_class_def_MsencContext,    // (msencctx) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_MsencContext,
+    .rtti.dtor      = &__nvoc_dtor_MsencContext,
     .rtti.offset    = 0,
     .metadata__ChannelDescendant.rtti.pClassDef = &__nvoc_class_def_ChannelDescendant,    // (chandes) super
     .metadata__ChannelDescendant.rtti.dtor      = &__nvoc_destructFromBase,
@@ -525,16 +525,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__MsencContext =
 
 // Destruct MsencContext object.
 void __nvoc_msencctxDestruct(MsencContext*);
-void __nvoc_dtor_ChannelDescendant(ChannelDescendant*);
-void __nvoc_dtor_MsencContext(MsencContext* pThis) {
+void __nvoc_dtor_ChannelDescendant(Dynamic*);
+void __nvoc_dtor_MsencContext(Dynamic* pThis) {
+
+    MsencContext *__nvoc_this = (MsencContext *) pThis;
 
 // Call destructor.
-    __nvoc_msencctxDestruct(pThis);
+    __nvoc_msencctxDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_ChannelDescendant(&pThis->__nvoc_base_ChannelDescendant);
+    __nvoc_dtor_ChannelDescendant((Dynamic *) &__nvoc_this->__nvoc_base_ChannelDescendant);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_MsencContext(MsencContext *pThis, RmHalspecOwner *pRmhalspecowner) {
     RmVariantHal *rmVariantHal = &pRmhalspecowner->rmVariantHal;
@@ -565,7 +567,7 @@ NV_STATUS __nvoc_ctor_MsencContext(MsencContext *pMsencContext, RmHalspecOwner *
 
     // Unwind on error.
 __nvoc_ctor_MsencContext_fail__init:
-    __nvoc_dtor_ChannelDescendant(&pMsencContext->__nvoc_base_ChannelDescendant);
+    __nvoc_dtor_ChannelDescendant((Dynamic *)&pMsencContext->__nvoc_base_ChannelDescendant);
 __nvoc_ctor_MsencContext_fail_ChannelDescendant:
 __nvoc_ctor_MsencContext_exit:
     return status;
@@ -697,13 +699,10 @@ __nvoc_objCreate_MsencContext_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_MsencContext(MsencContext **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_MsencContext(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_MsencContext(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_MsencContext((MsencContext **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

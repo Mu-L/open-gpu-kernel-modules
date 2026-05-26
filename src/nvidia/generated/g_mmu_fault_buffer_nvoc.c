@@ -35,7 +35,7 @@ void __nvoc_init__MmuFaultBuffer(MmuFaultBuffer*);
 void __nvoc_init_funcTable_MmuFaultBuffer(MmuFaultBuffer*);
 NV_STATUS __nvoc_ctor_MmuFaultBuffer(MmuFaultBuffer*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_MmuFaultBuffer(MmuFaultBuffer*);
-void __nvoc_dtor_MmuFaultBuffer(MmuFaultBuffer*);
+void __nvoc_dtor_MmuFaultBuffer(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__MmuFaultBuffer;
@@ -128,7 +128,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_MmuFaultBuffer =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "MmuFaultBuffer",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_MmuFaultBuffer,
+    .objCreatefn =        &__nvoc_objCreateDynamic_MmuFaultBuffer,
     .pCastInfo =          &__nvoc_castinfo__MmuFaultBuffer,
     .pExportInfo =        &__nvoc_export_info__MmuFaultBuffer
 };
@@ -138,6 +138,43 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_MmuFaultBuffer =
 #define NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(x)      (0)
 #endif
 
+// Exported trampoline function definitions
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+static NV_STATUS faultbufCtrlCmdFaultbufferGetSize__EXPORT(void *pMmuFaultBuffer, void *pGetParams) {
+    return faultbufCtrlCmdFaultbufferGetSize_IMPL(pMmuFaultBuffer, pGetParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000008u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+static NV_STATUS faultbufCtrlCmdFaultbufferGetRegisterMappings__EXPORT(void *pMmuFaultBuffer, void *pParams) {
+    return faultbufCtrlCmdFaultbufferGetRegisterMappings_IMPL(pMmuFaultBuffer, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000004u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000000u)
+static NV_STATUS faultbufCtrlCmdMmuFaultBufferRegisterNonReplayBuf__EXPORT(void *pMmuFaultBuffer, void *pParams) {
+    return faultbufCtrlCmdMmuFaultBufferRegisterNonReplayBuf_IMPL(pMmuFaultBuffer, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000000u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000000u)
+static NV_STATUS faultbufCtrlCmdMmuFaultBufferUnregisterNonReplayBuf__EXPORT(void *pMmuFaultBuffer, void *pParams) {
+    return faultbufCtrlCmdMmuFaultBufferUnregisterNonReplayBuf_IMPL(pMmuFaultBuffer, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000000u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000000u)
+static NV_STATUS faultbufCtrlCmdMmuFaultBufferRegisterReplayBuf__EXPORT(void *pMmuFaultBuffer, void *pParams) {
+    return faultbufCtrlCmdMmuFaultBufferRegisterReplayBuf_IMPL(pMmuFaultBuffer, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000000u)
+
+#if !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000000u)
+static NV_STATUS faultbufCtrlCmdMmuFaultBufferUnregisterReplayBuf__EXPORT(void *pMmuFaultBuffer, void *pParams) {
+    return faultbufCtrlCmdMmuFaultBufferUnregisterReplayBuf_IMPL(pMmuFaultBuffer, pParams);
+}
+#endif // !NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x00000000u)
+
 // Exported method array
 static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MmuFaultBuffer[] = 
 {
@@ -145,7 +182,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MmuFault
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &faultbufCtrlCmdFaultbufferGetSize_IMPL,
+        /*pFunc=*/      (void (*)(void)) &faultbufCtrlCmdFaultbufferGetSize__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x8u)
         /*flags=*/      0x8u,
         /*accessRight=*/0x0u,
@@ -160,7 +197,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MmuFault
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &faultbufCtrlCmdFaultbufferGetRegisterMappings_IMPL,
+        /*pFunc=*/      (void (*)(void)) &faultbufCtrlCmdFaultbufferGetRegisterMappings__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x4u)
         /*flags=*/      0x4u,
         /*accessRight=*/0x0u,
@@ -175,7 +212,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MmuFault
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &faultbufCtrlCmdMmuFaultBufferRegisterNonReplayBuf_IMPL,
+        /*pFunc=*/      (void (*)(void)) &faultbufCtrlCmdMmuFaultBufferRegisterNonReplayBuf__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0u)
         /*flags=*/      0x0u,
         /*accessRight=*/0x0u,
@@ -190,7 +227,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MmuFault
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &faultbufCtrlCmdMmuFaultBufferUnregisterNonReplayBuf_IMPL,
+        /*pFunc=*/      (void (*)(void)) &faultbufCtrlCmdMmuFaultBufferUnregisterNonReplayBuf__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0u)
         /*flags=*/      0x0u,
         /*accessRight=*/0x0u,
@@ -205,7 +242,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MmuFault
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &faultbufCtrlCmdMmuFaultBufferRegisterReplayBuf_IMPL,
+        /*pFunc=*/      (void (*)(void)) &faultbufCtrlCmdMmuFaultBufferRegisterReplayBuf__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0u)
         /*flags=*/      0x0u,
         /*accessRight=*/0x0u,
@@ -220,7 +257,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MmuFault
 #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0u)
         /*pFunc=*/      (void (*)(void)) NULL,
 #else
-        /*pFunc=*/      (void (*)(void)) &faultbufCtrlCmdMmuFaultBufferUnregisterReplayBuf_IMPL,
+        /*pFunc=*/      (void (*)(void)) &faultbufCtrlCmdMmuFaultBufferUnregisterReplayBuf__EXPORT,
 #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x0u)
         /*flags=*/      0x0u,
         /*accessRight=*/0x0u,
@@ -237,7 +274,7 @@ static const struct NVOC_EXPORTED_METHOD_DEF __nvoc_exported_method_def_MmuFault
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__MmuFaultBuffer __nvoc_metadata__MmuFaultBuffer = {
     .rtti.pClassDef = &__nvoc_class_def_MmuFaultBuffer,    // (faultbuf) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_MmuFaultBuffer,
+    .rtti.dtor      = &__nvoc_dtor_MmuFaultBuffer,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -548,18 +585,20 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__MmuFaultBuffer =
 
 // Destruct MmuFaultBuffer object.
 void __nvoc_faultbufDestruct(MmuFaultBuffer*);
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_Notifier(Notifier*);
-void __nvoc_dtor_MmuFaultBuffer(MmuFaultBuffer* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_Notifier(Dynamic*);
+void __nvoc_dtor_MmuFaultBuffer(Dynamic* pThis) {
+
+    MmuFaultBuffer *__nvoc_this = (MmuFaultBuffer *) pThis;
 
 // Call destructor.
-    __nvoc_faultbufDestruct(pThis);
+    __nvoc_faultbufDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
-    __nvoc_dtor_Notifier(&pThis->__nvoc_base_Notifier);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
+    __nvoc_dtor_Notifier((Dynamic *) &__nvoc_this->__nvoc_base_Notifier);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_MmuFaultBuffer(MmuFaultBuffer *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -588,9 +627,9 @@ NV_STATUS __nvoc_ctor_MmuFaultBuffer(MmuFaultBuffer *pMmuFaultBuffer, struct CAL
 
     // Unwind on error.
 __nvoc_ctor_MmuFaultBuffer_fail__init:
-    __nvoc_dtor_Notifier(&pMmuFaultBuffer->__nvoc_base_Notifier);
+    __nvoc_dtor_Notifier((Dynamic *)&pMmuFaultBuffer->__nvoc_base_Notifier);
 __nvoc_ctor_MmuFaultBuffer_fail_Notifier:
-    __nvoc_dtor_GpuResource(&pMmuFaultBuffer->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pMmuFaultBuffer->__nvoc_base_GpuResource);
 __nvoc_ctor_MmuFaultBuffer_fail_GpuResource:
 __nvoc_ctor_MmuFaultBuffer_exit:
     return status;
@@ -707,13 +746,10 @@ __nvoc_objCreate_MmuFaultBuffer_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_MmuFaultBuffer(MmuFaultBuffer **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_MmuFaultBuffer(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_MmuFaultBuffer(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_MmuFaultBuffer((MmuFaultBuffer **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

@@ -3378,7 +3378,7 @@ static void init_channel_manager_conf(uvm_channel_manager_t *manager)
     if (uvm_parent_gpu_is_coherent(gpu->parent)) {
         manager->conf.gpfifo_loc = UVM_BUFFER_LOCATION_SYS;
 
-        // On GPUs with limited ESCHED addressing range, e.g., Volta on P9, RM
+        // On GPUs with limited ESCHED addressing range, e.g., pre-Hopper, RM
         // cannot guarantee that USERD/GPPUT physical address is accessible by
         // ESCHED. We set GPPUT location to vidmem where physical addresses are
         // all accessible by ESCHED. We use the max_host_va as a proxy for the

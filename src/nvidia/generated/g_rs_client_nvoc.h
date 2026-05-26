@@ -171,7 +171,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_RsClient;
     ((RsClient*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(RsClient)))
 #endif //__nvoc_rs_client_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_RsClient(RsClient**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_RsClient(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_RsClient(RsClient**, Dynamic*, NvU32, struct PORT_MEM_ALLOCATOR *pAllocator, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_RsClient(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pAllocator, pParams) \
@@ -603,7 +603,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_RsClientResource;
     ((RsClientResource*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(RsClientResource)))
 #endif //__nvoc_rs_client_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_RsClientResource(RsClientResource**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_RsClientResource(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_RsClientResource(RsClientResource**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_RsClientResource(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

@@ -32,7 +32,7 @@ void __nvoc_init__DispSfUser(DispSfUser*);
 void __nvoc_init_funcTable_DispSfUser(DispSfUser*);
 NV_STATUS __nvoc_ctor_DispSfUser(DispSfUser*, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 void __nvoc_init_dataField_DispSfUser(DispSfUser*);
-void __nvoc_dtor_DispSfUser(DispSfUser*);
+void __nvoc_dtor_DispSfUser(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__DispSfUser;
@@ -115,7 +115,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_DispSfUser =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "DispSfUser",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_DispSfUser,
+    .objCreatefn =        &__nvoc_objCreateDynamic_DispSfUser,
     .pCastInfo =          &__nvoc_castinfo__DispSfUser,
     .pExportInfo =        &__nvoc_export_info__DispSfUser
 };
@@ -124,7 +124,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_DispSfUser =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__DispSfUser __nvoc_metadata__DispSfUser = {
     .rtti.pClassDef = &__nvoc_class_def_DispSfUser,    // (dispsf) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_DispSfUser,
+    .rtti.dtor      = &__nvoc_dtor_DispSfUser,
     .rtti.offset    = 0,
     .metadata__GpuResource.rtti.pClassDef = &__nvoc_class_def_GpuResource,    // (gpures) super
     .metadata__GpuResource.rtti.dtor      = &__nvoc_destructFromBase,
@@ -386,13 +386,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__DispSfUser =
 
 
 // Destruct DispSfUser object.
-void __nvoc_dtor_GpuResource(GpuResource*);
-void __nvoc_dtor_DispSfUser(DispSfUser* pThis) {
+void __nvoc_dtor_GpuResource(Dynamic*);
+void __nvoc_dtor_DispSfUser(Dynamic* pThis) {
+
+    DispSfUser *__nvoc_this = (DispSfUser *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_GpuResource(&pThis->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *) &__nvoc_this->__nvoc_base_GpuResource);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_DispSfUser(DispSfUser *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -418,7 +420,7 @@ NV_STATUS __nvoc_ctor_DispSfUser(DispSfUser *pDispSfUser, struct CALL_CONTEXT *p
 
     // Unwind on error.
 __nvoc_ctor_DispSfUser_fail__init:
-    __nvoc_dtor_GpuResource(&pDispSfUser->__nvoc_base_GpuResource);
+    __nvoc_dtor_GpuResource((Dynamic *)&pDispSfUser->__nvoc_base_GpuResource);
 __nvoc_ctor_DispSfUser_fail_GpuResource:
 __nvoc_ctor_DispSfUser_exit:
     return status;
@@ -530,13 +532,10 @@ __nvoc_objCreate_DispSfUser_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_DispSfUser(DispSfUser **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_DispSfUser(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
     struct CALL_CONTEXT *pCallContext = va_arg(__nvoc_args, struct CALL_CONTEXT *);
     struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams = va_arg(__nvoc_args, struct RS_RES_ALLOC_PARAMS_INTERNAL *);
 
-    __nvoc_status = __nvoc_objCreate_DispSfUser(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_DispSfUser((DispSfUser **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams);
 }
 

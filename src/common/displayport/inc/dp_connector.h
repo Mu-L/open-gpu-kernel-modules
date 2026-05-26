@@ -43,6 +43,7 @@
 #include "dp_vrr.h"
 #include "../../modeset/timing/nvt_dsc_pps.h"
 #include "ctrl/ctrl0073/ctrl0073dp.h"
+#include "nvlimits.h" // NV_MAX_HEADS
 #include "nvcfg_sdk.h"
 
 namespace DisplayPort

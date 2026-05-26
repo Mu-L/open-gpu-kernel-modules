@@ -214,7 +214,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_ChannelDescendant;
     ((ChannelDescendant*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(ChannelDescendant)))
 #endif //__nvoc_channel_descendant_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_ChannelDescendant(ChannelDescendant**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_ChannelDescendant(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_ChannelDescendant(ChannelDescendant**, Dynamic*, NvU32, struct CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams, PARAM_TO_ENGDESC_FUNCTION *pParamToEngDescFn);
 #define __objCreate_ChannelDescendant(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams, pParamToEngDescFn) \

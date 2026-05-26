@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -33,7 +33,7 @@
 #include "gpu/gsp/kernel_gsp.h"
 #include "fsp/fsp_caps_query_rpc.h"
 #include "fsp/fsp_clock_boost_rpc.h"
-#include "fsp/fsp_nvdm_format.h"
+#include "nvdm_format.h"
 
 #include "published/blackwell/gb100/dev_therm.h"
 #include "published/blackwell/gb100/dev_therm_addendum.h"
@@ -41,16 +41,28 @@
 #include "published/blackwell/gb100/dev_fsp_addendum.h"
 #include "published/blackwell/gb100/dev_gsp.h"
 #include "published/blackwell/gb100/dev_oob_pri.h"
+#include "published/blackwell/gb100/dev_bus.h"
+#include "published/blackwell/gb100/dev_bus_addendum.h"
 #include "published/blackwell/gb100/dev_bus_zb.h"
 #include "published/blackwell/gb100/dev_bus_zb_addendum.h"
 #include "published/blackwell/gb100/dev_top_zb.h"
 #include "published/blackwell/gb100/hwproject.h"
 
+#include "cper/gpu_cper.h"
 #include "os/os.h"
 #include "nvRmReg.h"
 #include "nverror.h"
 
 #define KERNEL_FSP_MBOX_PORT 2
+
+#define KFSP_GB100_GPU_INIT_ERROR_SUBTYPE_FSP_BOOT_TIMEOUT 1
+#define KFSP_GB100_GPU_INIT_ERROR_SUBTYPE_FSP_FUSE_ERROR   2
+
+#define KFSP_GB100_GPU_INIT_ERROR_FMT \
+    "Error status 0x%x while polling for FSP boot complete, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x"
+
+#define KFSP_GB100_GPU_INIT_FUSE_ERROR_FMT \
+    "FSP fuse error check has failed. Status = 0x%x."
 
 #define CMS2_LOG_START   0x50U
 #define CMS2_LOG_END     0x7FU
@@ -81,6 +93,8 @@ kfspWaitForSecureBoot_GB100
 {
     NV_STATUS status  = NV_OK;
     RMTIMEOUT timeout;
+    static const NV_CPER_GUID timeoutNotifyType = NV_CPER_NOTIFY_NVIDIA_GPU_TIMEOUT_GUID;
+    static const NV_CPER_GUID fuseErrorNotifyType = NV_CPER_NOTIFY_NVIDIA_GPU_FW_FAULT_GUID;
 
     //
     // Polling for FSP boot complete
@@ -96,15 +110,23 @@ kfspWaitForSecureBoot_GB100
 
     if (status != NV_OK)
     {
+        NvU32 fspBootComplete = GPU_REG_RD32(pGpu, NV_THERM_I2CS_SCRATCH_FSP_BOOT_COMPLETE);
+        NvU32 s0 = GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(0));
+        NvU32 s1 = GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(1));
+        NvU32 s2 = GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(2));
+        NvU32 s3 = GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(3));
+        char xidMessage[NV_CPER_NV_GPU_LEGACY_XID_MAX_MSG_LEN + 1];
+
+        nvDbgSnprintf(xidMessage, sizeof(xidMessage), KFSP_GB100_GPU_INIT_ERROR_FMT,
+                      status, fspBootComplete, s0, s1, s2, s3);
+
         NV_ASSERT_OK(gpuMarkDeviceForReset(pGpu));
-        NV_ERROR_LOG((void*) pGpu, GPU_INIT_ERROR, "Error status 0x%x while polling for FSP boot complete, "
-                     "0x%x, 0x%x, 0x%x, 0x%x, 0x%x",
-                     status,
-                     GPU_REG_RD32(pGpu, NV_THERM_I2CS_SCRATCH_FSP_BOOT_COMPLETE),
-                     GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(0)),
-                     GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(1)),
-                     GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(2)),
-                     GPU_REG_RD32(pGpu, NV_PFSP_FALCON_COMMON_SCRATCH_GROUP_2(3)));
+        NV_ERROR_LOG((void*) pGpu, GPU_INIT_ERROR, KFSP_GB100_GPU_INIT_ERROR_FMT,
+                     status, fspBootComplete, s0, s1, s2, s3);
+
+        kfspEmitGpuInitErrorCper(pGpu, pKernelFsp, &timeoutNotifyType,
+                                 KFSP_GB100_GPU_INIT_ERROR_SUBTYPE_FSP_BOOT_TIMEOUT,
+                                 xidMessage);
 
         kfspDumpDebugState_HAL(pGpu, pKernelFsp);
     }
@@ -118,8 +140,19 @@ kfspWaitForSecureBoot_GB100
     {
         NV_PRINTF(LEVEL_ERROR,
                   "****************************************** FSP Fuse Check Failure ************************************************\n");
-        NV_ERROR_LOG((void*) pGpu, GPU_INIT_ERROR, "FSP fuse error check has failed. Status = 0x%x.",
-                      GPU_REG_RD32(pGpu, NV_PFSP_FUSE_ERROR_CHECK));
+        {
+            NvU32 fuseStatus = GPU_REG_RD32(pGpu, NV_PFSP_FUSE_ERROR_CHECK);
+            char xidMessage[NV_CPER_NV_GPU_LEGACY_XID_MAX_MSG_LEN + 1];
+
+            NV_ERROR_LOG((void*) pGpu, GPU_INIT_ERROR, KFSP_GB100_GPU_INIT_FUSE_ERROR_FMT,
+                         fuseStatus);
+
+            nvDbgSnprintf(xidMessage, sizeof(xidMessage), KFSP_GB100_GPU_INIT_FUSE_ERROR_FMT,
+                          fuseStatus);
+            kfspEmitGpuInitErrorCper(pGpu, pKernelFsp, &fuseErrorNotifyType,
+                                     KFSP_GB100_GPU_INIT_ERROR_SUBTYPE_FSP_FUSE_ERROR,
+                                     xidMessage);
+        }
         NV_PRINTF(LEVEL_ERROR,
                     "** FSP fuse error check has failed. Status = 0x%x.                                                               **\n",
                     GPU_REG_RD32(pGpu, NV_PFSP_FUSE_ERROR_CHECK));
@@ -205,6 +238,8 @@ kfspDumpDebugState_GB100
               GPU_REG_RD32(pGpu, NV_PGSP_FALCON_MAILBOX0));
     NV_PRINTF(LEVEL_ERROR, "NV_PGSP_FALCON_MAILBOX1 = 0x%x\n",
               GPU_REG_RD32(pGpu, NV_PGSP_FALCON_MAILBOX1));
+    NV_PRINTF(LEVEL_ERROR, "NV_PBUS_SW_SCRATCH_GSP_FMC_ERROR = 0x%x\n",
+              GPU_REG_RD32(pGpu, NV_PBUS_SW_SCRATCH_GSP_FMC_ERROR));
     for(i = 0; i < NV_PGSP_MAILBOX__SIZE_1; i++)
     {
         NV_PRINTF(LEVEL_ERROR, "NV_PGSP_MAILBOX(%d) = 0x%x\n",

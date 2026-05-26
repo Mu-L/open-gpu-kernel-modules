@@ -174,7 +174,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_OBJFBSR;
     ((OBJFBSR*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(OBJFBSR)))
 #endif //__nvoc_fbsr_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_OBJFBSR(OBJFBSR**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_OBJFBSR(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_OBJFBSR(OBJFBSR**, Dynamic*, NvU32);
 #define __objCreate_OBJFBSR(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

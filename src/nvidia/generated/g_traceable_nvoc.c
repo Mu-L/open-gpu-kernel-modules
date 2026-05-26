@@ -26,7 +26,7 @@ void __nvoc_init__OBJTRACEABLE(OBJTRACEABLE*);
 void __nvoc_init_funcTable_OBJTRACEABLE(OBJTRACEABLE*);
 NV_STATUS __nvoc_ctor_OBJTRACEABLE(OBJTRACEABLE*);
 void __nvoc_init_dataField_OBJTRACEABLE(OBJTRACEABLE*);
-void __nvoc_dtor_OBJTRACEABLE(OBJTRACEABLE*);
+void __nvoc_dtor_OBJTRACEABLE(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJTRACEABLE;
@@ -46,7 +46,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJTRACEABLE =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJTRACEABLE",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) NULL,
+    .objCreatefn =        NULL,
     .pCastInfo =          &__nvoc_castinfo__OBJTRACEABLE,
     .pExportInfo =        &__nvoc_export_info__OBJTRACEABLE
 };
@@ -55,7 +55,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJTRACEABLE =
 // Metadata with per-class RTTI
 static const struct NVOC_METADATA__OBJTRACEABLE __nvoc_metadata__OBJTRACEABLE = {
     .rtti.pClassDef = &__nvoc_class_def_OBJTRACEABLE,    // (traceable) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJTRACEABLE,
+    .rtti.dtor      = &__nvoc_dtor_OBJTRACEABLE,
     .rtti.offset    = 0,
 };
 
@@ -76,8 +76,10 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJTRACEABLE =
 
 
 // Destruct OBJTRACEABLE object.
-void __nvoc_dtor_OBJTRACEABLE(OBJTRACEABLE* pThis) {
-    PORT_UNREFERENCED_VARIABLE(pThis);
+void __nvoc_dtor_OBJTRACEABLE(Dynamic* pThis) {
+
+    OBJTRACEABLE *__nvoc_this = (OBJTRACEABLE *) pThis;
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJTRACEABLE(OBJTRACEABLE *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);

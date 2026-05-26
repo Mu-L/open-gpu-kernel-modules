@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2014-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2014-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -272,6 +272,8 @@ enum NvKmsIoctlCommand {
     NVKMS_IOCTL_DISABLE_VBLANK_SEM_CONTROL,
     NVKMS_IOCTL_ACCEL_VBLANK_SEM_CONTROLS,
     NVKMS_IOCTL_FRAMEBUFFER_CONSOLE_DISABLED,
+    NVKMS_IOCTL_REGISTER_VBLANK_INTR_CALLBACK,
+    NVKMS_IOCTL_UNREGISTER_VBLANK_INTR_CALLBACK,
 };
 
 
@@ -280,8 +282,7 @@ enum NvKmsIoctlCommand {
 #define NVKMS_MAX_GPUS_PER_FRAMELOCK                                  4
 #define NVKMS_MAX_DEVICE_REGISTRY_KEYS                                16
 #define NVKMS_MAX_DEVICE_REGISTRY_KEYNAME_LEN                         32
-#define NVKMS_MAX_VBLANK_SYNC_OBJECTS_PER_HEAD                        6
-
+#define NVKMS_MAX_VBLANK_SYNC_OBJECTS_PER_HEAD                        5
 
 /*
  * There can be at most one SwapGroup per-head, per-disp (and,
@@ -795,6 +796,12 @@ struct NvKmsFlipCommonParams {
     } colorimetry;
 
     struct {
+        NvBool specified;
+        enum NvKmsDpyAttributeRequestedDitheringValue state;
+        enum NvKmsDpyAttributeRequestedDitheringModeValue mode;
+    } dithering;
+
+    struct {
         struct {
             NvKmsSurfaceHandle handle[NVKMS_MAX_EYES];
             struct NvKmsRRParams rrParams;
@@ -986,6 +993,13 @@ struct NvKmsFlipCommonParams {
             enum NvKmsInputTf val;
             NvBool specified;
         } tf;
+
+        /* When enabled, explicitly set FMT with provided matrix */
+        struct {
+            struct NvKmsCscMatrix matrix;
+            NvBool enabled;
+            NvBool specified;
+        } fmtOverride;
 
         /* When enabled, explicitly set CSC00 with provided matrix */
         struct {
@@ -1430,6 +1444,7 @@ struct NvKmsQueryDpyStaticDataReply {
     NvBool isDpMST;
     /* Bitmask of valid heads to drive this dpy. */
     NvU32 headMask;
+    NvBool isHDRCapable;
 };
 
 struct NvKmsQueryDpyStaticDataParams {
@@ -1570,16 +1585,16 @@ struct NvKmsQueryDpyDynamicDataParams {
     struct NvKmsQueryDpyDynamicDataReply reply;     /*! out */
 };
 
-/*! Values for the NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_SPACE attribute. */
-enum NvKmsDpyAttributeRequestedColorSpaceValue {
-    NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_SPACE_RGB = 0,
-    NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_SPACE_YCbCr422 = 1,
-    NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_SPACE_YCbCr444 = 2,
+/*! Values for the NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT attribute. */
+enum NvKmsDpyAttributeRequestedColorFormatValue {
+    NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT_RGB = 0,
+    NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT_YCbCr422 = 1,
+    NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT_YCbCr444 = 2,
 };
 
 struct NvKmsDpyOutputColorParams {
     /*! Output color format. Valid only when formatSpecified is true. */
-    enum NvKmsDpyAttributeRequestedColorSpaceValue format;
+    enum NvKmsDpyAttributeRequestedColorFormatValue format;
     NvBool formatSpecified;
 
     /*! Output color bpc. Valid only when bpcSpecified is true. */
@@ -1962,10 +1977,10 @@ struct NvKmsSetModeOneHeadRequest {
     NvU32 vrrOverrideMinRefreshRate;
 
     /*!
-     * Output colorspace. Valid only when colorSpaceSpecified is true.
+     * Output color format. Valid only when colorFormatSpecified is true.
      */
-    enum NvKmsDpyAttributeRequestedColorSpaceValue colorSpace;
-    NvBool colorSpaceSpecified;
+    enum NvKmsDpyAttributeRequestedColorFormatValue colorFormat;
+    NvBool colorFormatSpecified;
 
     /*!
      * Output color bpc. Valid only when colorBpcSpecified is true.
@@ -2665,8 +2680,8 @@ enum NvKmsDpyAttribute {
     NV_KMS_DPY_ATTRIBUTE_CURRENT_DITHERING_MODE,
     NV_KMS_DPY_ATTRIBUTE_CURRENT_DITHERING_DEPTH,
     NV_KMS_DPY_ATTRIBUTE_DIGITAL_VIBRANCE,
-    NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_SPACE,
-    NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE,
+    NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_FORMAT,
+    NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT,
     NV_KMS_DPY_ATTRIBUTE_REQUESTED_COLOR_RANGE,
     NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_RANGE,
     NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_BPC,
@@ -2699,20 +2714,11 @@ enum NvKmsDpyAttribute {
     NV_KMS_DPY_ATTRIBUTE_NUMBER_OF_HARDWARE_HEADS_USED,
 };
 
-/*! Values for the NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING attribute. */
-enum NvKmsDpyAttributeRequestedDitheringValue {
-    NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_AUTO = 0,
-    NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_ENABLED = 1,
-    NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_DISABLED = 2,
-};
-
-/*! Values for the NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_MODE attribute. */
-enum NvKmsDpyAttributeRequestedDitheringModeValue {
-    NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_MODE_AUTO = 0,
-    NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_MODE_DYNAMIC_2X2 = 1,
-    NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_MODE_STATIC_2X2 = 2,
-    NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_MODE_TEMPORAL = 3,
-};
+/*
+ * Values for NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING and
+ * NV_KMS_DPY_ATTRIBUTE_REQUESTED_DITHERING_MODE attributes are defined in
+ * nvkms-api-types.h to avoid duplication with KAPI.
+ */
 
 /*! Values for the NV_KMS_DPY_ATTRIBUTE_CURRENT_DITHERING_MODE attribute. */
 enum NvKmsDpyAttributeCurrentDitheringModeValue {
@@ -2738,12 +2744,12 @@ enum NvKmsDpyAttributeCurrentDitheringDepthValue {
     NV_KMS_DPY_ATTRIBUTE_CURRENT_DITHERING_DEPTH_10_BITS = 3,
 };
 
-/*! Values for the NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE attribute. */
-enum NvKmsDpyAttributeCurrentColorSpaceValue {
-    NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_RGB = 0,
-    NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr422 = 1,
-    NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr444 = 2,
-    NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_SPACE_YCbCr420 = 3,
+/*! Values for the NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT attribute. */
+enum NvKmsDpyAttributeCurrentColorFormatValue {
+    NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_RGB = 0,
+    NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr422 = 1,
+    NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr444 = 2,
+    NV_KMS_DPY_ATTRIBUTE_CURRENT_COLOR_FORMAT_YCbCr420 = 3,
 };
 
 /*! Values for the NV_KMS_DPY_ATTRIBUTE_DIGITAL_SIGNAL attribute. */
@@ -4330,5 +4336,67 @@ struct NvKmsFramebufferConsoleDisabledParams {
     struct NvKmsFramebufferConsoleDisabledRequest request;
     struct NvKmsFramebufferConsoleDisabledReply reply;
 };
+
+/*!
+ * NVKMS_IOCTL_REGISTER_VBLANK_INTR_CALLBACK:
+ *
+ * Register a callback to be invoked on every vblank interrupt for the
+ * specified head.
+ *
+ * The callback receives two parameters:
+ * - clientData: The 'param' value provided during registration
+ * - timestamp: Hardware timestamp in CPU time domain (nanoseconds), adjusted
+ *              to point to the first active/visible scan line
+ *
+ * If the timestamp cannot be determined, a value of 0 is passed to the callback.
+ *
+ * This IOCTL can only be used by kernel-mode clients.
+ */
+
+struct NvKmsRegisterVblankIntrCallbackRequest {
+    NvKmsDeviceHandle deviceHandle;
+    NvKmsDispHandle dispHandle;
+    NvU32 head;
+
+    NVRgInterruptCallbackProc pCallback NV_ALIGN_BYTES(8);
+    NvU64 param NV_ALIGN_BYTES(8);
+};
+
+struct NvKmsRegisterVblankIntrCallbackReply {
+    NvKmsVblankIntrCallbackHandle callbackHandle;
+};
+
+struct NvKmsRegisterVblankIntrCallbackParams {
+    struct NvKmsRegisterVblankIntrCallbackRequest request; /*! in */
+    struct NvKmsRegisterVblankIntrCallbackReply reply;     /*! out */
+};
+
+/*!
+ * NVKMS_IOCTL_UNREGISTER_VBLANK_INTR_CALLBACK:
+ *
+ * Unregister a previously registered vblank interrupt callback. The callback
+ * handle must have been obtained from a prior call to
+ * NVKMS_IOCTL_REGISTER_VBLANK_INTR_CALLBACK.
+ *
+ * This IOCTL can only be used by kernel-mode clients.
+ */
+
+struct NvKmsUnregisterVblankIntrCallbackRequest {
+    NvKmsDeviceHandle deviceHandle;
+    NvKmsDispHandle dispHandle;
+    NvU32 head;
+
+    NvKmsVblankIntrCallbackHandle callbackHandle;
+};
+
+struct NvKmsUnregisterVblankIntrCallbackReply {
+    NvU32 padding;
+};
+
+struct NvKmsUnregisterVblankIntrCallbackParams {
+    struct NvKmsUnregisterVblankIntrCallbackRequest request; /*! in */
+    struct NvKmsUnregisterVblankIntrCallbackReply reply;     /*! out */
+};
+
 
 #endif /* NVKMS_API_H */

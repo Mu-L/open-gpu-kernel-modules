@@ -26,7 +26,7 @@ void __nvoc_init__Ccsl(Ccsl*);
 void __nvoc_init_funcTable_Ccsl(Ccsl*);
 NV_STATUS __nvoc_ctor_Ccsl(Ccsl*);
 void __nvoc_init_dataField_Ccsl(Ccsl*);
-void __nvoc_dtor_Ccsl(Ccsl*);
+void __nvoc_dtor_Ccsl(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__Ccsl;
@@ -46,7 +46,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_Ccsl =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "Ccsl",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) NULL,
+    .objCreatefn =        NULL,
     .pCastInfo =          &__nvoc_castinfo__Ccsl,
     .pExportInfo =        &__nvoc_export_info__Ccsl
 };
@@ -55,7 +55,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_Ccsl =
 // Metadata with per-class RTTI
 static const struct NVOC_METADATA__Ccsl __nvoc_metadata__Ccsl = {
     .rtti.pClassDef = &__nvoc_class_def_Ccsl,    // (ccsl) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_Ccsl,
+    .rtti.dtor      = &__nvoc_dtor_Ccsl,
     .rtti.offset    = 0,
 };
 
@@ -76,8 +76,10 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__Ccsl =
 
 
 // Destruct Ccsl object.
-void __nvoc_dtor_Ccsl(Ccsl* pThis) {
-    PORT_UNREFERENCED_VARIABLE(pThis);
+void __nvoc_dtor_Ccsl(Dynamic* pThis) {
+
+    Ccsl *__nvoc_this = (Ccsl *) pThis;
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_Ccsl(Ccsl *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);

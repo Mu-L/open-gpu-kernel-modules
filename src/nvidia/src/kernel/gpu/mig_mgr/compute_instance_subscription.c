@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2019-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2019-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -38,6 +38,7 @@
 #include "kernel/gpu/mig_mgr/gpu_instance_subscription.h"
 #include "kernel/gpu/mig_mgr/compute_instance_subscription.h"
 #include "kernel/gpu/mig_mgr/kernel_mig_manager.h"
+#include "kernel/gpu/subdevice/subdevice.h"
 
 #include "class/clc638.h"
 #include "rmapi/rs_utils.h"
@@ -161,6 +162,17 @@ cisubscriptionDestruct_IMPL
 {
     CALL_CONTEXT *pCallContext;
     RS_RES_FREE_PARAMS_INTERNAL *pParams;
+    Subdevice *pSubdevice = GPU_RES_GET_SUBDEVICE(pComputeInstanceSubscription);
+    NV_STATUS status;
+
+    // This is idempotent - safe to call even if we didn't hold a reservation.
+    status = subdeviceReleaseComputeModeReservation(pSubdevice);
+    if ((status != NV_OK) && (status != NV_ERR_STATE_IN_USE))
+    {
+        NV_PRINTF(LEVEL_WARNING,
+                  "Unexpected error releasing compute mode reservation: 0x%x\n",
+                  status);
+    }
 
     resGetFreeParams(staticCast(pComputeInstanceSubscription, RsResource), &pCallContext, &pParams);
 

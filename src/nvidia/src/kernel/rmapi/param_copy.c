@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -45,7 +45,7 @@ NV_STATUS rmapiParamsAcquire
         !pParamCopy->bSizeValid)
     {
         NV_PRINTF(LEVEL_WARNING,
-                  "%s:  bad params from client: ptr " NvP64_fmt " size: 0x%x (%s)\n",
+                  "%s: Bad params from client: ptr " NvP64_fmt " size: 0x%x (%s)\n",
                   pParamCopy->msgTag, pParamCopy->pUserParams, pParamCopy->paramsSize,
                   pParamCopy->bSizeValid ? "valid" : "invalid");
         rmStatus = NV_ERR_INVALID_ARGUMENT;

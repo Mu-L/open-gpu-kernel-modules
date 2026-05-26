@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -473,7 +473,10 @@ kgmmuFaultBufferAllocSharedMemory_GH100
     // On systems with SEV enabled, the fault buffer flush sequence memory should be allocated
     // in unprotected sysmem as GSP will be reading this location to check whether the Replayable buffer is full.
     //
-    flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    if (confComputeForceUnprotAlloc(pGpu))
+    {
+        flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    }
 
     pClientShadowFaultBuffer = &pKernelGmmu->mmuFaultBuffer[GPU_GFID_PF].clientShadowFaultBuffer[index];
     status = memdescCreate(&pMemDesc, pGpu,
@@ -952,6 +955,7 @@ kgmmuSignExtendFaultAddress_GH100
             case OOR_ARCH_X86_64:
             case OOR_ARCH_ARM:
             case OOR_ARCH_AARCH64:
+            case OOR_ARCH_RISCV64:
                 *pMmuFaultAddress = (NvU64)(((NvS64)*pMmuFaultAddress << (64 - 57)) >>
                                             (64 - 57));
                 break;

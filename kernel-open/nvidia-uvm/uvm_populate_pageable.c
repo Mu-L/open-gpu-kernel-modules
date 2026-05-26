@@ -32,12 +32,6 @@
 #include "uvm_va_space.h"
 #include "uvm_populate_pageable.h"
 
-#if defined(NV_HANDLE_MM_FAULT_HAS_PT_REGS_ARG)
-#define UVM_HANDLE_MM_FAULT(vma, addr, flags)       handle_mm_fault(vma, addr, flags, NULL)
-#else
-#define UVM_HANDLE_MM_FAULT(vma, addr, flags)       handle_mm_fault(vma, addr, flags)
-#endif
-
 static bool is_write_populate(struct vm_area_struct *vma, uvm_populate_permissions_t populate_permissions)
 {
     switch (populate_permissions) {

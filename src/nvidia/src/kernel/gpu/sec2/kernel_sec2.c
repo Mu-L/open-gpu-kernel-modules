@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -32,6 +32,8 @@
 #include "gpu/gpu.h"
 #include "gpu/fifo/kernel_fifo.h"
 #include "gpu/fsp/kern_fsp_cot_payload.h"
+#include "mctp_format.h"
+#include "nvdm_format.h"
 #include "rmapi/event_api.h"
 
 #if RMCFG_MODULE_ENABLED (GSP)
@@ -317,10 +319,13 @@ ksec2SendMessage_IMPL
     pHeader = (NvU32*)pBuffer;
     // First packet
     seid = ksec2NvdmToSeid_HAL(pGpu, pKernelSec2, nvdmType);
-    // SOM=1,EOM=?,SEID,SEQ=0
-    pHeader[HEADER_DWORD_MCTP] = ksec2CreateMctpHeader_HAL(pGpu, pKernelSec2, 1,
-                                                     (NvU8)bSinglePacket, seid, seq);
-    pHeader[HEADER_DWORD_NVDM] = ksec2CreateNvdmHeader_HAL(pGpu, pKernelSec2, nvdmType);
+    pHeader[HEADER_DWORD_MCTP] = mctpCreateTransportHeader(
+        1,               // SOM = 1 (start of message)
+        !!bSinglePacket, // EOM = 1 if single packet, 0 if multi-packet
+        seid,            // Source endpoint ID
+        0,               // DEID = 0 (unused)
+        seq);            // Sequence number
+    pHeader[HEADER_DWORD_NVDM] = mctpCreateNvdmHeader((NvU8)nvdmType);
 
     curPayloadSize = NV_MIN(size, packetPayloadCapacity);
     portMemCopy(pBuffer + headerSize, packetPayloadCapacity, pPayload, curPayloadSize);
@@ -343,9 +348,12 @@ ksec2SendMessage_IMPL
             NvBool bLastPacket = (dataRemaining <= packetPayloadCapacity);
             curPayloadSize = (bLastPacket) ? dataRemaining : packetPayloadCapacity;
 
-            pHeader[HEADER_DWORD_MCTP] = ksec2CreateMctpHeader_HAL(pGpu, pKernelSec2, 0,
-                                                             (NvU8)bLastPacket, seid,
-                                                             (++seq) % 4);
+            pHeader[HEADER_DWORD_MCTP] = mctpCreateTransportHeader(
+                0,             // SOM = 0 (continuation packet)
+                !!bLastPacket, // EOM = 1 if last packet, 0 otherwise
+                seid,          // Source endpoint ID
+                0,             // DEID = 0 (unused)
+                (++seq) % 4);  // Sequence number
             portMemCopy(pBuffer + headerSize, packetPayloadCapacity,
                         pPayload + dataSent, curPayloadSize);
 

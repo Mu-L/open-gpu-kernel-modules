@@ -480,7 +480,6 @@ static void uvm_va_range_destroy_managed(uvm_va_range_managed_t *managed_range)
     uvm_va_block_t *block;
     uvm_va_block_t *block_tmp;
     uvm_perf_event_data_t event_data;
-    NV_STATUS status;
 
     if (managed_range->blocks) {
         // Unmap and drop our ref count on each block
@@ -501,11 +500,6 @@ static void uvm_va_range_destroy_managed(uvm_va_range_managed_t *managed_range)
     event_data.range_destroy.range = &managed_range->va_range;
     uvm_perf_event_notify(&managed_range->va_range.va_space->perf_events, UVM_PERF_EVENT_RANGE_DESTROY, &event_data);
 
-    status = uvm_range_group_assign_range(managed_range->va_range.va_space,
-                                          NULL,
-                                          managed_range->va_range.node.start,
-                                          managed_range->va_range.node.end);
-    UVM_ASSERT(status == NV_OK);
     kmem_cache_free(g_uvm_va_range_managed_cache, managed_range);
 }
 
@@ -774,6 +768,460 @@ NV_STATUS uvm_api_validate_va_range(UVM_VALIDATE_VA_RANGE_PARAMS *params, struct
         status = NV_OK;
 
     uvm_va_space_up_read(va_space);
+
+    return status;
+}
+
+// Helper to update residency histogram for a single page
+static void query_residency_update_page_residency(uvm_processor_id_t processor,
+                                                  NvU32 *processor_histogram,
+                                                  int numa_node,
+                                                  NvU32 *numa_node_histogram)
+{
+    UVM_ASSERT(processor_histogram);
+
+    processor_histogram[uvm_id_value(processor)]++;
+
+    // Track NUMA node for CPU pages (skip if NUMA disabled)
+    if (numa_node_histogram && UVM_ID_IS_CPU(processor) && numa_node >= 0 && numa_node < nr_node_ids)
+        numa_node_histogram[numa_node]++;
+}
+
+// Query residency for a single page in a VA block.
+// Locking: Caller must hold va_block->lock.
+static void query_residency_va_block_page(uvm_va_block_t *va_block,
+                                          NvU64 addr,
+                                          uvm_processor_mask_t *scratch_mask,
+                                          NvU32 *processor_histogram,
+                                          NvU32 *numa_node_histogram)
+{
+    uvm_processor_id_t processor;
+    uvm_page_index_t page_index = uvm_va_block_cpu_page_index(va_block, addr);
+    int numa_node = NUMA_NO_NODE;
+
+    uvm_processor_mask_zero(scratch_mask);
+    uvm_va_block_page_resident_processors(va_block, page_index, scratch_mask);
+
+    if (uvm_processor_mask_empty(scratch_mask))
+        return;
+
+    // Prioritize GPUs over CPUs for read-duplicated pages
+    if (uvm_processor_mask_get_count(scratch_mask) > 1)
+        processor = uvm_processor_mask_find_first_gpu_id(scratch_mask);
+    else
+        processor = uvm_processor_mask_find_first_id(scratch_mask);
+
+    // For CPU pages, verify the page is actually allocated (has physical backing).
+    // If not, it's unpopulated and should not count towards any processor.
+    if (UVM_ID_IS_CPU(processor)) {
+        struct page *page;
+
+        // Check allocated mask first before accessing the page
+        if (!uvm_page_mask_test(&va_block->cpu.allocated, page_index))
+            return;
+
+        page = uvm_va_block_get_cpu_page(va_block, page_index);
+        if (!page)
+            return;
+
+        // Get NUMA node for physically backed CPU pages
+        if (numa_node_histogram)
+            numa_node = page_to_nid(page);
+    }
+
+    query_residency_update_page_residency(processor,
+                                          processor_histogram,
+                                          numa_node,
+                                          numa_node_histogram);
+}
+
+// Helper to find and update HMM va_block for residency queries.
+// Returns NULL if no HMM block exists or if updating residency info fails.
+// The update step is critical: it calls hmm_range_fault() to get the current
+// page state from the Linux kernel, ensuring we report fresh data.
+static uvm_va_block_t *query_residency_find_hmm_va_block_or_null(uvm_va_space_t *va_space,
+                                                                 struct mm_struct *mm,
+                                                                 NvU64 addr)
+{
+    uvm_va_block_t *va_block = NULL;
+    NV_STATUS status;
+
+    status = uvm_hmm_va_block_find(va_space, addr, &va_block);
+    if (status != NV_OK)
+        return NULL;
+
+    if (va_block) {
+        // Update the va_block's residency info from the kernel via hmm_range_fault().
+        // This ensures we query the actual current state, not stale cached data.
+        status = uvm_hmm_va_block_update_residency_info_unlocked(va_block, mm, addr, false);
+        if (status != NV_OK)
+            va_block = NULL;
+    }
+
+    return va_block;
+}
+
+// Query residency for a single failed page (for slow path with failed
+// move_pages).
+static NV_STATUS query_residency_single_page(uvm_va_space_t *va_space,
+                                             struct mm_struct *mm,
+                                             NvU64 addr,
+                                             uvm_processor_mask_t *scratch_mask,
+                                             NvU32 *processor_histogram,
+                                             NvU32 *numa_node_histogram)
+{
+    uvm_va_range_t *va_range;
+    uvm_va_range_managed_t *managed_range;
+    uvm_va_block_t *va_block = NULL;
+    size_t block_index;
+
+    // First try managed ranges
+    va_range = uvm_va_range_find(va_space, addr);
+    managed_range = uvm_va_range_to_managed_or_null(va_range);
+
+    if (managed_range) {
+        // Found a managed range - get the VA block
+        block_index = uvm_va_range_block_index(managed_range, addr);
+        va_block = uvm_va_range_block(managed_range, block_index);
+    } else if (!va_range) {
+        // No managed range - try HMM
+        // Note: This only finds HMM pages that already have va_blocks
+        va_block = query_residency_find_hmm_va_block_or_null(va_space, mm, addr);
+    } else {
+        // Non-managed VA range (e.g., external, semaphore pool), skip
+        return NV_OK;
+    }
+
+    if (!va_block)
+        return NV_OK; // No block allocated, skip
+
+    uvm_mutex_lock(&va_block->lock);
+    query_residency_va_block_page(va_block,
+                                  addr,
+                                  scratch_mask,
+                                  processor_histogram,
+                                  numa_node_histogram);
+    uvm_mutex_unlock(&va_block->lock);
+
+    return NV_OK;
+}
+
+// Fast path: query residency for managed memory ranges.
+static NV_STATUS query_residency_managed(uvm_va_space_t *va_space,
+                                         struct mm_struct *mm,
+                                         NvU64 base,
+                                         NvU64 length,
+                                         NvU32 sampling_stride,
+                                         NvU32 *processor_histogram,
+                                         NvU32 *numa_node_histogram)
+{
+    NvU64 addr;
+    NvU64 end_addr = base + length;
+    uvm_processor_mask_t *scratch_mask;
+
+    scratch_mask = uvm_processor_mask_cache_alloc();
+    if (!scratch_mask)
+        return NV_ERR_NO_MEMORY;
+
+    // Walk through sampled addresses in the range
+    for (addr = base; addr < end_addr; addr += sampling_stride) {
+        uvm_va_range_t *va_range = uvm_va_range_find(va_space, addr);
+        uvm_va_range_managed_t *managed_range = uvm_va_range_to_managed_or_null(va_range);
+        uvm_va_block_t *va_block;
+        size_t block_index;
+
+        if (!managed_range)
+            continue;
+
+        block_index = uvm_va_range_block_index(managed_range, addr);
+        va_block = uvm_va_range_block(managed_range, block_index);
+        if (!va_block)
+            continue;
+
+        uvm_mutex_lock(&va_block->lock);
+        query_residency_va_block_page(va_block,
+                                      addr,
+                                      scratch_mask,
+                                      processor_histogram,
+                                      numa_node_histogram);
+        uvm_mutex_unlock(&va_block->lock);
+    }
+
+    uvm_processor_mask_cache_free(scratch_mask);
+    return NV_OK;
+}
+
+// Validates that the queried range is homogeneous (all managed or all
+// non-managed) and contiguous. Returns NV_OK if valid, NV_ERR_INVALID_ADDRESS
+// if mixed, mismatched, or non-contiguous.
+static NV_STATUS query_residency_validate_range_homogeneity(uvm_va_space_t *va_space,
+                                                            NvU64 base,
+                                                            NvU64 length,
+                                                            NvBool is_managed_memory)
+{
+    uvm_va_range_t *va_range;
+    uvm_va_range_t *last_range = NULL;
+    NvU64 range_end = base + length - 1;
+
+    uvm_assert_rwsem_locked(&va_space->lock);
+
+    // Iterate over contiguous VA ranges only, gaps will cause early
+    // termination.
+    for (va_range = uvm_va_space_iter_first(va_space, base, range_end);
+         va_range != NULL;
+         va_range = uvm_va_space_iter_next_contig(va_range, range_end)) {
+
+        NvBool is_range_managed = (va_range->type == UVM_VA_RANGE_TYPE_MANAGED);
+
+        // All ranges must match the expected type
+        if (is_range_managed != is_managed_memory)
+            return NV_ERR_INVALID_ADDRESS;
+
+        last_range = va_range;
+    }
+
+    // No VA ranges found covering the queried region.
+    // For managed memory: error (user claims managed but no ranges exist).
+    // For non-managed memory: OK (pure system memory handled by move_pages).
+    if (!last_range)
+        return is_managed_memory ? NV_ERR_INVALID_ADDRESS : NV_OK;
+
+    // Verify the range is fully covered: first range must start at or before
+    // base, last range must end at or after range_end
+    va_range = uvm_va_space_iter_first(va_space, base, range_end);
+    if (!va_range || va_range->node.start > base || last_range->node.end < range_end)
+        return NV_ERR_INVALID_ADDRESS;
+
+    return NV_OK;
+}
+
+// TODO: Bug 5687193: Investigate performance optimizations for query residency
+NV_STATUS uvm_api_query_residency(UVM_QUERY_RESIDENCY_PARAMS *params, struct file *filp)
+{
+    uvm_va_space_t *va_space = uvm_va_space_get(filp);
+    NV_STATUS status = NV_OK;
+    void **pages = NULL;
+    int *pageStatus = NULL;
+    NvU64 i;
+    NvU32 *processor_histogram = NULL;
+    NvU32 *numa_node_histogram = NULL;
+    struct mm_struct *mm = NULL;
+    uvm_processor_id_t max_processor = UVM_ID_INVALID;
+    NvU32 max_count = 0;
+    NvU32 max_numa_node = 0;
+    NvU32 max_numa_count = 0;
+
+    // Validate input parameters (includes overflow check)
+    if (uvm_api_range_invalid(params->base, params->length))
+        return NV_ERR_INVALID_ADDRESS;
+
+    if (params->samplingStride == 0)
+        return NV_ERR_INVALID_ARGUMENT;
+
+    if (!PAGE_ALIGNED(params->samplingStride))
+        return NV_ERR_INVALID_ARGUMENT;
+
+    if (params->numSamples == 0)
+        return NV_ERR_INVALID_ARGUMENT;
+
+    // Allocate histograms
+    processor_histogram = uvm_kvmalloc_zero(UVM_ID_MAX_PROCESSORS * sizeof(*processor_histogram));
+    if (!processor_histogram)
+        return NV_ERR_NO_MEMORY;
+
+    // Allocate NUMA histogram for tracking per-node residency
+    // nr_node_ids is always >= 1 (even single-node systems have node 0)
+    numa_node_histogram = uvm_kvmalloc_zero(nr_node_ids * sizeof(*numa_node_histogram));
+    if (!numa_node_histogram) {
+        status = NV_ERR_NO_MEMORY;
+        goto cleanup;
+    }
+
+    // Copy the page arrays from userspace
+    pages = uvm_kvmalloc(params->numSamples * sizeof(void *));
+    if (!pages) {
+        status = NV_ERR_NO_MEMORY;
+        goto cleanup;
+    }
+
+    pageStatus = uvm_kvmalloc(params->numSamples * sizeof(int));
+    if (!pageStatus) {
+        status = NV_ERR_NO_MEMORY;
+        goto cleanup;
+    }
+
+    // Use NV_ERR_INVALID_ARGUMENT for copy_from_user failures to align with
+    // userspace UvmErrnoToNvStatus().
+    if (copy_from_user(pages, (void *)params->pageAddresses, params->numSamples * sizeof(void *))) {
+        status = NV_ERR_INVALID_ARGUMENT;
+        goto cleanup;
+    }
+
+    if (copy_from_user(pageStatus, (void *)params->pageStatus, params->numSamples * sizeof(int))) {
+        status = NV_ERR_INVALID_ARGUMENT;
+        goto cleanup;
+    }
+
+    mm = uvm_va_space_mm_or_current_retain_lock(va_space);
+    uvm_va_space_down_read(va_space);
+
+    // Validate range homogeneity: the entire range must be consistently
+    // managed or non-managed to ensure correct residency tracking
+    status = query_residency_validate_range_homogeneity(va_space,
+                                                        params->base,
+                                                        params->length,
+                                                        params->isManagedMemory);
+    if (status != NV_OK)
+        goto unlock;
+
+    if (params->isManagedMemory) {
+        // FAST PATH: All pages are invalid from move_pages()
+        // This is UVM-managed memory - walk VA blocks directly
+        status = query_residency_managed(va_space,
+                                         mm,
+                                         params->base,
+                                         params->length,
+                                         params->samplingStride,
+                                         processor_histogram,
+                                         numa_node_histogram);
+        if (status != NV_OK)
+            goto unlock;
+    } else {
+        // SLOW PATH: Build histogram from move_pages() results with 50% optimization
+        NvU32 valid_cpu_pages = 0;
+        NvU32 total_samples = params->numSamples;
+        uvm_processor_mask_t *scratch_mask;
+
+        scratch_mask = uvm_processor_mask_cache_alloc();
+        if (!scratch_mask) {
+            status = NV_ERR_NO_MEMORY;
+            goto unlock;
+        }
+
+        // STEP 1: Count pages from move_pages() results
+        // On coherent systems with NUMA-enabled GPUs, move_pages() returns
+        // the GPU's NUMA node ID for pages in GPU memory. We must check if
+        // each node belongs to a GPU to correctly attribute residency.
+        for (i = 0; i < total_samples; i++) {
+            int nid = pageStatus[i];
+            if (nid >= 0) {
+                uvm_gpu_t *gpu = uvm_va_space_find_gpu_with_memory_node_id(va_space, nid);
+
+                if (gpu) {
+                    // This is a GPU NUMA node - attribute to that GPU
+                    processor_histogram[uvm_id_value(gpu->id)]++;
+                } else {
+                    // This is a CPU NUMA node
+                    valid_cpu_pages++;
+                    processor_histogram[uvm_id_value(UVM_ID_CPU)]++;
+                }
+
+                // Track NUMA histogram regardless of processor type
+                if (numa_node_histogram && nid < nr_node_ids)
+                    numa_node_histogram[nid]++;
+            }
+        }
+
+        // STEP 2: Check for 50% optimization (non-coherent systems)
+        // If CPU has > 50% of pages, we can skip UVM queries
+        if (valid_cpu_pages > (total_samples / 2)) {
+            // CPU wins - no need to query UVM for failed pages
+            // Histogram already updated above
+        } else {
+            // CPU has ≤ 50% - must query ALL failed pages to find global
+            // maximum
+            for (i = 0; i < total_samples; i++) {
+                if (pageStatus[i] < 0) {
+                    // This page failed in move_pages() - query UVM
+                    void *addr = pages[i];
+
+                    status = query_residency_single_page(va_space,
+                                                        mm,
+                                                        (NvU64)addr,
+                                                        scratch_mask,
+                                                        processor_histogram,
+                                                        numa_node_histogram);
+                    if (status != NV_OK) {
+                        uvm_processor_mask_cache_free(scratch_mask);
+                        goto unlock;
+                    }
+                }
+            }
+        }
+
+        uvm_processor_mask_cache_free(scratch_mask);
+    }
+
+    // Find processor with most pages. On ties, prefer lowest ordinal GPU over
+    // CPU. Check GPUs first (starting from GPU0) so lowest ordinal GPU wins
+    // ties.
+    for (i = UVM_ID_GPU0_VALUE; i < UVM_ID_MAX_PROCESSORS; i++) {
+        if (processor_histogram[i] > max_count) {
+            max_count = processor_histogram[i];
+            max_processor = uvm_id_from_value(i);
+        }
+    }
+
+    // Check CPU last, it only wins if it has strictly more pages than any GPU.
+    if (processor_histogram[UVM_ID_CPU_VALUE] > max_count) {
+        max_count = processor_histogram[UVM_ID_CPU_VALUE];
+        max_processor = UVM_ID_CPU;
+    }
+
+    // If no processor has any pages (unpopulated memory), return zero UUID
+    // This is valid for mapped but unpopulated memory ranges
+    if (!UVM_ID_IS_VALID(max_processor)) {
+        memset(&params->residency, 0, sizeof(params->residency));
+        params->resident_nid = NUMA_NO_NODE;
+        goto unlock;
+    }
+
+    // Map processor ID to UUID
+    uvm_processor_get_uuid(max_processor, &params->residency);
+
+    // Handle NUMA node based on system type and winner
+    // Skip NUMA node tracking if histogram wasn't allocated (NUMA disabled)
+    if (!numa_node_histogram) {
+        params->resident_nid = NUMA_NO_NODE;
+    } else if (UVM_ID_IS_CPU(max_processor)) {
+        // CPU won - return CPU NUMA node with most pages
+        // Skip GPU NUMA nodes (coherent systems have GPU memory as NUMA nodes)
+        for (i = 0; i < nr_node_ids; i++) {
+            if (numa_node_histogram[i] > max_numa_count &&
+                !uvm_va_space_memory_node_is_gpu(va_space, i)) {
+                max_numa_count = numa_node_histogram[i];
+                max_numa_node = i;
+            }
+        }
+
+        params->resident_nid = (max_numa_count > 0) ? (NvS32)max_numa_node : NUMA_NO_NODE;
+    } else {
+        // GPU won, return appropriate NUMA node based on coherency
+        uvm_gpu_t *gpu = uvm_gpu_get(max_processor);
+
+        UVM_ASSERT(UVM_ID_IS_GPU(max_processor));
+        if (gpu) {
+            if (gpu->mem_info.numa.enabled) {
+                // Coherent GPU - return GPU's NUMA node
+                params->resident_nid = (NvS32)uvm_gpu_numa_node(gpu);
+            } else {
+                // Non-coherent GPU - return NUMA_NO_NODE
+                params->resident_nid = NUMA_NO_NODE;
+            }
+        } else {
+            params->resident_nid = NUMA_NO_NODE;
+        }
+    }
+
+unlock:
+    uvm_va_space_up_read(va_space);
+    uvm_va_space_mm_or_current_release_unlock(va_space, mm);
+
+cleanup:
+    uvm_kvfree(pages);
+    uvm_kvfree(pageStatus);
+    uvm_kvfree(processor_histogram);
+    uvm_kvfree(numa_node_histogram);
 
     return status;
 }
@@ -1483,13 +1931,10 @@ NV_STATUS uvm_va_range_set_preferred_location(uvm_va_range_managed_t *managed_ra
 {
     NV_STATUS status = NV_OK;
     uvm_processor_mask_t *set_accessed_by_processors = NULL;
-    uvm_range_group_range_iter_t iter;
-    uvm_range_group_range_t *rgr = NULL;
     uvm_va_space_t *va_space = managed_range->va_range.va_space;
     uvm_va_block_t *va_block;
     uvm_va_block_context_t *va_block_context;
     uvm_va_policy_t *va_range_policy;
-    NvU64 start, end;
 
     uvm_assert_rwsem_locked_write(&va_space->lock);
 
@@ -1502,29 +1947,6 @@ NV_STATUS uvm_va_range_set_preferred_location(uvm_va_range_managed_t *managed_ra
     va_range_policy = &managed_range->policy;
     if (uvm_va_policy_preferred_location_equal(va_range_policy, preferred_location, preferred_cpu_nid))
         goto out;
-
-    // Mark all range group ranges within this managed range as migrated since
-    // the preferred location has changed.
-    start = managed_range->va_range.node.start;
-    end = managed_range->va_range.node.end;
-    uvm_range_group_for_each_range_in(rgr, va_space, start, end) {
-        uvm_spin_lock(&rgr->range_group->migrated_ranges_lock);
-        if (list_empty(&rgr->range_group_migrated_list_node))
-            list_move_tail(&rgr->range_group_migrated_list_node, &rgr->range_group->migrated_ranges);
-        uvm_spin_unlock(&rgr->range_group->migrated_ranges_lock);
-    }
-
-    if (UVM_ID_IS_INVALID(preferred_location)) {
-        uvm_range_group_for_each_migratability_in_safe(&iter, va_space, start, end) {
-            if (!iter.migratable) {
-                // Clear the range group assocation for any unmigratable ranges
-                // if there is no preferred location
-                status = uvm_range_group_assign_range(va_space, NULL, iter.start, iter.end);
-                if (status != NV_OK)
-                    goto out;
-            }
-        }
-    }
 
     // The old preferred location should establish new remote mappings if it has
     // accessed-by set.
@@ -1603,21 +2025,6 @@ void uvm_va_range_unset_accessed_by(uvm_va_range_managed_t *managed_range,
                                     uvm_processor_id_t processor_id,
                                     uvm_tracker_t *out_tracker)
 {
-    uvm_range_group_range_t *rgr = NULL;
-
-    // Mark all range group ranges within this managed range as migrated. We do
-    // this to force uvm_range_group_set_migration_policy to re-check the policy
-    // state since we're changing it here.
-    uvm_range_group_for_each_range_in(rgr,
-                                      managed_range->va_range.va_space,
-                                      managed_range->va_range.node.start,
-                                      managed_range->va_range.node.end) {
-        uvm_spin_lock(&rgr->range_group->migrated_ranges_lock);
-        if (list_empty(&rgr->range_group_migrated_list_node))
-            list_move_tail(&rgr->range_group_migrated_list_node, &rgr->range_group->migrated_ranges);
-        uvm_spin_unlock(&rgr->range_group->migrated_ranges_lock);
-    }
-
     uvm_processor_mask_clear(&managed_range->policy.accessed_by, processor_id);
 }
 

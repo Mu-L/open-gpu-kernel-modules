@@ -187,7 +187,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_VidmemAccessBitBuffer;
     ((VidmemAccessBitBuffer*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(VidmemAccessBitBuffer)))
 #endif //__nvoc_vidmem_access_bit_buffer_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_VidmemAccessBitBuffer(VidmemAccessBitBuffer**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_VidmemAccessBitBuffer(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_VidmemAccessBitBuffer(VidmemAccessBitBuffer**, Dynamic*, NvU32, CALL_CONTEXT *pCallContext, struct RS_RES_ALLOC_PARAMS_INTERNAL *pParams);
 #define __objCreate_VidmemAccessBitBuffer(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags, pCallContext, pParams) \

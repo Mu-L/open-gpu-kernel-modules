@@ -24,11 +24,11 @@
 #ifndef __UVM_VA_SPACE_H__
 #define __UVM_VA_SPACE_H__
 
+#include "uvm_extern_decl.h"
 #include "uvm_processors.h"
 #include "uvm_global.h"
 #include "uvm_gpu.h"
 #include "uvm_range_tree.h"
-#include "uvm_range_group.h"
 #include "uvm_forward_decl.h"
 #include "uvm_mmu.h"
 #include "uvm_linux.h"
@@ -214,13 +214,6 @@ struct uvm_va_space_struct
     // Storage in g_uvm_global.va_spaces.list
     struct list_head list_node;
 
-    // Monotonically increasing counter for range groups IDs
-    atomic64_t range_group_id_counter;
-
-    // Range groups
-    struct radix_tree_root range_groups;
-    uvm_range_tree_t range_group_ranges;
-
     // Peer to peer table
     // A bitmask of peer to peer pairs enabled in this va_space
     // indexed by a pair_index returned by uvm_gpu_pair_index().
@@ -278,6 +271,12 @@ struct uvm_va_space_struct
     // Mask of gpu_va_spaces registered with the va space
     // indexed by gpu->id
     uvm_processor_mask_t registered_gpu_va_spaces;
+
+    // Mask of iGPUs for when adding mappings following a migration,
+    // to specify iGPUs which will need remote CPU mappings after migration
+    // whose destination is either the CPU or another iGPU. This is because
+    // iGPU residency entails CPU locality with remote mappings.
+    uvm_processor_mask_t integrated_gpus;
 
     // Mask of GPUs which have temporarily dropped the VA space lock mid-
     // unregister. Used to make other paths return an error rather than
@@ -376,13 +375,22 @@ struct uvm_va_space_struct
     // The mm currently associated with this VA space, if any.
     uvm_va_space_mm_t va_space_mm;
 
-    union
+    struct
     {
-        uvm_ats_va_space_t ats;
+        // Whether va_space supports pageable access.
+        bool access_enabled;
 
-        // HMM information about this VA space.
-        uvm_hmm_va_space_t hmm;
-    };
+        // Whether va_space supports pageable device migrations.
+        bool migrations_enabled;
+
+        // true if HMM or CDMM is enabled, false otherwise.
+        bool cdmm_enabled;
+    } pageable;
+
+    uvm_ats_va_space_t ats;
+
+    // HMM information about this VA space.
+    uvm_hmm_va_space_t hmm;
 
     struct
     {
@@ -788,6 +796,7 @@ static bool uvm_va_space_ats_enabled(const uvm_va_space_t *va_space)
 static void uvm_va_space_ats_set(uvm_va_space_t *va_space, uvm_ats_va_space_state_t state)
 {
     UVM_ASSERT(state != UVM_ATS_VA_SPACE_ATS_UNSET);
+
     atomic_set(&va_space->ats.state, state);
 }
 
@@ -798,7 +807,7 @@ static uvm_gpu_t *uvm_va_space_find_gpu_with_memory_node_id(uvm_va_space_t *va_s
 
     UVM_ASSERT(nv_numa_node_has_memory(node_id));
 
-    if (!uvm_va_space_ats_supported(va_space))
+    if (!g_uvm_global.ats.supported)
         return NULL;
 
     for_each_va_space_gpu(gpu, va_space) {
@@ -852,15 +861,7 @@ static uvm_gpu_t *uvm_va_space_find_first_gpu_attached_to_cpu_node(uvm_va_space_
 uvm_user_channel_t *uvm_gpu_va_space_get_user_channel(uvm_gpu_va_space_t *gpu_va_space,
                                                       uvm_gpu_phys_address_t instance_ptr);
 
-// Whether some form of pageable access (ATS, HMM) is supported by the system on
-// this VA space. This does NOT check whether GPUs with pageable support are
-// present, just whether system + VA space support exists.
-bool uvm_va_space_pageable_mem_access_supported(uvm_va_space_t *va_space);
-
-bool uvm_va_space_pageable_mem_access_enabled(uvm_va_space_t *va_space);
-
-NV_STATUS uvm_test_get_pageable_mem_access_type(UVM_TEST_GET_PAGEABLE_MEM_ACCESS_TYPE_PARAMS *params,
-                                                 struct file *filp);
+NV_STATUS uvm_test_get_pageable_mem_type(UVM_TEST_GET_PAGEABLE_MEM_TYPE_PARAMS *params, struct file *filp);
 NV_STATUS uvm_test_enable_static_peer_access(UVM_TEST_ENABLE_STATIC_PEER_ACCESS_PARAMS *params, struct file *filp);
 NV_STATUS uvm_test_disable_static_peer_access(UVM_TEST_DISABLE_STATIC_PEER_ACCESS_PARAMS *params, struct file *filp);
 NV_STATUS uvm_test_destroy_gpu_va_space_delay(UVM_TEST_DESTROY_GPU_VA_SPACE_DELAY_PARAMS *params, struct file *filp);

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -80,11 +80,11 @@ gpuInitRegistryOverrides_KERNEL
     // client had enabled compute mode earlier, we would have
     // recorded this in the registry.
     //
-    pGpu->computeModeRules = NV2080_CTRL_GPU_COMPUTE_MODE_RULES_NONE;
+    pGpu->computeModeState.computeModeRules = NV2080_CTRL_GPU_COMPUTE_MODE_RULES_NONE;
     if (NV_OK == osReadRegistryDword(pGpu,
                 NV_REG_STR_RM_COMPUTE_MODE_RULES, &data32))
     {
-        pGpu->computeModeRules = data32;
+        pGpu->computeModeState.computeModeRules = data32;
     }
 
     // Check to see if we have any ThreadState registry overrides
@@ -241,6 +241,11 @@ gpuInitRegistryOverrides_KERNEL
     if (osReadRegistryDword(pGpu, NV_REG_STR_RM_MEMORY_SUBSYSTEM_ERROR_DETECTION, &data32) == NV_OK)
     {
         pGpu->bMemsubsysErrDetectionEnabled = (data32 == NV_REG_STR_RM_MEMORY_SUBSYSTEM_ERROR_DETECTION_ENABLE);
+    }
+
+    if (osReadRegistryDword(pGpu, NV_REG_STR_RM_CPER_EMIT_TO_SYSTEM_LOG, &data32) == NV_OK)
+    {
+        pGpu->bCperDumpEnabled = (data32 == NV_REG_STR_RM_CPER_EMIT_TO_SYSTEM_LOG_ENABLED_TRUE);
     }
 
     return NV_OK;

@@ -8,7 +8,7 @@
 // Profile:  shipping-gpus-openrm
 // Template: templates/gt_rmconfig_private.h
 //
-// Chips:    TU10X, GA100, GA102, GA103, GA104, GA106, GA107, AD10X, GH10X, GB100, GB102, GB10B, GB110, GB112, GB202, GB203, GB205, GB206, GB207, GB20B, GB20C, T234D, T26XD
+// Chips:    TU10X, GA100, GA102, GA103, GA104, GA106, GA107, AD10X, GH10X, GB100, GB102, GB10B, GB110, GB112, GB202, GB203, GB205, GB206, GB207, GB20B, GB20C, GR10X, T23XD, T26XD
 //
 
 #ifndef _G_RMCFG_PRIVATE_H_
@@ -330,6 +330,18 @@
 #define IsGB20XorBetter(pGpu)          rmcfg_IsGB20XorBetter(pGpu)
 
 
+// GR10X
+#define IsGR100(pGpu)                  rmcfg_IsGR100(pGpu)
+#define IsGR100orBetter(pGpu)          rmcfg_IsGR100orBetter(pGpu)
+
+#define IsGR102(pGpu)                  rmcfg_IsGR102(pGpu)
+#define IsGR102orBetter(pGpu)          rmcfg_IsGR102orBetter(pGpu)
+
+// Any GR10X chip?
+#define IsGR10X(pGpu)                  rmcfg_IsGR10X(pGpu)
+#define IsGR10XorBetter(pGpu)          rmcfg_IsGR10XorBetter(pGpu)
+
+
 // T12X
 #define IsT001_FERMI_NOT_EXIST(pGpu)   ((0) && (pGpu))
 #define IsT001_FERMI_NOT_EXISTorBetter(pGpu) ((0) && (pGpu))
@@ -399,6 +411,9 @@
 // T23XD
 #define IsT234D(pGpu)                  rmcfg_IsT234D(pGpu)
 #define IsT234DorBetter(pGpu)          rmcfg_IsT234DorBetter(pGpu)
+
+#define IsT239D(pGpu)                  rmcfg_IsT239D(pGpu)
+#define IsT239DorBetter(pGpu)          rmcfg_IsT239DorBetter(pGpu)
 
 // Any T23XD chip?
 #define IsT23XD(pGpu)                  rmcfg_IsT23XD(pGpu)
@@ -623,6 +638,30 @@
 
 // Any GB20Y chip?
 #define IsGB20Y(pGpu)                  rmcfg_IsGB20Y(pGpu)
+
+
+// Any dRUBIN chip?
+#define IsdRUBIN(pGpu)                 rmcfg_IsdRUBIN(pGpu)
+#define IsdRUBINorBetter(pGpu)         rmcfg_IsdRUBINorBetter(pGpu)
+
+
+// Any RUBIN chip?
+#define IsRUBIN(pGpu)                  (IsRUBIN_CLASSIC_GPUS(pGpu) || IsRUBIN_TEGRA_BIG_GPUS(pGpu))
+#define IsRUBINorBetter(pGpu)          (IsRUBIN_CLASSIC_GPUSorBetter(pGpu) || IsRUBIN_TEGRA_BIG_GPUSorBetter(pGpu))
+
+
+// Any RUBIN_CLASSIC_GPUS chip?
+#define IsRUBIN_CLASSIC_GPUS(pGpu)     rmcfg_IsRUBIN_CLASSIC_GPUS(pGpu)
+#define IsRUBIN_CLASSIC_GPUSorBetter(pGpu) rmcfg_IsRUBIN_CLASSIC_GPUSorBetter(pGpu)
+
+
+// Any GR1XX chip?
+#define IsGR1XX(pGpu)                  rmcfg_IsGR1XX(pGpu)
+#define IsGR1XXorBetter(pGpu)          rmcfg_IsGR1XXorBetter(pGpu)
+
+
+// Any ZERO_GFX chip?
+#define IsZERO_GFX(pGpu)               rmcfg_IsZERO_GFX(pGpu)
 
 
 // Any TEGRA_BIG_GPUS chip?

@@ -52,7 +52,6 @@
 #include "nv-hypervisor.h"
 #include "nv-rsync.h"
 #include "nv-kthread-q.h"
-#include "nv-pat.h"
 #include "nv-dmabuf.h"
 #include "nv-caps-imex.h"
 
@@ -357,6 +356,9 @@ void nv_detect_conf_compute_platform(
 )
 {
 #if defined(NV_CC_PLATFORM_PRESENT)
+#if defined(NVCPU_AARCH64)
+    os_cc_enabled = cc_platform_has(CC_ATTR_MEM_ENCRYPT);
+#else
     os_cc_enabled = cc_platform_has(CC_ATTR_GUEST_MEM_ENCRYPT);
 
 #if defined(NV_CC_ATTR_SEV_SNP)
@@ -378,6 +380,7 @@ void nv_detect_conf_compute_platform(
         os_cc_tdx_enabled = NV_TRUE;
     }
 #endif
+#endif /* NVCPU_AARCH64 */
 #else
     os_cc_enabled = NV_FALSE;
     os_cc_sev_snp_enabled = NV_FALSE;
@@ -538,15 +541,10 @@ nvlink_drivers_init(void)
     return rc;
 }
 
-int nv_init_page_pools(void);
-void nv_destroy_page_pools(void);
-
 static void
 nv_module_state_exit(nv_stack_t *sp)
 {
     nv_state_t *nv = NV_STATE_PTR(&nv_ctl_device);
-
-    nv_teardown_pat_support();
 
     nv_kthread_q_stop(&nv_deferred_close_kthread_q);
     nv_kthread_q_stop(&nv_kthread_q);
@@ -584,14 +582,6 @@ nv_module_state_init(nv_stack_t *sp)
     rc = nv_kthread_q_init(&nv_deferred_close_kthread_q, "nv_queue");
     if (rc != 0)
     {
-        nv_kthread_q_stop(&nv_kthread_q);
-        goto exit;
-    }
-
-    rc = nv_init_pat_support(sp);
-    if (rc < 0)
-    {
-        nv_kthread_q_stop(&nv_deferred_close_kthread_q);
         nv_kthread_q_stop(&nv_kthread_q);
         goto exit;
     }
@@ -2501,14 +2491,6 @@ nvidia_ioctl(
 
     if (arg_cmd == NV_ESC_IOCTL_XFER_CMD)
     {
-        if (arg_size != sizeof(nv_ioctl_xfer_t))
-        {
-            nv_printf(NV_DBG_ERRORS,
-                    "NVRM: invalid ioctl XFER structure size!\n");
-            status = -EINVAL;
-            goto done_early;
-        }
-
         if (copy_from_user(&ioc_xfer, arg_ptr, sizeof(ioc_xfer)))
         {
             nv_printf(NV_DBG_ERRORS,
@@ -2551,12 +2533,6 @@ nvidia_ioctl(
     if (arg_cmd == NV_ESC_WAIT_OPEN_COMPLETE)
     {
         nv_ioctl_wait_open_complete_t *params = arg_copy;
-
-        if (arg_size != sizeof(nv_ioctl_wait_open_complete_t))
-        {
-            status = -EINVAL;
-            goto done_early;
-        }
 
         params->rc = nvlfp->open_rc;
         params->adapterStatus = nvlfp->adapter_status;
@@ -2601,8 +2577,7 @@ nvidia_ioctl(
 
             NV_ACTUAL_DEVICE_ONLY(nv);
 
-            if ((arg_size < sizeof(*query_intr)) ||
-                (!nv->regs->map))
+            if (!nv->regs->map)
             {
                 status = -EINVAL;
                 goto done;
@@ -2632,7 +2607,7 @@ nvidia_ioctl(
 
             NV_CTL_DEVICE_ONLY(nv);
 
-            if ((num_arg_gpus == 0) || (arg_size % sizeof(NvU32) != 0))
+            if (num_arg_gpus == 0)
             {
                 status = -EINVAL;
                 goto done;
@@ -2706,12 +2681,6 @@ nvidia_ioctl(
 
             NV_CTL_DEVICE_ONLY(nv);
 
-            if (arg_size != sizeof(nv_ioctl_sys_params_t))
-            {
-                status = -EINVAL;
-                goto done;
-            }
-
             /* numa_memblock_size should only be set once */
             if (nvl->numa_memblock_size == 0)
             {
@@ -2732,12 +2701,6 @@ nvidia_ioctl(
             rmStatus = NV_OK;
 
             NV_ACTUAL_DEVICE_ONLY(nv);
-
-            if (arg_size != sizeof(nv_ioctl_numa_info_t))
-            {
-                status = -EINVAL;
-                goto done;
-            }
 
             rmStatus = rm_get_gpu_numa_info(sp, nv, api);
             if (rmStatus != NV_OK)
@@ -2764,12 +2727,6 @@ nvidia_ioctl(
             }
 
             NV_ACTUAL_DEVICE_ONLY(nv);
-
-            if (arg_size != sizeof(nv_ioctl_set_numa_status_t))
-            {
-                status = -EINVAL;
-                goto done;
-            }
 
             /*
              * The nv_linux_state_t for the device needs to be locked
@@ -2836,12 +2793,6 @@ unlock:
         case NV_ESC_EXPORT_TO_DMABUF_FD:
         {
             nv_ioctl_export_to_dma_buf_fd_t *params = arg_copy;
-
-            if (arg_size != sizeof(nv_ioctl_export_to_dma_buf_fd_t))
-            {
-                status = -EINVAL;
-                goto done;
-            }
 
             NV_ACTUAL_DEVICE_ONLY(nv);
 
@@ -4471,14 +4422,10 @@ nv_power_management(
             status = rm_power_management(sp, nv, pm_action);
 
             nv_kthread_q_stop(&nvl->bottom_half_q);
-
-            nv_disable_pat_support();
             break;
         }
         case NV_PM_ACTION_RESUME:
         {
-            nv_enable_pat_support();
-
             nv_kthread_q_item_init(&nvl->bottom_half_q_item,
                                    nvidia_isr_bh_unlocked, (void *)nv);
 
@@ -4874,7 +4821,24 @@ nv_suspend_devices(
 {
     nv_linux_state_t *nvl;
     NvBool resume_devices = NV_FALSE;
+    NvBool resume_uvm = NV_FALSE;
     NV_STATUS status = NV_OK;
+
+    // Block suspend if at least one device does not support it
+    LOCK_NV_LINUX_DEVICES();
+
+    for (nvl = nv_linux_devices; nvl != NULL; nvl = nvl->next)
+    {
+        nv_state_t *nv = NV_STATE_PTR(nvl);
+
+        if (nv->is_pm_unsupported)
+        {
+            UNLOCK_NV_LINUX_DEVICES();
+            return NV_ERR_NOT_SUPPORTED;
+        }
+    }
+
+    UNLOCK_NV_LINUX_DEVICES();
 
     nvidia_modeset_suspend(0);
 
@@ -4902,6 +4866,7 @@ nv_suspend_devices(
     {
         status = nv_uvm_suspend();
         WARN_ON(status != NV_OK);
+        resume_uvm = (status == NV_OK);
     }
     if (status != NV_OK)
     {
@@ -4951,7 +4916,10 @@ done:
 
         UNLOCK_NV_LINUX_DEVICES();
 
-        nv_uvm_resume();
+        if (resume_uvm)
+        {
+            nv_uvm_resume();
+        }
 
         nvidia_modeset_resume(0);
     }
@@ -5257,25 +5225,6 @@ NV_STATUS NV_API_CALL nv_log_error(
 #endif
 
     return status;
-}
-
-NV_STATUS NV_API_CALL nv_set_primary_vga_status(
-    nv_state_t *nv
-)
-{
-    nv_linux_state_t *nvl;
-    struct pci_dev *pci_dev;
-
-    nvl = NV_GET_NVL_FROM_NV_STATE(nv);
-    pci_dev = nvl->pci_dev;
-
-    if (pci_dev != NULL)
-    {
-        nv->primary_vga = ((NV_PCI_RESOURCE_FLAGS(pci_dev, PCI_ROM_RESOURCE) &
-            IORESOURCE_ROM_SHADOW) == IORESOURCE_ROM_SHADOW);
-    }
-
-    return NV_OK;
 }
 
 NvBool NV_API_CALL nv_requires_dma_remap(
@@ -6153,6 +6102,23 @@ NvBool NV_API_CALL nv_is_chassis_notebook(void)
     return (chassis_type && (!strcmp(chassis_type, "9") || !strcmp(chassis_type, "10")));
 }
 
+/*
+ * Function to query if the platform is a Galaxy Workstation.
+ */
+NvBool nv_is_galaxy_workstation(void)
+{
+    const char *system_name = dmi_get_system_info(DMI_PRODUCT_NAME);
+
+    if (system_name &&
+        strstr(system_name, "Station") &&
+        strstr(system_name, "GB300"))
+    {
+        return NV_TRUE;
+    }
+
+    return NV_FALSE;
+}
+
 void NV_API_CALL nv_allow_runtime_suspend
 (
     nv_state_t *nv
@@ -6375,7 +6341,7 @@ void NV_API_CALL nv_get_screen_info(
 
             /*
              * Ensure that either this is a zero-FB SOC GPU with a console in
-             * the system carveout, or it’s a dGPU device with  console mapped
+             * the system carveout, or it's a dGPU device with console mapped
              * onto its BAR.
              */
             if (NV_HAS_CONSOLE_IN_SYSMEM_CARVEOUT(nv) ||
@@ -6429,7 +6395,7 @@ void NV_API_CALL nv_get_screen_info(
 #endif
         /*
          * Ensure that either this is a zero-FB SOC GPU with a console in the
-         * system carveout, or it’s a dGPU device with  console mapped onto its
+         * system carveout, or it's a dGPU device with console mapped onto its
          * BAR.
          */
         if (NV_HAS_CONSOLE_IN_SYSMEM_CARVEOUT(nv) ||
@@ -6520,13 +6486,12 @@ void NV_API_CALL nv_set_gpu_pg_mask
 
     // overlay the gpu_pg_mask from module parameter
     if (NVreg_TegraGpuPgMask != NV_TEGRA_PCI_IGPU_PG_MASK_DEFAULT) {
+        nv_printf(NV_DBG_INFO, "NVRM: overlay gpu_pg_mask with module parameter.\n");
         nv->tegra_pci_igpu_pg_mask = NVreg_TegraGpuPgMask;
-        nv_printf(NV_DBG_INFO, "NVRM: overlay gpu_pg_mask " \
-                "with module parameter %u.\n", nv->tegra_pci_igpu_pg_mask);
     }
 
     if (nv->tegra_pci_igpu_pg_mask == NV_TEGRA_PCI_IGPU_PG_MASK_DEFAULT) {
-        nv_printf(NV_DBG_INFO, "NVRM: Using default gpu_pg_mask. " \
+        nv_printf(NV_DBG_INFO, "NVRM: Using default gpu_pg_mask. "\
                                     "There's no need to send BPMP MRQ.\n");
         return;
     }
@@ -6562,13 +6527,6 @@ void NV_API_CALL nv_set_gpu_pg_mask
     nv_printf(NV_DBG_INFO, "NVRM: gpu_pg_mask configuration is not supported\n");
 #endif // defined(NV_PM_RUNTIME_AVAILABLE) && defined(NV_PM_DOMAIN_AVAILABLE)
 #endif // defined(NV_BPMP_MRQ_HAS_STRAP_SET)
-}
-
-void NV_API_CALL nv_trigger_gpu_flr(nv_state_t *nv)
-{
-    nv_linux_state_t *nvl = NV_GET_NVL_FROM_NV_STATE(nv);
-
-    os_pci_trigger_flr((void *)nvl->pci_dev);
 }
 
 module_init(nvidia_init_module);

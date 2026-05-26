@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -217,7 +217,7 @@ extern "C" {
 #define NV2080_NOTIFIERS_NVLINK_INFO_LINK_DOWN                     (176)
 #define NV2080_NOTIFIERS_NVPCF_EVENTS                              (177)
 #define NV2080_NOTIFIERS_HDMI_FRL_RETRAINING_REQUEST               (178)
-#define NV2080_NOTIFIERS_VRR_SET_TIMEOUT                           (179)
+// unused                                                          (179)
 #define NV2080_NOTIFIERS_OFA1                                      (180)
 #define NV2080_NOTIFIERS_AUX_POWER_EVENT                           (181)
 #define NV2080_NOTIFIERS_AUX_POWER_STATE_CHANGE                    (182)
@@ -237,7 +237,8 @@ extern "C" {
 #define NV2080_NOTIFIERS_USE_GC6_REDUCED_THRESHOLD                 (196)
 #define NV2080_NOTIFIERS_GPU_RC_RESET                              (197)
 #define NV2080_NOTIFIERS_RESERVED_198                              (198) // Unused
-#define NV2080_NOTIFIERS_MAXCOUNT                                  (199)
+#define NV2080_NOTIFIERS_INFOROM_BRL_OBJECT_UPDATED                (199)
+#define NV2080_NOTIFIERS_MAXCOUNT                                  (200)
 
 // Indexed GR notifier reference
 #define NV2080_NOTIFIERS_GR(x)         ((x == 0) ? (NV2080_NOTIFIERS_GR0) : (NV2080_NOTIFIERS_GR1 + (x - 1)))
@@ -603,10 +604,6 @@ typedef struct {
     NvU32 GpuId;
     NvU32 linkId;
 } Nv2080NvlinkLnkChangeNotification;
-
-typedef struct {
-    NvU32 head;
-} Nv2080VrrSetTimeoutNotification;
 
 #ifdef __cplusplus
 };     /* extern "C" */

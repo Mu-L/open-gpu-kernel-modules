@@ -22,7 +22,6 @@
  */
 
 #include "gpu/gpu_arch.h"
-#include "published/blackwell/gb10b/dev_fuse.h"
 #include "published/blackwell/gb10b/hwproject.h"
 
 NvU32 gpuarchGetSystemPhysAddrWidth_GB10B(GpuArch *pGpuArch)
@@ -40,9 +39,4 @@ NvU32 gpuarchGetDmaAddrWidth_GB10B(GpuArch *pGpuArch)
     //       flush buffer allocations?
     //
     return NV_CHIP_EXTENDED_SYSTEM_PHYSICAL_ADDRESS_BITS - 1;
-}
-
-NvU32 gpuarchGetGpcFuseStatusOffset_GB10B(GpuArch *pGpuArch)
-{
-    return NV_FUSE_STATUS_OPT_GPC;
 }

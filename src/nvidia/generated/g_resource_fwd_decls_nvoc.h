@@ -304,6 +304,27 @@ struct ProfilerDev;
 typedef struct ProfilerDev ProfilerDev;
 #endif /* __nvoc_class_id_ProfilerDev */
 
+struct ProfilerDeviceEvent;
+
+#ifndef __nvoc_class_id_ProfilerDeviceEvent
+#define __nvoc_class_id_ProfilerDeviceEvent 0xf121bfu
+typedef struct ProfilerDeviceEvent ProfilerDeviceEvent;
+#endif /* __nvoc_class_id_ProfilerDeviceEvent */
+
+struct ProfilerContextEvent;
+
+#ifndef __nvoc_class_id_ProfilerContextEvent
+#define __nvoc_class_id_ProfilerContextEvent 0x98abfeu
+typedef struct ProfilerContextEvent ProfilerContextEvent;
+#endif /* __nvoc_class_id_ProfilerContextEvent */
+
+struct TraceDeviceEvent;
+
+#ifndef __nvoc_class_id_TraceDeviceEvent
+#define __nvoc_class_id_TraceDeviceEvent 0x64ce63u
+typedef struct TraceDeviceEvent TraceDeviceEvent;
+#endif /* __nvoc_class_id_TraceDeviceEvent */
+
 struct PerfBuffer;
 
 #ifndef __nvoc_class_id_PerfBuffer
@@ -874,6 +895,9 @@ struct NVOCFwdDeclHack {
     struct Profiler *PRIVATE_FIELD(Profiler_GF100_PROFILER);
     struct ProfilerCtx *PRIVATE_FIELD(ProfilerCtx_MAXWELL_PROFILER_CONTEXT);
     struct ProfilerDev *PRIVATE_FIELD(ProfilerDev_MAXWELL_PROFILER_DEVICE);
+    struct ProfilerDeviceEvent *PRIVATE_FIELD(ProfilerDeviceEvent_PROFILER_DEVICE_EVENT);
+    struct ProfilerContextEvent *PRIVATE_FIELD(ProfilerContextEvent_PROFILER_CONTEXT_EVENT);
+    struct TraceDeviceEvent *PRIVATE_FIELD(TraceDeviceEvent_TRACE_DEVICE_EVENT);
     struct PerfBuffer *PRIVATE_FIELD(PerfBuffer_G84_PERFBUFFER);
     struct VgpuApi *PRIVATE_FIELD(VgpuApi_KEPLER_DEVICE_VGPU);
     struct Hdacodec *PRIVATE_FIELD(Hdacodec_GF100_HDACODEC);
@@ -939,6 +963,7 @@ struct NVOCFwdDeclHack {
     struct DispSfUser *PRIVATE_FIELD(DispSfUser_NVC371_DISP_SF_USER);
     struct DispSfUser *PRIVATE_FIELD(DispSfUser_NVC671_DISP_SF_USER);
     struct DispSfUser *PRIVATE_FIELD(DispSfUser_NVC771_DISP_SF_USER);
+    struct DispSfUser *PRIVATE_FIELD(DispSfUser_NVC871_DISP_SF_USER);
     struct DispSfUser *PRIVATE_FIELD(DispSfUser_NVC971_DISP_SF_USER);
     struct DispSfUser *PRIVATE_FIELD(DispSfUser_NVCA71_DISP_SF_USER);
     struct DispSfUser *PRIVATE_FIELD(DispSfUser_NVCB71_DISP_SF_USER);
@@ -954,6 +979,7 @@ struct NVOCFwdDeclHack {
     struct NvDispApi *PRIVATE_FIELD(NvDispApi_NVC570_DISPLAY);
     struct NvDispApi *PRIVATE_FIELD(NvDispApi_NVC670_DISPLAY);
     struct NvDispApi *PRIVATE_FIELD(NvDispApi_NVC770_DISPLAY);
+    struct NvDispApi *PRIVATE_FIELD(NvDispApi_NVC870_DISPLAY);
     struct NvDispApi *PRIVATE_FIELD(NvDispApi_NVC970_DISPLAY);
     struct NvDispApi *PRIVATE_FIELD(NvDispApi_NVCA70_DISPLAY);
     struct NvDispApi *PRIVATE_FIELD(NvDispApi_NVCB70_DISPLAY);
@@ -964,6 +990,7 @@ struct NVOCFwdDeclHack {
     struct RgLineCallback *PRIVATE_FIELD(RgLineCallback_NV0092_RG_LINE_CALLBACK);
     struct DispChannelPio *PRIVATE_FIELD(DispChannelPio_NVC57A_CURSOR_IMM_CHANNEL_PIO);
     struct DispChannelPio *PRIVATE_FIELD(DispChannelPio_NVC67A_CURSOR_IMM_CHANNEL_PIO);
+    struct DispChannelPio *PRIVATE_FIELD(DispChannelPio_NVC87A_CURSOR_IMM_CHANNEL_PIO);
     struct DispChannelPio *PRIVATE_FIELD(DispChannelPio_NVC97A_CURSOR_IMM_CHANNEL_PIO);
     struct DispChannelPio *PRIVATE_FIELD(DispChannelPio_NVCA7A_CURSOR_IMM_CHANNEL_PIO);
     struct DispChannelPio *PRIVATE_FIELD(DispChannelPio_NVCB7A_CURSOR_IMM_CHANNEL_PIO);
@@ -979,6 +1006,10 @@ struct NVOCFwdDeclHack {
     struct DispChannelDma *PRIVATE_FIELD(DispChannelDma_NVC67E_WINDOW_CHANNEL_DMA);
     struct DispCapabilities *PRIVATE_FIELD(DispCapabilities_NVC673_DISP_CAPABILITIES);
     struct DispCapabilities *PRIVATE_FIELD(DispCapabilities_NVC773_DISP_CAPABILITIES);
+    struct DispChannelDma *PRIVATE_FIELD(DispChannelDma_NVC87B_WINDOW_IMM_CHANNEL_DMA);
+    struct DispChannelDma *PRIVATE_FIELD(DispChannelDma_NVC87D_CORE_CHANNEL_DMA);
+    struct DispChannelDma *PRIVATE_FIELD(DispChannelDma_NVC87E_WINDOW_CHANNEL_DMA);
+    struct DispCapabilities *PRIVATE_FIELD(DispCapabilities_NVC873_DISP_CAPABILITIES);
     struct DispChannelDma *PRIVATE_FIELD(DispChannelDma_NVC97B_WINDOW_IMM_CHANNEL_DMA);
     struct DispChannelDma *PRIVATE_FIELD(DispChannelDma_NVC97D_CORE_CHANNEL_DMA);
     struct DispChannelDma *PRIVATE_FIELD(DispChannelDma_NVC97E_WINDOW_CHANNEL_DMA);
@@ -1017,12 +1048,14 @@ struct NVOCFwdDeclHack {
     struct NvdecContext *PRIVATE_FIELD(NvdecContext_NVCEB0_VIDEO_DECODER);
     struct NvdecContext *PRIVATE_FIELD(NvdecContext_NVCFB0_VIDEO_DECODER);
     struct NvdecContext *PRIVATE_FIELD(NvdecContext_NVD1B0_VIDEO_DECODER);
+    struct NvdecContext *PRIVATE_FIELD(NvdecContext_NVD2B0_VIDEO_DECODER);
     struct NvjpgContext *PRIVATE_FIELD(NvjpgContext_NVB8D1_VIDEO_NVJPG);
     struct NvjpgContext *PRIVATE_FIELD(NvjpgContext_NVC4D1_VIDEO_NVJPG);
     struct NvjpgContext *PRIVATE_FIELD(NvjpgContext_NVC9D1_VIDEO_NVJPG);
     struct NvjpgContext *PRIVATE_FIELD(NvjpgContext_NVCDD1_VIDEO_NVJPG);
     struct NvjpgContext *PRIVATE_FIELD(NvjpgContext_NVCED0_VIDEO_NVJPG);
     struct NvjpgContext *PRIVATE_FIELD(NvjpgContext_NVCFD1_VIDEO_NVJPG);
+    struct NvjpgContext *PRIVATE_FIELD(NvjpgContext_NVD2D1_VIDEO_NVJPG);
     struct OfaContext *PRIVATE_FIELD(OfaContext_NVB8FA_VIDEO_OFA);
     struct OfaContext *PRIVATE_FIELD(OfaContext_NVC6FA_VIDEO_OFA);
     struct OfaContext *PRIVATE_FIELD(OfaContext_NVC7FA_VIDEO_OFA);
@@ -1031,6 +1064,7 @@ struct NVOCFwdDeclHack {
     struct OfaContext *PRIVATE_FIELD(OfaContext_NVCEFA_VIDEO_OFA);
     struct OfaContext *PRIVATE_FIELD(OfaContext_NVCFFA_VIDEO_OFA);
     struct OfaContext *PRIVATE_FIELD(OfaContext_NVD1FA_VIDEO_OFA);
+    struct OfaContext *PRIVATE_FIELD(OfaContext_NVD2FA_VIDEO_OFA);
     struct MsencContext *PRIVATE_FIELD(MsencContext_NVD1B7_VIDEO_ENCODER);
     struct MsencContext *PRIVATE_FIELD(MsencContext_NVC4B7_VIDEO_ENCODER);
     struct MsencContext *PRIVATE_FIELD(MsencContext_NVB4B7_VIDEO_ENCODER);
@@ -1092,7 +1126,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_NVOCFwdDeclHack;
     ((NVOCFwdDeclHack*) __nvoc_dynamicCast(staticCast((pThis), Dynamic), classInfo(NVOCFwdDeclHack)))
 #endif //__nvoc_resource_fwd_decls_h_disabled
 
-NV_STATUS __nvoc_objCreateDynamic_NVOCFwdDeclHack(NVOCFwdDeclHack**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_NVOCFwdDeclHack(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_NVOCFwdDeclHack(NVOCFwdDeclHack**, Dynamic*, NvU32);
 #define __objCreate_NVOCFwdDeclHack(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

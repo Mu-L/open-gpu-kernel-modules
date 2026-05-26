@@ -136,7 +136,8 @@ NvU8 crashcatReportV1ReporterVersionLibos3Major(NvCrashCatReport_V1 *pReport)
 
 // NV_CRASHCAT_REPORT_V1_SOURCE_ID_IMPL_DEF (63:18)
 #define NV_CRASHCAT_REPORT_V1_SOURCE_ID_LIBOS3_TASK_ID                31:24
-#define NV_CRASHCAT_REPORT_V1_SOURCE_ID_LIBOS3_RESERVED               63:32
+#define NV_CRASHCAT_REPORT_V1_SOURCE_ID_LIBOS3_GFID                   39:32
+#define NV_CRASHCAT_REPORT_V1_SOURCE_ID_LIBOS3_RESERVED               63:40
 #define NV_CRASHCAT_REPORT_V1_SOURCE_ID_LIBOS3_TASK_ID_UNSPECIFIED    (0xFF)
 
 static NV_INLINE
@@ -150,6 +151,19 @@ static NV_INLINE
 NvU8 crashcatReportV1SourceLibos3TaskId(NvCrashCatReport_V1 *pReport)
 {
     return (NvU8)DRF_VAL64(_CRASHCAT, _REPORT_V1_SOURCE_ID, _LIBOS3_TASK_ID, pReport->sourceId);
+}
+
+static NV_INLINE
+void crashcatReportV1SetSourceLibos3Gfid(NvCrashCatReport_V1 *pReport, NvU32 gfid)
+{
+    pReport->sourceId = FLD_SET_DRF_NUM64(_CRASHCAT, _REPORT_V1_SOURCE_ID, _LIBOS3_GFID, gfid,
+                                          pReport->sourceId);
+}
+
+static NV_INLINE
+NvU32 crashcatReportV1SourceLibos3Gfid(NvCrashCatReport_V1 *pReport)
+{
+    return (NvU32)DRF_VAL64(_CRASHCAT, _REPORT_V1_SOURCE_ID, _LIBOS3_GFID, pReport->sourceId);
 }
 
 // NV_CRASHCAT_REPORT_V1_SOURCE_CAUSE_IMPL_DEF (63:32)

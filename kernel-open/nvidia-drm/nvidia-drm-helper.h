@@ -319,6 +319,51 @@ struct drm_color_ctm_3x4 {
 };
 #endif
 
+/*
+ * struct drm_color_lut32 was added by commit 621c45ca12ed
+ * ("drm: Add Enhanced LUT precision structure") in v6.19-rc1. For backwards
+ * compatibility, define it when not present.
+ */
+#if !defined(NV_DRM_COLOR_LUT32_PRESENT)
+struct drm_color_lut32 {
+    __u32 red;
+    __u32 green;
+    __u32 blue;
+    __u32 reserved;
+};
+#endif
+
+/**
+ * nv_drm_atomic_replace_property_blob - Replace a property blob with refcounting
+ * @blob: Pointer to blob pointer to replace
+ * @new_blob: New blob to install (can be NULL)
+ * @replaced: Output: whether blob was actually replaced (can be NULL if not needed)
+ */
+void nv_drm_atomic_replace_property_blob(struct drm_property_blob **blob,
+                                        struct drm_property_blob *new_blob,
+                                        NvBool *replaced);
+
+/**
+ * nv_drm_atomic_replace_property_blob_from_id - Look up and replace a property blob
+ * @dev: DRM device
+ * @blob: Pointer to blob pointer to replace
+ * @blob_id: Blob ID to lookup (0 = NULL)
+ * @expected_size: Expected blob size (0 = don't check)
+ * @replaced: Output: whether blob was actually replaced
+ *
+ * Returns: 0 on success, -EINVAL if blob not found or wrong size
+ */
+int nv_drm_atomic_replace_property_blob_from_id(struct drm_device *dev,
+                                                struct drm_property_blob **blob,
+                                                uint64_t blob_id,
+                                                ssize_t expected_size,
+                                                NvBool *replaced);
+
+/*
+ * S31.32 sign-magnitude fixed-point constant for 1.0
+ */
+#define NV_DRM_S31_32_ONE (((NvU64) 1) << 32)
+
 #endif /* defined(NV_DRM_AVAILABLE) */
 
 #endif /* __NVIDIA_DRM_HELPER_H__ */

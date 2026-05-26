@@ -28,7 +28,7 @@ void __nvoc_init__OBJPFM(OBJPFM*);
 void __nvoc_init_funcTable_OBJPFM(OBJPFM*);
 NV_STATUS __nvoc_ctor_OBJPFM(OBJPFM*);
 void __nvoc_init_dataField_OBJPFM(OBJPFM*);
-void __nvoc_dtor_OBJPFM(OBJPFM*);
+void __nvoc_dtor_OBJPFM(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__OBJPFM;
@@ -47,7 +47,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJPFM =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "OBJPFM",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_OBJPFM,
+    .objCreatefn =        &__nvoc_objCreateDynamic_OBJPFM,
     .pCastInfo =          &__nvoc_castinfo__OBJPFM,
     .pExportInfo =        &__nvoc_export_info__OBJPFM
 };
@@ -56,7 +56,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_OBJPFM =
 // Metadata with per-class RTTI with ancestor(s)
 static const struct NVOC_METADATA__OBJPFM __nvoc_metadata__OBJPFM = {
     .rtti.pClassDef = &__nvoc_class_def_OBJPFM,    // (pfm) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_OBJPFM,
+    .rtti.dtor      = &__nvoc_dtor_OBJPFM,
     .rtti.offset    = 0,
     .metadata__Object.rtti.pClassDef = &__nvoc_class_def_Object,    // (obj) super
     .metadata__Object.rtti.dtor      = &__nvoc_destructFromBase,
@@ -81,13 +81,15 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__OBJPFM =
 
 
 // Destruct OBJPFM object.
-void __nvoc_dtor_Object(Object*);
-void __nvoc_dtor_OBJPFM(OBJPFM* pThis) {
+void __nvoc_dtor_Object(Dynamic*);
+void __nvoc_dtor_OBJPFM(Dynamic* pThis) {
+
+    OBJPFM *__nvoc_this = (OBJPFM *) pThis;
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_Object(&pThis->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *) &__nvoc_this->__nvoc_base_Object);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_OBJPFM(OBJPFM *pThis) {
     PORT_UNREFERENCED_VARIABLE(pThis);
@@ -115,7 +117,7 @@ NV_STATUS __nvoc_ctor_OBJPFM(OBJPFM *pPfm) {
 
     // Unwind on error.
 __nvoc_ctor_OBJPFM_fail__init:
-    __nvoc_dtor_Object(&pPfm->__nvoc_base_Object);
+    __nvoc_dtor_Object((Dynamic *)&pPfm->__nvoc_base_Object);
 __nvoc_ctor_OBJPFM_fail_Object:
 __nvoc_ctor_OBJPFM_exit:
     return status;
@@ -219,11 +221,8 @@ __nvoc_objCreate_OBJPFM_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_OBJPFM(OBJPFM **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_OBJPFM(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_OBJPFM(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_OBJPFM((OBJPFM **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

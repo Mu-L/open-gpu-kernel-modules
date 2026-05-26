@@ -29,7 +29,7 @@ void __nvoc_init__KernelHFRP(KernelHFRP*, GpuHalspecOwner *pGpuhalspecowner);
 void __nvoc_init_funcTable_KernelHFRP(KernelHFRP*, GpuHalspecOwner *pGpuhalspecowner);
 NV_STATUS __nvoc_ctor_KernelHFRP(KernelHFRP*, GpuHalspecOwner *pGpuhalspecowner);
 void __nvoc_init_dataField_KernelHFRP(KernelHFRP*, GpuHalspecOwner *pGpuhalspecowner);
-void __nvoc_dtor_KernelHFRP(KernelHFRP*);
+void __nvoc_dtor_KernelHFRP(Dynamic*);
 
 // Structures used within RTTI (run-time type information)
 extern const struct NVOC_CASTINFO __nvoc_castinfo__KernelHFRP;
@@ -62,7 +62,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelHFRP =
 #if NV_PRINTF_STRINGS_ALLOWED
     .classInfo.name =               "KernelHFRP",
 #endif
-    .objCreatefn =        (NVOC_DYNAMIC_OBJ_CREATE) &__nvoc_objCreateDynamic_KernelHFRP,
+    .objCreatefn =        &__nvoc_objCreateDynamic_KernelHFRP,
     .pCastInfo =          &__nvoc_castinfo__KernelHFRP,
     .pExportInfo =        &__nvoc_export_info__KernelHFRP
 };
@@ -71,7 +71,7 @@ const struct NVOC_CLASS_DEF __nvoc_class_def_KernelHFRP =
 // Metadata with per-class RTTI and vtable with ancestor(s)
 static const struct NVOC_METADATA__KernelHFRP __nvoc_metadata__KernelHFRP = {
     .rtti.pClassDef = &__nvoc_class_def_KernelHFRP,    // (khfrp) this
-    .rtti.dtor      = (NVOC_DYNAMIC_DTOR) &__nvoc_dtor_KernelHFRP,
+    .rtti.dtor      = &__nvoc_dtor_KernelHFRP,
     .rtti.offset    = 0,
     .metadata__OBJENGSTATE.rtti.pClassDef = &__nvoc_class_def_OBJENGSTATE,    // (engstate) super
     .metadata__OBJENGSTATE.rtti.dtor      = &__nvoc_destructFromBase,
@@ -206,16 +206,18 @@ const struct NVOC_EXPORT_INFO __nvoc_export_info__KernelHFRP =
 
 // Destruct KernelHFRP object.
 void __nvoc_khfrpDestruct(KernelHFRP*);
-void __nvoc_dtor_OBJENGSTATE(OBJENGSTATE*);
-void __nvoc_dtor_KernelHFRP(KernelHFRP* pThis) {
+void __nvoc_dtor_OBJENGSTATE(Dynamic*);
+void __nvoc_dtor_KernelHFRP(Dynamic* pThis) {
+
+    KernelHFRP *__nvoc_this = (KernelHFRP *) pThis;
 
 // Call destructor.
-    __nvoc_khfrpDestruct(pThis);
+    __nvoc_khfrpDestruct(__nvoc_this);
 
 // Recurse to superclass destructors.
-    __nvoc_dtor_OBJENGSTATE(&pThis->__nvoc_base_OBJENGSTATE);
+    __nvoc_dtor_OBJENGSTATE((Dynamic *) &__nvoc_this->__nvoc_base_OBJENGSTATE);
 
-    PORT_UNREFERENCED_VARIABLE(pThis);
+    PORT_UNREFERENCED_VARIABLE(__nvoc_this);
 }
 void __nvoc_init_dataField_KernelHFRP(KernelHFRP *pThis, GpuHalspecOwner *pGpuhalspecowner) {
     ChipHal *chipHal = &pGpuhalspecowner->chipHal;
@@ -226,7 +228,7 @@ void __nvoc_init_dataField_KernelHFRP(KernelHFRP *pThis, GpuHalspecOwner *pGpuha
     PORT_UNREFERENCED_VARIABLE(chipHal_HalVarIdx);
 
     // NVOC Property Hal field -- PDB_PROP_KHFRP_IS_ENABLED
-    if (( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x00000300UL) )) /* ChipHal: GB20B | GB20C */ 
+    if (( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000000c0UL) )) /* ChipHal: GB20B | GB20C */ 
     {
         pThis->setProperty(pThis, PDB_PROP_KHFRP_IS_ENABLED, NV_TRUE);
     }
@@ -237,7 +239,7 @@ void __nvoc_init_dataField_KernelHFRP(KernelHFRP *pThis, GpuHalspecOwner *pGpuha
     }
 
     // NVOC Property Hal field -- PDB_PROP_KHFRP_HDA_IS_ENABLED
-    if (( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x00000300UL) )) /* ChipHal: GB20B | GB20C */ 
+    if (( ((chipHal_HalVarIdx >> 5) == 2UL) && ((1UL << (chipHal_HalVarIdx & 0x1f)) & 0x000000c0UL) )) /* ChipHal: GB20B | GB20C */ 
     {
         pThis->setProperty(pThis, PDB_PROP_KHFRP_HDA_IS_ENABLED, NV_TRUE);
     }
@@ -382,11 +384,8 @@ __nvoc_objCreate_KernelHFRP_cleanup:
     return __nvoc_status;
 }
 
-NV_STATUS __nvoc_objCreateDynamic_KernelHFRP(KernelHFRP **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
-    NV_STATUS __nvoc_status;
+NV_STATUS __nvoc_objCreateDynamic_KernelHFRP(Dynamic **__nvoc_ppThis, Dynamic *__nvoc_pParent, NvU32 __nvoc_createFlags, va_list __nvoc_args) {
 
-    __nvoc_status = __nvoc_objCreate_KernelHFRP(__nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
-
-    return __nvoc_status;
+    return __nvoc_objCreate_KernelHFRP((KernelHFRP **) __nvoc_ppThis, __nvoc_pParent, __nvoc_createFlags);
 }
 

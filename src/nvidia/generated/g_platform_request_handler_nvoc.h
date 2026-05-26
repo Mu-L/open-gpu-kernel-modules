@@ -359,7 +359,7 @@ extern const struct NVOC_CLASS_DEF __nvoc_class_def_PlatformRequestHandler;
 #define PDB_PROP_PFMREQHNDLR_IS_PLATFORM_LEGACY_BASE_NAME PDB_PROP_PFMREQHNDLR_IS_PLATFORM_LEGACY
 
 
-NV_STATUS __nvoc_objCreateDynamic_PlatformRequestHandler(PlatformRequestHandler**, Dynamic*, NvU32, va_list);
+NV_STATUS __nvoc_objCreateDynamic_PlatformRequestHandler(Dynamic**, Dynamic*, NvU32, va_list);
 
 NV_STATUS __nvoc_objCreate_PlatformRequestHandler(PlatformRequestHandler**, Dynamic*, NvU32);
 #define __objCreate_PlatformRequestHandler(__nvoc_ppNewObj, __nvoc_pParent, __nvoc_createFlags) \

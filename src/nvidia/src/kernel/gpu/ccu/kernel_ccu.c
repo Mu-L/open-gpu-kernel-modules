@@ -36,6 +36,8 @@
 #include "gpu/bus/kern_bus.h"
 #include "vgpu/rpc.h"
 
+#include "gpu/conf_compute/conf_compute.h"
+
 NV_STATUS kccuConstructEngine_IMPL(OBJGPU *pGpu,
                                    KernelCcu *pKernelCcu,
                                    ENGDESCRIPTOR engDesc)
@@ -77,7 +79,10 @@ _kccuAllocMemory
         aperture = ADDR_FBMEM;
     }
 
-    flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    if (confComputeForceUnprotAlloc(pGpu))
+    {
+        flags |= MEMDESC_FLAGS_ALLOC_IN_UNPROTECTED_MEMORY;
+    }
 
     // Allocate memory & init the KernelCcu class members to store shared buffer info
     pKernelCcu->shrBuf[idx].pCounterDstInfo = portMemAllocNonPaged(sizeof(CCU_SHRBUF_INFO));

@@ -76,6 +76,7 @@ typedef enum {
     BINDATA_LABEL_UCODE_HS_OVL_SIG_PATCH_METADATA_PROD,
     BINDATA_LABEL_UCODE_HS_OVL_SIG_PROD,
     BINDATA_LABEL_UCODE_IMAGE,
+    BINDATA_LABEL_UCODE_COMPONENT,
     BINDATA_LABEL_UCODE_IMAGE_DBG,
     BINDATA_LABEL_UCODE_IMAGE_DESC,
     BINDATA_LABEL_UCODE_IMAGE_PROD,
@@ -126,6 +127,12 @@ void bindataStorageReleaseData(void *pData);
 void bindataInitialize(void);
 void bindataDestroy(void);
 
+//
+// The ucodes may not be contigously mapped in the VA space, so we have to use
+// an accessor function to copy stuff as needed.
+//
+typedef NV_STATUS (*UcodesFetchFunc)(void *mapping, void *dst, NvLength offset, NvLength size);
+NV_STATUS bindataRegisterExternalUcodesBin(void *, NvLength, UcodesFetchFunc);
 //
 // Bindata Archive support
 //
